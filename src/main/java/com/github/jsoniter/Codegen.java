@@ -20,7 +20,7 @@ class Codegen {
         try {
             CtClass ctClass = pool.makeClass("codegen." + clazz.getName().replace("[", "array_"));
             ctClass.setInterfaces(new CtClass[]{pool.get(Decoder.class.getName())});
-            String source = null;
+            String source;
             if (clazz.isArray()) {
                 source = genArray(clazz);
             } else {
@@ -37,7 +37,7 @@ class Codegen {
     }
 
     private static String genObject(Class clazz) {
-        Map<Integer, Object> map = new HashMap<Integer, Object>();
+        Map<Integer, Object> map = new HashMap<>();
         for (Field field : clazz.getFields()) {
             byte[] fieldName = field.getName().getBytes();
             Map<Byte, Object> current = (Map<Byte, Object>) map.get(fieldName.length);
@@ -59,7 +59,7 @@ class Codegen {
         StringBuilder lines = new StringBuilder();
         append(lines, "public Object decode(Class clazz, com.github.jsoniter.Jsoniter iter) {");
         append(lines, "{{clazz}} obj = new {{clazz}}();");
-        append(lines, "for (com.github.jsoniter.Slice field = iter.ReadObject(); field != null; field = iter.ReadObject()) {");
+        append(lines, "for (com.github.jsoniter.Slice field = iter.readObject(); field != null; field = iter.readObject()) {");
         append(lines, "switch (field.len) {");
         for (Map.Entry<Integer, Object> entry : map.entrySet()) {
             Integer len = entry.getKey();
@@ -82,53 +82,67 @@ class Codegen {
             append(lines, String.format("if (field.data[%d]==%s) {", i, b));
             if (i == len - 1) {
                 Field field = (Field) entry.getValue();
-                append(lines, String.format("obj.%s = iter.ReadString().toString();", field.getName()));
+                append(lines, String.format("obj.%s = iter.readString().toString();", field.getName()));
                 append(lines, "continue;");
             } else {
-                addFieldDispatch(lines, len, i+1, (Map<Byte, Object>) entry.getValue());
+                addFieldDispatch(lines, len, i + 1, (Map<Byte, Object>) entry.getValue());
             }
             append(lines, "}");
         }
     }
 
     private static String genArray(Class clazz) {
+        String nativeRead = new HashMap<String, String>() {{
+            put("float", "readFloat");
+            put("double", "readDouble");
+            put("byte", "readByte");
+            put("short", "readShort");
+            put("int", "readInt");
+            put("long", "readLong");
+        }}.get(clazz.getComponentType().getName());
         StringBuilder lines = new StringBuilder();
         append(lines, "public Object decode(Class clazz, com.github.jsoniter.Jsoniter iter) {");
-        append(lines, "if (!iter.ReadArray()) {");
+        append(lines, "if (!iter.readArray()) {");
         append(lines, "return new {{comp}}[0];");
         append(lines, "}");
-        append(lines, "{{comp}} a1 = ({{comp}}) iter.ReadUnsignedInt();");
-        append(lines, "if (!iter.ReadArray()) {");
+        append(lines, "{{comp}} a1 = iter.{{op}};");
+        append(lines, "if (!iter.readArray()) {");
         append(lines, "return new {{comp}}[]{ a1 };");
         append(lines, "}");
-        append(lines, "{{comp}} a2 = ({{comp}}) iter.ReadUnsignedInt();");
-        append(lines, "if (!iter.ReadArray()) {");
+        append(lines, "{{comp}} a2 = iter.{{op}};");
+        append(lines, "if (!iter.readArray()) {");
         append(lines, "return new {{comp}}[]{ a1, a2 };");
         append(lines, "}");
-        append(lines, "{{comp}} a3 = ({{comp}}) iter.ReadUnsignedInt();");
-        append(lines, "if (!iter.ReadArray()) {");
+        append(lines, "{{comp}} a3 = iter.{{op}};");
+        append(lines, "if (!iter.readArray()) {");
         append(lines, "return new {{comp}}[]{ a1, a2, a3 };");
         append(lines, "}");
-        append(lines, "{{comp}} a4 = ({{comp}}) iter.ReadUnsignedInt();");
+        append(lines, "{{comp}} a4 = iter.{{op}};");
         append(lines, "{{comp}}[] arr = new {{comp}}[8];");
         append(lines, "arr[0] = a1;");
         append(lines, "arr[1] = a2;");
         append(lines, "arr[2] = a3;");
         append(lines, "arr[3] = a4;");
         append(lines, "int i = 4;");
-        append(lines, "while (iter.ReadArray()) {");
+        append(lines, "while (iter.readArray()) {");
         append(lines, "if (i == arr.length) {");
         append(lines, "{{comp}}[] newArr = new {{comp}}[arr.length * 2];");
         append(lines, "System.arraycopy(arr, 0, newArr, 0, arr.length);");
         append(lines, "arr = newArr;");
         append(lines, "}");
-        append(lines, "arr[i++] = ({{comp}}) iter.ReadUnsignedInt();");
+        append(lines, "arr[i++] = iter.{{op}};");
         append(lines, "}");
         append(lines, "{{comp}}[] result = new {{comp}}[i];");
         append(lines, "System.arraycopy(arr, 0, result, 0, i);");
         append(lines, "return result;");
         append(lines, "}");
-        return lines.toString().replace("{{comp}}", clazz.getComponentType().getName());
+        String op = String.format("read(%s.class)", clazz.getComponentType().getName());
+        if (nativeRead != null) {
+            op = nativeRead + "()";
+        }
+        return lines.toString().replace(
+                "{{comp}}", clazz.getComponentType().getName()).replace(
+                "{{op}}", op);
     }
 
     private static void append(StringBuilder lines, String str) {
