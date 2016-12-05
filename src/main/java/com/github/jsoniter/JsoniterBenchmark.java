@@ -1,5 +1,6 @@
 package com.github.jsoniter;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.parser.JSONReaderScanner;
 import com.alibaba.fastjson.parser.JSONScanner;
 import com.alibaba.fastjson.parser.JSONToken;
@@ -15,21 +16,14 @@ public class JsoniterBenchmark {
 
     @Benchmark
     public void fastjson() {
-        JSONScanner scanner = new JSONScanner(JsoniterBenchmarkState.inputString);
-        scanner.nextToken();
-        do {
-            scanner.nextToken();
-            scanner.intValue();
-            scanner.nextToken();
-        } while (scanner.token() == JSONToken.COMMA);
+        JSON.parseObject(JsoniterBenchmarkState.inputString, byte[].class);
     }
 
     @Benchmark
     public void jsoniter() throws IOException {
-        Jsoniter iter = Jsoniter.parseBytes(JsoniterBenchmarkState.inputBytes);
-        while (iter.ReadArray()) {
-            iter.ReadUnsignedInt();
-        }
+        Jsoniter jsoniter = Jsoniter.parseBytes(JsoniterBenchmarkState.inputBytes);
+        byte[] val = new byte[3];
+        jsoniter.Read(val);
     }
 
     public static void main(String[] args) throws Exception {

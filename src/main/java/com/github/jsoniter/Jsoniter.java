@@ -3,8 +3,6 @@ package com.github.jsoniter;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.CharBuffer;
-import java.nio.charset.Charset;
 
 public class Jsoniter implements Closeable {
 
@@ -291,5 +289,9 @@ public class Jsoniter implements Closeable {
         }
         skipWhitespaces();
         return field;
+    }
+
+    public void Read(Object obj) throws IOException {
+        Codegen.gen(obj.getClass()).decode(obj, this);
     }
 }
