@@ -253,4 +253,43 @@ public class Jsoniter implements Closeable {
             }
         }
     }
+
+    public Slice ReadObject() throws IOException {
+        skipWhitespaces();
+        byte c = readByte();
+        switch (c) {
+            case 'n':
+                throw new UnsupportedOperationException();
+            case '{':
+                skipWhitespaces();
+                c = readByte();
+                switch (c) {
+                    case '}':
+                        return null; // end of object
+                    case '"':
+                        unreadByte();
+                        return readObjectField();
+                    default:
+                        throw exp("ReadObject", "expect \" after {");
+                }
+            case ',':
+                skipWhitespaces();
+                return readObjectField();
+            case '}':
+                return null; // end of object
+            default:
+                throw exp("ReadObject", "expect { or , or } or n");
+        }
+    }
+
+    private Slice readObjectField() throws IOException {
+        Slice field = ReadString();
+        skipWhitespaces();
+        byte c = readByte();
+        if (c != ':') {
+            throw exp("readObjectField", "expect : after object field");
+        }
+        skipWhitespaces();
+        return field;
+    }
 }
