@@ -109,4 +109,45 @@ public class Jsoniter implements Closeable {
     private RuntimeException exp(String op, String msg) {
         return new RuntimeException(op + ": " + msg + ", head: " + head + ", buf: " + new String(buf));
     }
+
+    public boolean ReadArray() throws IOException {
+        skipWhitespaces();
+        byte c = readByte();
+        switch (c) {
+            case '[':
+                skipWhitespaces();
+                c = readByte();
+                if (c == ']') {
+                    return false;
+                } else {
+                    unreadByte();
+                    return true;
+                }
+            case ']':
+                return false;
+            case ',':
+                skipWhitespaces();
+                return true;
+            case 'n':
+                throw new UnsupportedOperationException();
+            default:
+                throw exp("ReadArray", "expect [ or , or n or ]");
+        }
+    }
+
+    private void skipWhitespaces() throws IOException {
+        byte c = readByte();
+        for (; ; ) {
+            switch (c) {
+                case ' ':
+                case '\n':
+                case '\t':
+                    c = readByte();
+                default:
+                    unreadByte();
+                    return;
+
+            }
+        }
+    }
 }
