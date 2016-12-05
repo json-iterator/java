@@ -99,7 +99,7 @@ public class Jsoniter implements Closeable {
             return 0;
         }
         if (v == -1) {
-            throw exp("ReadUnsignedInt", "expect 0~9");
+            throw err("ReadUnsignedInt", "expect 0~9");
         }
         int result = 0;
         for (; ; ) {
@@ -114,7 +114,7 @@ public class Jsoniter implements Closeable {
         return result;
     }
 
-    private RuntimeException exp(String op, String msg) {
+    public RuntimeException err(String op, String msg) {
         return new RuntimeException(op + ": " + msg + ", head: " + head + ", buf: " + new String(buf));
     }
 
@@ -139,7 +139,7 @@ public class Jsoniter implements Closeable {
             case 'n':
                 throw new UnsupportedOperationException();
             default:
-                throw exp("ReadArray", "expect [ or , or n or ]");
+                throw err("ReadArray", "expect [ or , or n or ]");
         }
     }
 
@@ -168,7 +168,7 @@ public class Jsoniter implements Closeable {
             case '"':
                 break;
             default:
-                throw exp("ReadString", "expect n or \"");
+                throw err("ReadString", "expect n or \"");
         }
         for (; ; ) {
             c = readByte();
@@ -205,24 +205,24 @@ public class Jsoniter implements Closeable {
                         case 'u':
                             int v = digits[readByte()];
                             if (v == -1) {
-                                throw exp("ReadString", "expect 0~9 or a~f");
+                                throw err("ReadString", "expect 0~9 or a~f");
                             }
                             char b = (char) v;
                             v = digits[readByte()];
                             if (v == -1) {
-                                throw exp("ReadString", "expect 0~9 or a~f");
+                                throw err("ReadString", "expect 0~9 or a~f");
                             }
                             b = (char) (b << 4);
                             b += v;
                             v = digits[readByte()];
                             if (v == -1) {
-                                throw exp("ReadString", "expect 0~9 or a~f");
+                                throw err("ReadString", "expect 0~9 or a~f");
                             }
                             b = (char) (b << 4);
                             b += v;
                             v = digits[readByte()];
                             if (v == -1) {
-                                throw exp("ReadString", "expect 0~9 or a~f");
+                                throw err("ReadString", "expect 0~9 or a~f");
                             }
                             b = (char) (b << 4);
                             b += v;
@@ -243,7 +243,7 @@ public class Jsoniter implements Closeable {
                             }
                             break;
                         default:
-                            throw exp("ReadString", "invalid escape char after \\");
+                            throw err("ReadString", "invalid escape char after \\");
                     }
                     break;
                 default:
@@ -268,7 +268,7 @@ public class Jsoniter implements Closeable {
                         unreadByte();
                         return readObjectField();
                     default:
-                        throw exp("ReadObject", "expect \" after {");
+                        throw err("ReadObject", "expect \" after {");
                 }
             case ',':
                 skipWhitespaces();
@@ -276,7 +276,7 @@ public class Jsoniter implements Closeable {
             case '}':
                 return null; // end of object
             default:
-                throw exp("ReadObject", "expect { or , or } or n");
+                throw err("ReadObject", "expect { or , or } or n");
         }
     }
 
@@ -285,13 +285,42 @@ public class Jsoniter implements Closeable {
         skipWhitespaces();
         byte c = readByte();
         if (c != ':') {
-            throw exp("readObjectField", "expect : after object field");
+            throw err("readObjectField", "expect : after object field");
         }
         skipWhitespaces();
         return field;
     }
 
-    public void Read(Object obj) throws IOException {
-        Codegen.gen(obj.getClass()).decode(obj, this);
+    public <T> T Read(Class<T> clazz) throws IOException {
+        return (T) Codegen.gen(clazz).decode(clazz, this);
+//        TestObj testObj = new TestObj();
+//        for (Slice field = ReadObject(); field != null; field = ReadObject()) {
+//            if (field.len == 6) {
+//                if (field.data[0] == 'f') {
+//                    if (field.data[1] == 'i') {
+//                        if (field.data[2] == 'e') {
+//                            if (field.data[3] == 'l') {
+//                                if (field.data[4] == 'd') {
+//                                    if (field.data[5] == '1') {
+//                                        testObj.field1 = ReadString().toString();
+//                                        continue;
+//                                    }
+//                                    if (field.data[5] == '2') {
+//                                        testObj.field2 = ReadString().toString();
+//                                        continue;
+//                                    }
+//
+//                                }
+//
+//                            }
+//
+//                        }
+//
+//                    }
+//                }
+//            }
+//            throw new RuntimeException();
+//        }
+//        return (T) testObj;
     }
 }

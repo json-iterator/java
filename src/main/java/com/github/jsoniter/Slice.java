@@ -16,6 +16,11 @@ public class Slice {
         return new Slice(new byte[cap], len);
     }
 
+    public static Slice make(String str) {
+        byte[] data = str.getBytes();
+        return new Slice(data, data.length);
+    }
+
     public void append(byte c) {
         if (len == data.length) {
             byte[] newData = new byte[data.length * 2];

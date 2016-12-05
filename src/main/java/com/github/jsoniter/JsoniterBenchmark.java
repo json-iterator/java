@@ -16,14 +16,14 @@ public class JsoniterBenchmark {
 
     @Benchmark
     public void fastjson() {
-        JSON.parseObject(JsoniterBenchmarkState.inputString, byte[].class);
+        JSON.parseObject(JsoniterBenchmarkState.inputString, TestObj.class);
     }
 
     @Benchmark
     public void jsoniter() throws IOException {
         Jsoniter jsoniter = Jsoniter.parseBytes(JsoniterBenchmarkState.inputBytes);
-        byte[] val = new byte[3];
-        jsoniter.Read(val);
+//        jsoniter.Read(int[].class);
+        jsoniter.Read(TestObj.class);
     }
 
     public static void main(String[] args) throws Exception {
