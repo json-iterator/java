@@ -5,10 +5,20 @@ import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.CtNewMethod;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
 
 class Codegen {
+    final static Map<String, String> NATIVE_READS = new HashMap<String, String>() {{
+        put("float", "readFloat");
+        put("double", "readDouble");
+        put("byte", "readByte");
+        put("short", "readShort");
+        put("int", "readInt");
+        put("long", "readLong");
+    }};
+    // TODO: make cache thread safe
     static Map<Class, Decoder> cache = new HashMap<>();
     static ClassPool pool = ClassPool.getDefault();
 
@@ -18,6 +28,16 @@ class Codegen {
             return decoder;
         }
         try {
+            if (clazz == String.class) {
+                decoder = new Decoder() {
+                    @Override
+                    public Object decode(Class clazz, Jsoniter iter) throws IOException {
+                        return iter.readString().toString();
+                    }
+                };
+                cache.put(clazz, decoder);
+                return decoder;
+            }
             CtClass ctClass = pool.makeClass("codegen." + clazz.getName().replace("[", "array_"));
             ctClass.setInterfaces(new CtClass[]{pool.get(Decoder.class.getName())});
             String source;
@@ -82,7 +102,13 @@ class Codegen {
             append(lines, String.format("if (field.data[%d]==%s) {", i, b));
             if (i == len - 1) {
                 Field field = (Field) entry.getValue();
-                append(lines, String.format("obj.%s = iter.readString().toString();", field.getName()));
+                String fieldTypeName = field.getType().getCanonicalName();
+                String nativeRead = NATIVE_READS.get(fieldTypeName);
+                if (nativeRead == null) {
+                    append(lines, String.format("obj.%s = (%s)iter.read(%s.class);", field.getName(), fieldTypeName, fieldTypeName));
+                } else {
+                    append(lines, String.format("obj.%s = iter.%s();", field.getName(), nativeRead));
+                }
                 append(lines, "continue;");
             } else {
                 addFieldDispatch(lines, len, i + 1, (Map<Byte, Object>) entry.getValue());
@@ -92,32 +118,29 @@ class Codegen {
     }
 
     private static String genArray(Class clazz) {
-        String nativeRead = new HashMap<String, String>() {{
-            put("float", "readFloat");
-            put("double", "readDouble");
-            put("byte", "readByte");
-            put("short", "readShort");
-            put("int", "readInt");
-            put("long", "readLong");
-        }}.get(clazz.getComponentType().getName());
+        Class compType = clazz.getComponentType();
+        if (compType.isArray()) {
+            throw new IllegalArgumentException("nested array not supported: " + clazz.getCanonicalName());
+        }
+        String nativeRead = NATIVE_READS.get(compType.getName());
         StringBuilder lines = new StringBuilder();
         append(lines, "public Object decode(Class clazz, com.github.jsoniter.Jsoniter iter) {");
         append(lines, "if (!iter.readArray()) {");
         append(lines, "return new {{comp}}[0];");
         append(lines, "}");
-        append(lines, "{{comp}} a1 = iter.{{op}};");
+        append(lines, "{{comp}} a1 = ({{comp}}) iter.{{op}};");
         append(lines, "if (!iter.readArray()) {");
         append(lines, "return new {{comp}}[]{ a1 };");
         append(lines, "}");
-        append(lines, "{{comp}} a2 = iter.{{op}};");
+        append(lines, "{{comp}} a2 = ({{comp}}) iter.{{op}};");
         append(lines, "if (!iter.readArray()) {");
         append(lines, "return new {{comp}}[]{ a1, a2 };");
         append(lines, "}");
-        append(lines, "{{comp}} a3 = iter.{{op}};");
+        append(lines, "{{comp}} a3 = ({{comp}}) iter.{{op}};");
         append(lines, "if (!iter.readArray()) {");
         append(lines, "return new {{comp}}[]{ a1, a2, a3 };");
         append(lines, "}");
-        append(lines, "{{comp}} a4 = iter.{{op}};");
+        append(lines, "{{comp}} a4 = ({{comp}}) iter.{{op}};");
         append(lines, "{{comp}}[] arr = new {{comp}}[8];");
         append(lines, "arr[0] = a1;");
         append(lines, "arr[1] = a2;");
@@ -130,18 +153,18 @@ class Codegen {
         append(lines, "System.arraycopy(arr, 0, newArr, 0, arr.length);");
         append(lines, "arr = newArr;");
         append(lines, "}");
-        append(lines, "arr[i++] = iter.{{op}};");
+        append(lines, "arr[i++] = ({{comp}}) iter.{{op}};");
         append(lines, "}");
         append(lines, "{{comp}}[] result = new {{comp}}[i];");
         append(lines, "System.arraycopy(arr, 0, result, 0, i);");
         append(lines, "return result;");
         append(lines, "}");
-        String op = String.format("read(%s.class)", clazz.getComponentType().getName());
+        String op = String.format("read(%s.class)", compType.getCanonicalName());
         if (nativeRead != null) {
             op = nativeRead + "()";
         }
         return lines.toString().replace(
-                "{{comp}}", clazz.getComponentType().getName()).replace(
+                "{{comp}}", compType.getCanonicalName()).replace(
                 "{{op}}", op);
     }
 

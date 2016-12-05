@@ -11,14 +11,14 @@ public class JsoniterBenchmark {
 
     @Benchmark
     public void fastjson() {
-        JSON.parseObject(JsoniterBenchmarkState.inputString, float[].class);
+        JSON.parseObject(JsoniterBenchmarkState.inputString, SimpleObject[].class);
     }
 
     @Benchmark
     public void jsoniter() throws IOException {
         Jsoniter jsoniter = Jsoniter.parseBytes(JsoniterBenchmarkState.inputBytes);
-        jsoniter.read(float[].class);
-//        jsoniter.read(TestObj.class);
+        jsoniter.read(SimpleObject[].class);
+//        jsoniter.read(SimpleObject.class);
     }
 
     public static void main(String[] args) throws Exception {
