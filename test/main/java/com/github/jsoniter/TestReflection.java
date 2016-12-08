@@ -3,6 +3,7 @@ package com.github.jsoniter;
 import junit.framework.TestCase;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -51,5 +52,11 @@ public class TestReflection extends TestCase {
         ComplexObject val = iter.read(ComplexObject.class);
         assertEquals(100, val.field1);
         assertArrayEquals(new float[]{1f, 2f}, val.field2, 0.01f);
+    }
+
+    public void test_fields_skipped() throws IOException {
+        Jsoniter iter = Jsoniter.parseString("{'field3': '3', 'field1': 100}".replace('\'', '"'));
+        ComplexObject val = iter.read(ComplexObject.class);
+        assertEquals(100, val.field1);
     }
 }

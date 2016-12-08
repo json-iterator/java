@@ -17,6 +17,7 @@ class Codegen {
         put("short", "readShort");
         put("int", "readInt");
         put("long", "readLong");
+        put("java.lang.String", "readString");
     }};
     // TODO: make cache thread safe
     static Map<Class, Decoder> cache = new HashMap<>();
@@ -28,16 +29,6 @@ class Codegen {
             return decoder;
         }
         try {
-            if (clazz == String.class) {
-                decoder = new Decoder() {
-                    @Override
-                    public Object decode(Class clazz, Jsoniter iter) throws IOException {
-                        return iter.readStringAsSlice().toString();
-                    }
-                };
-                cache.put(clazz, decoder);
-                return decoder;
-            }
             CtClass ctClass = pool.makeClass("codegen." + clazz.getName().replace("[", "array_"));
             ctClass.setInterfaces(new CtClass[]{pool.get(Decoder.class.getName())});
             String source;
@@ -89,7 +80,7 @@ class Codegen {
             append(lines, "break;");
         }
         append(lines, "}");
-        append(lines, "throw iter.err('bind object', 'field not found');".replace('\'', '"'));
+        append(lines, "iter.skip();");
         append(lines, "}");
         append(lines, "return obj;");
         append(lines, "}");
@@ -99,7 +90,7 @@ class Codegen {
     private static void addFieldDispatch(StringBuilder lines, int len, int i, Map<Byte, Object> current) {
         for (Map.Entry<Byte, Object> entry : current.entrySet()) {
             Byte b = entry.getKey();
-            append(lines, String.format("if (field.data[%d]==%s) {", i, b));
+            append(lines, String.format("if (field.at(%d)==%s) {", i, b));
             if (i == len - 1) {
                 Field field = (Field) entry.getValue();
                 String fieldTypeName = field.getType().getCanonicalName();
