@@ -3,6 +3,7 @@ package com.github.jsoniter;
 import junit.framework.TestCase;
 
 import java.io.IOException;
+import java.util.List;
 
 import static org.junit.Assert.assertArrayEquals;
 
@@ -24,6 +25,12 @@ public class TestReflection extends TestCase {
         Jsoniter iter = Jsoniter.parseString("[1,2,3]");
         int[] val = iter.read(int[].class);
         assertArrayEquals(new int[]{1, 2, 3}, val);
+    }
+
+    public void test_int_list() throws IOException {
+        Jsoniter iter = Jsoniter.parseString("[1,2,3]");
+        List<Integer> val = iter.read(new TypeLiteral<List<Integer>>(){});
+        assertArrayEquals(new Integer[]{1, 2, 3}, val.toArray(new Integer[0]));
     }
 
     public void test_float_array() throws IOException {

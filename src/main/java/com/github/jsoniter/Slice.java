@@ -2,23 +2,22 @@ package com.github.jsoniter;
 
 public class Slice {
     public byte[] data;
+    public int head;
     public int len;
 
-    public Slice(byte[] data, int len) {
+    public Slice(byte[] data, int head, int len) {
         this.data = data;
+        this.head = head;
         this.len = len;
     }
 
     public static Slice make(int len, int cap) {
-        if (cap <= 0) {
-            throw new IllegalArgumentException("cap must > 0");
-        }
-        return new Slice(new byte[cap], len);
+        return new Slice(new byte[cap], 0, len);
     }
 
     public static Slice make(String str) {
         byte[] data = str.getBytes();
-        return new Slice(data, data.length);
+        return new Slice(data, 0, data.length);
     }
 
     public void append(byte c) {
@@ -39,7 +38,7 @@ public class Slice {
 
         if (len != slice.len) return false;
 
-        for (int i = 0; i < len; i++)
+        for (int i = head; i < len; i++)
             if (data[i] != slice.data[i])
                 return false;
         return true;
@@ -49,7 +48,7 @@ public class Slice {
     @Override
     public int hashCode() {
         int result = 1;
-        for (int i = 0; i < len; i++) {
+        for (int i = head; i < len; i++) {
             result = 31 * result + data[i];
         }
         return result;
@@ -57,6 +56,6 @@ public class Slice {
 
     @Override
     public String toString() {
-        return new String(data, 0, len);
+        return new String(data, head, len);
     }
 }

@@ -21,11 +21,6 @@ public class TestInt extends TestCase {
         assertEquals(-123, iter.readShort());
     }
 
-    public void test_byte() throws IOException {
-        Jsoniter iter = Jsoniter.parseString("-123");
-        assertEquals(-123, iter.readByte());
-    }
-
     public void test_unsigned_long() throws IOException {
         Jsoniter iter = Jsoniter.parseString("123");
         assertEquals(123, iter.readUnsignedLong());

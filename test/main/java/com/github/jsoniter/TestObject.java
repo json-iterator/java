@@ -14,7 +14,7 @@ public class TestObject extends TestCase {
     public void test_one_field() throws IOException {
         Jsoniter iter = Jsoniter.parseString("{'hello': 'world'}".replace('\'', '"'));
         assertEquals("hello", iter.readObject().toString());
-        assertEquals("world", iter.readString().toString());
+        assertEquals("world", iter.readStringAsSlice().toString());
         assertNull(iter.readObject());
     }
 }

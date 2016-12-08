@@ -65,26 +65,33 @@ public class Jsoniter implements Closeable {
         }
     }
 
-    byte nextByte() throws IOException {
+    byte readByte() throws IOException {
         if (head == tail) {
-            if (in == null) {
-                eof = true;
+            if (!loadMore()) {
                 return 0;
-            }
-            int n = in.read(buf);
-            if (n < 1) {
-                if (n == -1) {
-                    eof = true;
-                    return 0;
-                } else {
-                    throw new IOException("read returned " + n);
-                }
-            } else {
-                head = 0;
-                tail = n;
             }
         }
         return buf[head++];
+    }
+
+    private boolean loadMore() throws IOException {
+        if (in == null) {
+            eof = true;
+            return false;
+        }
+        int n = in.read(buf);
+        if (n < 1) {
+            if (n == -1) {
+                eof = true;
+                return false;
+            } else {
+                throw new IOException("read returned " + n);
+            }
+        } else {
+            head = 0;
+            tail = n;
+        }
+        return true;
     }
 
     void unreadByte() throws IOException {
@@ -92,15 +99,6 @@ public class Jsoniter implements Closeable {
             throw new IOException("unread too many bytes");
         }
         head--;
-    }
-
-    public byte readByte() throws IOException {
-        int v = readInt();
-        if (Byte.MIN_VALUE <= v && v <= Byte.MAX_VALUE) {
-            return (byte) v;
-        } else {
-            throw new RuntimeException("byte overflow: " + v);
-        }
     }
 
     public short readShort() throws IOException {
@@ -113,7 +111,7 @@ public class Jsoniter implements Closeable {
     }
 
     public int readInt() throws IOException {
-        byte c = nextByte();
+        byte c = readByte();
         if (c == '-') {
             return -readUnsignedInt();
         } else {
@@ -124,7 +122,7 @@ public class Jsoniter implements Closeable {
 
     public int readUnsignedInt() throws IOException {
         // TODO: throw overflow
-        byte c = nextByte();
+        byte c = readByte();
         int v = digits[c];
         if (v == 0) {
             return 0;
@@ -135,7 +133,7 @@ public class Jsoniter implements Closeable {
         int result = 0;
         for (; ; ) {
             result = result * 10 + v;
-            c = nextByte();
+            c = readByte();
             v = digits[c];
             if (v == -1) {
                 unreadByte();
@@ -146,7 +144,7 @@ public class Jsoniter implements Closeable {
     }
 
     public long readLong() throws IOException {
-        byte c = nextByte();
+        byte c = readByte();
         if (c == '-') {
             return -readUnsignedLong();
         } else {
@@ -157,7 +155,7 @@ public class Jsoniter implements Closeable {
 
     public long readUnsignedLong() throws IOException {
         // TODO: throw overflow
-        byte c = nextByte();
+        byte c = readByte();
         int v = digits[c];
         if (v == 0) {
             return 0;
@@ -168,7 +166,7 @@ public class Jsoniter implements Closeable {
         long result = 0;
         for (; ; ) {
             result = result * 10 + v;
-            c = nextByte();
+            c = readByte();
             v = digits[c];
             if (v == -1) {
                 unreadByte();
@@ -183,12 +181,10 @@ public class Jsoniter implements Closeable {
     }
 
     public boolean readArray() throws IOException {
-        skipWhitespaces();
-        byte c = nextByte();
+        byte c = nextToken();
         switch (c) {
             case '[':
-                skipWhitespaces();
-                c = nextByte();
+                c = nextToken();
                 if (c == ']') {
                     return false;
                 } else {
@@ -201,46 +197,72 @@ public class Jsoniter implements Closeable {
                 skipWhitespaces();
                 return true;
             case 'n':
-                throw new UnsupportedOperationException();
+                skipUntilBreak();
+                return false;
             default:
                 throw err("readArray", "expect [ or , or n or ]");
         }
     }
 
     private void skipWhitespaces() throws IOException {
-        byte c = nextByte();
-        for (; ; ) {
-            switch (c) {
-                case ' ':
-                case '\n':
-                case '\t':
-                    c = nextByte();
-                default:
-                    unreadByte();
-                    return;
-
+        for(;;) {
+            for (int i = head; i < tail; i++) {
+                byte c = buf[i];
+                switch (c) {
+                    case ' ':
+                    case '\n':
+                    case '\t':
+                    case '\r':
+                        continue;
+                }
+                head = i;
+                return;
+            }
+            if (!loadMore()) {
+                return;
             }
         }
     }
 
-    public Slice readString() throws IOException {
-        Slice result = Slice.make(0, 10);
-        byte c = nextByte();
+    private byte nextToken() throws IOException {
+        for(;;) {
+            for (int i = head; i < tail; i++) {
+                byte c = buf[i];
+                switch (c) {
+                    case ' ':
+                    case '\n':
+                    case '\t':
+                    case '\r':
+                        continue;
+                }
+                head = i+1;
+                return c;
+            }
+            if (!loadMore()) {
+                return 0;
+            }
+        }
+    }
+
+    public Slice readStringAsSlice() throws IOException {
+        byte c = readByte();
         switch (c) {
             case 'n':
-                throw new UnsupportedOperationException();
+                skipUntilBreak();
+                return Slice.make(0, 0);
             case '"':
                 break;
             default:
-                throw err("readString", "expect n or \"");
+                throw err("readStringAsSlice", "expect n or \"");
         }
+        Slice result = Slice.make(0, 10);
         for (; ; ) {
-            c = nextByte();
+            c = readByte();
             switch (c) {
                 case '"':
                     return result;
                 case '\\':
-                    c = nextByte();
+                    c = readByte();
                     switch (c) {
                         case '"':
                             result.append((byte) '"');
@@ -267,26 +289,26 @@ public class Jsoniter implements Closeable {
                             result.append((byte) '\t');
                             break;
                         case 'u':
-                            int v = digits[nextByte()];
+                            int v = digits[readByte()];
                             if (v == -1) {
-                                throw err("readString", "expect 0~9 or a~f");
+                                throw err("readStringAsSlice", "expect 0~9 or a~f");
                             }
                             char b = (char) v;
-                            v = digits[nextByte()];
+                            v = digits[readByte()];
                             if (v == -1) {
-                                throw err("readString", "expect 0~9 or a~f");
+                                throw err("readStringAsSlice", "expect 0~9 or a~f");
                             }
                             b = (char) (b << 4);
                             b += v;
-                            v = digits[nextByte()];
+                            v = digits[readByte()];
                             if (v == -1) {
-                                throw err("readString", "expect 0~9 or a~f");
+                                throw err("readStringAsSlice", "expect 0~9 or a~f");
                             }
                             b = (char) (b << 4);
                             b += v;
-                            v = digits[nextByte()];
+                            v = digits[readByte()];
                             if (v == -1) {
-                                throw err("readString", "expect 0~9 or a~f");
+                                throw err("readStringAsSlice", "expect 0~9 or a~f");
                             }
                             b = (char) (b << 4);
                             b += v;
@@ -307,7 +329,7 @@ public class Jsoniter implements Closeable {
                             }
                             break;
                         default:
-                            throw err("readString", "invalid escape char after \\");
+                            throw err("readStringAsSlice", "invalid escape char after \\");
                     }
                     break;
                 default:
@@ -317,14 +339,13 @@ public class Jsoniter implements Closeable {
     }
 
     public Slice readObject() throws IOException {
-        skipWhitespaces();
-        byte c = nextByte();
+        byte c = nextToken();
         switch (c) {
             case 'n':
-                throw new UnsupportedOperationException();
+                skipUntilBreak();
+                return Slice.make(0, 0);
             case '{':
-                skipWhitespaces();
-                c = nextByte();
+                c = nextToken();
                 switch (c) {
                     case '}':
                         return null; // end of object
@@ -345,9 +366,8 @@ public class Jsoniter implements Closeable {
     }
 
     private Slice readObjectField() throws IOException {
-        Slice field = readString();
-        skipWhitespaces();
-        byte c = nextByte();
+        Slice field = readStringAsSlice();
+        byte c = nextToken();
         if (c != ':') {
             throw err("readObjectField", "expect : after object field");
         }
@@ -361,7 +381,7 @@ public class Jsoniter implements Closeable {
 
     private String readNumber() throws IOException {
         StringBuilder str = new StringBuilder(8);
-        for (byte c = nextByte(); !eof; c = nextByte()) {
+        for (byte c = readByte(); !eof; c = readByte()) {
             switch (c) {
                 case '-':
                 case '+':
@@ -396,5 +416,195 @@ public class Jsoniter implements Closeable {
     public double readDouble() throws IOException {
         // TODO: remove dependency on sun.misc
         return FloatingDecimal.readJavaFormatString(readNumber()).doubleValue();
+    }
+
+    public <T> T read(TypeLiteral<T> typeLiteral) throws IOException {
+        System.out.println(typeLiteral.getType());
+        return null;
+    }
+
+    public void skip() throws IOException {
+        byte c = readByte();
+        switch (c) {
+            case '"':
+                skipString();
+                return;
+            case '-':
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9':
+            case 't':
+            case 'f':
+            case 'n':
+                skipUntilBreak();
+                return;
+            case '[':
+                skipArray();
+                return;
+            case '{':
+                skipObject();
+                return;
+            default:
+                throw err("Skip", "do not know how to skip: " + c);
+        }
+    }
+
+    private void skipObject() throws IOException {
+        int level = 1;
+        for(;;) {
+            for (int i = head; i < tail; i++) {
+                switch (buf[i]) {
+                    case '"': // If inside string, skip it
+                        head = i + 1;
+                        skipString();
+                        i = head - 1; // it will be i++ soon
+                        break;
+                    case '{': // If open symbol, increase level
+                        level++;
+                        break;
+                    case '}': // If close symbol, increase level
+                        level--;
+
+                        // If we have returned to the original level, we're done
+                        if (level == 0) {
+                            head = i + 1;
+                            return;
+                        }
+                        break;
+                }
+            }
+            if (!loadMore()) {
+                return;
+            }
+        }
+    }
+
+    private void skipArray() throws IOException {
+        int level = 1;
+        for(;;) {
+            for (int i = head; i < tail; i++) {
+                switch (buf[i]) {
+                    case '"': // If inside string, skip it
+                        head = i + 1;
+                        skipString();
+                        i = head - 1; // it will be i++ soon
+                        break;
+                    case '[': // If open symbol, increase level
+                        level++;
+                        break;
+                    case ']': // If close symbol, increase level
+                        level--;
+
+                        // If we have returned to the original level, we're done
+                        if (level == 0) {
+                            head = i + 1;
+                            return;
+                        }
+                        break;
+                }
+            }
+            if (!loadMore()) {
+                return;
+            }
+        }
+    }
+
+    private void skipUntilBreak() throws IOException {
+        // true, false, null, number
+        for (; ; ) {
+            for (int i = head; i < tail; i++) {
+                byte c = buf[i];
+                switch (c) {
+                    case ' ':
+                    case '\n':
+                    case '\r':
+                    case '\t':
+                    case ',':
+                    case '}':
+                    case ']':
+                        head = i;
+                        return;
+                }
+            }
+            if (!loadMore()) {
+                return;
+            }
+        }
+    }
+
+    private void skipString() throws IOException {
+        for(;;) {
+            int end = findStringEnd();
+            if (end == -1) {
+                int j = tail - 1;
+                boolean escaped = true;
+                for(;;) {
+                    if (j < head || buf[j] != '\\') {
+                        // even number of backslashes
+                        // either end of buffer, or " found
+                        escaped = false;
+                        break;
+                    }
+                    j--;
+                    if (j < head || buf[j] != '\\') {
+                        // odd number of backslashes
+                        // it is \" or \\\"
+                        break;
+                    }
+                    j--;
+
+                }
+                if (!loadMore()) {
+                    return;
+                }
+                if (escaped) {
+                    head = 1; // skip the first char as last char read is \
+                }
+            } else {
+                head = end;
+                return;
+            }
+        }
+    }
+
+    // adapted from: https://github.com/buger/jsonparser/blob/master/parser.go
+    // Tries to find the end of string
+    // Support if string contains escaped quote symbols.
+    int findStringEnd() {
+        boolean escaped = false;
+        for (int i = head; i < tail; i++) {
+            byte c = buf[i];
+            if (c == '"') {
+                if (!escaped) {
+                    return i + 1;
+                } else {
+                    int j = i - 1;
+                    for (; ; ) {
+                        if (j < head || buf[j] != '\\') {
+                            // even number of backslashes
+                            // either end of buffer, or " found
+                            return i + 1;
+                        }
+                        j--;
+                        if (j < head || buf[j] != '\\') {
+                            // odd number of backslashes
+                            // it is \" or \\\"
+                            break;
+                        }
+                        j--;
+                    }
+                }
+            } else if (c == '\\') {
+                escaped = true;
+            }
+        }
+        return -1;
     }
 }

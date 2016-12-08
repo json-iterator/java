@@ -32,7 +32,7 @@ class Codegen {
                 decoder = new Decoder() {
                     @Override
                     public Object decode(Class clazz, Jsoniter iter) throws IOException {
-                        return iter.readString().toString();
+                        return iter.readStringAsSlice().toString();
                     }
                 };
                 cache.put(clazz, decoder);
