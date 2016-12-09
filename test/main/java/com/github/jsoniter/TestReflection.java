@@ -10,6 +10,12 @@ import static org.junit.Assert.assertArrayEquals;
 
 public class TestReflection extends TestCase {
 
+    public void test_boolean_array() throws IOException {
+        Jsoniter iter = Jsoniter.parseString("[true, false]");
+        boolean[] val = iter.read(boolean[].class);
+        assertArrayEquals(new boolean[]{true, false}, val);
+    }
+
     public void test_int_array() throws IOException {
         Jsoniter iter = Jsoniter.parseString("[1,2,3]");
         int[] val = iter.read(int[].class);
@@ -26,6 +32,12 @@ public class TestReflection extends TestCase {
         Jsoniter iter = Jsoniter.parseString("[1,2,3]");
         List<Integer> val = iter.read(new TypeLiteral<ArrayList<Integer>>(){});
         assertArrayEquals(new Integer[]{1, 2, 3}, val.toArray(new Integer[0]));
+    }
+
+    public void test_string_list() throws IOException {
+        Jsoniter iter = Jsoniter.parseString("['hello', 'world']".replace('\'', '"'));
+        List<String> val = iter.read(new TypeLiteral<List<String>>(){});
+        assertArrayEquals(new String[]{"hello", "world"}, val.toArray(new String[0]));
     }
 
     public void test_float_array() throws IOException {

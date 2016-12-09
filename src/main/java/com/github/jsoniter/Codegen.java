@@ -17,24 +17,33 @@ class Codegen {
     final static Map<String, String> NATIVE_READS = new HashMap<String, String>() {{
         put("float", "iter.readFloat()");
         put("double", "iter.readDouble()");
+        put("boolean", "iter.readBoolean()");
         put("byte", "iter.readShort()");
         put("short", "iter.readShort()");
         put("int", "iter.readInt()");
         put("long", "iter.readLong()");
         put(Float.class.getName(), "Float.valueOf(iter.readFloat())");
         put(Double.class.getName(), "Double.valueOf(iter.readDouble())");
+        put(Boolean.class.getName(), "Boolean.valueOf(iter.readBoolean())");
         put(Byte.class.getName(), "Byte.valueOf(iter.readShort())");
         put(Short.class.getName(), "Short.valueOf(iter.readShort())");
         put(Integer.class.getName(), "Integer.valueOf(iter.readInt())");
         put(Long.class.getName(), "Long.valueOf(iter.readLong())");
         put(String.class.getName(), "iter.readString()");
     }};
-    // TODO: make cache thread safe
-    static Map<Type, Decoder> cache = new HashMap<>();
+    static volatile Map<String, Decoder> cache = new HashMap<>();
     static ClassPool pool = ClassPool.getDefault();
 
-    static Decoder gen(Type type, Type[] typeArgs) {
-        Decoder decoder = cache.get(type);
+    static Decoder getDecoder(String cacheKey, Type type, Type[] typeArgs) {
+        Decoder decoder = cache.get(cacheKey);
+        if (decoder != null) {
+            return decoder;
+        }
+        return gen(cacheKey, type, typeArgs);
+    }
+
+    private synchronized static Decoder gen(String cacheKey, Type type, Type[] typeArgs) {
+        Decoder decoder = cache.get(cacheKey);
         if (decoder != null) {
             return decoder;
         }
@@ -42,24 +51,18 @@ class Codegen {
         if (type instanceof ParameterizedType) {
             ParameterizedType pType = (ParameterizedType) type;
             clazz = (Class) pType.getRawType();
+            typeArgs = pType.getActualTypeArguments();
         } else {
             clazz = (Class) type;
         }
         try {
-            String decodeClassName = "codegen." + clazz.getName().replace("[", "array_");
-            CtClass ctClass = pool.makeClass(decodeClassName);
+            CtClass ctClass = pool.makeClass(cacheKey);
             ctClass.setInterfaces(new CtClass[]{pool.get(Decoder.class.getName())});
             String source;
             if (clazz.isArray()) {
                 source = genArray(clazz);
             } else if (List.class.isAssignableFrom(clazz)) {
-                Class compType = null;
-                if (typeArgs != null) {
-                    compType = (Class) typeArgs[0];
-                } else {
-                    ParameterizedType pType = (ParameterizedType) type;
-                    compType = (Class) pType.getActualTypeArguments()[0];
-                }
+                Class compType = (Class) typeArgs[0];
                 if (clazz == List.class) {
                     clazz = ArrayList.class;
                 }
@@ -70,7 +73,9 @@ class Codegen {
             CtMethod method = CtNewMethod.make(source, ctClass);
             ctClass.addMethod(method);
             decoder = (Decoder) ctClass.toClass().newInstance();
-            cache.put(clazz, decoder);
+            HashMap<String, Decoder> newCache = new HashMap<>(cache);
+            newCache.put(cacheKey, decoder);
+            cache = newCache;
             return decoder;
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -138,8 +143,9 @@ class Codegen {
                     if (field.getGenericType() instanceof ParameterizedType) {
                         ParameterizedType pType = (ParameterizedType) field.getGenericType();
                         Class arg1 = (Class) pType.getActualTypeArguments()[0];
-                        append(lines, String.format("obj.%s = (%s)iter.read(%s.class, %s.class);",
-                                field.getName(), fieldTypeName, fieldTypeName, arg1.getName()));
+                        append(lines, String.format("obj.%s = (%s)iter.read(\"%s\", %s.class, %s.class);",
+                                field.getName(), fieldTypeName, TypeLiteral.generateCacheKey(field.getGenericType()),
+                                fieldTypeName, arg1.getName()));
                     } else {
                         append(lines, String.format("obj.%s = (%s)iter.read(%s.class);",
                                 field.getName(), fieldTypeName, fieldTypeName));

@@ -93,6 +93,20 @@ public class Jsoniter implements Closeable {
         return false;
     }
 
+    public final boolean readBoolean() throws IOException {
+        byte c = readByte();
+        switch (c) {
+            case 't':
+                skipUntilBreak();
+                return true;
+            case 'f':
+                skipUntilBreak();
+                return false;
+            default:
+                throw err("readBoolean", "expect t or f, found: " + c);
+        }
+    }
+
     public final short readShort() throws IOException {
         int v = readInt();
         if (Short.MIN_VALUE <= v && v <= Short.MAX_VALUE) {
@@ -169,7 +183,12 @@ public class Jsoniter implements Closeable {
     }
 
     public final RuntimeException err(String op, String msg) {
-        return new RuntimeException(op + ": " + msg + ", head: " + head + ", buf: " + new String(buf));
+        int peekStart = head - 10;
+        if (peekStart < 0) {
+            peekStart = 0;
+        }
+        String peek = new String(buf, peekStart, head - peekStart);
+        return new RuntimeException(op + ": " + msg + ", head: " + head + ", peek: " + peek + ", buf: " + new String(buf));
     }
 
     public final boolean readArray() throws IOException {
@@ -545,16 +564,16 @@ public class Jsoniter implements Closeable {
     }
 
     public final <T> T read(Class<T> clazz) throws IOException {
-        return (T) Codegen.gen(clazz, null).decode(clazz, this);
+        return (T) Codegen.getDecoder(TypeLiteral.generateCacheKey(clazz), clazz, null).decode(clazz, this);
     }
 
-    public final <T> T read(Class<T> clazz, Type typeArg) throws IOException {
-        return (T) Codegen.gen(clazz, new Type[]{typeArg}).decode(clazz, this);
+    public final <T> T read(String cacheKey, Class<T> clazz, Type typeArg) throws IOException {
+        return (T) Codegen.getDecoder(cacheKey, clazz, new Type[]{typeArg}).decode(clazz, this);
     }
 
     public final <T> T read(TypeLiteral<T> typeLiteral) throws IOException {
         Type type = typeLiteral.getType();
-        return (T) Codegen.gen(type, null).decode(type, this);
+        return (T) Codegen.getDecoder(typeLiteral.cacheKey, type, null).decode(type, this);
     }
 
     public final void skip() throws IOException {
