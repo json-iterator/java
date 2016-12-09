@@ -15,13 +15,18 @@ import java.util.Map;
 
 class Codegen {
     final static Map<String, String> NATIVE_READS = new HashMap<String, String>() {{
-        put("float", "iter.readInt()");
+        put("float", "iter.readFloat()");
         put("double", "iter.readDouble()");
-        put("byte", "iter.readByte()");
+        put("byte", "iter.readShort()");
         put("short", "iter.readShort()");
         put("int", "iter.readInt()");
         put("long", "iter.readLong()");
+        put(Float.class.getName(), "Float.valueOf(iter.readFloat())");
+        put(Double.class.getName(), "Double.valueOf(iter.readDouble())");
+        put(Byte.class.getName(), "Byte.valueOf(iter.readShort())");
+        put(Short.class.getName(), "Short.valueOf(iter.readShort())");
         put(Integer.class.getName(), "Integer.valueOf(iter.readInt())");
+        put(Long.class.getName(), "Long.valueOf(iter.readLong())");
         put(String.class.getName(), "iter.readString()");
     }};
     // TODO: make cache thread safe

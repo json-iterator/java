@@ -1,7 +1,5 @@
 package com.github.jsoniter;
 
-import sun.misc.FloatingDecimal;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -505,8 +503,13 @@ public class Jsoniter implements Closeable {
     }
 
     final String readNumber() throws IOException {
-        StringBuilder str = new StringBuilder(8);
+        int j = 0;
         for (byte c = readByte(); !eof; c = readByte()) {
+            if (j == reusableChars.length) {
+                char[] newBuf = new char[reusableChars.length * 2];
+                System.arraycopy(reusableChars, 0, newBuf, 0, reusableChars.length);
+                reusableChars = newBuf;
+            }
             switch (c) {
                 case '-':
                 case '+':
@@ -523,24 +526,22 @@ public class Jsoniter implements Closeable {
                 case '7':
                 case '8':
                 case '9':
-                    str.append(((char) c));
+                    reusableChars[j++] = (char) c;
                     break;
                 default:
                     unreadByte();
-                    return str.toString();
+                    return new String(reusableChars, 0, j);
             }
         }
-        return str.toString();
+        return new String(reusableChars, 0, j);
     }
 
     public final float readFloat() throws IOException {
-        // TODO: remove dependency on sun.misc
-        return FloatingDecimal.readJavaFormatString(readNumber()).floatValue();
+        return Float.valueOf(readNumber());
     }
 
     public final double readDouble() throws IOException {
-        // TODO: remove dependency on sun.misc
-        return FloatingDecimal.readJavaFormatString(readNumber()).doubleValue();
+        return Double.valueOf(readNumber());
     }
 
     public final <T> T read(Class<T> clazz) throws IOException {
