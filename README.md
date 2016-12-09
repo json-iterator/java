@@ -2,6 +2,8 @@
 
 faster than DOM, more usable than SAX/StAX. Join us [![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/json-iterator/Lobby)
 
+This library also has a golang version, with same api and performance: https://github.com/json-iterator/go
+
 # Benchmark (databind)
 
 |       | jsoniter    | dsljson     | fastjson   | gson       | jackson     |
