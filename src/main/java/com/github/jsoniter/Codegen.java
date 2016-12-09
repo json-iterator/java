@@ -8,7 +8,10 @@ import javassist.CtNewMethod;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 class Codegen {
     final static Map<String, String> NATIVE_READS = new HashMap<String, String>() {{
@@ -25,12 +28,12 @@ class Codegen {
     static Map<Type, Decoder> cache = new HashMap<>();
     static ClassPool pool = ClassPool.getDefault();
 
-    static Decoder gen(Type type) {
+    static Decoder gen(Type type, Type[] typeArgs) {
         Decoder decoder = cache.get(type);
         if (decoder != null) {
             return decoder;
         }
-        Class clazz = null;
+        Class clazz;
         if (type instanceof ParameterizedType) {
             ParameterizedType pType = (ParameterizedType) type;
             clazz = (Class) pType.getRawType();
@@ -45,8 +48,17 @@ class Codegen {
             if (clazz.isArray()) {
                 source = genArray(clazz);
             } else if (List.class.isAssignableFrom(clazz)) {
-                ParameterizedType pType = (ParameterizedType) type;
-                source = genList(clazz, (Class) pType.getActualTypeArguments()[0]);
+                Class compType = null;
+                if (typeArgs != null) {
+                    compType = (Class) typeArgs[0];
+                } else {
+                    ParameterizedType pType = (ParameterizedType) type;
+                    compType = (Class) pType.getActualTypeArguments()[0];
+                }
+                if (clazz == List.class) {
+                    clazz = ArrayList.class;
+                }
+                source = genList(clazz, compType);
             } else {
                 source = genObject(clazz);
             }
@@ -118,7 +130,15 @@ class Codegen {
                 String fieldTypeName = field.getType().getCanonicalName();
                 String nativeRead = NATIVE_READS.get(fieldTypeName);
                 if (nativeRead == null) {
-                    append(lines, String.format("obj.%s = (%s)iter.read(%s.class);", field.getName(), fieldTypeName, fieldTypeName));
+                    if (field.getGenericType() instanceof ParameterizedType) {
+                        ParameterizedType pType = (ParameterizedType) field.getGenericType();
+                        Class arg1 = (Class) pType.getActualTypeArguments()[0];
+                        append(lines, String.format("obj.%s = (%s)iter.read(%s.class, %s.class);",
+                                field.getName(), fieldTypeName, fieldTypeName, arg1.getName()));
+                    } else {
+                        append(lines, String.format("obj.%s = (%s)iter.read(%s.class);",
+                                field.getName(), fieldTypeName, fieldTypeName));
+                    }
                 } else {
                     append(lines, String.format("obj.%s = %s;", field.getName(), nativeRead));
                 }

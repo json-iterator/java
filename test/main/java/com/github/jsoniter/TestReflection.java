@@ -45,7 +45,10 @@ public class TestReflection extends TestCase {
         Jsoniter iter = Jsoniter.parseString("{'field1': 100, 'field2': [1,2]}".replace('\'', '"'));
         ComplexObject val = iter.read(ComplexObject.class);
         assertEquals(100, val.field1);
-        assertArrayEquals(new float[]{1f, 2f}, val.field2, 0.01f);
+        assertEquals(new ArrayList<Integer>(){{
+            add(1);
+            add(2);
+        }}, val.field2);
     }
 
     public void test_fields_skipped() throws IOException {

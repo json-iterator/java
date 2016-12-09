@@ -544,12 +544,16 @@ public class Jsoniter implements Closeable {
     }
 
     public final <T> T read(Class<T> clazz) throws IOException {
-        return (T) Codegen.gen(clazz).decode(clazz, this);
+        return (T) Codegen.gen(clazz, null).decode(clazz, this);
+    }
+
+    public final <T> T read(Class<T> clazz, Type typeArg) throws IOException {
+        return (T) Codegen.gen(clazz, new Type[]{typeArg}).decode(clazz, this);
     }
 
     public final <T> T read(TypeLiteral<T> typeLiteral) throws IOException {
         Type type = typeLiteral.getType();
-        return (T) Codegen.gen(type).decode(type, this);
+        return (T) Codegen.gen(type, null).decode(type, this);
     }
 
     public final void skip() throws IOException {
