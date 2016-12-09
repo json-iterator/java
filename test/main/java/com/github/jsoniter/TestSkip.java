@@ -2,6 +2,8 @@ package com.github.jsoniter;
 
 import junit.framework.TestCase;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 public class TestSkip extends TestCase {
@@ -36,4 +38,20 @@ public class TestSkip extends TestCase {
         Jsoniter iter = Jsoniter.parseString("\"a");
         assertEquals(1, iter.findStringEnd());
     }
+
+//    public void test_large_file() throws IOException {
+//        for (int i = 0; i < 100; i++) {
+//            FileInputStream fileInputStream = new FileInputStream("/tmp/large-file.json");
+//            Jsoniter iter = Jsoniter.parse(fileInputStream, 4096);
+//            int total = 0;
+//            while (iter.readArray()) {
+//                iter.skip();
+//                total++;
+//            }
+//            if (total != 11351) {
+//                throw new RuntimeException();
+//            }
+//            fileInputStream.close();
+//        }
+//    }
 }

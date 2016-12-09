@@ -4,9 +4,10 @@ faster than DOM, more usable than SAX/StAX. Join us [![Gitter chat](https://badg
 
 # Benchmark (databind)
 
-| jsoniter    | dsljson     | fastjson   | gson       | jackson     |
-| ---         | ---         | ---        | ---        | ---         |
-| 5791477.392 | 1825251.497 | 528568.402 | 509073.118 | 1002068.202 |
+|       | jsoniter    | dsljson     | fastjson   | gson       | jackson     |
+| ---   | ---         | ---         | ---        | ---        | ---         |
+| 10kb  | 5791477.392 | 1825251.497 | 528568.402 | 509073.118 | 1002068.202 |
+| 100kb | 64452.613   | 19128.133   | 8612.036   | 6303.252   | 12011.405   |
 
 10x faster than fastjson, 3x faster than dsljson
 
