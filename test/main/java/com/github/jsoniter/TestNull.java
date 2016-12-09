@@ -8,7 +8,7 @@ public class TestNull extends TestCase {
 
     public void test_null_string() throws IOException {
         Jsoniter iter = Jsoniter.parseString("null".replace('\'', '"'));
-        assertEquals("", iter.readSlice().toString());
+        assertEquals(null, iter.readSlice());
     }
 
     public void test_read_null() throws IOException {
