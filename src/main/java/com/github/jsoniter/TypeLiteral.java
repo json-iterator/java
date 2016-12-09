@@ -40,7 +40,6 @@ public class TypeLiteral<T> {
             throw new RuntimeException("Missing type parameter.");
         }
         ParameterizedType parameterized = (ParameterizedType) superclass;
-        System.out.println(parameterized.getActualTypeArguments()[0]);
         return parameterized.getActualTypeArguments()[0];
     }
 

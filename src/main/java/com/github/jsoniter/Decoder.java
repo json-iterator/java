@@ -1,7 +1,8 @@
 package com.github.jsoniter;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 
 public interface Decoder {
-    Object decode(Class clazz, Jsoniter iter) throws IOException;
+    Object decode(Type type, Jsoniter iter) throws IOException;
 }

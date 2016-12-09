@@ -3,24 +3,12 @@ package com.github.jsoniter;
 import junit.framework.TestCase;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertArrayEquals;
 
 public class TestReflection extends TestCase {
-
-    public void test_string() throws IOException {
-        Jsoniter iter = Jsoniter.parseString("'hello'".replace('\'', '"'));
-        String val = iter.read(String.class);
-        assertEquals("hello", val);
-    }
-
-    public void test_byte_array() throws IOException {
-        Jsoniter iter = Jsoniter.parseString("[1,2,3,4,5,6,7,8,9]");
-        byte[] val = iter.read(byte[].class);
-        assertArrayEquals(new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9}, val);
-    }
 
     public void test_int_array() throws IOException {
         Jsoniter iter = Jsoniter.parseString("[1,2,3]");
@@ -28,9 +16,15 @@ public class TestReflection extends TestCase {
         assertArrayEquals(new int[]{1, 2, 3}, val);
     }
 
+    public void test_Integer_array() throws IOException {
+        Jsoniter iter = Jsoniter.parseString("[1,2,3]");
+        Integer[] val = iter.read(Integer[].class);
+        assertArrayEquals(new Integer[]{1, 2, 3}, val);
+    }
+
     public void test_int_list() throws IOException {
         Jsoniter iter = Jsoniter.parseString("[1,2,3]");
-        List<Integer> val = iter.read(new TypeLiteral<List<Integer>>(){});
+        List<Integer> val = iter.read(new TypeLiteral<ArrayList<Integer>>(){});
         assertArrayEquals(new Integer[]{1, 2, 3}, val.toArray(new Integer[0]));
     }
 

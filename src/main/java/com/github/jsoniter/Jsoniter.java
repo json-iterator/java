@@ -5,6 +5,7 @@ import sun.misc.FloatingDecimal;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Type;
 
 public class Jsoniter implements Closeable {
 
@@ -503,10 +504,6 @@ public class Jsoniter implements Closeable {
         return field;
     }
 
-    public final <T> T read(Class<T> clazz) throws IOException {
-        return (T) Codegen.gen(clazz).decode(clazz, this);
-    }
-
     final String readNumber() throws IOException {
         StringBuilder str = new StringBuilder(8);
         for (byte c = readByte(); !eof; c = readByte()) {
@@ -546,9 +543,13 @@ public class Jsoniter implements Closeable {
         return FloatingDecimal.readJavaFormatString(readNumber()).doubleValue();
     }
 
+    public final <T> T read(Class<T> clazz) throws IOException {
+        return (T) Codegen.gen(clazz).decode(clazz, this);
+    }
+
     public final <T> T read(TypeLiteral<T> typeLiteral) throws IOException {
-        System.out.println(typeLiteral.getType());
-        return null;
+        Type type = typeLiteral.getType();
+        return (T) Codegen.gen(type).decode(type, this);
     }
 
     public final void skip() throws IOException {
