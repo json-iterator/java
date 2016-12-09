@@ -1,7 +1,5 @@
 package com.github.jsoniter;
 
-import java.nio.CharBuffer;
-
 public class Slice {
 
     final static int[] digits = new int[256];
