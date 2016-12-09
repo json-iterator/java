@@ -1,5 +1,8 @@
 package com.github.jsoniter;
 
+import com.dslplatform.json.CompiledJson;
+
+@CompiledJson
 public class SimpleObject {
     public String field2;
     public String field1;

@@ -5,23 +5,16 @@ import sun.misc.FloatingDecimal;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.CharBuffer;
 
 public class Jsoniter implements Closeable {
 
-    final static char rune1Max = 1 << 7 - 1;
-    final static char rune2Max = 1 << 11 - 1;
-    final static char rune3Max = 1 << 16 - 1;
-    final static char tx = 0x80; // 1000 0000
-    final static char t2 = 0xC0; // 1100 0000
-    final static char t3 = 0xE0; // 1110 0000
-    final static char t4 = 0xF0; // 1111 0000
-    final static char maskx = 0x3F; // 0011 1111
     final InputStream in;
-    final byte[] buf;
+    byte[] buf;
     int head;
     int tail;
     boolean eof;
+    private final Slice reusableSlice = new Slice(null, 0, 0);
+    private char[] reusableChars = new char[256];
 
     public Jsoniter(InputStream in, byte[] buf) {
         this.in = in;
@@ -43,13 +36,19 @@ public class Jsoniter implements Closeable {
         return parseBytes(str.getBytes());
     }
 
-    public void close() throws IOException {
+    public final void reuse(byte[] buf) {
+        this.buf = buf;
+        this.head = 0;
+        this.tail = buf.length;
+    }
+
+    public final void close() throws IOException {
         if (in != null) {
             in.close();
         }
     }
 
-    byte readByte() throws IOException {
+    final byte readByte() throws IOException {
         if (head == tail) {
             if (!loadMore()) {
                 return 0;
@@ -58,7 +57,7 @@ public class Jsoniter implements Closeable {
         return buf[head++];
     }
 
-    private boolean loadMore() throws IOException {
+    final boolean loadMore() throws IOException {
         if (in == null) {
             eof = true;
             return false;
@@ -78,14 +77,14 @@ public class Jsoniter implements Closeable {
         return true;
     }
 
-    void unreadByte() throws IOException {
+    final void unreadByte() throws IOException {
         if (head == 0) {
             throw new IOException("unread too many bytes");
         }
         head--;
     }
 
-    public boolean readNull() throws IOException {
+    public final boolean readNull() throws IOException {
         byte c = readByte();
         if (c == 'n') {
             skipUntilBreak();
@@ -95,7 +94,7 @@ public class Jsoniter implements Closeable {
         return false;
     }
 
-    public short readShort() throws IOException {
+    public final short readShort() throws IOException {
         int v = readInt();
         if (Short.MIN_VALUE <= v && v <= Short.MAX_VALUE) {
             return (short) v;
@@ -104,7 +103,7 @@ public class Jsoniter implements Closeable {
         }
     }
 
-    public int readInt() throws IOException {
+    public final int readInt() throws IOException {
         byte c = readByte();
         if (c == '-') {
             return -readUnsignedInt();
@@ -114,7 +113,7 @@ public class Jsoniter implements Closeable {
         }
     }
 
-    public int readUnsignedInt() throws IOException {
+    public final int readUnsignedInt() throws IOException {
         // TODO: throw overflow
         byte c = readByte();
         int v = Slice.digits[c];
@@ -137,7 +136,7 @@ public class Jsoniter implements Closeable {
         return result;
     }
 
-    public long readLong() throws IOException {
+    public final long readLong() throws IOException {
         byte c = readByte();
         if (c == '-') {
             return -readUnsignedLong();
@@ -147,7 +146,7 @@ public class Jsoniter implements Closeable {
         }
     }
 
-    public long readUnsignedLong() throws IOException {
+    public final long readUnsignedLong() throws IOException {
         // TODO: throw overflow
         byte c = readByte();
         int v = Slice.digits[c];
@@ -170,11 +169,11 @@ public class Jsoniter implements Closeable {
         return result;
     }
 
-    public RuntimeException err(String op, String msg) {
+    public final RuntimeException err(String op, String msg) {
         return new RuntimeException(op + ": " + msg + ", head: " + head + ", buf: " + new String(buf));
     }
 
-    public boolean readArray() throws IOException {
+    public final boolean readArray() throws IOException {
         byte c = nextToken();
         switch (c) {
             case '[':
@@ -198,7 +197,7 @@ public class Jsoniter implements Closeable {
         }
     }
 
-    private void skipWhitespaces() throws IOException {
+    final void skipWhitespaces() throws IOException {
         for (; ; ) {
             for (int i = head; i < tail; i++) {
                 byte c = buf[i];
@@ -218,7 +217,23 @@ public class Jsoniter implements Closeable {
         }
     }
 
-    private byte nextToken() throws IOException {
+    final boolean skipWhitespacesWithoutLoadMore() throws IOException {
+        for (int i = head; i < tail; i++) {
+            byte c = buf[i];
+            switch (c) {
+                case ' ':
+                case '\n':
+                case '\t':
+                case '\r':
+                    continue;
+            }
+            head = i;
+            return false;
+        }
+        return true;
+    }
+
+    final byte nextToken() throws IOException {
         for (; ; ) {
             for (int i = head; i < tail; i++) {
                 byte c = buf[i];
@@ -238,31 +253,33 @@ public class Jsoniter implements Closeable {
         }
     }
 
-    public Slice readStringAsSlice() throws IOException {
+    public final Slice readSlice() throws IOException {
         byte c = readByte();
         switch (c) {
             case 'n':
                 skipUntilBreak();
-                return Slice.make(0, 0);
+                return null;
             case '"':
                 break;
             default:
-                throw err("readStringAsSlice", "expect n or \"");
+                throw err("readSlice", "expect n or \"");
         }
-        int end = findStringEnd();
+        int end = findSliceEnd();
         if (end != -1) {
             // reuse current buffer
-            Slice slice = new Slice(buf, head, end - head - 1);
+            reusableSlice.data = buf;
+            reusableSlice.head = head;
+            reusableSlice.len = end - head - 1;
             head = end;
-            return slice;
+            return reusableSlice;
         }
         byte[] part1 = new byte[tail - head];
         System.arraycopy(buf, head, part1, 0, part1.length);
         for (; ; ) {
             if (!loadMore()) {
-                throw err("readStringAsSlice", "unmatched quote");
+                throw err("readSlice", "unmatched quote");
             }
-            end = findStringEnd();
+            end = findSliceEnd();
             if (end == -1) {
                 byte[] part2 = new byte[part1.length + buf.length];
                 System.arraycopy(part1, 0, part2, 0, part1.length);
@@ -273,16 +290,159 @@ public class Jsoniter implements Closeable {
                 System.arraycopy(part1, 0, part2, 0, part1.length);
                 System.arraycopy(buf, 0, part2, part1.length, end - 1);
                 head = end;
-                return new Slice(part2, 0, part2.length);
+                reusableSlice.data = part2;
+                reusableSlice.head = 0;
+                reusableSlice.len = part2.length;
+                return reusableSlice;
             }
         }
     }
 
-    public String readString() throws IOException {
-        return readStringAsSlice().toString();
+    public final String readString() throws IOException {
+        byte c = readByte();
+        switch (c) {
+            case 'n':
+                skipUntilBreak();
+                return null;
+            case '"':
+                break;
+            default:
+                throw err("readSlice", "expect n or \"");
+        }
+        // try fast path first
+        for (int i = head, j = 0; i < tail && j < reusableChars.length; i++, j++) {
+            c = buf[i];
+            if (c == '"') {
+                head = i+1;
+                return new String(reusableChars, 0, j);
+            }
+            // If we encounter a backslash, which is a beginning of an escape sequence
+            // or a high bit was set - indicating an UTF-8 encoded multibyte character,
+            // there is no chance that we can decode the string without instantiating
+            // a temporary buffer, so quit this loop
+            if ((c ^ '\\') < 1) break;
+            reusableChars[j] = (char) c;
+        }
+        return readStringSlowPath();
     }
 
-    public Slice readObject() throws IOException {
+    final String readStringSlowPath() throws IOException {
+        // http://grepcode.com/file_/repository.grepcode.com/java/root/jdk/openjdk/8u40-b25/sun/nio/cs/UTF_8.java/?v=source
+        // byte => char with support of escape in one pass
+        int j = 0;
+        int minimumCapacity = reusableChars.length - 2;
+        for(;;) {
+            if (j == minimumCapacity) {
+                char[] newBuf = new char[reusableChars.length * 2];
+                System.arraycopy(reusableChars, 0, newBuf, 0, reusableChars.length);
+                reusableChars = newBuf;
+                minimumCapacity = reusableChars.length - 2;
+            }
+            int b1 = readByte();
+            if (b1 >= 0) {
+                if (b1 == '"') {
+                    return new String(reusableChars, 0, j);
+                } else if (b1 == '\\') {
+                    int b2 = readByte();
+                    switch (b2) {
+                        case '"':
+                            reusableChars[j++] = '"';
+                            break;
+                        case '\\':
+                            reusableChars[j++] = '\\';
+                            break;
+                        case '/':
+                            reusableChars[j++] = '/';
+                            break;
+                        case 'b':
+                            reusableChars[j++] = '\b';
+                            break;
+                        case 'f':
+                            reusableChars[j++] = '\f';
+                            break;
+                        case 'n':
+                            reusableChars[j++] = '\n';
+                            break;
+                        case 'r':
+                            reusableChars[j++] = '\r';
+                            break;
+                        case 't':
+                            reusableChars[j++] = '\t';
+                            break;
+                        case 'u':
+                            int v = Slice.digits[readByte()];
+                            if (v == -1) {
+                                throw new RuntimeException("bad unicode");
+                            }
+                            char b = (char) v;
+                            v = Slice.digits[readByte()];
+                            if (v == -1) {
+                                throw new RuntimeException("bad unicode");
+                            }
+                            b = (char) (b << 4);
+                            b += v;
+                            v = Slice.digits[readByte()];
+                            if (v == -1) {
+                                throw new RuntimeException("bad unicode");
+                            }
+                            b = (char) (b << 4);
+                            b += v;
+                            v = Slice.digits[readByte()];
+                            if (v == -1) {
+                                throw new RuntimeException("bad unicode");
+                            }
+                            b = (char) (b << 4);
+                            b += v;
+                            reusableChars[j++] = b;
+                            break;
+                        default:
+                            throw new RuntimeException("unexpected escape char: " + b2);
+                    }
+                } else {
+                    // 1 byte, 7 bits: 0xxxxxxx
+                    reusableChars[j++] = (char) b1;
+                }
+            } else if ((b1 >> 5) == -2 && (b1 & 0x1e) != 0) {
+                // 2 bytes, 11 bits: 110xxxxx 10xxxxxx
+                int b2 = readByte();
+                reusableChars[j++] = (char) (((b1 << 6) ^ b2)
+                        ^
+                        (((byte) 0xC0 << 6) ^
+                                ((byte) 0x80 << 0)));
+            } else if ((b1 >> 4) == -2) {
+                // 3 bytes, 16 bits: 1110xxxx 10xxxxxx 10xxxxxx
+                int b2 = readByte();
+                int b3 = readByte();
+                char c = (char)
+                        ((b1 << 12) ^
+                                (b2 <<  6) ^
+                                (b3 ^
+                                        (((byte) 0xE0 << 12) ^
+                                                ((byte) 0x80 <<  6) ^
+                                                ((byte) 0x80 <<  0))));
+                reusableChars[j++] = c;
+            } else if ((b1 >> 3) == -2) {
+                // 4 bytes, 21 bits: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+                int b2 = readByte();
+                int b3 = readByte();
+                int b4 = readByte();
+                int uc = ((b1 << 18) ^
+                        (b2 << 12) ^
+                        (b3 <<  6) ^
+                        (b4 ^
+                                (((byte) 0xF0 << 18) ^
+                                        ((byte) 0x80 << 12) ^
+                                        ((byte) 0x80 <<  6) ^
+                                        ((byte) 0x80 <<  0))));
+                reusableChars[j++] = Character.highSurrogate(uc);
+                reusableChars[j++] = Character.lowSurrogate(uc);
+            } else {
+                throw new RuntimeException("unexpected input");
+            }
+        }
+    }
+
+    public final Slice readObject() throws IOException {
         byte c = nextToken();
         switch (c) {
             case 'n':
@@ -309,21 +469,45 @@ public class Jsoniter implements Closeable {
         }
     }
 
-    private Slice readObjectField() throws IOException {
-        Slice field = readStringAsSlice();
-        byte c = nextToken();
-        if (c != ':') {
+    final Slice readObjectField() throws IOException {
+        Slice field = readSlice();
+        boolean notCopied = field != null;
+        if (skipWhitespacesWithoutLoadMore()) {
+            if (notCopied) {
+                byte[] newBuf = new byte[field.len];
+                System.arraycopy(field.data, field.head, newBuf, 0, field.len);
+                field.data = newBuf;
+                field.head = 0;
+                field.len = newBuf.length;
+            }
+            if (!loadMore()) {
+                throw err("readObjectField", "expect : after object field");
+            }
+        }
+        if (buf[head] != ':') {
             throw err("readObjectField", "expect : after object field");
         }
-        skipWhitespaces();
+        head++;
+        if (skipWhitespacesWithoutLoadMore()) {
+            if (notCopied) {
+                byte[] newBuf = new byte[field.len];
+                System.arraycopy(field.data, field.head, newBuf, 0, field.len);
+                field.data = newBuf;
+                field.head = 0;
+                field.len = newBuf.length;
+            }
+            if (!loadMore()) {
+                throw err("readObjectField", "expect : after object field");
+            }
+        }
         return field;
     }
 
-    public <T> T read(Class<T> clazz) throws IOException {
+    public final <T> T read(Class<T> clazz) throws IOException {
         return (T) Codegen.gen(clazz).decode(clazz, this);
     }
 
-    private String readNumber() throws IOException {
+    final String readNumber() throws IOException {
         StringBuilder str = new StringBuilder(8);
         for (byte c = readByte(); !eof; c = readByte()) {
             switch (c) {
@@ -352,22 +536,22 @@ public class Jsoniter implements Closeable {
         return str.toString();
     }
 
-    public float readFloat() throws IOException {
+    public final float readFloat() throws IOException {
         // TODO: remove dependency on sun.misc
         return FloatingDecimal.readJavaFormatString(readNumber()).floatValue();
     }
 
-    public double readDouble() throws IOException {
+    public final double readDouble() throws IOException {
         // TODO: remove dependency on sun.misc
         return FloatingDecimal.readJavaFormatString(readNumber()).doubleValue();
     }
 
-    public <T> T read(TypeLiteral<T> typeLiteral) throws IOException {
+    public final <T> T read(TypeLiteral<T> typeLiteral) throws IOException {
         System.out.println(typeLiteral.getType());
         return null;
     }
 
-    public void skip() throws IOException {
+    public final void skip() throws IOException {
         byte c = readByte();
         switch (c) {
             case '"':
@@ -400,7 +584,7 @@ public class Jsoniter implements Closeable {
         }
     }
 
-    private void skipObject() throws IOException {
+    final void skipObject() throws IOException {
         int level = 1;
         for (; ; ) {
             for (int i = head; i < tail; i++) {
@@ -430,7 +614,7 @@ public class Jsoniter implements Closeable {
         }
     }
 
-    private void skipArray() throws IOException {
+    final void skipArray() throws IOException {
         int level = 1;
         for (; ; ) {
             for (int i = head; i < tail; i++) {
@@ -460,7 +644,7 @@ public class Jsoniter implements Closeable {
         }
     }
 
-    private void skipUntilBreak() throws IOException {
+    final void skipUntilBreak() throws IOException {
         // true, false, null, number
         for (; ; ) {
             for (int i = head; i < tail; i++) {
@@ -483,7 +667,7 @@ public class Jsoniter implements Closeable {
         }
     }
 
-    private void skipString() throws IOException {
+    final void skipString() throws IOException {
         for (; ; ) {
             int end = findStringEnd();
             if (end == -1) {
@@ -521,7 +705,7 @@ public class Jsoniter implements Closeable {
     // adapted from: https://github.com/buger/jsonparser/blob/master/parser.go
     // Tries to find the end of string
     // Support if string contains escaped quote symbols.
-    int findStringEnd() {
+    final int findStringEnd() {
         boolean escaped = false;
         for (int i = head; i < tail; i++) {
             byte c = buf[i];
@@ -547,6 +731,19 @@ public class Jsoniter implements Closeable {
                 }
             } else if (c == '\\') {
                 escaped = true;
+            }
+        }
+        return -1;
+    }
+
+    // slice does not allow escape
+    final int findSliceEnd() {
+        for (int i = head; i < tail; i++) {
+            byte c = buf[i];
+            if (c == '"') {
+                return i + 1;
+            } else if (c == '\\') {
+                throw err("findSliceEnd", "slice does not support escape char");
             }
         }
         return -1;
