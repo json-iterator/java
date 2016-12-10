@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -119,7 +118,7 @@ public class Jsoniter implements Closeable {
                 eof = true;
                 return false;
             } else {
-                throw new IOException("read returned " + n);
+                throw new IOException("readAny returned " + n);
             }
         } else {
             head = 0;
@@ -666,7 +665,7 @@ public class Jsoniter implements Closeable {
         return Double.valueOf(readNumber());
     }
 
-    public final Object read() throws IOException {
+    public final Object readAny() throws IOException {
         ValueType valueType = whatIsNext();
         switch (valueType) {
             case STRING:
@@ -680,7 +679,7 @@ public class Jsoniter implements Closeable {
             case ARRAY:
                 ArrayList list = new ArrayList();
                 while (readArray()) {
-                    list.add(read());
+                    list.add(readAny());
                 }
                 return list;
             case OBJECT:
@@ -690,7 +689,7 @@ public class Jsoniter implements Closeable {
                 }
                 return map;
             default:
-                throw reportError("read", "unexpected value type: " + valueType);
+                throw reportError("readAny", "unexpected value type: " + valueType);
         }
     }
 
@@ -857,7 +856,7 @@ public class Jsoniter implements Closeable {
                     return;
                 }
                 if (escaped) {
-                    head = 1; // skip the first char as last char read is \
+                    head = 1; // skip the first char as last char readAny is \
                 }
             } else {
                 head = end;
