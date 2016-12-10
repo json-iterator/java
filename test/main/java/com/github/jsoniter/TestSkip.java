@@ -32,7 +32,7 @@ public class TestSkip extends TestCase {
         assertFalse(iter.readArray());
     }
 
-    public void test_find_string_end() {
+    public void test_find_string_end() throws IOException {
         Jsoniter iter = Jsoniter.parse("\"a");
         assertEquals(1, iter.findStringEnd());
     }

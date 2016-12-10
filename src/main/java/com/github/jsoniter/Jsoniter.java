@@ -1,9 +1,12 @@
 package com.github.jsoniter;
 
+import org.postgresql.util.Base64;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
+import java.util.Date;
 
 public class Jsoniter implements Closeable {
 
@@ -52,36 +55,39 @@ public class Jsoniter implements Closeable {
         valueTypes['{'] = ValueType.OBJECT;
     }
 
-    public Jsoniter(InputStream in, byte[] buf) {
+    public Jsoniter(InputStream in, byte[] buf) throws IOException {
         this.in = in;
         this.buf = buf;
         if (this.in == null) {
             tail = buf.length;
         }
+        skipWhitespaces();
     }
 
-    public static Jsoniter parse(InputStream in, int bufSize) {
+    public static Jsoniter parse(InputStream in, int bufSize) throws IOException {
         return new Jsoniter(in, new byte[bufSize]);
     }
 
-    public static Jsoniter parse(byte[] buf) {
+    public static Jsoniter parse(byte[] buf) throws IOException {
         return new Jsoniter(null, buf);
     }
 
-    public static Jsoniter parse(String str) {
+    public static Jsoniter parse(String str) throws IOException {
         return parse(str.getBytes());
     }
 
-    public final void reset(byte[] buf) {
+    public final void reset(byte[] buf) throws IOException {
         this.buf = buf;
         this.head = 0;
         this.tail = buf.length;
+        skipWhitespaces();
     }
 
-    public final void reset(InputStream in) {
+    public final void reset(InputStream in) throws IOException {
         this.in = in;
         this.head = 0;
         this.tail = 0;
+        skipWhitespaces();
     }
 
     public final void close() throws IOException {
@@ -146,7 +152,7 @@ public class Jsoniter implements Closeable {
                 skipUntilBreak();
                 return false;
             default:
-                throw err("readBoolean", "expect t or f, found: " + c);
+                throw reportError("readBoolean", "expect t or f, found: " + c);
         }
     }
 
@@ -177,7 +183,7 @@ public class Jsoniter implements Closeable {
             return 0;
         }
         if (v == -1) {
-            throw err("readUnsignedInt", "expect 0~9");
+            throw reportError("readUnsignedInt", "expect 0~9");
         }
         int result = 0;
         for (; ; ) {
@@ -210,7 +216,7 @@ public class Jsoniter implements Closeable {
             return 0;
         }
         if (v == -1) {
-            throw err("readUnsignedLong", "expect 0~9");
+            throw reportError("readUnsignedLong", "expect 0~9");
         }
         long result = 0;
         for (; ; ) {
@@ -225,13 +231,13 @@ public class Jsoniter implements Closeable {
         return result;
     }
 
-    public final RuntimeException err(String op, String msg) {
+    public final RuntimeException reportError(String op, String msg) {
         int peekStart = head - 10;
         if (peekStart < 0) {
             peekStart = 0;
         }
         String peek = new String(buf, peekStart, head - peekStart);
-        return new RuntimeException(op + ": " + msg + ", head: " + head + ", peek: " + peek + ", buf: " + new String(buf));
+        throw new RuntimeException(op + ": " + msg + ", head: " + head + ", peek: " + peek + ", buf: " + new String(buf));
     }
 
     public final String currentBuffer() {
@@ -263,7 +269,7 @@ public class Jsoniter implements Closeable {
                 skipUntilBreak();
                 return false;
             default:
-                throw err("readArray", "expect [ or , or n or ]");
+                throw reportError("readArray", "expect [ or , or n or ]");
         }
     }
 
@@ -332,7 +338,7 @@ public class Jsoniter implements Closeable {
             case '"':
                 break;
             default:
-                throw err("readSlice", "expect n or \"");
+                throw reportError("readSlice", "expect n or \"");
         }
         int end = findSliceEnd();
         if (end != -1) {
@@ -347,7 +353,7 @@ public class Jsoniter implements Closeable {
         System.arraycopy(buf, head, part1, 0, part1.length);
         for (; ; ) {
             if (!loadMore()) {
-                throw err("readSlice", "unmatched quote");
+                throw reportError("readSlice", "unmatched quote");
             }
             end = findSliceEnd();
             if (end == -1) {
@@ -368,6 +374,11 @@ public class Jsoniter implements Closeable {
         }
     }
 
+    public final byte[] readBase64() throws IOException {
+        Slice slice = readSlice();
+        return Base64.decode(slice.data, slice.head, slice.len);
+    }
+
     public final String readString() throws IOException {
         byte c = readByte();
         switch (c) {
@@ -377,13 +388,13 @@ public class Jsoniter implements Closeable {
             case '"':
                 break;
             default:
-                throw err("readSlice", "expect n or \"");
+                throw reportError("readSlice", "expect n or \"");
         }
         // try fast path first
         for (int i = head, j = 0; i < tail && j < reusableChars.length; i++, j++) {
             c = buf[i];
             if (c == '"') {
-                head = i+1;
+                head = i + 1;
                 return new String(reusableChars, 0, j);
             }
             // If we encounter a backslash, which is a beginning of an escape sequence
@@ -401,7 +412,7 @@ public class Jsoniter implements Closeable {
         // byte => char with support of escape in one pass
         int j = 0;
         int minimumCapacity = reusableChars.length - 2;
-        for(;;) {
+        for (; ; ) {
             if (j == minimumCapacity) {
                 char[] newBuf = new char[reusableChars.length * 2];
                 System.arraycopy(reusableChars, 0, newBuf, 0, reusableChars.length);
@@ -485,11 +496,11 @@ public class Jsoniter implements Closeable {
                 int b3 = readByte();
                 char c = (char)
                         ((b1 << 12) ^
-                                (b2 <<  6) ^
+                                (b2 << 6) ^
                                 (b3 ^
                                         (((byte) 0xE0 << 12) ^
-                                                ((byte) 0x80 <<  6) ^
-                                                ((byte) 0x80 <<  0))));
+                                                ((byte) 0x80 << 6) ^
+                                                ((byte) 0x80 << 0))));
                 reusableChars[j++] = c;
             } else if ((b1 >> 3) == -2) {
                 // 4 bytes, 21 bits: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
@@ -498,12 +509,12 @@ public class Jsoniter implements Closeable {
                 int b4 = readByte();
                 int uc = ((b1 << 18) ^
                         (b2 << 12) ^
-                        (b3 <<  6) ^
+                        (b3 << 6) ^
                         (b4 ^
                                 (((byte) 0xF0 << 18) ^
                                         ((byte) 0x80 << 12) ^
-                                        ((byte) 0x80 <<  6) ^
-                                        ((byte) 0x80 <<  0))));
+                                        ((byte) 0x80 << 6) ^
+                                        ((byte) 0x80 << 0))));
                 reusableChars[j++] = Character.highSurrogate(uc);
                 reusableChars[j++] = Character.lowSurrogate(uc);
             } else {
@@ -527,25 +538,25 @@ public class Jsoniter implements Closeable {
                         unreadByte();
                         String field = readString();
                         if (nextToken() != ':') {
-                            throw err("readObject", "expect : after object field");
+                            throw reportError("readObject", "expect : after object field");
                         }
                         skipWhitespaces();
                         return field;
                     default:
-                        throw err("readObject", "expect \" after {");
+                        throw reportError("readObject", "expect \" after {");
                 }
             case ',':
                 skipWhitespaces();
                 String field = readString();
                 if (nextToken() != ':') {
-                    throw err("readObject", "expect : after object field");
+                    throw reportError("readObject", "expect : after object field");
                 }
                 skipWhitespaces();
                 return field;
             case '}':
                 return null; // end of object
             default:
-                throw err("readObject", "expect { or , or } or n");
+                throw reportError("readObject", "expect { or , or } or n");
         }
     }
 
@@ -564,7 +575,7 @@ public class Jsoniter implements Closeable {
                         unreadByte();
                         return readObjectFieldAsSlice();
                     default:
-                        throw err("readObjectAsSlice", "expect \" after {");
+                        throw reportError("readObjectAsSlice", "expect \" after {");
                 }
             case ',':
                 skipWhitespaces();
@@ -572,7 +583,7 @@ public class Jsoniter implements Closeable {
             case '}':
                 return null; // end of object
             default:
-                throw err("readObjectAsSlice", "expect { or , or } or n");
+                throw reportError("readObjectAsSlice", "expect { or , or } or n");
         }
     }
 
@@ -588,11 +599,11 @@ public class Jsoniter implements Closeable {
                 field.len = newBuf.length;
             }
             if (!loadMore()) {
-                throw err("readObjectFieldAsSlice", "expect : after object field");
+                throw reportError("readObjectFieldAsSlice", "expect : after object field");
             }
         }
         if (buf[head] != ':') {
-            throw err("readObjectFieldAsSlice", "expect : after object field");
+            throw reportError("readObjectFieldAsSlice", "expect : after object field");
         }
         head++;
         if (skipWhitespacesWithoutLoadMore()) {
@@ -604,7 +615,7 @@ public class Jsoniter implements Closeable {
                 field.len = newBuf.length;
             }
             if (!loadMore()) {
-                throw err("readObjectFieldAsSlice", "expect : after object field");
+                throw reportError("readObjectFieldAsSlice", "expect : after object field");
             }
         }
         return field;
@@ -656,6 +667,10 @@ public class Jsoniter implements Closeable {
         return (T) Codegen.getDecoder(TypeLiteral.generateCacheKey(clazz), clazz, null).decode(clazz, this);
     }
 
+    public final <T> T read(String cacheKey, Class<T> clazz) throws IOException {
+        return (T) Codegen.getDecoder(cacheKey, clazz, null).decode(clazz, this);
+    }
+
     public final <T> T read(String cacheKey, Class<T> clazz, Type typeArg) throws IOException {
         return (T) Codegen.getDecoder(cacheKey, clazz, new Type[]{typeArg}).decode(clazz, this);
     }
@@ -694,7 +709,7 @@ public class Jsoniter implements Closeable {
                 skipObject();
                 return;
             default:
-                throw err("Skip", "do not know how to skip: " + c);
+                throw reportError("Skip", "do not know how to skip: " + c);
         }
     }
 
@@ -857,7 +872,7 @@ public class Jsoniter implements Closeable {
             if (c == '"') {
                 return i + 1;
             } else if (c == '\\') {
-                throw err("findSliceEnd", "slice does not support escape char");
+                throw reportError("findSliceEnd", "slice does not support escape char");
             }
         }
         return -1;
@@ -867,5 +882,25 @@ public class Jsoniter implements Closeable {
         ValueType valueType = valueTypes[readByte()];
         unreadByte();
         return valueType;
+    }
+
+    public static void registerTypeDecoder(Class clazz, Decoder decoder) {
+        Codegen.addNewDecoder(TypeLiteral.generateCacheKey(clazz), decoder);
+    }
+
+    public static void registerTypeDecoder(TypeLiteral typeLiteral, Decoder decoder) {
+        Codegen.addNewDecoder(typeLiteral.cacheKey, decoder);
+    }
+
+    public static void registerFieldDecoder(Class clazz, String field, Decoder decoder) {
+        Codegen.addNewDecoder(field+"@"+TypeLiteral.generateCacheKey(clazz), decoder);
+    }
+
+    public static void registerFieldDecoder(TypeLiteral typeLiteral, String field, Decoder decoder) {
+        Codegen.addNewDecoder(field+"@"+typeLiteral.cacheKey, decoder);
+    }
+
+    public static void clearDecoders() {
+        Codegen.cache.clear();
     }
 }
