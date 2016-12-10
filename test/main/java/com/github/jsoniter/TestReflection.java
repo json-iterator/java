@@ -3,14 +3,37 @@ package com.github.jsoniter;
 import junit.framework.TestCase;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.Assert.assertArrayEquals;
 
 public class TestReflection extends TestCase {
+
+    public void test_string() throws IOException {
+        Jsoniter iter = Jsoniter.parse("'hello'".replace('\'', '"'));
+        String val = iter.read(String.class);
+        assertEquals("hello", val);
+    }
+
+    public void test_object() throws IOException {
+        Jsoniter iter = Jsoniter.parse("'hello'".replace('\'', '"'));
+        try {
+            iter.read(Object.class);
+        } catch (IllegalArgumentException e) {
+            return;
+        }
+        fail();
+    }
+
+    public void test_no_arg_list() throws IOException {
+        Jsoniter iter = Jsoniter.parse("'hello'".replace('\'', '"'));
+        try {
+            iter.read(List.class);
+        } catch (IllegalArgumentException e) {
+            return;
+        }
+        fail();
+    }
 
     public void test_boolean_array() throws IOException {
         Jsoniter iter = Jsoniter.parse("[true, false]");
@@ -46,6 +69,12 @@ public class TestReflection extends TestCase {
         Jsoniter iter = Jsoniter.parse("['hello']".replace('\'', '"'));
         Set<String> val = iter.read(new TypeLiteral<Set<String>>(){});
         assertArrayEquals(new String[]{"hello"}, val.toArray(new String[0]));
+    }
+
+    public void test_string_map() throws IOException {
+        Jsoniter iter = Jsoniter.parse("{'hello': 'world'}".replace('\'', '"'));
+        Map<String, String> val = iter.read(new TypeLiteral<Map<String, String>>(){});
+        assertEquals("world", val.get("hello"));
     }
 
     public void test_float_array() throws IOException {
