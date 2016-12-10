@@ -2,13 +2,11 @@ package com.github.jsoniter;
 
 import junit.framework.TestCase;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 public class TestSkip extends TestCase {
     public void test_skip_number() throws IOException {
-        Jsoniter iter = Jsoniter.parseString("[1,2]");
+        Jsoniter iter = Jsoniter.parse("[1,2]");
         assertTrue(iter.readArray());
         iter.skip();
         assertTrue(iter.readArray());
@@ -17,7 +15,7 @@ public class TestSkip extends TestCase {
     }
 
     public void test_skip_string() throws IOException {
-        Jsoniter iter = Jsoniter.parseString("['hello',2]".replace('\'', '"'));
+        Jsoniter iter = Jsoniter.parse("['hello',2]".replace('\'', '"'));
         assertTrue(iter.readArray());
         iter.skip();
         assertTrue(iter.readArray());
@@ -26,7 +24,7 @@ public class TestSkip extends TestCase {
     }
 
     public void test_skip_object() throws IOException {
-        Jsoniter iter = Jsoniter.parseString("[{'hello': {'world': 'a'}},2]".replace('\'', '"'));
+        Jsoniter iter = Jsoniter.parse("[{'hello': {'world': 'a'}},2]".replace('\'', '"'));
         assertTrue(iter.readArray());
         iter.skip();
         assertTrue(iter.readArray());
@@ -35,7 +33,7 @@ public class TestSkip extends TestCase {
     }
 
     public void test_find_string_end() {
-        Jsoniter iter = Jsoniter.parseString("\"a");
+        Jsoniter iter = Jsoniter.parse("\"a");
         assertEquals(1, iter.findStringEnd());
     }
 

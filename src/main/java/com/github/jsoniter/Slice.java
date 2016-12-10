@@ -2,22 +2,6 @@ package com.github.jsoniter;
 
 public class Slice {
 
-    final static int[] digits = new int[256];
-    static {
-        for (int i = 0; i < digits.length; i++) {
-            digits[i] = -1;
-        }
-        for (int i = '0'; i <= '9'; ++i) {
-            digits[i] = (i - '0');
-        }
-        for (int i = 'a'; i <= 'f'; ++i) {
-            digits[i] = ((i - 'a') + 10);
-        }
-        for (int i = 'A'; i <= 'F'; ++i) {
-            digits[i] = ((i - 'A') + 10);
-        }
-    }
-
     public byte[] data;
     public int head;
     public int len;

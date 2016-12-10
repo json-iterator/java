@@ -7,13 +7,50 @@ import java.lang.reflect.Type;
 
 public class Jsoniter implements Closeable {
 
-    final InputStream in;
+    final static int[] digits = new int[256];
+    final static ValueType[] valueTypes = new ValueType[256];
+    InputStream in;
     byte[] buf;
     int head;
     int tail;
     boolean eof;
     private final Slice reusableSlice = new Slice(null, 0, 0);
     private char[] reusableChars = new char[256];
+
+    static {
+        for (int i = 0; i < digits.length; i++) {
+            digits[i] = -1;
+        }
+        for (int i = '0'; i <= '9'; ++i) {
+            digits[i] = (i - '0');
+        }
+        for (int i = 'a'; i <= 'f'; ++i) {
+            digits[i] = ((i - 'a') + 10);
+        }
+        for (int i = 'A'; i <= 'F'; ++i) {
+            digits[i] = ((i - 'A') + 10);
+        }
+        for (int i = 0; i < valueTypes.length; i++) {
+            valueTypes[i] = ValueType.INVALID;
+        }
+        valueTypes['"'] = ValueType.STRING;
+        valueTypes['-'] = ValueType.NUMBER;
+        valueTypes['0'] = ValueType.NUMBER;
+        valueTypes['1'] = ValueType.NUMBER;
+        valueTypes['2'] = ValueType.NUMBER;
+        valueTypes['3'] = ValueType.NUMBER;
+        valueTypes['4'] = ValueType.NUMBER;
+        valueTypes['5'] = ValueType.NUMBER;
+        valueTypes['6'] = ValueType.NUMBER;
+        valueTypes['7'] = ValueType.NUMBER;
+        valueTypes['8'] = ValueType.NUMBER;
+        valueTypes['9'] = ValueType.NUMBER;
+        valueTypes['t'] = ValueType.BOOLEAN;
+        valueTypes['f'] = ValueType.BOOLEAN;
+        valueTypes['n'] = ValueType.NULL;
+        valueTypes['['] = ValueType.ARRAY;
+        valueTypes['{'] = ValueType.OBJECT;
+    }
 
     public Jsoniter(InputStream in, byte[] buf) {
         this.in = in;
@@ -27,18 +64,24 @@ public class Jsoniter implements Closeable {
         return new Jsoniter(in, new byte[bufSize]);
     }
 
-    public static Jsoniter parseBytes(byte[] buf) {
+    public static Jsoniter parse(byte[] buf) {
         return new Jsoniter(null, buf);
     }
 
-    public static Jsoniter parseString(String str) {
-        return parseBytes(str.getBytes());
+    public static Jsoniter parse(String str) {
+        return parse(str.getBytes());
     }
 
-    public final void reuse(byte[] buf) {
+    public final void reset(byte[] buf) {
         this.buf = buf;
         this.head = 0;
         this.tail = buf.length;
+    }
+
+    public final void reset(InputStream in) {
+        this.in = in;
+        this.head = 0;
+        this.tail = 0;
     }
 
     public final void close() throws IOException {
@@ -129,7 +172,7 @@ public class Jsoniter implements Closeable {
     public final int readUnsignedInt() throws IOException {
         // TODO: throw overflow
         byte c = readByte();
-        int v = Slice.digits[c];
+        int v = digits[c];
         if (v == 0) {
             return 0;
         }
@@ -140,7 +183,7 @@ public class Jsoniter implements Closeable {
         for (; ; ) {
             result = result * 10 + v;
             c = readByte();
-            v = Slice.digits[c];
+            v = digits[c];
             if (v == -1) {
                 unreadByte();
                 break;
@@ -162,7 +205,7 @@ public class Jsoniter implements Closeable {
     public final long readUnsignedLong() throws IOException {
         // TODO: throw overflow
         byte c = readByte();
-        int v = Slice.digits[c];
+        int v = digits[c];
         if (v == 0) {
             return 0;
         }
@@ -173,7 +216,7 @@ public class Jsoniter implements Closeable {
         for (; ; ) {
             result = result * 10 + v;
             c = readByte();
-            v = Slice.digits[c];
+            v = digits[c];
             if (v == -1) {
                 unreadByte();
                 break;
@@ -189,6 +232,15 @@ public class Jsoniter implements Closeable {
         }
         String peek = new String(buf, peekStart, head - peekStart);
         return new RuntimeException(op + ": " + msg + ", head: " + head + ", peek: " + peek + ", buf: " + new String(buf));
+    }
+
+    public final String currentBuffer() {
+        int peekStart = head - 10;
+        if (peekStart < 0) {
+            peekStart = 0;
+        }
+        String peek = new String(buf, peekStart, head - peekStart);
+        return "head: " + head + ", peek: " + peek + ", buf: " + new String(buf);
     }
 
     public final boolean readArray() throws IOException {
@@ -388,24 +440,24 @@ public class Jsoniter implements Closeable {
                             reusableChars[j++] = '\t';
                             break;
                         case 'u':
-                            int v = Slice.digits[readByte()];
+                            int v = digits[readByte()];
                             if (v == -1) {
                                 throw new RuntimeException("bad unicode");
                             }
                             char b = (char) v;
-                            v = Slice.digits[readByte()];
+                            v = digits[readByte()];
                             if (v == -1) {
                                 throw new RuntimeException("bad unicode");
                             }
                             b = (char) (b << 4);
                             b += v;
-                            v = Slice.digits[readByte()];
+                            v = digits[readByte()];
                             if (v == -1) {
                                 throw new RuntimeException("bad unicode");
                             }
                             b = (char) (b << 4);
                             b += v;
-                            v = Slice.digits[readByte()];
+                            v = digits[readByte()];
                             if (v == -1) {
                                 throw new RuntimeException("bad unicode");
                             }
@@ -809,5 +861,11 @@ public class Jsoniter implements Closeable {
             }
         }
         return -1;
+    }
+
+    public ValueType whatIsNext() throws IOException {
+        ValueType valueType = valueTypes[readByte()];
+        unreadByte();
+        return valueType;
     }
 }

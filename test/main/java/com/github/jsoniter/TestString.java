@@ -8,10 +8,10 @@ import java.io.IOException;
 public class TestString extends TestCase {
 
     public void test_string() throws IOException {
-        Jsoniter iter = Jsoniter.parseString("'hello''world'".replace('\'', '"'));
+        Jsoniter iter = Jsoniter.parse("'hello''world'".replace('\'', '"'));
         assertEquals("hello", iter.readSlice().toString());
         assertEquals("world", iter.readSlice().toString());
-        iter = Jsoniter.parseString("'hello''world'".replace('\'', '"'));
+        iter = Jsoniter.parse("'hello''world'".replace('\'', '"'));
         assertEquals("hello", iter.readString());
         assertEquals("world", iter.readString());
     }
