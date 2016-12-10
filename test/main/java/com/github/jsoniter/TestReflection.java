@@ -4,7 +4,9 @@ import junit.framework.TestCase;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.Assert.assertArrayEquals;
 
@@ -38,6 +40,12 @@ public class TestReflection extends TestCase {
         Jsoniter iter = Jsoniter.parse("['hello', 'world']".replace('\'', '"'));
         List<String> val = iter.read(new TypeLiteral<List<String>>(){});
         assertArrayEquals(new String[]{"hello", "world"}, val.toArray(new String[0]));
+    }
+
+    public void test_string_set() throws IOException {
+        Jsoniter iter = Jsoniter.parse("['hello']".replace('\'', '"'));
+        Set<String> val = iter.read(new TypeLiteral<Set<String>>(){});
+        assertArrayEquals(new String[]{"hello"}, val.toArray(new String[0]));
     }
 
     public void test_float_array() throws IOException {

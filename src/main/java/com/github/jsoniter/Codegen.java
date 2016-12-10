@@ -28,6 +28,10 @@ class Codegen {
         put(Long.class.getName(), "Long.valueOf(iter.readLong())");
         put(String.class.getName(), "iter.readString()");
     }};
+    final static Set<Class> WITH_CAPACITY_COLLECTION_CLASSES = new HashSet<Class>(){{
+        add(ArrayList.class);
+        add(HashSet.class);
+    }};
     static volatile Map<String, Decoder> cache = new HashMap<>();
     static ClassPool pool = ClassPool.getDefault();
 
@@ -52,18 +56,7 @@ class Codegen {
         } else {
             clazz = (Class) type;
         }
-        String source;
-        if (clazz.isArray()) {
-            source = genArray(clazz);
-        } else if (List.class.isAssignableFrom(clazz)) {
-            Class compType = (Class) typeArgs[0];
-            if (clazz == List.class) {
-                clazz = ArrayList.class;
-            }
-            source = genList(clazz, compType);
-        } else {
-            source = genObject(clazz, cacheKey);
-        }
+        String source = genSource(cacheKey, typeArgs, clazz);
         try {
             CtClass ctClass = pool.makeClass(cacheKey);
             ctClass.setInterfaces(new CtClass[]{pool.get(Decoder.class.getName())});
@@ -76,6 +69,26 @@ class Codegen {
             System.err.println("failed to generate encoder for: " + type + " with " + Arrays.toString(typeArgs));
             System.err.println(source);
             throw new RuntimeException(e);
+        }
+    }
+
+    private static String genSource(String cacheKey, Type[] typeArgs, Class clazz) {
+        if (clazz.isArray()) {
+            return genArray(clazz);
+        } else if (Collection.class.isAssignableFrom(clazz)) {
+            Class compType = (Class) typeArgs[0];
+            if (clazz == List.class) {
+                clazz = ArrayList.class;
+            } else if (clazz == Set.class) {
+                clazz = HashSet.class;
+            }
+            if (WITH_CAPACITY_COLLECTION_CLASSES.contains(clazz)) {
+                return genCollectionWithCapacity(clazz, compType);
+            } else {
+                return genCollection(clazz, compType);
+            }
+        } else {
+            return genObject(clazz, cacheKey);
         }
     }
 
@@ -224,7 +237,57 @@ class Codegen {
                 "{{op}}", op);
     }
 
-    private static String genList(Class clazz, Class compType) {
+    private static String genCollectionWithCapacity(Class clazz, Class compType) {
+        String nativeRead = NATIVE_READS.get(compType.getName());
+        StringBuilder lines = new StringBuilder();
+        append(lines, "public Object decode(java.lang.reflect.Type type, com.github.jsoniter.Jsoniter iter) {");
+        append(lines, "if (!iter.readArray()) {");
+        append(lines, "return new {{clazz}}(0);");
+        append(lines, "}");
+        append(lines, "{{comp}} a1 = ({{comp}}) {{op}};");
+        append(lines, "if (!iter.readArray()) {");
+        append(lines, "{{clazz}} obj = new {{clazz}}(1);");
+        append(lines, "obj.add(a1);");
+        append(lines, "return obj;");
+        append(lines, "}");
+        append(lines, "{{comp}} a2 = ({{comp}}) {{op}};");
+        append(lines, "if (!iter.readArray()) {");
+        append(lines, "{{clazz}} obj = new {{clazz}}(2);");
+        append(lines, "obj.add(a1);");
+        append(lines, "obj.add(a2);");
+        append(lines, "return obj;");
+        append(lines, "}");
+        append(lines, "{{comp}} a3 = ({{comp}}) {{op}};");
+        append(lines, "if (!iter.readArray()) {");
+        append(lines, "{{clazz}} obj = new {{clazz}}(3);");
+        append(lines, "obj.add(a1);");
+        append(lines, "obj.add(a2);");
+        append(lines, "obj.add(a3);");
+        append(lines, "return obj;");
+        append(lines, "}");
+        append(lines, "{{comp}} a4 = ({{comp}}) {{op}};");
+        append(lines, "{{clazz}} obj = new {{clazz}}(8);");
+        append(lines, "obj.add(a1);");
+        append(lines, "obj.add(a2);");
+        append(lines, "obj.add(a3);");
+        append(lines, "obj.add(a4);");
+        append(lines, "int i = 4;");
+        append(lines, "while (iter.readArray()) {");
+        append(lines, "obj.add(({{comp}}) {{op}});");
+        append(lines, "}");
+        append(lines, "return obj;");
+        append(lines, "}");
+        String op = String.format("iter.read(%s.class)", compType.getCanonicalName());
+        if (nativeRead != null) {
+            op = nativeRead;
+        }
+        return lines.toString().replace(
+                "{{clazz}}", clazz.getName()).replace(
+                "{{comp}}", compType.getCanonicalName()).replace(
+                "{{op}}", op);
+    }
+
+    private static String genCollection(Class clazz, Class compType) {
         String nativeRead = NATIVE_READS.get(compType.getName());
         StringBuilder lines = new StringBuilder();
         append(lines, "public Object decode(java.lang.reflect.Type type, com.github.jsoniter.Jsoniter iter) {");
