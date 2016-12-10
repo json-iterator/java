@@ -6,7 +6,10 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Jsoniter implements Closeable {
 
@@ -663,6 +666,34 @@ public class Jsoniter implements Closeable {
         return Double.valueOf(readNumber());
     }
 
+    public final Object read() throws IOException {
+        ValueType valueType = whatIsNext();
+        switch (valueType) {
+            case STRING:
+                return readString();
+            case NUMBER:
+                return readDouble();
+            case NULL:
+                return null;
+            case BOOLEAN:
+                return readBoolean();
+            case ARRAY:
+                ArrayList list = new ArrayList();
+                while (readArray()) {
+                    list.add(read());
+                }
+                return list;
+            case OBJECT:
+                Map map = new HashMap();
+                for (String field = readObject(); field != null; field = readObject()) {
+                    map.put(field, readObject());
+                }
+                return map;
+            default:
+                throw reportError("read", "unexpected value type: " + valueType);
+        }
+    }
+
     public final <T> T read(Class<T> clazz) throws IOException {
         return (T) Codegen.getDecoder(TypeLiteral.generateCacheKey(clazz), clazz).decode(clazz, this);
     }
@@ -897,11 +928,11 @@ public class Jsoniter implements Closeable {
     }
 
     public static void registerFieldDecoder(Class clazz, String field, Decoder decoder) {
-        Codegen.addNewDecoder(field+"@"+TypeLiteral.generateCacheKey(clazz), decoder);
+        Codegen.addNewDecoder(field + "@" + TypeLiteral.generateCacheKey(clazz), decoder);
     }
 
     public static void registerFieldDecoder(TypeLiteral typeLiteral, String field, Decoder decoder) {
-        Codegen.addNewDecoder(field+"@"+typeLiteral.cacheKey, decoder);
+        Codegen.addNewDecoder(field + "@" + typeLiteral.cacheKey, decoder);
     }
 
     public static void clearDecoders() {

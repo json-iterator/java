@@ -1,6 +1,7 @@
 package com.github.jsoniter;
 
 import junit.framework.TestCase;
+import org.junit.Assert;
 
 import java.io.IOException;
 import java.util.*;
@@ -15,24 +16,9 @@ public class TestReflection extends TestCase {
         assertEquals("hello", val);
     }
 
-    public void test_object() throws IOException {
-        Jsoniter iter = Jsoniter.parse("'hello'".replace('\'', '"'));
-        try {
-            iter.read(Object.class);
-        } catch (IllegalArgumentException e) {
-            return;
-        }
-        fail();
-    }
-
     public void test_no_arg_list() throws IOException {
-        Jsoniter iter = Jsoniter.parse("'hello'".replace('\'', '"'));
-        try {
-            iter.read(List.class);
-        } catch (IllegalArgumentException e) {
-            return;
-        }
-        fail();
+        Jsoniter iter = Jsoniter.parse("['hello']".replace('\'', '"'));
+        Assert.assertArrayEquals(new String[]{"hello"}, iter.read(List.class).toArray(new String[0]));
     }
 
     public void test_boolean_array() throws IOException {
@@ -104,5 +90,11 @@ public class TestReflection extends TestCase {
         Jsoniter iter = Jsoniter.parse("{'field3': '3', 'field1': 100}".replace('\'', '"'));
         ComplexObject val = iter.read(ComplexObject.class);
         assertEquals(100, val.field1);
+    }
+
+    public void test_read_object() throws IOException {
+        Jsoniter iter = Jsoniter.parse("'hello'".replace('\'', '"'));
+        String val = (String) iter.read(Object.class);
+        assertEquals("hello", val);
     }
 }

@@ -27,6 +27,7 @@ class Codegen {
         put(Integer.class.getName(), "Integer.valueOf(iter.readInt())");
         put(Long.class.getName(), "Long.valueOf(iter.readLong())");
         put(String.class.getName(), "iter.readString()");
+        put(Object.class.getName(), "iter.read()");
     }};
     final static Set<Class> WITH_CAPACITY_COLLECTION_CLASSES = new HashSet<Class>() {{
         add(ArrayList.class);
@@ -74,9 +75,6 @@ class Codegen {
     }
 
     private static String genSource(String cacheKey, Class clazz, Type[] typeArgs) {
-        if (Object.class == clazz) {
-            throw new IllegalArgumentException("can not bind to Object.class, parser need schema");
-        }
         if (NATIVE_READS.containsKey(clazz.getName())) {
             return genNative(clazz);
         }
@@ -84,21 +82,33 @@ class Codegen {
             return genArray(clazz);
         }
         if (Map.class.isAssignableFrom(clazz)) {
-            if (typeArgs.length != 2) {
+            Type keyType = String.class;
+            Type valueType = Object.class;
+            if (typeArgs.length == 0) {
+                // default to Map<String, Object>
+            } else if (typeArgs.length == 2) {
+                keyType = typeArgs[0];
+                valueType = typeArgs[1];
+            } else {
                 throw new IllegalArgumentException(
                         "can not bind to generic collection without argument types, " +
                                 "try syntax like TypeLiteral<Map<String, String>>{}");
             }
-            if (typeArgs[0] != String.class) {
+            if (keyType != String.class) {
                 throw new IllegalArgumentException("map key must be String");
             }
             if (clazz == Map.class) {
                 clazz = HashMap.class;
             }
-            return genMap(clazz, typeArgs[1]);
+            return genMap(clazz, valueType);
         }
         if (Collection.class.isAssignableFrom(clazz)) {
-            if (typeArgs.length != 1) {
+            Type compType = Object.class;
+            if (typeArgs.length == 0) {
+                // default to List<Object>
+            } else if (typeArgs.length == 1) {
+                compType = typeArgs[0];
+            } else {
                 throw new IllegalArgumentException(
                         "can not bind to generic collection without argument types, " +
                                 "try syntax like TypeLiteral<List<Integer>>{}");
@@ -109,9 +119,9 @@ class Codegen {
                 clazz = HashSet.class;
             }
             if (WITH_CAPACITY_COLLECTION_CLASSES.contains(clazz)) {
-                return genCollectionWithCapacity(clazz, typeArgs[0]);
+                return genCollectionWithCapacity(clazz, compType);
             } else {
-                return genCollection(clazz, typeArgs[0]);
+                return genCollection(clazz, compType);
             }
         }
         return genObject(clazz, cacheKey);
