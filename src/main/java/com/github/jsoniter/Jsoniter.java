@@ -460,12 +460,12 @@ public class Jsoniter implements Closeable {
         }
     }
 
-    public final Slice readObject() throws IOException {
+    public final String readObject() throws IOException {
         byte c = nextToken();
         switch (c) {
             case 'n':
                 skipUntilBreak();
-                return Slice.make(0, 0);
+                return null;
             case '{':
                 c = nextToken();
                 switch (c) {
@@ -473,13 +473,23 @@ public class Jsoniter implements Closeable {
                         return null; // end of object
                     case '"':
                         unreadByte();
-                        return readObjectField();
+                        String field = readString();
+                        if (nextToken() != ':') {
+                            throw err("readObject", "expect : after object field");
+                        }
+                        skipWhitespaces();
+                        return field;
                     default:
                         throw err("readObject", "expect \" after {");
                 }
             case ',':
                 skipWhitespaces();
-                return readObjectField();
+                String field = readString();
+                if (nextToken() != ':') {
+                    throw err("readObject", "expect : after object field");
+                }
+                skipWhitespaces();
+                return field;
             case '}':
                 return null; // end of object
             default:
@@ -487,7 +497,34 @@ public class Jsoniter implements Closeable {
         }
     }
 
-    final Slice readObjectField() throws IOException {
+    public final Slice readObjectAsSlice() throws IOException {
+        byte c = nextToken();
+        switch (c) {
+            case 'n':
+                skipUntilBreak();
+                return null;
+            case '{':
+                c = nextToken();
+                switch (c) {
+                    case '}':
+                        return null; // end of object
+                    case '"':
+                        unreadByte();
+                        return readObjectFieldAsSlice();
+                    default:
+                        throw err("readObjectAsSlice", "expect \" after {");
+                }
+            case ',':
+                skipWhitespaces();
+                return readObjectFieldAsSlice();
+            case '}':
+                return null; // end of object
+            default:
+                throw err("readObjectAsSlice", "expect { or , or } or n");
+        }
+    }
+
+    final Slice readObjectFieldAsSlice() throws IOException {
         Slice field = readSlice();
         boolean notCopied = field != null;
         if (skipWhitespacesWithoutLoadMore()) {
@@ -499,11 +536,11 @@ public class Jsoniter implements Closeable {
                 field.len = newBuf.length;
             }
             if (!loadMore()) {
-                throw err("readObjectField", "expect : after object field");
+                throw err("readObjectFieldAsSlice", "expect : after object field");
             }
         }
         if (buf[head] != ':') {
-            throw err("readObjectField", "expect : after object field");
+            throw err("readObjectFieldAsSlice", "expect : after object field");
         }
         head++;
         if (skipWhitespacesWithoutLoadMore()) {
@@ -515,7 +552,7 @@ public class Jsoniter implements Closeable {
                 field.len = newBuf.length;
             }
             if (!loadMore()) {
-                throw err("readObjectField", "expect : after object field");
+                throw err("readObjectFieldAsSlice", "expect : after object field");
             }
         }
         return field;

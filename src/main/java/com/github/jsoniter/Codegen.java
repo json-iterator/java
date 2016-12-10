@@ -114,7 +114,7 @@ class Codegen {
         StringBuilder lines = new StringBuilder();
         append(lines, "public Object decode(java.lang.reflect.Type type, com.github.jsoniter.Jsoniter iter) {");
         append(lines, "{{clazz}} obj = new {{clazz}}();");
-        append(lines, "for (com.github.jsoniter.Slice field = iter.readObject(); field != null; field = iter.readObject()) {");
+        append(lines, "for (com.github.jsoniter.Slice field = iter.readObjectAsSlice(); field != null; field = iter.readObjectAsSlice()) {");
         append(lines, "switch (field.len) {");
         for (Map.Entry<Integer, Object> entry : map.entrySet()) {
             Integer len = entry.getKey();
