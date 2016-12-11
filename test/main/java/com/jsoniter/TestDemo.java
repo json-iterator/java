@@ -12,7 +12,7 @@ public class TestDemo extends TestCase {
     }
     public void test_any_api() throws IOException {
         Jsoniter iter = Jsoniter.parse("[0,1,2,3]");
-        Object val = iter.readAny();
+        System.out.println(iter.readAny().toInt(3));
     }
     public void test_iterator_api() throws IOException {
         Jsoniter iter = Jsoniter.parse("[0,1,2,3]");

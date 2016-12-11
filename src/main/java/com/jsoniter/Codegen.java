@@ -27,7 +27,8 @@ class Codegen {
         put(Integer.class.getName(), "Integer.valueOf(iter.readInt())");
         put(Long.class.getName(), "Long.valueOf(iter.readLong())");
         put(String.class.getName(), "iter.readString()");
-        put(Object.class.getName(), "iter.readAny()");
+        put(Object.class.getName(), "iter.readAnyObject()");
+        put(Any.class.getName(), "iter.readAny()");
     }};
     final static Set<Class> WITH_CAPACITY_COLLECTION_CLASSES = new HashSet<Class>() {{
         add(ArrayList.class);

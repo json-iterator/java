@@ -663,7 +663,11 @@ public class Jsoniter implements Closeable {
         return Double.valueOf(readNumber());
     }
 
-    public final Object readAny() throws IOException {
+    public final Any readAny() throws IOException {
+        return new Any(readAnyObject());
+    }
+
+    public final Object readAnyObject() throws IOException {
         ValueType valueType = whatIsNext();
         switch (valueType) {
             case STRING:
@@ -677,17 +681,17 @@ public class Jsoniter implements Closeable {
             case ARRAY:
                 ArrayList list = new ArrayList();
                 while (readArray()) {
-                    list.add(readAny());
+                    list.add(readAnyObject());
                 }
                 return list;
             case OBJECT:
                 Map map = new HashMap();
                 for (String field = readObject(); field != null; field = readObject()) {
-                    map.put(field, readObject());
+                    map.put(field, readAnyObject());
                 }
                 return map;
             default:
-                throw reportError("readAny", "unexpected value type: " + valueType);
+                throw reportError("readAnyObject", "unexpected value type: " + valueType);
         }
     }
 

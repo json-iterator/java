@@ -1,14 +1,13 @@
 package com.jsoniter;
 
-import com.jsoniter.ComplexObject;
-import com.jsoniter.Jsoniter;
-import com.jsoniter.SimpleObject;
-import com.jsoniter.TypeLiteral;
 import junit.framework.TestCase;
 import org.junit.Assert;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.junit.Assert.assertArrayEquals;
 

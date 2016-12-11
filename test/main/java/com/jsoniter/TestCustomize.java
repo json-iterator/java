@@ -21,7 +21,7 @@ public class TestCustomize extends TestCase {
     }
 
     public void test_customize_field() throws IOException {
-        Jsoniter.registerFieldDecoder(MyObject.class, "field1", new Decoder(){
+        Jsoniter.registerFieldDecoder(SimpleObject.class, "field1", new Decoder(){
 
             @Override
             public Object decode(Type type, Jsoniter iter) throws IOException {
@@ -29,7 +29,8 @@ public class TestCustomize extends TestCase {
             }
         });
         Jsoniter iter = Jsoniter.parse("{'field1': 100}".replace('\'', '"'));
-        MyObject myObject = iter.read(MyObject.class);
+        SimpleObject myObject = iter.read(SimpleObject.class);
         assertEquals("100", myObject.field1);
+        Jsoniter.clearDecoders();
     }
 }

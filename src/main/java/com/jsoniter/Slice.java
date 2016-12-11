@@ -1,6 +1,6 @@
 package com.jsoniter;
 
-class Slice {
+public class Slice {
 
     public byte[] data;
     public int head;
