@@ -7,7 +7,31 @@
     <version>0.9.1</version>
     <artifactId>jsoniter</artifactId>
     <name>json iterator</name>
+    <description>json iterator is fast and easy to use json parser</description>
     <url>http://jsoniter.com</url>
+    <packaging>jar</packaging>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>http://www.opensource.org/licenses/mit-license.php</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Tao Wen</name>
+            <email>taowen@gmail.com</email>
+            <organization>jsoniter</organization>
+            <organizationUrl>http://jsoniter.com</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/json-iterator/java.git</connection>
+        <developerConnection>scm:git:ssh://github.com:json-iterator/java.git</developerConnection>
+        <url>http://github.com/json-iterator/java/tree/master</url>
+    </scm>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
