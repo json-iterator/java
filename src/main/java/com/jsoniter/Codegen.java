@@ -60,6 +60,9 @@ class Codegen {
             clazz = (Class) type;
         }
         String source = genSource(cacheKey, clazz, typeArgs);
+        if (System.getenv("JSONITER_DEBUG") != null) {
+            System.out.println(source);
+        }
         try {
             CtClass ctClass = pool.makeClass(cacheKey);
             ctClass.setInterfaces(new CtClass[]{pool.get(Decoder.class.getName())});
@@ -231,12 +234,12 @@ class Codegen {
     private static String genReadOp(Type type) {
         if (type instanceof Class) {
             Class clazz = (Class) type;
-            String nativeRead = NATIVE_READS.get(clazz.getName());
+            String nativeRead = NATIVE_READS.get(clazz.getCanonicalName());
             if (nativeRead != null) {
                 return nativeRead;
             }
             return String.format("(%s)iter.read(\"%s\", %s.class)",
-                    clazz.getName(), TypeLiteral.generateCacheKey(clazz), clazz.getName());
+                    clazz.getCanonicalName(), TypeLiteral.generateCacheKey(clazz), clazz.getCanonicalName());
         }
         if (type instanceof ParameterizedType) {
             ParameterizedType pType = (ParameterizedType) type;
@@ -245,12 +248,12 @@ class Codegen {
             switch (args.length) {
                 case 1:
                     return String.format("(%s)iter.read(\"%s\", %s.class, %s.class);",
-                            clazz.getName(), TypeLiteral.generateCacheKey(type),
-                            clazz.getName(), ((Class) args[0]).getName());
+                            clazz.getCanonicalName(), TypeLiteral.generateCacheKey(type),
+                            clazz.getCanonicalName(), ((Class) args[0]).getCanonicalName());
                 case 2:
                     return String.format("(%s)iter.read(\"%s\", %s.class, %s.class, %s.class);",
-                            clazz.getName(), TypeLiteral.generateCacheKey(type),
-                            clazz.getName(), ((Class) args[0]).getName(), ((Class) args[1]).getName());
+                            clazz.getCanonicalName(), TypeLiteral.generateCacheKey(type),
+                            clazz.getCanonicalName(), ((Class) args[0]).getCanonicalName(), ((Class) args[1]).getCanonicalName());
                 default:
                     throw new IllegalArgumentException("unsupported number of type arguments: " + type);
             }
