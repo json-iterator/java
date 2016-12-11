@@ -1,4 +1,4 @@
-package com.github.jsoniter;
+package com.jsoniter;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;

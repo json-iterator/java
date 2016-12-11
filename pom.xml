@@ -3,11 +3,11 @@
         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
         xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.github.jsoniter</groupId>
-    <version>0.0.1</version>
+    <groupId>com.jsoniter</groupId>
+    <version>0.9.1</version>
     <artifactId>jsoniter</artifactId>
     <name>json iterator</name>
-    <url>http://maven.apache.org</url>
+    <url>http://jsoniter.com</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -15,60 +15,15 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.7.21</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-api</artifactId>
-            <version>2.6.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <version>2.6.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-slf4j-impl</artifactId>
-            <version>2.6.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>fastjson</artifactId>
-            <version>1.2.4</version>
-        </dependency>
-        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.12</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.openjdk.jmh</groupId>
-            <artifactId>jmh-core</artifactId>
-            <version>1.17.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.openjdk.jmh</groupId>
-            <artifactId>jmh-generator-annprocess</artifactId>
-            <version>1.17.1</version>
-        </dependency>
-        <dependency>
             <groupId>org.javassist</groupId>
             <artifactId>javassist</artifactId>
             <version>3.21.0-GA</version>
-        </dependency>
-        <dependency>
-            <groupId>com.dslplatform</groupId>
-            <artifactId>dsl-json</artifactId>
-            <version>1.3.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.dslplatform</groupId>
-            <artifactId>dsl-json-processor</artifactId>
-            <version>1.4.1</version>
         </dependency>
     </dependencies>
 
@@ -95,15 +50,6 @@
         </testResources>
         <plugins>
             <plugin>
-                <groupId>com.github.chrisdchristo</groupId>
-                <artifactId>capsule-maven-plugin</artifactId>
-                <version>1.4.2</version>
-                <configuration>
-                    <appClass>com.didi.gulfstream.Main</appClass>
-                    <type>fat</type>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>2.5.1</version>
@@ -113,26 +59,6 @@
                     <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.3</version>
-                <configuration>
-                    <compilerArguments>
-                        <!--Adsljson.showdsl>true</Adsljson.showdsl-->
-                        <!--<Adsljson.loglevel>DEBUG</Adsljson.loglevel>-->
-                        <!--Adsljson.annotation>EXPLICIT</Adsljson.annotation-->
-                        <!--Adsljson.compiler>custom_path_to_compiler/dsl-compiler.exe</Adsljson.compiler-->
-                    </compilerArguments>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
-    <distributionManagement>
-        <snapshotRepository>
-            <id>nexus-snapshots</id>
-            <name>Nexus Snapshot Repository</name>
-            <url>http://maven.intra.xiaojukeji.com:8081/nexus/content/repositories/snapshots/</url>
-        </snapshotRepository>
-    </distributionManagement>
 </project>

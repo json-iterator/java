@@ -1,5 +1,7 @@
-package com.github.jsoniter;
+package com.jsoniter;
 
+import com.jsoniter.Jsoniter;
+import com.jsoniter.ValueType;
 import junit.framework.TestCase;
 
 import java.io.IOException;

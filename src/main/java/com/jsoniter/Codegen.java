@@ -1,4 +1,4 @@
-package com.github.jsoniter;
+package com.jsoniter;
 
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -129,7 +129,7 @@ class Codegen {
 
     private static String genMap(Class clazz, Type valueType) {
         StringBuilder lines = new StringBuilder();
-        append(lines, "public Object decode(java.lang.reflect.Type type, com.github.jsoniter.Jsoniter iter) {");
+        append(lines, "public Object decode(java.lang.reflect.Type type, com.jsoniter.Jsoniter iter) {");
         append(lines, "{{clazz}} map = new {{clazz}}();");
         append(lines, "for (String field = iter.readObject(); field != null; field = iter.readObject()) {");
         append(lines, "map.put(field, {{op}});");
@@ -141,7 +141,7 @@ class Codegen {
 
     private static String genNative(Class clazz) {
         StringBuilder lines = new StringBuilder();
-        append(lines, "public Object decode(java.lang.reflect.Type type, com.github.jsoniter.Jsoniter iter) {");
+        append(lines, "public Object decode(java.lang.reflect.Type type, com.jsoniter.Jsoniter iter) {");
         append(lines, "return " + NATIVE_READS.get(clazz.getName()) + ";");
         append(lines, "}");
         return lines.toString();
@@ -175,7 +175,7 @@ class Codegen {
         }
         if (map.isEmpty()) {
             StringBuilder lines = new StringBuilder();
-            append(lines, "public Object decode(java.lang.reflect.Type type, com.github.jsoniter.Jsoniter iter) {");
+            append(lines, "public Object decode(java.lang.reflect.Type type, com.jsoniter.Jsoniter iter) {");
             append(lines, "{{clazz}} obj = new {{clazz}}();");
             append(lines, "iter.skip();");
             append(lines, "return obj;");
@@ -183,9 +183,9 @@ class Codegen {
             return lines.toString().replace("{{clazz}}", clazz.getName());
         }
         StringBuilder lines = new StringBuilder();
-        append(lines, "public Object decode(java.lang.reflect.Type type, com.github.jsoniter.Jsoniter iter) {");
+        append(lines, "public Object decode(java.lang.reflect.Type type, com.jsoniter.Jsoniter iter) {");
         append(lines, "{{clazz}} obj = new {{clazz}}();");
-        append(lines, "for (com.github.jsoniter.Slice field = iter.readObjectAsSlice(); field != null; field = iter.readObjectAsSlice()) {");
+        append(lines, "for (com.jsoniter.Slice field = iter.readObjectAsSlice(); field != null; field = iter.readObjectAsSlice()) {");
         append(lines, "switch (field.len) {");
         for (Map.Entry<Integer, Object> entry : map.entrySet()) {
             Integer len = entry.getKey();
@@ -263,7 +263,7 @@ class Codegen {
             throw new IllegalArgumentException("nested array not supported: " + clazz.getCanonicalName());
         }
         StringBuilder lines = new StringBuilder();
-        append(lines, "public Object decode(java.lang.reflect.Type type, com.github.jsoniter.Jsoniter iter) {");
+        append(lines, "public Object decode(java.lang.reflect.Type type, com.jsoniter.Jsoniter iter) {");
         append(lines, "if (!iter.readArray()) {");
         append(lines, "return new {{comp}}[0];");
         append(lines, "}");
@@ -305,7 +305,7 @@ class Codegen {
 
     private static String genCollectionWithCapacity(Class clazz, Type compType) {
         StringBuilder lines = new StringBuilder();
-        append(lines, "public Object decode(java.lang.reflect.Type type, com.github.jsoniter.Jsoniter iter) {");
+        append(lines, "public Object decode(java.lang.reflect.Type type, com.jsoniter.Jsoniter iter) {");
         append(lines, "if (!iter.readArray()) {");
         append(lines, "return new {{clazz}}(0);");
         append(lines, "}");
@@ -349,7 +349,7 @@ class Codegen {
 
     private static String genCollection(Class clazz, Type compType) {
         StringBuilder lines = new StringBuilder();
-        append(lines, "public Object decode(java.lang.reflect.Type type, com.github.jsoniter.Jsoniter iter) {");
+        append(lines, "public Object decode(java.lang.reflect.Type type, com.jsoniter.Jsoniter iter) {");
         append(lines, "if (!iter.readArray()) {");
         append(lines, "return new {{clazz}}();");
         append(lines, "}");

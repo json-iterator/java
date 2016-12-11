@@ -1,6 +1,4 @@
-package com.github.jsoniter;
-
-import org.postgresql.util.Base64;
+package com.jsoniter;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -378,7 +376,7 @@ public class Jsoniter implements Closeable {
 
     public final byte[] readBase64() throws IOException {
         Slice slice = readSlice();
-        return Base64.decode(slice.data, slice.head, slice.len);
+        return null;
     }
 
     public final String readString() throws IOException {

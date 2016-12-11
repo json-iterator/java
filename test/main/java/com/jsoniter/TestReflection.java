@@ -1,5 +1,9 @@
-package com.github.jsoniter;
+package com.jsoniter;
 
+import com.jsoniter.ComplexObject;
+import com.jsoniter.Jsoniter;
+import com.jsoniter.SimpleObject;
+import com.jsoniter.TypeLiteral;
 import junit.framework.TestCase;
 import org.junit.Assert;
 

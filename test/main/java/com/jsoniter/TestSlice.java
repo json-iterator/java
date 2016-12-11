@@ -1,16 +1,15 @@
-package com.github.jsoniter;
+package com.jsoniter;
 
 import junit.framework.TestCase;
-
-import static org.junit.Assert.assertArrayEquals;
+import org.junit.Assert;
 
 public class TestSlice extends TestCase {
     public void test_append() {
         Slice slice = Slice.make(0, 1);
         slice.append((byte) 1);
-        assertArrayEquals(new byte[]{1}, slice.data);
+        Assert.assertArrayEquals(new byte[]{1}, slice.data);
         slice.append((byte) 2);
-        assertArrayEquals(new byte[]{1,2}, slice.data);
+        Assert.assertArrayEquals(new byte[]{1,2}, slice.data);
     }
 
     public void test_hash_code() {

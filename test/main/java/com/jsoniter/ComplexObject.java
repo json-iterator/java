@@ -1,4 +1,4 @@
-package com.github.jsoniter;
+package com.jsoniter;
 
 import java.util.List;
 

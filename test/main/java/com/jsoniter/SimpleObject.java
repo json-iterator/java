@@ -1,4 +1,4 @@
-package com.github.jsoniter;
+package com.jsoniter;
 
 public class SimpleObject {
     public String field2;
