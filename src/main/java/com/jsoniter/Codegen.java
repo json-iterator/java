@@ -35,7 +35,7 @@ class Codegen {
         add(HashSet.class);
         add(Vector.class);
     }};
-    static volatile Map<String, Decoder> cache = new HashMap<>();
+    static volatile Map<String, Decoder> cache = new HashMap<String, Decoder>();
     static ClassPool pool = ClassPool.getDefault();
 
     static Decoder getDecoder(String cacheKey, Type type, Type... typeArgs) {
@@ -152,25 +152,25 @@ class Codegen {
     }
 
     public static void addNewDecoder(String cacheKey, Decoder decoder) {
-        HashMap<String, Decoder> newCache = new HashMap<>(cache);
+        HashMap<String, Decoder> newCache = new HashMap<String, Decoder>(cache);
         newCache.put(cacheKey, decoder);
         cache = newCache;
     }
 
     private static String genObject(Class clazz, String cacheKey) {
-        Map<Integer, Object> map = new HashMap<>();
+        Map<Integer, Object> map = new HashMap<Integer, Object>();
         for (Field field : clazz.getFields()) {
             byte[] fieldName = field.getName().getBytes();
             Map<Byte, Object> current = (Map<Byte, Object>) map.get(fieldName.length);
             if (current == null) {
-                current = new HashMap<>();
+                current = new HashMap<Byte, Object>();
                 map.put(fieldName.length, current);
             }
             for (int i = 0; i < fieldName.length - 1; i++) {
                 byte b = fieldName[i];
                 Map<Byte, Object> next = (Map<Byte, Object>) current.get(b);
                 if (next == null) {
-                    next = new HashMap<>();
+                    next = new HashMap<Byte, Object>();
                     current.put(b, next);
                 }
                 current = next;
