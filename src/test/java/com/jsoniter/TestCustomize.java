@@ -4,6 +4,7 @@ import junit.framework.TestCase;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.util.Date;
 
 public class TestCustomize extends TestCase {
@@ -33,7 +34,7 @@ public class TestCustomize extends TestCase {
     }
 
     public void test_customize_all_fields() throws IOException {
-        Jsoniter.registerFieldDecoderFactory(new Extension() {
+        Jsoniter.registerExtension(new EmptyExtension() {
             @Override
             public Decoder createDecoder(Field field) {
                 if (field.getDeclaringClass() == CustomizedObject.class && field.getName().equals("field1")) {
@@ -47,11 +48,6 @@ public class TestCustomize extends TestCase {
                 }
                 return null;
             }
-
-            @Override
-            public String[] getAlternativeFieldNames(Field field) {
-                return null;
-            }
         });
         Jsoniter iter = Jsoniter.parse("{'field1': 100}".replace('\'', '"'));
         CustomizedObject myObject = iter.read(CustomizedObject.class);
@@ -59,7 +55,7 @@ public class TestCustomize extends TestCase {
     }
 
     public void test_change_field_name() throws IOException {
-        Jsoniter.registerFieldDecoderFactory(new Extension() {
+        Jsoniter.registerExtension(new EmptyExtension() {
             @Override
             public Decoder createDecoder(Field field) {
                 if (field.getDeclaringClass() == CustomizedObject.class && field.getName().equals("field1")) {
@@ -107,7 +103,16 @@ public class TestCustomize extends TestCase {
     }
 
     public void test_customized_constructor() throws IOException {
-        Jsoniter iter = Jsoniter.parse("{'field1': 100}".replace('\'', '"'));
+        Jsoniter.registerExtension(new EmptyExtension(){
+            @Override
+            public String codegenNewInstance(Type type) {
+                if (type == CtorCustomizedObject.class) {
+                    return "new " + CtorCustomizedObject.class.getName() + "(iter.readInt())";
+                }
+                return null;
+            }
+        });
+        Jsoniter iter = Jsoniter.parse("100".replace('\'', '"'));
         CtorCustomizedObject myObject = iter.read(CtorCustomizedObject.class);
         assertEquals(100, myObject.getField1());
     }

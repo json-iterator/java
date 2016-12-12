@@ -41,7 +41,7 @@ class Codegen {
         add(Vector.class);
     }};
     static volatile Map<String, Decoder> cache = new HashMap<String, Decoder>();
-    static List<Extension> fieldDecoderFactories = new ArrayList<Extension>();
+    static List<Extension> extensions = new ArrayList<Extension>();
     static ClassPool pool = ClassPool.getDefault();
 
     static Decoder getDecoder(String cacheKey, Type type, Type... typeArgs) {
@@ -164,10 +164,51 @@ class Codegen {
     }
 
     private static String genObject(Class clazz, String cacheKey) {
-        Map<Integer, Object> map = new HashMap<Integer, Object>();
+        Map<Integer, Object> trieTree = buildTriTree(clazz);
+        String newInstanceCode = null;
+        for (Extension extension : extensions) {
+            newInstanceCode = extension.codegenNewInstance(clazz);
+            if (newInstanceCode != null) {
+                break;
+            }
+        }
+        if (newInstanceCode == null) {
+            newInstanceCode = "new " + clazz.getCanonicalName() + "()";
+        }
+        if (trieTree.isEmpty()) {
+            StringBuilder lines = new StringBuilder();
+            append(lines, "public Object decode(com.jsoniter.Jsoniter iter) {");
+            append(lines, "{{clazz}} obj = {{newInst}};");
+            append(lines, "iter.skip();");
+            append(lines, "return obj;");
+            append(lines, "}");
+            return lines.toString().replace("{{clazz}}", clazz.getName()).replace("{{newInst}}", newInstanceCode);
+        }
+        StringBuilder lines = new StringBuilder();
+        append(lines, "public Object decode(com.jsoniter.Jsoniter iter) {");
+        append(lines, "{{clazz}} obj = {{newInst}};");
+        append(lines, "for (com.jsoniter.Slice field = iter.readObjectAsSlice(); field != null; field = iter.readObjectAsSlice()) {");
+        append(lines, "switch (field.len) {");
+        for (Map.Entry<Integer, Object> entry : trieTree.entrySet()) {
+            Integer len = entry.getKey();
+            append(lines, "case " + len + ": ");
+            Map<Byte, Object> current = (Map<Byte, Object>) entry.getValue();
+            addFieldDispatch(lines, len, 0, current, cacheKey);
+            append(lines, "break;");
+        }
+        append(lines, "}");
+        append(lines, "iter.skip();");
+        append(lines, "}");
+        append(lines, "return obj;");
+        append(lines, "}");
+        return lines.toString().replace("{{clazz}}", clazz.getName()).replace("{{newInst}}", newInstanceCode);
+    }
+
+    private static Map<Integer, Object> buildTriTree(Class clazz) {
+        Map<Integer, Object> trieTree = new HashMap<Integer, Object>();
         for (Field field : clazz.getFields()) {
             String[] alternativeFieldNames = null;
-            for (Extension extension : fieldDecoderFactories) {
+            for (Extension extension : extensions) {
                 alternativeFieldNames = extension.getAlternativeFieldNames(field);
                 if (alternativeFieldNames != null) {
                     break;
@@ -178,10 +219,10 @@ class Codegen {
             }
             for (String alternativeFieldName : alternativeFieldNames) {
                 byte[] fieldName = alternativeFieldName.getBytes();
-                Map<Byte, Object> current = (Map<Byte, Object>) map.get(fieldName.length);
+                Map<Byte, Object> current = (Map<Byte, Object>) trieTree.get(fieldName.length);
                 if (current == null) {
                     current = new HashMap<Byte, Object>();
-                    map.put(fieldName.length, current);
+                    trieTree.put(fieldName.length, current);
                 }
                 for (int i = 0; i < fieldName.length - 1; i++) {
                     byte b = fieldName[i];
@@ -195,37 +236,11 @@ class Codegen {
                 current.put(fieldName[fieldName.length - 1], field);
             }
         }
-        if (map.isEmpty()) {
-            StringBuilder lines = new StringBuilder();
-            append(lines, "public Object decode(com.jsoniter.Jsoniter iter) {");
-            append(lines, "{{clazz}} obj = new {{clazz}}();");
-            append(lines, "iter.skip();");
-            append(lines, "return obj;");
-            append(lines, "}");
-            return lines.toString().replace("{{clazz}}", clazz.getName());
-        }
-        StringBuilder lines = new StringBuilder();
-        append(lines, "public Object decode(com.jsoniter.Jsoniter iter) {");
-        append(lines, "{{clazz}} obj = new {{clazz}}();");
-        append(lines, "for (com.jsoniter.Slice field = iter.readObjectAsSlice(); field != null; field = iter.readObjectAsSlice()) {");
-        append(lines, "switch (field.len) {");
-        for (Map.Entry<Integer, Object> entry : map.entrySet()) {
-            Integer len = entry.getKey();
-            append(lines, "case " + len + ": ");
-            Map<Byte, Object> current = (Map<Byte, Object>) entry.getValue();
-            addFieldDispatch(lines, len, 0, current, cacheKey);
-            append(lines, "break;");
-        }
-        append(lines, "}");
-        append(lines, "iter.skip();");
-        append(lines, "}");
-        append(lines, "return obj;");
-        append(lines, "}");
-        return lines.toString().replace("{{clazz}}", clazz.getName());
+        return trieTree;
     }
 
     private static Decoder createFieldDecoder(String fieldCacheKey, Field field) {
-        for (Extension extension : fieldDecoderFactories) {
+        for (Extension extension : extensions) {
             Decoder decoder = extension.createDecoder(field);
             if (decoder != null) {
                 addNewDecoder(fieldCacheKey, decoder);
@@ -480,8 +495,8 @@ class Codegen {
         lines.append("\n");
     }
 
-    public static void addFieldDecoderFactory(Extension extension) {
-        fieldDecoderFactories.add(extension);
+    public static void registerExtension(Extension extension) {
+        extensions.add(extension);
     }
 
     public static Decoder.IntDecoder getIntDecoder(String cacheKey) {

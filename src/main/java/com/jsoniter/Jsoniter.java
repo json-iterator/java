@@ -1033,7 +1033,7 @@ public class Jsoniter implements Closeable {
         Codegen.cache.clear();
     }
 
-    public static void registerFieldDecoderFactory(Extension extension) {
-        Codegen.addFieldDecoderFactory(extension);
+    public static void registerExtension(Extension extension) {
+        Codegen.registerExtension(extension);
     }
 }
