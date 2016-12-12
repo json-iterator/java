@@ -36,6 +36,7 @@ class Codegen {
         add(Vector.class);
     }};
     static volatile Map<String, Decoder> cache = new HashMap<String, Decoder>();
+    static List<FieldDecoderFactory> fieldDecoderFactories = new ArrayList<FieldDecoderFactory>();
     static ClassPool pool = ClassPool.getDefault();
 
     static Decoder getDecoder(String cacheKey, Type type, Type... typeArgs) {
@@ -160,22 +161,32 @@ class Codegen {
     private static String genObject(Class clazz, String cacheKey) {
         Map<Integer, Object> map = new HashMap<Integer, Object>();
         for (Field field : clazz.getFields()) {
-            byte[] fieldName = field.getName().getBytes();
-            Map<Byte, Object> current = (Map<Byte, Object>) map.get(fieldName.length);
-            if (current == null) {
-                current = new HashMap<Byte, Object>();
-                map.put(fieldName.length, current);
+            Decoder decoder = createFieldDecoder(cacheKey, field);
+            String[] alternativeFieldNames = null;
+            if (decoder instanceof FieldDecoder) {
+                alternativeFieldNames = ((FieldDecoder) decoder).getAlternativeFieldNames();
             }
-            for (int i = 0; i < fieldName.length - 1; i++) {
-                byte b = fieldName[i];
-                Map<Byte, Object> next = (Map<Byte, Object>) current.get(b);
-                if (next == null) {
-                    next = new HashMap<Byte, Object>();
-                    current.put(b, next);
+            if (alternativeFieldNames == null) {
+                alternativeFieldNames = new String[]{field.getName()};
+            }
+            for (String alternativeFieldName : alternativeFieldNames) {
+                byte[] fieldName = alternativeFieldName.getBytes();
+                Map<Byte, Object> current = (Map<Byte, Object>) map.get(fieldName.length);
+                if (current == null) {
+                    current = new HashMap<Byte, Object>();
+                    map.put(fieldName.length, current);
                 }
-                current = next;
+                for (int i = 0; i < fieldName.length - 1; i++) {
+                    byte b = fieldName[i];
+                    Map<Byte, Object> next = (Map<Byte, Object>) current.get(b);
+                    if (next == null) {
+                        next = new HashMap<Byte, Object>();
+                        current.put(b, next);
+                    }
+                    current = next;
+                }
+                current.put(fieldName[fieldName.length - 1], field);
             }
-            current.put(fieldName[fieldName.length - 1], field);
         }
         if (map.isEmpty()) {
             StringBuilder lines = new StringBuilder();
@@ -206,6 +217,20 @@ class Codegen {
         return lines.toString().replace("{{clazz}}", clazz.getName());
     }
 
+    private static Decoder createFieldDecoder(String cacheKey, Field field) {
+        String fieldCacheKey = field.getName() + "@" + cacheKey;
+        for (FieldDecoderFactory fieldDecoderFactory : fieldDecoderFactories) {
+            Decoder decoder = fieldDecoderFactory.createDecoder(field);
+            if (decoder != null) {
+                addNewDecoder(fieldCacheKey, decoder);
+                break;
+            }
+        }
+        // the decoder can be just created by the factory
+        // or it can be registered directly
+        return cache.get(fieldCacheKey);
+    }
+
     private static void addFieldDispatch(StringBuilder lines, int len, int i, Map<Byte, Object> current, String cacheKey) {
         for (Map.Entry<Byte, Object> entry : current.entrySet()) {
             Byte b = entry.getKey();
@@ -221,8 +246,8 @@ class Codegen {
     }
 
     private static void genField(StringBuilder lines, Field field, String cacheKey) {
-        String fieldCacheKey = field.getName() + "@" + cacheKey;
         String fieldTypeName = field.getType().getCanonicalName();
+        String fieldCacheKey = field.getName() + "@" + cacheKey;
         if (cache.containsKey(fieldCacheKey)) {
             append(lines, String.format("obj.%s = (%s)iter.read(\"%s\", %s.class);",
                     field.getName(), fieldTypeName, fieldCacheKey, fieldTypeName));
@@ -398,5 +423,9 @@ class Codegen {
     private static void append(StringBuilder lines, String str) {
         lines.append(str);
         lines.append("\n");
+    }
+
+    public static void addFieldDecoderFactory(FieldDecoderFactory fieldDecoderFactory) {
+        fieldDecoderFactories.add(fieldDecoderFactory);
     }
 }
