@@ -5,6 +5,8 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -752,6 +754,14 @@ public class Jsoniter implements Closeable {
 
     public final double readDouble() throws IOException {
         return Double.valueOf(readNumber());
+    }
+
+    public final BigDecimal readBigDecimal() throws IOException {
+        return new BigDecimal(readNumber());
+    }
+
+    public final BigInteger readBigInteger() throws IOException {
+        return new BigInteger(readNumber());
     }
 
     public final Any readAny() throws IOException {

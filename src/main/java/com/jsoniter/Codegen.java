@@ -8,6 +8,8 @@ import javassist.CtNewMethod;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.*;
 
 class Codegen {
@@ -27,6 +29,8 @@ class Codegen {
         put(Short.class.getName(), "Short.valueOf(iter.readShort())");
         put(Integer.class.getName(), "Integer.valueOf(iter.readInt())");
         put(Long.class.getName(), "Long.valueOf(iter.readLong())");
+        put(BigDecimal.class.getName(), "iter.readBigDecimal()");
+        put(BigInteger.class.getName(), "iter.readBigInteger()");
         put(String.class.getName(), "iter.readString()");
         put(Object.class.getName(), "iter.readAnyObject()");
         put(Any.class.getName(), "iter.readAny()");
