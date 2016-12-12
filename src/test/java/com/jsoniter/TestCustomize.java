@@ -4,14 +4,13 @@ import junit.framework.TestCase;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.lang.reflect.Type;
 import java.util.Date;
 
 public class TestCustomize extends TestCase {
     public void test_customize_type() throws IOException {
         Jsoniter.registerTypeDecoder(Date.class, new Decoder() {
             @Override
-            public Object decode(Type type, Jsoniter iter) throws IOException {
+            public Object decode(Jsoniter iter) throws IOException {
                 return new Date(iter.readLong());
             }
         });
@@ -21,10 +20,10 @@ public class TestCustomize extends TestCase {
     }
 
     public void test_customize_field() throws IOException {
-        Jsoniter.registerFieldDecoder(CustomizedObject.class, "field1", new Decoder(){
+        Jsoniter.registerFieldDecoder(CustomizedObject.class, "field1", new Decoder() {
 
             @Override
-            public Object decode(Type type, Jsoniter iter) throws IOException {
+            public Object decode(Jsoniter iter) throws IOException {
                 return Integer.toString(iter.readInt());
             }
         });
@@ -38,10 +37,10 @@ public class TestCustomize extends TestCase {
             @Override
             public Decoder createDecoder(Field field) {
                 if (field.getDeclaringClass() == CustomizedObject.class && field.getName().equals("field1")) {
-                    return new Decoder(){
+                    return new Decoder() {
 
                         @Override
-                        public Object decode(Type type, Jsoniter iter) throws IOException {
+                        public Object decode(Jsoniter iter) throws IOException {
                             return Integer.toString(iter.readInt());
                         }
                     };
@@ -66,7 +65,7 @@ public class TestCustomize extends TestCase {
                 if (field.getDeclaringClass() == CustomizedObject.class && field.getName().equals("field1")) {
                     return new Decoder() {
                         @Override
-                        public Object decode(Type type, Jsoniter iter) throws IOException {
+                        public Object decode(Jsoniter iter) throws IOException {
                             return Integer.toString(iter.readInt());
                         }
                     };
@@ -90,7 +89,7 @@ public class TestCustomize extends TestCase {
     }
 
     public void test_customized_decoder_with_int_field() throws IOException {
-        Jsoniter.registerFieldDecoder(CustomizedObject.class, "field3", new Decoder.IntDecoder(){
+        Jsoniter.registerFieldDecoder(CustomizedObject.class, "field3", new Decoder.IntDecoder() {
 
             @Override
             public int decodeInt(Jsoniter iter) throws IOException {
@@ -98,12 +97,18 @@ public class TestCustomize extends TestCase {
             }
 
             @Override
-            public Object decode(Type type, Jsoniter iter) throws IOException {
+            public Object decode(Jsoniter iter) throws IOException {
                 return null;
             }
         });
         Jsoniter iter = Jsoniter.parse("{'field3': 100}".replace('\'', '"'));
         CustomizedObject myObject = iter.read(CustomizedObject.class);
         assertEquals(100 * 5, myObject.field3);
+    }
+
+    public void test_customized_constructor() throws IOException {
+        Jsoniter iter = Jsoniter.parse("{'field1': 100}".replace('\'', '"'));
+        CtorCustomizedObject myObject = iter.read(CtorCustomizedObject.class);
+        assertEquals(100, myObject.getField1());
     }
 }

@@ -139,7 +139,7 @@ class Codegen {
 
     private static String genMap(Class clazz, Type valueType) {
         StringBuilder lines = new StringBuilder();
-        append(lines, "public Object decode(java.lang.reflect.Type type, com.jsoniter.Jsoniter iter) {");
+        append(lines, "public Object decode(com.jsoniter.Jsoniter iter) {");
         append(lines, "{{clazz}} map = new {{clazz}}();");
         append(lines, "for (String field = iter.readObject(); field != null; field = iter.readObject()) {");
         append(lines, "map.put(field, {{op}});");
@@ -151,7 +151,7 @@ class Codegen {
 
     private static String genNative(Class clazz) {
         StringBuilder lines = new StringBuilder();
-        append(lines, "public Object decode(java.lang.reflect.Type type, com.jsoniter.Jsoniter iter) {");
+        append(lines, "public Object decode(com.jsoniter.Jsoniter iter) {");
         append(lines, "return " + NATIVE_READS.get(clazz.getName()) + ";");
         append(lines, "}");
         return lines.toString();
@@ -197,7 +197,7 @@ class Codegen {
         }
         if (map.isEmpty()) {
             StringBuilder lines = new StringBuilder();
-            append(lines, "public Object decode(java.lang.reflect.Type type, com.jsoniter.Jsoniter iter) {");
+            append(lines, "public Object decode(com.jsoniter.Jsoniter iter) {");
             append(lines, "{{clazz}} obj = new {{clazz}}();");
             append(lines, "iter.skip();");
             append(lines, "return obj;");
@@ -205,7 +205,7 @@ class Codegen {
             return lines.toString().replace("{{clazz}}", clazz.getName());
         }
         StringBuilder lines = new StringBuilder();
-        append(lines, "public Object decode(java.lang.reflect.Type type, com.jsoniter.Jsoniter iter) {");
+        append(lines, "public Object decode(com.jsoniter.Jsoniter iter) {");
         append(lines, "{{clazz}} obj = new {{clazz}}();");
         append(lines, "for (com.jsoniter.Slice field = iter.readObjectAsSlice(); field != null; field = iter.readObjectAsSlice()) {");
         append(lines, "switch (field.len) {");
@@ -334,18 +334,9 @@ class Codegen {
             ParameterizedType pType = (ParameterizedType) type;
             Class clazz = (Class) pType.getRawType();
             Type[] args = pType.getActualTypeArguments();
-            switch (args.length) {
-                case 1:
-                    return String.format("(%s)iter.read(\"%s\", %s.class, %s.class);",
-                            clazz.getCanonicalName(), TypeLiteral.generateCacheKey(type),
-                            clazz.getCanonicalName(), ((Class) args[0]).getCanonicalName());
-                case 2:
-                    return String.format("(%s)iter.read(\"%s\", %s.class, %s.class, %s.class);",
-                            clazz.getCanonicalName(), TypeLiteral.generateCacheKey(type),
-                            clazz.getCanonicalName(), ((Class) args[0]).getCanonicalName(), ((Class) args[1]).getCanonicalName());
-                default:
-                    throw new IllegalArgumentException("unsupported number of type arguments: " + type);
-            }
+            String cacheKey = TypeLiteral.generateCacheKey(type);
+            getDecoder(cacheKey, clazz, args); // set the decoder to cache
+            return String.format("(%s)iter.read(\"%s\")", clazz.getCanonicalName(), cacheKey);
         }
         throw new IllegalArgumentException("unsupported type: " + type);
     }
@@ -356,7 +347,7 @@ class Codegen {
             throw new IllegalArgumentException("nested array not supported: " + clazz.getCanonicalName());
         }
         StringBuilder lines = new StringBuilder();
-        append(lines, "public Object decode(java.lang.reflect.Type type, com.jsoniter.Jsoniter iter) {");
+        append(lines, "public Object decode(com.jsoniter.Jsoniter iter) {");
         append(lines, "if (!iter.readArray()) {");
         append(lines, "return new {{comp}}[0];");
         append(lines, "}");
@@ -398,7 +389,7 @@ class Codegen {
 
     private static String genCollectionWithCapacity(Class clazz, Type compType) {
         StringBuilder lines = new StringBuilder();
-        append(lines, "public Object decode(java.lang.reflect.Type type, com.jsoniter.Jsoniter iter) {");
+        append(lines, "public Object decode(com.jsoniter.Jsoniter iter) {");
         append(lines, "if (!iter.readArray()) {");
         append(lines, "return new {{clazz}}(0);");
         append(lines, "}");
@@ -442,7 +433,7 @@ class Codegen {
 
     private static String genCollection(Class clazz, Type compType) {
         StringBuilder lines = new StringBuilder();
-        append(lines, "public Object decode(java.lang.reflect.Type type, com.jsoniter.Jsoniter iter) {");
+        append(lines, "public Object decode(com.jsoniter.Jsoniter iter) {");
         append(lines, "if (!iter.readArray()) {");
         append(lines, "return new {{clazz}}();");
         append(lines, "}");

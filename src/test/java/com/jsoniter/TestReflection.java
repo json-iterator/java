@@ -42,29 +42,6 @@ public class TestReflection extends TestCase {
         assertArrayEquals(new Integer[]{1, 2, 3}, val);
     }
 
-    public void test_int_list() throws IOException {
-        Jsoniter iter = Jsoniter.parse("[1,2,3]");
-        List<Integer> val = iter.read(new TypeLiteral<ArrayList<Integer>>(){});
-        assertArrayEquals(new Integer[]{1, 2, 3}, val.toArray(new Integer[0]));
-    }
-
-    public void test_string_list() throws IOException {
-        Jsoniter iter = Jsoniter.parse("['hello', 'world']".replace('\'', '"'));
-        List<String> val = iter.read(new TypeLiteral<List<String>>(){});
-        assertArrayEquals(new String[]{"hello", "world"}, val.toArray(new String[0]));
-    }
-
-    public void test_string_set() throws IOException {
-        Jsoniter iter = Jsoniter.parse("['hello']".replace('\'', '"'));
-        Set<String> val = iter.read(new TypeLiteral<Set<String>>(){});
-        assertArrayEquals(new String[]{"hello"}, val.toArray(new String[0]));
-    }
-
-    public void test_string_map() throws IOException {
-        Jsoniter iter = Jsoniter.parse("{'hello': 'world'}".replace('\'', '"'));
-        Map<String, String> val = iter.read(new TypeLiteral<Map<String, String>>(){});
-        assertEquals("world", val.get("hello"));
-    }
 
     public void test_float_array() throws IOException {
         Jsoniter iter = Jsoniter.parse("[1.1,2,3]");
@@ -77,16 +54,6 @@ public class TestReflection extends TestCase {
         SimpleObject val = iter.read(SimpleObject.class);
         assertEquals("hello", val.field1);
         assertEquals("world", val.field2);
-    }
-
-    public void test_complex_object() throws IOException {
-        Jsoniter iter = Jsoniter.parse("{'field1': 100, 'field2': [1,2]}".replace('\'', '"'));
-        ComplexObject val = iter.read(ComplexObject.class);
-        assertEquals(100, val.field1);
-        assertEquals(new ArrayList<Integer>(){{
-            add(1);
-            add(2);
-        }}, val.field2);
     }
 
     public void test_fields_skipped() throws IOException {

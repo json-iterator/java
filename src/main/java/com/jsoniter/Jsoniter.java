@@ -797,24 +797,16 @@ public class Jsoniter implements Closeable {
     }
 
     public final <T> T read(Class<T> clazz) throws IOException {
-        return (T) Codegen.getDecoder(TypeLiteral.generateCacheKey(clazz), clazz).decode(clazz, this);
+        return (T) Codegen.getDecoder(TypeLiteral.generateCacheKey(clazz), clazz).decode(this);
     }
 
     public final <T> T read(TypeLiteral<T> typeLiteral) throws IOException {
         Type type = typeLiteral.getType();
-        return (T) Codegen.getDecoder(typeLiteral.cacheKey, type).decode(type, this);
+        return (T) Codegen.getDecoder(typeLiteral.cacheKey, type).decode(this);
     }
 
-    public final <T> T read(String cacheKey, Class<T> clazz) throws IOException {
-        return (T) Codegen.getDecoder(cacheKey, clazz).decode(clazz, this);
-    }
-
-    public final <T> T read(String cacheKey, Class<T> clazz, Type typeArg1) throws IOException {
-        return (T) Codegen.getDecoder(cacheKey, clazz, typeArg1).decode(clazz, this);
-    }
-
-    public final <T> T read(String cacheKey, Class<T> clazz, Type typeArg1, Type typeArg2) throws IOException {
-        return (T) Codegen.getDecoder(cacheKey, clazz, typeArg1, typeArg2).decode(clazz, this);
+    public final <T> T read(String cacheKey) throws IOException {
+        return (T) Codegen.getDecoder(cacheKey, null).decode(this);
     }
 
     public final void skip() throws IOException {

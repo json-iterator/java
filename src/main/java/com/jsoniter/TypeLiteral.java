@@ -1,5 +1,6 @@
 package com.jsoniter;
 
+import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
@@ -31,14 +32,31 @@ public class TypeLiteral<T> {
             Class clazz = (Class) pType.getRawType();
             decoderClassName.append(clazz.getName().replace("[", "array_"));
             for (int i = 0; i < pType.getActualTypeArguments().length; i++) {
-                Class typeArg = (Class) pType.getActualTypeArguments()[i];
+                String typeName = formatTypeWithoutSpecialCharacter(pType.getActualTypeArguments()[i]);
                 decoderClassName.append('_');
-                decoderClassName.append(typeArg.getName());
+                decoderClassName.append(typeName);
             }
         } else {
             throw new UnsupportedOperationException("do not know how to handle: " + type);
         }
         return decoderClassName.toString().replace("$", "_");
+    }
+
+    private static String formatTypeWithoutSpecialCharacter(Type type) {
+        if (type instanceof Class) {
+            Class clazz = (Class) type;
+            return clazz.getCanonicalName();
+        }
+        if (type instanceof ParameterizedType) {
+            ParameterizedType pType = (ParameterizedType) type;
+            String typeName = formatTypeWithoutSpecialCharacter(pType.getRawType());
+            for (Type typeArg : pType.getActualTypeArguments()) {
+                typeName += "_";
+                typeName += formatTypeWithoutSpecialCharacter(typeArg);
+            }
+            return typeName;
+        }
+        throw new RuntimeException("unsupported type: " + type);
     }
 
     static Type getSuperclassTypeParameter(Class<?> subclass) {
