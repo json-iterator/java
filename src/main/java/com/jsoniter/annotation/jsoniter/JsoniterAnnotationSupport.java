@@ -1,10 +1,10 @@
 package com.jsoniter.annotation.jsoniter;
 
-import com.jsoniter.*;
+import com.jsoniter.Decoder;
+import com.jsoniter.FieldDecoderFactory;
+import com.jsoniter.Jsoniter;
 
-import java.io.IOException;
 import java.lang.reflect.Field;
-import java.lang.reflect.Type;
 
 public class JsoniterAnnotationSupport implements FieldDecoderFactory {
 
@@ -14,6 +14,11 @@ public class JsoniterAnnotationSupport implements FieldDecoderFactory {
 
     @Override
     public Decoder createDecoder(final Field field) {
+        return null;
+    }
+
+    @Override
+    public String[] getAlternativeFieldNames(Field field) {
         JsonProperty annotation = field.getAnnotation(JsonProperty.class);
         if (annotation == null) {
             return null;
@@ -23,23 +28,6 @@ public class JsoniterAnnotationSupport implements FieldDecoderFactory {
             alternativeField = field.getName();
         }
         final String[] alternativeFields = new String[]{alternativeField};
-        final String fieldCacheKey = TypeLiteral.generateCacheKey(field.getGenericType());
-        final Class<?> fieldType = field.getType();
-        return new FieldDecoder() {
-            @Override
-            public String[] getAlternativeFieldNames() {
-                return alternativeFields;
-            }
-
-            @Override
-            public boolean useDefaultDecoder() {
-                return false;
-            }
-
-            @Override
-            public Object decode(Type type, Jsoniter iter) throws IOException {
-                return iter.read(fieldCacheKey, fieldType);
-            }
-        };
+        return alternativeFields;
     }
 }

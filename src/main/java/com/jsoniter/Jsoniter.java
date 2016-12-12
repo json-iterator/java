@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import static java.lang.Character.*;
+
 public class Jsoniter implements Closeable {
 
     final static int[] digits = new int[256];
@@ -28,7 +30,7 @@ public class Jsoniter implements Closeable {
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
     InputStream in;
     byte[] buf;
     int head;
@@ -159,6 +161,10 @@ public class Jsoniter implements Closeable {
         return false;
     }
 
+    public final boolean readBoolean(String cacheKey) throws IOException {
+        return Codegen.getBooleanDecoder(cacheKey).decodeBoolean(this);
+    }
+
     public final boolean readBoolean() throws IOException {
         byte c = readByte();
         switch (c) {
@@ -173,6 +179,10 @@ public class Jsoniter implements Closeable {
         }
     }
 
+    public final short readShort(String cacheKey) throws IOException {
+        return Codegen.getShortDecoder(cacheKey).decodeShort(this);
+    }
+
     public final short readShort() throws IOException {
         int v = readInt();
         if (Short.MIN_VALUE <= v && v <= Short.MAX_VALUE) {
@@ -180,6 +190,10 @@ public class Jsoniter implements Closeable {
         } else {
             throw new RuntimeException("short overflow: " + v);
         }
+    }
+
+    public final int readInt(String cacheKey) throws IOException {
+        return Codegen.getIntDecoder(cacheKey).decodeInt(this);
     }
 
     public final int readInt() throws IOException {
@@ -213,6 +227,10 @@ public class Jsoniter implements Closeable {
             }
         }
         return result;
+    }
+
+    public final long readLong(String cacheKey) throws IOException {
+        return Codegen.getLongDecoder(cacheKey).decodeLong(this);
     }
 
     public final long readLong() throws IOException {
@@ -411,22 +429,22 @@ public class Jsoniter implements Closeable {
             }
 
             int num = 0;
-            if (i + 1 < end && base64Tbl[slice.data[i+1]] != -1) {
-                b = b | ((base64Tbl[slice.data[i+1]] & 0xFF) << 12);
+            if (i + 1 < end && base64Tbl[slice.data[i + 1]] != -1) {
+                b = b | ((base64Tbl[slice.data[i + 1]] & 0xFF) << 12);
                 num++;
             }
-            if (i + 2 < end && base64Tbl[slice.data[i+2]] != -1) {
-                b = b | ((base64Tbl[slice.data[i+2]] & 0xFF) << 6);
+            if (i + 2 < end && base64Tbl[slice.data[i + 2]] != -1) {
+                b = b | ((base64Tbl[slice.data[i + 2]] & 0xFF) << 6);
                 num++;
             }
-            if (i + 3 < end && base64Tbl[slice.data[i+3]] != -1) {
-                b = b | (base64Tbl[slice.data[i+3]] & 0xFF);
+            if (i + 3 < end && base64Tbl[slice.data[i + 3]] != -1) {
+                b = b | (base64Tbl[slice.data[i + 3]] & 0xFF);
                 num++;
             }
 
             while (num > 0) {
                 int c = (b & 0xFF0000) >> 16;
-                buffer.write((char)c);
+                buffer.write((char) c);
                 b <<= 8;
                 num--;
             }
@@ -571,12 +589,21 @@ public class Jsoniter implements Closeable {
                                         ((byte) 0x80 << 12) ^
                                         ((byte) 0x80 << 6) ^
                                         ((byte) 0x80 << 0))));
-                reusableChars[j++] = Character.highSurrogate(uc);
-                reusableChars[j++] = Character.lowSurrogate(uc);
+                reusableChars[j++] = highSurrogate(uc);
+                reusableChars[j++] = lowSurrogate(uc);
             } else {
                 throw new RuntimeException("unexpected input");
             }
         }
+    }
+
+    private static char highSurrogate(int codePoint) {
+        return (char) ((codePoint >>> 10)
+                + (MIN_HIGH_SURROGATE - (MIN_SUPPLEMENTARY_CODE_POINT >>> 10)));
+    }
+
+    private static char lowSurrogate(int codePoint) {
+        return (char) ((codePoint & 0x3ff) + MIN_LOW_SURROGATE);
     }
 
     public final String readObject() throws IOException {
@@ -711,8 +738,16 @@ public class Jsoniter implements Closeable {
         return new String(reusableChars, 0, j);
     }
 
+    public final float readFloat(String cacheKey) throws IOException {
+        return Codegen.getFloatDecoder(cacheKey).decodeFloat(this);
+    }
+
     public final float readFloat() throws IOException {
         return Float.valueOf(readNumber());
+    }
+
+    public final double readDouble(String cacheKey) throws IOException {
+        return Codegen.getDoubleDecoder(cacheKey).decodeDouble(this);
     }
 
     public final double readDouble() throws IOException {

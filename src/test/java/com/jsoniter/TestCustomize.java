@@ -48,6 +48,11 @@ public class TestCustomize extends TestCase {
                 }
                 return null;
             }
+
+            @Override
+            public String[] getAlternativeFieldNames(Field field) {
+                return null;
+            }
         });
         Jsoniter iter = Jsoniter.parse("{'field1': 100}".replace('\'', '"'));
         CustomizedObject myObject = iter.read(CustomizedObject.class);
@@ -59,23 +64,20 @@ public class TestCustomize extends TestCase {
             @Override
             public Decoder createDecoder(Field field) {
                 if (field.getDeclaringClass() == CustomizedObject.class && field.getName().equals("field1")) {
-                    return new FieldDecoder(){
-
-                        @Override
-                        public String[] getAlternativeFieldNames() {
-                            return new String[]{"field_1", "Field1"};
-                        }
-
-                        @Override
-                        public boolean useDefaultDecoder() {
-                            return false;
-                        }
-
+                    return new Decoder() {
                         @Override
                         public Object decode(Type type, Jsoniter iter) throws IOException {
                             return Integer.toString(iter.readInt());
                         }
                     };
+                }
+                return null;
+            }
+
+            @Override
+            public String[] getAlternativeFieldNames(Field field) {
+                if (field.getDeclaringClass() == CustomizedObject.class && field.getName().equals("field1")) {
+                    return new String[]{"field_1", "Field1"};
                 }
                 return null;
             }
@@ -85,5 +87,23 @@ public class TestCustomize extends TestCase {
         assertEquals("100", myObject1.field1);
         CustomizedObject myObject2 = iter.read(CustomizedObject.class);
         assertEquals("101", myObject2.field1);
+    }
+
+    public void test_customized_decoder_with_int_field() throws IOException {
+        Jsoniter.registerFieldDecoder(CustomizedObject.class, "field3", new Decoder.IntDecoder(){
+
+            @Override
+            public int decodeInt(Jsoniter iter) throws IOException {
+                return iter.readInt() * 5;
+            }
+
+            @Override
+            public Object decode(Type type, Jsoniter iter) throws IOException {
+                return null;
+            }
+        });
+        Jsoniter iter = Jsoniter.parse("{'field3': 100}".replace('\'', '"'));
+        CustomizedObject myObject = iter.read(CustomizedObject.class);
+        assertEquals(100 * 5, myObject.field3);
     }
 }

@@ -10,4 +10,11 @@ public interface FieldDecoderFactory {
      * @return null, if no special customization needed
      */
     Decoder createDecoder(Field field);
+
+    /**
+     * Customize the field map to
+     * @param field the field reflection object
+     * @return null, if fallback to default behavior
+     */
+    String[] getAlternativeFieldNames(Field field);
 }

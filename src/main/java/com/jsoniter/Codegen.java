@@ -18,6 +18,7 @@ class Codegen {
         put("byte", "iter.readShort()");
         put("short", "iter.readShort()");
         put("int", "iter.readInt()");
+        put("char", "iter.readInt()");
         put("long", "iter.readLong()");
         put(Float.class.getName(), "Float.valueOf(iter.readFloat())");
         put(Double.class.getName(), "Double.valueOf(iter.readDouble())");
@@ -161,10 +162,12 @@ class Codegen {
     private static String genObject(Class clazz, String cacheKey) {
         Map<Integer, Object> map = new HashMap<Integer, Object>();
         for (Field field : clazz.getFields()) {
-            Decoder decoder = createFieldDecoder(cacheKey, field);
             String[] alternativeFieldNames = null;
-            if (decoder instanceof FieldDecoder) {
-                alternativeFieldNames = ((FieldDecoder) decoder).getAlternativeFieldNames();
+            for (FieldDecoderFactory fieldDecoderFactory : fieldDecoderFactories) {
+                alternativeFieldNames = fieldDecoderFactory.getAlternativeFieldNames(field);
+                if (alternativeFieldNames != null) {
+                    break;
+                }
             }
             if (alternativeFieldNames == null) {
                 alternativeFieldNames = new String[]{field.getName()};
@@ -217,8 +220,7 @@ class Codegen {
         return lines.toString().replace("{{clazz}}", clazz.getName());
     }
 
-    private static Decoder createFieldDecoder(String cacheKey, Field field) {
-        String fieldCacheKey = field.getName() + "@" + cacheKey;
+    private static Decoder createFieldDecoder(String fieldCacheKey, Field field) {
         for (FieldDecoderFactory fieldDecoderFactory : fieldDecoderFactories) {
             Decoder decoder = fieldDecoderFactory.createDecoder(field);
             if (decoder != null) {
@@ -246,14 +248,67 @@ class Codegen {
     }
 
     private static void genField(StringBuilder lines, Field field, String cacheKey) {
-        String fieldTypeName = field.getType().getCanonicalName();
+        Class<?> fieldType = field.getType();
+        String fieldTypeName = fieldType.getCanonicalName();
         String fieldCacheKey = field.getName() + "@" + cacheKey;
-        Decoder decoder = cache.get(fieldCacheKey);
-        boolean useCustomizedDecoder = decoder != null;
-        if (useCustomizedDecoder && decoder instanceof FieldDecoder) {
-            useCustomizedDecoder = ((FieldDecoder) decoder).useDefaultDecoder();
-        }
-        if (useCustomizedDecoder) {
+        Decoder decoder = createFieldDecoder(fieldCacheKey, field);
+        if (decoder != null) {
+            if (fieldType == boolean.class) {
+                if (!(decoder instanceof Decoder.BooleanDecoder)) {
+                    throw new RuntimeException("decoder for field " + field + "must implement Decoder.BooleanDecoder");
+                }
+                append(lines, String.format("obj.%s = iter.readBoolean(\"%s\");", field.getName(), fieldCacheKey));
+                return;
+            }
+            if (fieldType == byte.class) {
+                if (!(decoder instanceof Decoder.ShortDecoder)) {
+                    throw new RuntimeException("decoder for field " + field + "must implement Decoder.ShortDecoder");
+                }
+                append(lines, String.format("obj.%s = iter.readShort(\"%s\");", field.getName(), fieldCacheKey));
+                return;
+            }
+            if (fieldType == short.class) {
+                if (!(decoder instanceof Decoder.ShortDecoder)) {
+                    throw new RuntimeException("decoder for field " + field + "must implement Decoder.ShortDecoder");
+                }
+                append(lines, String.format("obj.%s = iter.readShort(\"%s\");", field.getName(), fieldCacheKey));
+                return;
+            }
+            if (fieldType == char.class) {
+                if (!(decoder instanceof Decoder.IntDecoder)) {
+                    throw new RuntimeException("decoder for field " + field + "must implement Decoder.IntDecoder");
+                }
+                append(lines, String.format("obj.%s = iter.readInt(\"%s\");", field.getName(), fieldCacheKey));
+                return;
+            }
+            if (fieldType == int.class) {
+                if (!(decoder instanceof Decoder.IntDecoder)) {
+                    throw new RuntimeException("decoder for field " + field + "must implement Decoder.IntDecoder");
+                }
+                append(lines, String.format("obj.%s = iter.readInt(\"%s\");", field.getName(), fieldCacheKey));
+                return;
+            }
+            if (fieldType == long.class) {
+                if (!(decoder instanceof Decoder.LongDecoder)) {
+                    throw new RuntimeException("decoder for field " + field + "must implement Decoder.LongDecoder");
+                }
+                append(lines, String.format("obj.%s = iter.readLong(\"%s\");", field.getName(), fieldCacheKey));
+                return;
+            }
+            if (fieldType == float.class) {
+                if (!(decoder instanceof Decoder.FloatDecoder)) {
+                    throw new RuntimeException("decoder for field " + field + "must implement Decoder.FloatDecoder");
+                }
+                append(lines, String.format("obj.%s = iter.readFloat(\"%s\");", field.getName(), fieldCacheKey));
+                return;
+            }
+            if (fieldType == double.class) {
+                if (!(decoder instanceof Decoder.DoubleDecoder)) {
+                    throw new RuntimeException("decoder for field " + field + "must implement Decoder.DoubleDecoder");
+                }
+                append(lines, String.format("obj.%s = iter.readDouble(\"%s\");", field.getName(), fieldCacheKey));
+                return;
+            }
             append(lines, String.format("obj.%s = (%s)iter.read(\"%s\", %s.class);",
                     field.getName(), fieldTypeName, fieldCacheKey, fieldTypeName));
             return;
@@ -432,5 +487,29 @@ class Codegen {
 
     public static void addFieldDecoderFactory(FieldDecoderFactory fieldDecoderFactory) {
         fieldDecoderFactories.add(fieldDecoderFactory);
+    }
+
+    public static Decoder.IntDecoder getIntDecoder(String cacheKey) {
+        return (Decoder.IntDecoder) cache.get(cacheKey);
+    }
+
+    public static Decoder.BooleanDecoder getBooleanDecoder(String cacheKey) {
+        return (Decoder.BooleanDecoder) cache.get(cacheKey);
+    }
+
+    public static Decoder.ShortDecoder getShortDecoder(String cacheKey) {
+        return (Decoder.ShortDecoder) cache.get(cacheKey);
+    }
+
+    public static Decoder.LongDecoder getLongDecoder(String cacheKey) {
+        return (Decoder.LongDecoder) cache.get(cacheKey);
+    }
+
+    public static Decoder.FloatDecoder getFloatDecoder(String cacheKey) {
+        return (Decoder.FloatDecoder) cache.get(cacheKey);
+    }
+
+    public static Decoder.DoubleDecoder getDoubleDecoder(String cacheKey) {
+        return (Decoder.DoubleDecoder) cache.get(cacheKey);
     }
 }
