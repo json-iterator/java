@@ -3,7 +3,9 @@ package com.jsoniter;
 import junit.framework.TestCase;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 public class TestAny extends TestCase {
     public void test_get() {
@@ -57,5 +59,18 @@ public class TestAny extends TestCase {
 
     public void test_to_boolean() {
         assertTrue(new Any("123").toBoolean());
+    }
+
+    public void test_apply_to_all_element() {
+        Any any = new Any(new Object[]{
+                new HashMap<String, Object>() {{
+                    put("hello", "world1");
+                }},
+                new HashMap<String, Object>() {{
+                    put("hello", "world2");
+                }}
+        });
+        List<String> objects = any.get("*", "hello");
+        assertEquals(Arrays.asList("world1", "world2"), objects);
     }
 }

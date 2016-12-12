@@ -1,6 +1,7 @@
 package com.jsoniter;
 
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -41,9 +42,9 @@ public class Any {
         }
     }
 
-    public Object get(Object... keys) {
+    public <T> T get(Object... keys) {
         try {
-            return lastAccessed = getPath(val, keys);
+            return (T) (lastAccessed = getPath(val, keys));
         } catch (ClassCastException e) {
             return null;
         } catch (IndexOutOfBoundsException e) {
@@ -178,6 +179,28 @@ public class Any {
             return val;
         }
         Object key = keys[0];
+        if ("*".equals(key)) {
+            if (val.getClass().isArray()) {
+                ArrayList result = new ArrayList(Array.getLength(val));
+                for (int i = 0; i < Array.getLength(val); i++) {
+                    Object nextVal = Array.get(val, i);
+                    Object[] nextKeys = new Object[keys.length - 1];
+                    System.arraycopy(keys, 1, nextKeys, 0, nextKeys.length);
+                    result.add(getPath(nextVal, nextKeys));
+                }
+                return result;
+            } else {
+                List list = (List) val;
+                ArrayList result = new ArrayList(list.size());
+                for (Object e : list) {
+                    Object nextVal = e;
+                    Object[] nextKeys = new Object[keys.length - 1];
+                    System.arraycopy(keys, 1, nextKeys, 0, nextKeys.length);
+                    result.add(getPath(nextVal, nextKeys));
+                }
+                return result;
+            }
+        }
         if (key instanceof Integer) {
             Object nextVal = getFromArrayOrList(val, (Integer)key);
             Object[] nextKeys = new Object[keys.length - 1];
