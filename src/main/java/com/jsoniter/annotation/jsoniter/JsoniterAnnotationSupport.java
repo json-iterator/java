@@ -19,15 +19,18 @@ public class JsoniterAnnotationSupport implements FieldDecoderFactory {
 
     @Override
     public String[] getAlternativeFieldNames(Field field) {
-        JsonProperty annotation = field.getAnnotation(JsonProperty.class);
-        if (annotation == null) {
-            return null;
+        JsonIgnore jsonIgnore = field.getAnnotation(JsonIgnore.class);
+        if (jsonIgnore != null) {
+            return new String[0];
         }
-        String alternativeField = annotation.value();
-        if (alternativeField.equals(JsonProperty.USE_DEFAULT_NAME)) {
-            alternativeField = field.getName();
+        JsonProperty jsonProperty = field.getAnnotation(JsonProperty.class);
+        if (jsonProperty != null) {
+            String alternativeField = jsonProperty.value();
+            if (alternativeField.equals(JsonProperty.USE_DEFAULT_NAME)) {
+                alternativeField = field.getName();
+            }
+            return new String[]{alternativeField};
         }
-        final String[] alternativeFields = new String[]{alternativeField};
-        return alternativeFields;
+        return null;
     }
 }
