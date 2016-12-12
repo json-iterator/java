@@ -248,7 +248,12 @@ class Codegen {
     private static void genField(StringBuilder lines, Field field, String cacheKey) {
         String fieldTypeName = field.getType().getCanonicalName();
         String fieldCacheKey = field.getName() + "@" + cacheKey;
-        if (cache.containsKey(fieldCacheKey)) {
+        Decoder decoder = cache.get(fieldCacheKey);
+        boolean useCustomizedDecoder = decoder != null;
+        if (useCustomizedDecoder && decoder instanceof FieldDecoder) {
+            useCustomizedDecoder = ((FieldDecoder) decoder).useDefaultDecoder();
+        }
+        if (useCustomizedDecoder) {
             append(lines, String.format("obj.%s = (%s)iter.read(\"%s\", %s.class);",
                     field.getName(), fieldTypeName, fieldCacheKey, fieldTypeName));
             return;

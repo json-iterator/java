@@ -6,5 +6,11 @@ public interface FieldDecoder extends Decoder {
      *
      * @return null, if field is the field name
      */
-    public String[] getAlternativeFieldNames();
+    String[] getAlternativeFieldNames();
+
+    /**
+     * do not override decode
+     * @return true, for default decoder
+     */
+    boolean useDefaultDecoder();
 }

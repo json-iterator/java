@@ -67,6 +67,11 @@ public class TestCustomize extends TestCase {
                         }
 
                         @Override
+                        public boolean useDefaultDecoder() {
+                            return false;
+                        }
+
+                        @Override
                         public Object decode(Type type, Jsoniter iter) throws IOException {
                             return Integer.toString(iter.readInt());
                         }

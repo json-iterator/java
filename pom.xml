@@ -7,7 +7,7 @@
     <version>0.9.1</version>
     <artifactId>jsoniter</artifactId>
     <name>json iterator</name>
-    <description>json iterator is fast and easy to use json parser</description>
+    <description>jsoniter (json-iterator) is fast and flexible JSON parser available in Java and Go</description>
     <url>http://jsoniter.com</url>
     <packaging>jar</packaging>
 
