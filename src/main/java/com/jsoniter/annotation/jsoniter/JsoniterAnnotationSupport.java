@@ -1,12 +1,12 @@
 package com.jsoniter.annotation.jsoniter;
 
 import com.jsoniter.Decoder;
-import com.jsoniter.FieldDecoderFactory;
+import com.jsoniter.Extension;
 import com.jsoniter.Jsoniter;
 
 import java.lang.reflect.Field;
 
-public class JsoniterAnnotationSupport implements FieldDecoderFactory {
+public class JsoniterAnnotationSupport implements Extension {
 
     public static void enable() {
         Jsoniter.registerFieldDecoderFactory(new JsoniterAnnotationSupport());

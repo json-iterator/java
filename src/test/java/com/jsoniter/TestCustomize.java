@@ -34,7 +34,7 @@ public class TestCustomize extends TestCase {
     }
 
     public void test_customize_all_fields() throws IOException {
-        Jsoniter.registerFieldDecoderFactory(new FieldDecoderFactory() {
+        Jsoniter.registerFieldDecoderFactory(new Extension() {
             @Override
             public Decoder createDecoder(Field field) {
                 if (field.getDeclaringClass() == CustomizedObject.class && field.getName().equals("field1")) {
@@ -60,7 +60,7 @@ public class TestCustomize extends TestCase {
     }
 
     public void test_change_field_name() throws IOException {
-        Jsoniter.registerFieldDecoderFactory(new FieldDecoderFactory() {
+        Jsoniter.registerFieldDecoderFactory(new Extension() {
             @Override
             public Decoder createDecoder(Field field) {
                 if (field.getDeclaringClass() == CustomizedObject.class && field.getName().equals("field1")) {

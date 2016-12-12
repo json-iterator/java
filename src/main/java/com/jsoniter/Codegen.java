@@ -41,7 +41,7 @@ class Codegen {
         add(Vector.class);
     }};
     static volatile Map<String, Decoder> cache = new HashMap<String, Decoder>();
-    static List<FieldDecoderFactory> fieldDecoderFactories = new ArrayList<FieldDecoderFactory>();
+    static List<Extension> fieldDecoderFactories = new ArrayList<Extension>();
     static ClassPool pool = ClassPool.getDefault();
 
     static Decoder getDecoder(String cacheKey, Type type, Type... typeArgs) {
@@ -167,8 +167,8 @@ class Codegen {
         Map<Integer, Object> map = new HashMap<Integer, Object>();
         for (Field field : clazz.getFields()) {
             String[] alternativeFieldNames = null;
-            for (FieldDecoderFactory fieldDecoderFactory : fieldDecoderFactories) {
-                alternativeFieldNames = fieldDecoderFactory.getAlternativeFieldNames(field);
+            for (Extension extension : fieldDecoderFactories) {
+                alternativeFieldNames = extension.getAlternativeFieldNames(field);
                 if (alternativeFieldNames != null) {
                     break;
                 }
@@ -225,8 +225,8 @@ class Codegen {
     }
 
     private static Decoder createFieldDecoder(String fieldCacheKey, Field field) {
-        for (FieldDecoderFactory fieldDecoderFactory : fieldDecoderFactories) {
-            Decoder decoder = fieldDecoderFactory.createDecoder(field);
+        for (Extension extension : fieldDecoderFactories) {
+            Decoder decoder = extension.createDecoder(field);
             if (decoder != null) {
                 addNewDecoder(fieldCacheKey, decoder);
                 break;
@@ -489,8 +489,8 @@ class Codegen {
         lines.append("\n");
     }
 
-    public static void addFieldDecoderFactory(FieldDecoderFactory fieldDecoderFactory) {
-        fieldDecoderFactories.add(fieldDecoderFactory);
+    public static void addFieldDecoderFactory(Extension extension) {
+        fieldDecoderFactories.add(extension);
     }
 
     public static Decoder.IntDecoder getIntDecoder(String cacheKey) {

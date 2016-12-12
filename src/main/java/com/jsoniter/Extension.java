@@ -2,7 +2,7 @@ package com.jsoniter;
 
 import java.lang.reflect.Field;
 
-public interface FieldDecoderFactory {
+public interface Extension {
     /**
      * Customize field of certain kind, for example having certain annotation
      *
