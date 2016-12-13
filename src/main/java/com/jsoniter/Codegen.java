@@ -328,8 +328,9 @@ class Codegen {
                 append(lines, String.format("obj.%s = iter.readDouble(\"%s\");", field.getName(), fieldCacheKey));
                 return;
             }
-            append(lines, String.format("obj.%s = (%s)iter.read(\"%s\", %s.class);",
-                    field.getName(), fieldTypeName, fieldCacheKey, fieldTypeName));
+            getDecoder(fieldCacheKey, fieldType); // put decoder into cache
+            append(lines, String.format("obj.%s = (%s)iter.read(\"%s\");",
+                    field.getName(), fieldTypeName, fieldCacheKey));
             return;
         }
         append(lines, String.format("obj.%s = %s;", field.getName(), genReadOp(field.getGenericType())));
