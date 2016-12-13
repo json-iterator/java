@@ -8,7 +8,7 @@ public interface Decoder {
      *
      * @param iter the iterator instance
      * @return the value to set
-     * @throws IOException
+     * @throws IOException when reading from iterator triggered error
      */
     Object decode(Jsoniter iter) throws IOException;
 
