@@ -630,6 +630,9 @@ public class Jsoniter implements Closeable {
     }
 
     public final int readObjectFieldAsHash() throws IOException {
+        if (nextToken() != '"') {
+            throw reportError("readObjectFieldAsHash", "expect \"");
+        }
         long hash = 0x811c9dc5;
         for (; ; ) {
             for (int i = head; i < tail; i++) {

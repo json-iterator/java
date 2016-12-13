@@ -1,15 +1,12 @@
 package com.jsoniter;
 
 
-import com.dslplatform.json.BoolConverter;
 import com.dslplatform.json.DslJson;
-import com.dslplatform.json.JsonReader;
 import org.openjdk.jmh.Main;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 
 import java.io.IOException;
-import java.util.List;
 
 @State(Scope.Thread)
 public class BenchmarkRunner {

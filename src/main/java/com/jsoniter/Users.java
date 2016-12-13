@@ -69,11 +69,11 @@ public class Users {
 
         public double longitude;
 
-        @JsonAttribute(nullable = true)
-        public List<String> tags;
-
-        @JsonAttribute(nullable = true)
-        public List<Friend> friends;
+//        @JsonAttribute(nullable = true)
+//        public List<String> tags;
+//
+//        @JsonAttribute(nullable = true)
+//        public List<Friend> friends;
 
         public String greeting;
 
@@ -104,8 +104,8 @@ public class Users {
             if (address != null ? !address.equals(user.address) : user.address != null) return false;
             if (about != null ? !about.equals(user.about) : user.about != null) return false;
             if (registered != null ? !registered.equals(user.registered) : user.registered != null) return false;
-            if (tags != null ? !tags.equals(user.tags) : user.tags != null) return false;
-            if (friends != null ? !friends.equals(user.friends) : user.friends != null) return false;
+//            if (tags != null ? !tags.equals(user.tags) : user.tags != null) return false;
+//            if (friends != null ? !friends.equals(user.friends) : user.friends != null) return false;
             if (greeting != null ? !greeting.equals(user.greeting) : user.greeting != null) return false;
             return favoriteFruit != null ? favoriteFruit.equals(user.favoriteFruit) : user.favoriteFruit == null;
         }
@@ -134,17 +134,17 @@ public class Users {
             result = 31 * result + (int) (temp ^ (temp >>> 32));
             temp = Double.doubleToLongBits(longitude);
             result = 31 * result + (int) (temp ^ (temp >>> 32));
-            result = 31 * result + (tags != null ? tags.hashCode() : 0);
-            result = 31 * result + (friends != null ? friends.hashCode() : 0);
+//            result = 31 * result + (tags != null ? tags.hashCode() : 0);
+//            result = 31 * result + (friends != null ? friends.hashCode() : 0);
             result = 31 * result + (greeting != null ? greeting.hashCode() : 0);
             result = 31 * result + (favoriteFruit != null ? favoriteFruit.hashCode() : 0);
             return result;
         }
 
-        @Override
-        public String toString() {
-            return "JsonDataObj{" + "_id=" + _id + ", index=" + index + ", guid=" + guid + ", isActive=" + isActive + ", balance=" + balance + ", picture=" + picture + ", age=" + age + ", eyeColor=" + eyeColor + ", name=" + name + ", gender=" + gender + ", company=" + company + ", email=" + email + ", phone=" + phone + ", address=" + address + ", about=" + about + ", registered=" + registered + ", latitude=" + latitude + ", longitude=" + longitude + ", tags=" + tags + ", friends=" + friends + ", greeting=" + greeting + ", favoriteFruit=" + favoriteFruit + '}';
-        }
+//        @Override
+//        public String toString() {
+//            return "JsonDataObj{" + "_id=" + _id + ", index=" + index + ", guid=" + guid + ", isActive=" + isActive + ", balance=" + balance + ", picture=" + picture + ", age=" + age + ", eyeColor=" + eyeColor + ", name=" + name + ", gender=" + gender + ", company=" + company + ", email=" + email + ", phone=" + phone + ", address=" + address + ", about=" + about + ", registered=" + registered + ", latitude=" + latitude + ", longitude=" + longitude + ", tags=" + tags + ", friends=" + friends + ", greeting=" + greeting + ", favoriteFruit=" + favoriteFruit + '}';
+//        }
     }
 
     @CompiledJson

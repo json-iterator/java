@@ -5,6 +5,10 @@ import java.io.IOException;
 // only uesd by generated code to access decoder
 public class CodegenAccess {
 
+    public static byte nextToken(Jsoniter iter) throws IOException {
+        return iter.nextToken();
+    }
+
     public static final boolean readBoolean(String cacheKey, Jsoniter iter) throws IOException {
         return Codegen.getBooleanDecoder(cacheKey).decodeBoolean(iter);
     }
@@ -35,9 +39,6 @@ public class CodegenAccess {
 
     public static boolean readArrayStart(Jsoniter iter) throws IOException {
         byte c = iter.readByte();
-        if (c == 'n') {
-            return false;
-        }
         if (c != '[') {
             throw iter.reportError("readArrayStart", "expect [ or n");
         }
@@ -49,17 +50,20 @@ public class CodegenAccess {
         return true;
     }
 
-    public static boolean readArrayMiddle(Jsoniter iter) throws IOException {
-        byte c = iter.nextToken();
-        if (c == ',') {
-            iter.skipWhitespaces();
-            return true;
-        } else {
-            if (c != ']') {
-                throw iter.reportError("readArrayMiddle", "expect ]");
-            }
-            iter.skipWhitespaces();
+    public static boolean readObjectStart(Jsoniter iter) throws IOException {
+        byte c = iter.readByte();
+        if (c != '{') {
+            throw iter.reportError("readObjectStart", "expect { or n");
+        }
+        c = iter.nextToken();
+        if (c == '}') {
             return false;
         }
+        iter.unreadByte();
+        return true;
+    }
+
+    public static void reportIncompleteObject(Jsoniter iter) {
+        throw iter.reportError("genObject", "expect }");
     }
 }

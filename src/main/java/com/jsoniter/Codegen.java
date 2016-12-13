@@ -182,6 +182,7 @@ class Codegen {
         if (clazz.getFields().length == 0) {
             StringBuilder lines = new StringBuilder();
             append(lines, "public static Object decode_(com.jsoniter.Jsoniter iter) {");
+            append(lines, "if (iter.readNull()) { return null; }");
             append(lines, "{{clazz}} obj = {{newInst}};");
             append(lines, "iter.skip();");
             append(lines, "return obj;");
@@ -190,10 +191,11 @@ class Codegen {
         }
         StringBuilder lines = new StringBuilder();
         append(lines, "public static Object decode_(com.jsoniter.Jsoniter iter) {");
+        append(lines, "if (iter.readNull()) { return null; }");
         append(lines, "{{clazz}} obj = {{newInst}};");
-        append(lines, "if (iter.readByte() != '{') { throw new RuntimeException();}");
-        append(lines, "if (iter.nextToken() != '\"') { throw new RuntimeException();}");
+        append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) { return obj; }");
         append(lines, "switch (iter.readObjectFieldAsHash()) {");
+        HashSet<Integer> knownHashes = new HashSet<Integer>();
         for (Field field : clazz.getFields()) {
             long hash = 0x811c9dc5;
             for (byte b : field.getName().getBytes()) {
@@ -205,6 +207,11 @@ class Codegen {
                 // hash collision, 0 can not be used as sentinel
                 return genObject(clazz, cacheKey);
             }
+            if (knownHashes.contains(intHash)) {
+                // hash collision with other field can not be used as sentinel
+                return genObject(clazz, cacheKey);
+            }
+            knownHashes.add(intHash);
             append(lines, "case " + intHash + ": ");
             genField(lines, field, cacheKey);
             append(lines, "break;");
@@ -212,8 +219,8 @@ class Codegen {
         append(lines, "default:");
         append(lines, "iter.skip();");
         append(lines, "}");
-        append(lines, "while (iter.nextToken() == ',') {");
-        append(lines, "iter.nextToken();");
+        append(lines, "byte c = 0;");
+        append(lines, "while ((c = com.jsoniter.CodegenAccess.nextToken(iter)) == ',') {");
         append(lines, "switch (iter.readObjectFieldAsHash()) {");
         for (Field field : clazz.getFields()) {
             long hash = 0x811c9dc5;
@@ -222,10 +229,6 @@ class Codegen {
                 hash *= 0x1000193;
             }
             int intHash = (int) hash;
-            if (intHash == 0) {
-                // hash collision, 0 can not be used as sentinel
-                return genObject(clazz, cacheKey);
-            }
             append(lines, "case " + intHash + ": ");
             genField(lines, field, cacheKey);
             append(lines, "continue;");
@@ -233,6 +236,7 @@ class Codegen {
         append(lines, "}");
         append(lines, "iter.skip();");
         append(lines, "}");
+        append(lines, "if (c != '}') { com.jsoniter.CodegenAccess.reportIncompleteObject(iter); }");
         append(lines, "return obj;");
         append(lines, "}");
         return lines.toString().replace("{{clazz}}", clazz.getCanonicalName()).replace("{{newInst}}", newInstanceCode);
@@ -250,17 +254,9 @@ class Codegen {
         if (newInstanceCode == null) {
             newInstanceCode = "new " + clazz.getCanonicalName() + "()";
         }
-        if (trieTree.isEmpty()) {
-            StringBuilder lines = new StringBuilder();
-            append(lines, "public static Object decode_(com.jsoniter.Jsoniter iter) {");
-            append(lines, "{{clazz}} obj = {{newInst}};");
-            append(lines, "iter.skip();");
-            append(lines, "return obj;");
-            append(lines, "}");
-            return lines.toString().replace("{{clazz}}", clazz.getCanonicalName()).replace("{{newInst}}", newInstanceCode);
-        }
         StringBuilder lines = new StringBuilder();
         append(lines, "public static Object decode_(com.jsoniter.Jsoniter iter) {");
+        append(lines, "if (iter.readNull()) { return null; }");
         append(lines, "{{clazz}} obj = {{newInst}};");
         append(lines, "for (com.jsoniter.Slice field = iter.readObjectAsSlice(); field != null; field = iter.readObjectAsSlice()) {");
         append(lines, "switch (field.len) {");
@@ -458,15 +454,15 @@ class Codegen {
         append(lines, "return new {{comp}}[0];");
         append(lines, "}");
         append(lines, "{{comp}} a1 = {{op}};");
-        append(lines, "if (!com.jsoniter.CodegenAccess.readArrayMiddle(iter)) {");
+        append(lines, "if (com.jsoniter.CodegenAccess.nextToken(iter) != ',') {");
         append(lines, "return new {{comp}}[]{ a1 };");
         append(lines, "}");
         append(lines, "{{comp}} a2 = {{op}};");
-        append(lines, "if (!com.jsoniter.CodegenAccess.readArrayMiddle(iter)) {");
+        append(lines, "if (com.jsoniter.CodegenAccess.nextToken(iter) != ',') {");
         append(lines, "return new {{comp}}[]{ a1, a2 };");
         append(lines, "}");
         append(lines, "{{comp}} a3 = {{op}};");
-        append(lines, "if (!com.jsoniter.CodegenAccess.readArrayMiddle(iter)) {");
+        append(lines, "if (com.jsoniter.CodegenAccess.nextToken(iter) != ',') {");
         append(lines, "return new {{comp}}[]{ a1, a2, a3 };");
         append(lines, "}");
         append(lines, "{{comp}} a4 = ({{comp}}) {{op}};");
@@ -476,7 +472,7 @@ class Codegen {
         append(lines, "arr[2] = a3;");
         append(lines, "arr[3] = a4;");
         append(lines, "int i = 4;");
-        append(lines, "while (com.jsoniter.CodegenAccess.readArrayMiddle(iter)) {");
+        append(lines, "while (com.jsoniter.CodegenAccess.nextToken(iter) == ',') {");
         append(lines, "if (i == arr.length) {");
         append(lines, "{{comp}}[] newArr = new {{comp}}[arr.length * 2];");
         append(lines, "System.arraycopy(arr, 0, newArr, 0, arr.length);");
@@ -500,20 +496,20 @@ class Codegen {
         append(lines, "return new {{clazz}}(0);");
         append(lines, "}");
         append(lines, "Object a1 = {{op}};");
-        append(lines, "if (!com.jsoniter.CodegenAccess.readArrayMiddle(iter)) {");
+        append(lines, "if (com.jsoniter.CodegenAccess.nextToken(iter) != ',') {");
         append(lines, "{{clazz}} obj = new {{clazz}}(1);");
         append(lines, "obj.add(a1);");
         append(lines, "return obj;");
         append(lines, "}");
         append(lines, "Object a2 = {{op}};");
-        append(lines, "if (!com.jsoniter.CodegenAccess.readArrayMiddle(iter)) {");
+        append(lines, "if (com.jsoniter.CodegenAccess.nextToken(iter) != ',') {");
         append(lines, "{{clazz}} obj = new {{clazz}}(2);");
         append(lines, "obj.add(a1);");
         append(lines, "obj.add(a2);");
         append(lines, "return obj;");
         append(lines, "}");
         append(lines, "Object a3 = {{op}};");
-        append(lines, "if (!com.jsoniter.CodegenAccess.readArrayMiddle(iter)) {");
+        append(lines, "if (com.jsoniter.CodegenAccess.nextToken(iter) != ',') {");
         append(lines, "{{clazz}} obj = new {{clazz}}(3);");
         append(lines, "obj.add(a1);");
         append(lines, "obj.add(a2);");
@@ -527,7 +523,7 @@ class Codegen {
         append(lines, "obj.add(a3);");
         append(lines, "obj.add(a4);");
         append(lines, "int i = 4;");
-        append(lines, "while (com.jsoniter.CodegenAccess.readArrayMiddle(iter)) {");
+        append(lines, "while (com.jsoniter.CodegenAccess.nextToken(iter) == ',') {");
         append(lines, "obj.add({{op}});");
         append(lines, "}");
         append(lines, "return obj;");
@@ -544,20 +540,20 @@ class Codegen {
         append(lines, "return new {{clazz}}();");
         append(lines, "}");
         append(lines, "Object a1 = {{op}};");
-        append(lines, "if (!com.jsoniter.CodegenAccess.readArrayMiddle(iter)) {");
+        append(lines, "if (com.jsoniter.CodegenAccess.nextToken(iter) != ',') {");
         append(lines, "{{clazz}} obj = new {{clazz}}();");
         append(lines, "obj.add(a1);");
         append(lines, "return obj;");
         append(lines, "}");
         append(lines, "Object a2 = {{op}};");
-        append(lines, "if (!com.jsoniter.CodegenAccess.readArrayMiddle(iter)) {");
+        append(lines, "if (com.jsoniter.CodegenAccess.nextToken(iter) != ',') {");
         append(lines, "{{clazz}} obj = new {{clazz}}();");
         append(lines, "obj.add(a1);");
         append(lines, "obj.add(a2);");
         append(lines, "return obj;");
         append(lines, "}");
         append(lines, "Object a3 = {{op}};");
-        append(lines, "if (!com.jsoniter.CodegenAccess.readArrayMiddle(iter)) {");
+        append(lines, "if (com.jsoniter.CodegenAccess.nextToken(iter) != ',') {");
         append(lines, "{{clazz}} obj = new {{clazz}}();");
         append(lines, "obj.add(a1);");
         append(lines, "obj.add(a2);");
@@ -571,7 +567,7 @@ class Codegen {
         append(lines, "obj.add(a3);");
         append(lines, "obj.add(a4);");
         append(lines, "int i = 4;");
-        append(lines, "while (com.jsoniter.CodegenAccess.readArrayMiddle(iter)) {");
+        append(lines, "while (com.jsoniter.CodegenAccess.nextToken(iter) == ',') {");
         append(lines, "obj.add({{op}});");
         append(lines, "}");
         append(lines, "return obj;");
