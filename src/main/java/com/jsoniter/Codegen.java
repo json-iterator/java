@@ -182,7 +182,7 @@ class Codegen {
             append(lines, "iter.skip();");
             append(lines, "return obj;");
             append(lines, "}");
-            return lines.toString().replace("{{clazz}}", clazz.getName()).replace("{{newInst}}", newInstanceCode);
+            return lines.toString().replace("{{clazz}}", clazz.getCanonicalName()).replace("{{newInst}}", newInstanceCode);
         }
         StringBuilder lines = new StringBuilder();
         append(lines, "public Object decode(com.jsoniter.Jsoniter iter) {");
@@ -193,7 +193,7 @@ class Codegen {
             Integer len = entry.getKey();
             append(lines, "case " + len + ": ");
             Map<Byte, Object> current = (Map<Byte, Object>) entry.getValue();
-            addFieldDispatch(lines, len, 0, current, cacheKey);
+            addFieldDispatch(lines, len, 0, current, cacheKey, new ArrayList<Byte>());
             append(lines, "break;");
         }
         append(lines, "}");
@@ -201,7 +201,7 @@ class Codegen {
         append(lines, "}");
         append(lines, "return obj;");
         append(lines, "}");
-        return lines.toString().replace("{{clazz}}", clazz.getName()).replace("{{newInst}}", newInstanceCode);
+        return lines.toString().replace("{{clazz}}", clazz.getCanonicalName()).replace("{{newInst}}", newInstanceCode);
     }
 
     private static Map<Integer, Object> buildTriTree(Class clazz) {
@@ -252,16 +252,38 @@ class Codegen {
         return cache.get(fieldCacheKey);
     }
 
-    private static void addFieldDispatch(StringBuilder lines, int len, int i, Map<Byte, Object> current, String cacheKey) {
+    private static void addFieldDispatch(StringBuilder lines, int len, int i, Map<Byte, Object> current, String cacheKey, List<Byte> bytesToCompare) {
         for (Map.Entry<Byte, Object> entry : current.entrySet()) {
             Byte b = entry.getKey();
-            append(lines, String.format("if (field.at(%d)==%s) {", i, b));
             if (i == len - 1) {
+                append(lines, "if (");
+                for (int j = 0; j < bytesToCompare.size(); j++) {
+                    Byte a = bytesToCompare.get(j);
+                    append(lines, String.format("field.at(%d)==%s && ", i - bytesToCompare.size() + j, a));
+                }
+                append(lines, String.format("field.at(%d)==%s", i, b));
+                append(lines, ") {");
                 genField(lines, (Field) entry.getValue(), cacheKey);
                 append(lines, "continue;");
-            } else {
-                addFieldDispatch(lines, len, i + 1, (Map<Byte, Object>) entry.getValue(), cacheKey);
+                append(lines, "}");
+                continue;
             }
+            Map<Byte, Object> next = (Map<Byte, Object>) entry.getValue();
+            if (next.size() == 1) {
+                ArrayList<Byte> nextBytesToCompare = new ArrayList<Byte>(bytesToCompare);
+                nextBytesToCompare.add(b);
+                addFieldDispatch(lines, len, i + 1, next, cacheKey, nextBytesToCompare);
+                continue;
+            }
+            append(lines, "if (");
+            for (int j = 0; j < bytesToCompare.size(); j++) {
+                Byte a = bytesToCompare.get(j);
+                append(lines, String.format("field.at(%d)==%s && ", i - bytesToCompare.size() + j, a));
+            }
+            append(lines, String.format("field.at(%d)==%s", i, b));
+            append(lines, ") {");
+            addFieldDispatch(lines, len, i + 1, next, cacheKey, new ArrayList<Byte>());
+            append(lines, "continue;");
             append(lines, "}");
         }
     }
@@ -423,7 +445,7 @@ class Codegen {
         append(lines, "return obj;");
         append(lines, "}");
         append(lines, "Object a4 = {{op}};");
-        append(lines, "{{clazz}} obj = new {{clazz}}(8);");
+        append(lines, "{{clazz}} obj = new {{clazz}}(5);");
         append(lines, "obj.add(a1);");
         append(lines, "obj.add(a2);");
         append(lines, "obj.add(a3);");

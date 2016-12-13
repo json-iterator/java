@@ -101,6 +101,7 @@ public class Jsoniter implements Closeable {
         this.buf = buf;
         this.head = 0;
         this.tail = buf.length;
+        this.eof = false;
         skipWhitespaces();
     }
 
@@ -108,6 +109,7 @@ public class Jsoniter implements Closeable {
         this.in = in;
         this.head = 0;
         this.tail = 0;
+        this.eof = false;
         skipWhitespaces();
     }
 
@@ -350,7 +352,7 @@ public class Jsoniter implements Closeable {
         }
     }
 
-    public final Slice readSlice() throws IOException {
+    final Slice readSlice() throws IOException {
         byte c = readByte();
         switch (c) {
             case 'n':
@@ -729,7 +731,11 @@ public class Jsoniter implements Closeable {
     }
 
     public final double readDouble() throws IOException {
-        return Double.valueOf(readNumber());
+        try {
+            return Double.valueOf(readNumber());
+        } catch (RuntimeException e) {
+            throw reportError("readDouble", e.getMessage());
+        }
     }
 
     public final BigDecimal readBigDecimal() throws IOException {
