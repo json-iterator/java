@@ -329,7 +329,7 @@ class Codegen {
                 return;
             }
             getDecoder(fieldCacheKey, fieldType); // put decoder into cache
-            append(lines, String.format("obj.%s = (%s)iter.read(\"%s\");",
+            append(lines, String.format("obj.%s = (%s)com.jsoniter.CodegenAccess.read(\"%s\", iter);",
                     field.getName(), fieldTypeName, fieldCacheKey));
             return;
         }
@@ -343,18 +343,10 @@ class Codegen {
             if (nativeRead != null) {
                 return nativeRead;
             }
-            return String.format("(%s)iter.read(\"%s\", %s.class)",
-                    clazz.getCanonicalName(), TypeLiteral.generateCacheKey(clazz), clazz.getCanonicalName());
         }
-        if (type instanceof ParameterizedType) {
-            ParameterizedType pType = (ParameterizedType) type;
-            Class clazz = (Class) pType.getRawType();
-            Type[] args = pType.getActualTypeArguments();
-            String cacheKey = TypeLiteral.generateCacheKey(type);
-            getDecoder(cacheKey, clazz, args); // set the decoder to cache
-            return String.format("(%s)iter.read(\"%s\")", clazz.getCanonicalName(), cacheKey);
-        }
-        throw new IllegalArgumentException("unsupported type: " + type);
+        String cacheKey = TypeLiteral.generateCacheKey(type);
+        getDecoder(cacheKey, type); // set the decoder to cache
+        return String.format("com.jsoniter.CodegenAccess.read(\"%s\", iter)", cacheKey);
     }
 
     private static String genArray(Class clazz) {

@@ -163,10 +163,6 @@ public class Jsoniter implements Closeable {
         return false;
     }
 
-    public final boolean readBoolean(String cacheKey) throws IOException {
-        return Codegen.getBooleanDecoder(cacheKey).decodeBoolean(this);
-    }
-
     public final boolean readBoolean() throws IOException {
         byte c = readByte();
         switch (c) {
@@ -181,10 +177,6 @@ public class Jsoniter implements Closeable {
         }
     }
 
-    public final short readShort(String cacheKey) throws IOException {
-        return Codegen.getShortDecoder(cacheKey).decodeShort(this);
-    }
-
     public final short readShort() throws IOException {
         int v = readInt();
         if (Short.MIN_VALUE <= v && v <= Short.MAX_VALUE) {
@@ -192,10 +184,6 @@ public class Jsoniter implements Closeable {
         } else {
             throw new RuntimeException("short overflow: " + v);
         }
-    }
-
-    public final int readInt(String cacheKey) throws IOException {
-        return Codegen.getIntDecoder(cacheKey).decodeInt(this);
     }
 
     public final int readInt() throws IOException {
@@ -229,10 +217,6 @@ public class Jsoniter implements Closeable {
             }
         }
         return result;
-    }
-
-    public final long readLong(String cacheKey) throws IOException {
-        return Codegen.getLongDecoder(cacheKey).decodeLong(this);
     }
 
     public final long readLong() throws IOException {
@@ -740,16 +724,8 @@ public class Jsoniter implements Closeable {
         return new String(reusableChars, 0, j);
     }
 
-    public final float readFloat(String cacheKey) throws IOException {
-        return Codegen.getFloatDecoder(cacheKey).decodeFloat(this);
-    }
-
     public final float readFloat() throws IOException {
         return Float.valueOf(readNumber());
-    }
-
-    public final double readDouble(String cacheKey) throws IOException {
-        return Codegen.getDoubleDecoder(cacheKey).decodeDouble(this);
     }
 
     public final double readDouble() throws IOException {
@@ -803,10 +779,6 @@ public class Jsoniter implements Closeable {
     public final <T> T read(TypeLiteral<T> typeLiteral) throws IOException {
         Type type = typeLiteral.getType();
         return (T) Codegen.getDecoder(typeLiteral.cacheKey, type).decode(this);
-    }
-
-    public final <T> T read(String cacheKey) throws IOException {
-        return (T) Codegen.getDecoder(cacheKey, null).decode(this);
     }
 
     public final void skip() throws IOException {
@@ -1027,10 +999,6 @@ public class Jsoniter implements Closeable {
 
     public static void registerFieldDecoder(TypeLiteral typeLiteral, String field, Decoder decoder) {
         Codegen.addNewDecoder(field + "@" + typeLiteral.cacheKey, decoder);
-    }
-
-    public static void clearDecoders() {
-        Codegen.cache.clear();
     }
 
     public static void registerExtension(Extension extension) {
