@@ -32,4 +32,34 @@ public class CodegenAccess {
     public static final <T> T read(String cacheKey, Jsoniter iter) throws IOException {
         return (T) Codegen.getDecoder(cacheKey, null).decode(iter);
     }
+
+    public static boolean readArrayStart(Jsoniter iter) throws IOException {
+        byte c = iter.readByte();
+        if (c == 'n') {
+            return false;
+        }
+        if (c != '[') {
+            throw iter.reportError("readArrayStart", "expect [ or n");
+        }
+        c = iter.nextToken();
+        if (c == ']') {
+            return false;
+        }
+        iter.unreadByte();
+        return true;
+    }
+
+    public static boolean readArrayMiddle(Jsoniter iter) throws IOException {
+        byte c = iter.nextToken();
+        if (c == ',') {
+            iter.skipWhitespaces();
+            return true;
+        } else {
+            if (c != ']') {
+                throw iter.reportError("readArrayMiddle", "expect ]");
+            }
+            iter.skipWhitespaces();
+            return false;
+        }
+    }
 }

@@ -1,9 +1,10 @@
 package com.jsoniter;
 
-import com.jsoniter.Jsoniter;
 import junit.framework.TestCase;
 
 import java.io.IOException;
+
+import static org.junit.Assert.assertArrayEquals;
 
 public class TestArray extends TestCase {
 
@@ -65,5 +66,15 @@ public class TestArray extends TestCase {
         assertTrue(iter.readArray());
         assertEquals(2, iter.readUnsignedInt());
         assertFalse(iter.readArray());
+    }
+
+    public void test_null() throws IOException {
+        Jsoniter iter = Jsoniter.parse("null");
+        assertNull(iter.read(double[].class));
+    }
+
+    public void test_boolean_array() throws IOException {
+        Jsoniter iter = Jsoniter.parse("[true, false, true]");
+        assertArrayEquals(new boolean[]{true, false, true}, iter.read(boolean[].class));
     }
 }
