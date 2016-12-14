@@ -1,6 +1,8 @@
 package com.jsoniter;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 // only uesd by generated code to access decoder
 public class CodegenAccess {
@@ -50,6 +52,20 @@ public class CodegenAccess {
         return true;
     }
 
+    public static boolean readArrayMiddle(Jsoniter iter) throws IOException {
+        byte c = iter.nextToken();
+        if (c == ',') {
+            iter.skipWhitespaces();
+            return true;
+        } else {
+            if (c != ']') {
+                throw iter.reportError("readArrayMiddle", "expect ]");
+            }
+            iter.skipWhitespaces();
+            return false;
+        }
+    }
+
     public static boolean readObjectStart(Jsoniter iter) throws IOException {
         byte c = iter.readByte();
         if (c != '{') {
@@ -65,5 +81,71 @@ public class CodegenAccess {
 
     public static void reportIncompleteObject(Jsoniter iter) {
         throw iter.reportError("genObject", "expect }");
+    }
+
+    public static void reportIncompleteArray(Jsoniter iter) {
+        throw iter.reportError("genArray", "expect ]");
+    }
+
+    public static final int readObjectFieldAsHash(Jsoniter iter) throws IOException {
+        if (iter.nextToken() != '"') {
+            throw iter.reportError("readObjectFieldAsHash", "expect \"");
+        }
+        long hash = 0x811c9dc5;
+        for (; ; ) {
+            for (int i = iter.head; i < iter.tail; i++) {
+                byte c = iter.buf[i];
+                if (c == '"') {
+                    iter.head = i + 1;
+                    if (iter.nextToken() != ':') {
+                        throw iter.reportError("readObjectFieldAsHash", "expect : after field");
+                    }
+                    iter.skipWhitespaces();
+                    return (int) hash;
+                }
+                hash ^= c;
+                hash *= 0x1000193;
+            }
+            if (!iter.loadMore()) {
+                throw iter.reportError("readObjectFieldAsHash", "unmatched quote");
+            }
+        }
+    }
+
+    public static final Slice readObjectFieldAsSlice(Jsoniter iter) throws IOException {
+        if (iter.nextToken() != '"') {
+            throw iter.reportError("readObjectFieldAsSlice", "expect \"");
+        }
+        Slice field = iter.readSlice();
+        boolean notCopied = field != null;
+        if (iter.skipWhitespacesWithoutLoadMore()) {
+            if (notCopied) {
+                byte[] newBuf = new byte[field.len];
+                System.arraycopy(field.data, field.head, newBuf, 0, field.len);
+                field.data = newBuf;
+                field.head = 0;
+                field.len = newBuf.length;
+            }
+            if (!iter.loadMore()) {
+                throw iter.reportError("readObjectFieldAsSlice", "expect : after object field");
+            }
+        }
+        if (iter.buf[iter.head] != ':') {
+            throw iter.reportError("readObjectFieldAsSlice", "expect : after object field");
+        }
+        iter.head++;
+        if (iter.skipWhitespacesWithoutLoadMore()) {
+            if (notCopied) {
+                byte[] newBuf = new byte[field.len];
+                System.arraycopy(field.data, field.head, newBuf, 0, field.len);
+                field.data = newBuf;
+                field.head = 0;
+                field.len = newBuf.length;
+            }
+            if (!iter.loadMore()) {
+                throw iter.reportError("readObjectFieldAsSlice", "expect : after object field");
+            }
+        }
+        return field;
     }
 }

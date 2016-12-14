@@ -69,11 +69,11 @@ public class Users {
 
         public double longitude;
 
-//        @JsonAttribute(nullable = true)
-//        public List<String> tags;
-//
-//        @JsonAttribute(nullable = true)
-//        public List<Friend> friends;
+        @JsonAttribute(nullable = true)
+        public List<String> tags;
+
+        @JsonAttribute(nullable = true)
+        public List<Friend> friends;
 
         public String greeting;
 

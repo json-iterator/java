@@ -8,13 +8,13 @@ public class TestObject extends TestCase {
 
     public void test_empty_object() throws IOException {
         Jsoniter iter = Jsoniter.parse("{}");
-        assertNull(iter.readObjectAsSlice());
+        assertNull(iter.readObject());
     }
 
     public void test_one_field() throws IOException {
         Jsoniter iter = Jsoniter.parse("{'hello':'world'}".replace('\'', '"'));
         assertEquals("hello", iter.readObject());
-        assertEquals("world", iter.readSlice().toString());
-        assertNull(iter.readObjectAsSlice());
+        assertEquals("world", iter.readString());
+        assertNull(iter.readObject());
     }
 }

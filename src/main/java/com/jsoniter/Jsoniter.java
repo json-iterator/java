@@ -41,7 +41,7 @@ public class Jsoniter implements Closeable {
     int tail;
     boolean eof;
     private final Slice reusableSlice = new Slice(null, 0, 0);
-    private char[] reusableChars = new char[256];
+    private char[] reusableChars = new char[64];
 
     static {
         for (int i = 0; i < digits.length; i++) {
@@ -629,93 +629,6 @@ public class Jsoniter implements Closeable {
         }
     }
 
-    public final int readObjectFieldAsHash() throws IOException {
-        if (nextToken() != '"') {
-            throw reportError("readObjectFieldAsHash", "expect \"");
-        }
-        long hash = 0x811c9dc5;
-        for (; ; ) {
-            for (int i = head; i < tail; i++) {
-                byte c = buf[i];
-                if (c == '"') {
-                    head = i + 1;
-                    if (nextToken() != ':') {
-                        throw reportError("readObjectFieldAsHash", "expect : after field");
-                    }
-                    skipWhitespaces();
-                    return (int) hash;
-                }
-                hash ^= c;
-                hash *= 0x1000193;
-            }
-            if (!loadMore()) {
-                throw reportError("readObjectFieldAsHash", "unmatched quote");
-            }
-        }
-    }
-
-    public final Slice readObjectAsSlice() throws IOException {
-        byte c = nextToken();
-        switch (c) {
-            case 'n':
-                skipUntilBreak();
-                return null;
-            case '{':
-                c = nextToken();
-                switch (c) {
-                    case '}':
-                        return null; // end of object
-                    case '"':
-                        return readObjectFieldAsSlice();
-                    default:
-                        throw reportError("readObjectAsSlice", "expect \" after {");
-                }
-            case ',':
-                if (nextToken() != '"') {
-                    throw reportError("readObjectAsSlice", "expect \" after ,");
-                }
-                return readObjectFieldAsSlice();
-            case '}':
-                return null; // end of object
-            default:
-                throw reportError("readObjectAsSlice", "expect { or , or } or n");
-        }
-    }
-
-    final Slice readObjectFieldAsSlice() throws IOException {
-        Slice field = readSlice();
-        boolean notCopied = field != null;
-        if (skipWhitespacesWithoutLoadMore()) {
-            if (notCopied) {
-                byte[] newBuf = new byte[field.len];
-                System.arraycopy(field.data, field.head, newBuf, 0, field.len);
-                field.data = newBuf;
-                field.head = 0;
-                field.len = newBuf.length;
-            }
-            if (!loadMore()) {
-                throw reportError("readObjectFieldAsSlice", "expect : after object field");
-            }
-        }
-        if (buf[head] != ':') {
-            throw reportError("readObjectFieldAsSlice", "expect : after object field");
-        }
-        head++;
-        if (skipWhitespacesWithoutLoadMore()) {
-            if (notCopied) {
-                byte[] newBuf = new byte[field.len];
-                System.arraycopy(field.data, field.head, newBuf, 0, field.len);
-                field.data = newBuf;
-                field.head = 0;
-                field.len = newBuf.length;
-            }
-            if (!loadMore()) {
-                throw reportError("readObjectFieldAsSlice", "expect : after object field");
-            }
-        }
-        return field;
-    }
-
     final String readNumber() throws IOException {
         int j = 0;
         for (byte c = readByte(); !eof; c = readByte()) {
@@ -759,6 +672,11 @@ public class Jsoniter implements Closeable {
     }
 
     public final double readDouble() throws IOException {
+        if (head == tail) {
+            if (!loadMore()) {
+                throw reportError("readDouble", "no more to read");
+            }
+        }
         final byte ch = buf[head];
         if (ch == '-') {
             return parseNegativeDouble(head + 1);
@@ -779,7 +697,7 @@ public class Jsoniter implements Closeable {
                 return value;
             }
             if (c == '.') break;
-            final int ind = buf[i] - 48;
+            final int ind = digits[c];
             value = (value << 3) + (value << 1) + ind;
             if (ind < 0 || ind > 9) {
                 return readDoubleSlowPath();
@@ -794,7 +712,7 @@ public class Jsoniter implements Closeable {
                     head = i;
                     return value / (double) div;
                 }
-                final int ind = buf[i] - 48;
+                final int ind = digits[c];
                 div = (div << 3) + (div << 1);
                 value = (value << 3) + (value << 1) + ind;
                 if (ind < 0 || ind > 9) {
@@ -816,7 +734,7 @@ public class Jsoniter implements Closeable {
                 return value;
             }
             if (c == '.') break;
-            final int ind = buf[i] - 48;
+            final int ind = digits[c];
             value = (value << 3) + (value << 1) - ind;
             if (ind < 0 || ind > 9) {
                 return readDoubleSlowPath();
@@ -831,7 +749,7 @@ public class Jsoniter implements Closeable {
                     head = i;
                     return value / (double) div;
                 }
-                final int ind = buf[i] - 48;
+                final int ind = digits[c];
                 div = (div << 3) + (div << 1);
                 value = (value << 3) + (value << 1) - ind;
                 if (ind < 0 || ind > 9) {

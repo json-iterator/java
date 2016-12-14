@@ -42,7 +42,6 @@ public class TestReflection extends TestCase {
         assertArrayEquals(new Integer[]{1, 2, 3}, val);
     }
 
-
     public void test_float_array() throws IOException {
         Jsoniter iter = Jsoniter.parse("[1.1,2,3]");
         float[] val = iter.read(float[].class);

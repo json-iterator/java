@@ -31,4 +31,9 @@ public class TestInt extends TestCase {
         Jsoniter iter = Jsoniter.parse("-123");
         assertEquals(-123, iter.readLong());
     }
+
+    public void test_read_long_from_class() throws IOException {
+        Jsoniter iter = Jsoniter.parse("-123");
+        assertEquals(Long.valueOf(-123), iter.read(Long.class));
+    }
 }

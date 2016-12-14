@@ -25,11 +25,11 @@ public class TypeLiteral<T> {
         StringBuilder decoderClassName = new StringBuilder("codegen.");
         if (type instanceof Class) {
             Class clazz = (Class) type;
-            decoderClassName.append(clazz.getName().replace("[", "array_"));
+            decoderClassName.append(clazz.getCanonicalName().replace("[]", "_array"));
         } else if (type instanceof ParameterizedType) {
             ParameterizedType pType = (ParameterizedType) type;
             Class clazz = (Class) pType.getRawType();
-            decoderClassName.append(clazz.getName().replace("[", "array_"));
+            decoderClassName.append(clazz.getCanonicalName().replace("[]", "_array"));
             for (int i = 0; i < pType.getActualTypeArguments().length; i++) {
                 String typeName = formatTypeWithoutSpecialCharacter(pType.getActualTypeArguments()[i]);
                 decoderClassName.append('_');
