@@ -15,7 +15,6 @@ import static java.lang.Character.*;
 
 public class Jsoniter implements Closeable {
 
-    private static final boolean[] whitespaces = new boolean[256];
     private static final boolean[] breaks = new boolean[256];
     final static int[] digits = new int[256];
     final static ValueType[] valueTypes = new ValueType[256];
@@ -41,7 +40,7 @@ public class Jsoniter implements Closeable {
     int tail;
     boolean eof;
     private final Slice reusableSlice = new Slice(null, 0, 0);
-    private char[] reusableChars = new char[64];
+    private char[] reusableChars = new char[32];
 
     static {
         for (int i = 0; i < digits.length; i++) {
@@ -76,10 +75,6 @@ public class Jsoniter implements Closeable {
         valueTypes['n'] = ValueType.NULL;
         valueTypes['['] = ValueType.ARRAY;
         valueTypes['{'] = ValueType.OBJECT;
-        whitespaces[' '] = true;
-        whitespaces['\t'] = true;
-        whitespaces['\n'] = true;
-        whitespaces['\r'] = true;
         breaks[' '] = true;
         breaks['\t'] = true;
         breaks['\n'] = true;
@@ -95,7 +90,6 @@ public class Jsoniter implements Closeable {
         if (this.in == null) {
             tail = buf.length;
         }
-        skipWhitespaces();
     }
 
     public static Jsoniter parse(InputStream in, int bufSize) throws IOException {
@@ -115,7 +109,6 @@ public class Jsoniter implements Closeable {
         this.head = 0;
         this.tail = buf.length;
         this.eof = false;
-        skipWhitespaces();
     }
 
     public final void reset(InputStream in) throws IOException {
@@ -123,7 +116,6 @@ public class Jsoniter implements Closeable {
         this.head = 0;
         this.tail = 0;
         this.eof = false;
-        skipWhitespaces();
     }
 
     public final void close() throws IOException {
@@ -132,7 +124,7 @@ public class Jsoniter implements Closeable {
         }
     }
 
-    public final byte readByte() throws IOException {
+    final byte readByte() throws IOException {
         if (head == tail) {
             if (!loadMore()) {
                 return 0;
@@ -152,7 +144,7 @@ public class Jsoniter implements Closeable {
                 eof = true;
                 return false;
             } else {
-                throw new IOException("readAny returned " + n);
+                throw reportError("loadMore", "read from input stream returned " + n);
             }
         } else {
             head = 0;
@@ -161,7 +153,7 @@ public class Jsoniter implements Closeable {
         return true;
     }
 
-    public final void unreadByte() throws IOException {
+    final void unreadByte() throws IOException {
         if (head == 0) {
             throw new IOException("unread too many bytes");
         }
@@ -169,7 +161,7 @@ public class Jsoniter implements Closeable {
     }
 
     public final boolean readNull() throws IOException {
-        byte c = readByte();
+        byte c = nextToken();
         if (c == 'n') {
             skipUntilBreak();
             return true;
@@ -179,7 +171,7 @@ public class Jsoniter implements Closeable {
     }
 
     public final boolean readBoolean() throws IOException {
-        byte c = readByte();
+        byte c = nextToken();
         switch (c) {
             case 't':
                 skipUntilBreak();
@@ -202,7 +194,7 @@ public class Jsoniter implements Closeable {
     }
 
     public final int readInt() throws IOException {
-        byte c = readByte();
+        byte c = nextToken();
         if (c == '-') {
             return -readUnsignedInt();
         } else {
@@ -235,7 +227,7 @@ public class Jsoniter implements Closeable {
     }
 
     public final long readLong() throws IOException {
-        byte c = readByte();
+        byte c = nextToken();
         if (c == '-') {
             return -readUnsignedLong();
         } else {
@@ -299,45 +291,15 @@ public class Jsoniter implements Closeable {
             case ']':
                 return false;
             case ',':
-                skipWhitespaces();
                 return true;
             case 'n':
-                skipUntilBreak();
                 return false;
             default:
                 throw reportError("readArray", "expect [ or , or n or ]");
         }
     }
 
-    public final void skipWhitespaces() throws IOException {
-        for (; ; ) {
-            for (int i = head; i < tail; i++) {
-                byte c = buf[i];
-                if (whitespaces[c]) {
-                    continue;
-                }
-                head = i;
-                return;
-            }
-            if (!loadMore()) {
-                return;
-            }
-        }
-    }
-
-    final boolean skipWhitespacesWithoutLoadMore() throws IOException {
-        for (int i = head; i < tail; i++) {
-            byte c = buf[i];
-            if (whitespaces[c]) {
-                continue;
-            }
-            head = i;
-            return false;
-        }
-        return true;
-    }
-
-    public final byte nextToken() throws IOException {
+    final byte nextToken() throws IOException {
         for (; ; ) {
             for (int i = head; i < tail; i++) {
                 byte c = buf[i];
@@ -394,7 +356,7 @@ public class Jsoniter implements Closeable {
 
     public final byte[] readBase64() throws IOException {
         // from https://gist.github.com/EmilHernvall/953733
-        if (readByte() != '"') {
+        if (nextToken() != '"') {
             throw reportError("readBase64", "expect \" for base64");
         }
         Slice slice = readSlice();
@@ -440,15 +402,13 @@ public class Jsoniter implements Closeable {
     }
 
     public final String readString() throws IOException {
-        byte c = readByte();
-        switch (c) {
-            case 'n':
-                skipUntilBreak();
-                return null;
-            case '"':
-                break;
-            default:
-                throw reportError("readString", "expect n or \"");
+        byte c = nextToken();
+        if (c == 'n') {
+            skipUntilBreak();
+            return null;
+        }
+        if (c != '"') {
+            throw reportError("readString", "expect n or \"");
         }
         // try fast path first
         for (int i = head, j = 0; i < tail && j < reusableChars.length; i++, j++) {
@@ -607,20 +567,17 @@ public class Jsoniter implements Closeable {
                         unreadByte();
                         String field = readString();
                         if (nextToken() != ':') {
-                            throw reportError("readObject", "expect : after object field");
+                            throw reportError("readObject", "expect :");
                         }
-                        skipWhitespaces();
                         return field;
                     default:
                         throw reportError("readObject", "expect \" after {");
                 }
             case ',':
-                skipWhitespaces();
                 String field = readString();
                 if (nextToken() != ':') {
-                    throw reportError("readObject", "expect : after object field");
+                    throw reportError("readObject", "expect :");
                 }
-                skipWhitespaces();
                 return field;
             case '}':
                 return null; // end of object
@@ -631,7 +588,7 @@ public class Jsoniter implements Closeable {
 
     final String readNumber() throws IOException {
         int j = 0;
-        for (byte c = readByte(); !eof; c = readByte()) {
+        for (byte c = nextToken(); !eof; c = readByte()) {
             if (j == reusableChars.length) {
                 char[] newBuf = new char[reusableChars.length * 2];
                 System.arraycopy(reusableChars, 0, newBuf, 0, reusableChars.length);
@@ -810,7 +767,7 @@ public class Jsoniter implements Closeable {
     }
 
     public final void skip() throws IOException {
-        byte c = readByte();
+        byte c = nextToken();
         switch (c) {
             case '"':
                 skipString();
@@ -1001,7 +958,7 @@ public class Jsoniter implements Closeable {
     }
 
     public ValueType whatIsNext() throws IOException {
-        ValueType valueType = valueTypes[readByte()];
+        ValueType valueType = valueTypes[nextToken()];
         unreadByte();
         return valueType;
     }

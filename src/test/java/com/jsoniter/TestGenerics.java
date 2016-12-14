@@ -44,6 +44,7 @@ public class TestGenerics extends TestCase {
         Jsoniter iter = Jsoniter.parse("[[1,2],[3,4]]");
         List<List<Integer>> listOfList = iter.read(new TypeLiteral<List<List<Integer>>>() {
         });
+        System.out.println(listOfList);
         assertEquals(Integer.valueOf(4), listOfList.get(1).get(1));
     }
 

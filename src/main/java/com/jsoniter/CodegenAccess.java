@@ -40,7 +40,7 @@ public class CodegenAccess {
     }
 
     public static boolean readArrayStart(Jsoniter iter) throws IOException {
-        byte c = iter.readByte();
+        byte c = iter.nextToken();
         if (c != '[') {
             throw iter.reportError("readArrayStart", "expect [ or n");
         }
@@ -52,22 +52,8 @@ public class CodegenAccess {
         return true;
     }
 
-    public static boolean readArrayMiddle(Jsoniter iter) throws IOException {
-        byte c = iter.nextToken();
-        if (c == ',') {
-            iter.skipWhitespaces();
-            return true;
-        } else {
-            if (c != ']') {
-                throw iter.reportError("readArrayMiddle", "expect ]");
-            }
-            iter.skipWhitespaces();
-            return false;
-        }
-    }
-
     public static boolean readObjectStart(Jsoniter iter) throws IOException {
-        byte c = iter.readByte();
+        byte c = iter.nextToken();
         if (c != '{') {
             throw iter.reportError("readObjectStart", "expect { or n");
         }
@@ -93,18 +79,22 @@ public class CodegenAccess {
         }
         long hash = 0x811c9dc5;
         for (; ; ) {
-            for (int i = iter.head; i < iter.tail; i++) {
-                byte c = iter.buf[i];
+            byte c = 0;
+            int i = iter.head;
+            for ( ;i < iter.tail; i++) {
+                c = iter.buf[i];
                 if (c == '"') {
-                    iter.head = i + 1;
-                    if (iter.nextToken() != ':') {
-                        throw iter.reportError("readObjectFieldAsHash", "expect : after field");
-                    }
-                    iter.skipWhitespaces();
-                    return (int) hash;
+                    break;
                 }
                 hash ^= c;
                 hash *= 0x1000193;
+            }
+            if (c == '"') {
+                iter.head = i + 1;
+                if (iter.nextToken() != ':') {
+                    throw iter.reportError("readObjectFieldAsHash", "expect :");
+                }
+                return (int) hash;
             }
             if (!iter.loadMore()) {
                 throw iter.reportError("readObjectFieldAsHash", "unmatched quote");
@@ -118,7 +108,7 @@ public class CodegenAccess {
         }
         Slice field = iter.readSlice();
         boolean notCopied = field != null;
-        if (iter.skipWhitespacesWithoutLoadMore()) {
+        if (skipWhitespacesWithoutLoadMore(iter)) {
             if (notCopied) {
                 byte[] newBuf = new byte[field.len];
                 System.arraycopy(field.data, field.head, newBuf, 0, field.len);
@@ -134,7 +124,7 @@ public class CodegenAccess {
             throw iter.reportError("readObjectFieldAsSlice", "expect : after object field");
         }
         iter.head++;
-        if (iter.skipWhitespacesWithoutLoadMore()) {
+        if (skipWhitespacesWithoutLoadMore(iter)) {
             if (notCopied) {
                 byte[] newBuf = new byte[field.len];
                 System.arraycopy(field.data, field.head, newBuf, 0, field.len);
@@ -147,5 +137,21 @@ public class CodegenAccess {
             }
         }
         return field;
+    }
+
+    private final static boolean skipWhitespacesWithoutLoadMore(Jsoniter iter) throws IOException {
+        for (int i = iter.head; i < iter.tail; i++) {
+            byte c = iter.buf[i];
+            switch (c) {
+                case ' ':
+                case '\n':
+                case '\t':
+                case '\r':
+                    continue;
+            }
+            iter.head = i;
+            return false;
+        }
+        return true;
     }
 }

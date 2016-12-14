@@ -62,9 +62,9 @@ public class TestArray extends TestCase {
     public void test_whitespace_after_comma() throws IOException {
         Jsoniter iter = Jsoniter.parse("[1, 2]");
         assertTrue(iter.readArray());
-        assertEquals(1, iter.readUnsignedInt());
+        assertEquals(1, iter.readInt());
         assertTrue(iter.readArray());
-        assertEquals(2, iter.readUnsignedInt());
+        assertEquals(2, iter.readInt());
         assertFalse(iter.readArray());
     }
 
