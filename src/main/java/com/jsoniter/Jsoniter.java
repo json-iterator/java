@@ -40,7 +40,7 @@ public class Jsoniter implements Closeable {
     int tail;
     boolean eof;
     private final Slice reusableSlice = new Slice(null, 0, 0);
-    private char[] reusableChars = new char[32];
+    char[] reusableChars = new char[32];
 
     static {
         for (int i = 0; i < digits.length; i++) {
@@ -84,7 +84,7 @@ public class Jsoniter implements Closeable {
         breaks[']'] = true;
     }
 
-    public Jsoniter(InputStream in, byte[] buf) throws IOException {
+    public Jsoniter(InputStream in, byte[] buf) {
         this.in = in;
         this.buf = buf;
         if (this.in == null) {
@@ -92,30 +92,34 @@ public class Jsoniter implements Closeable {
         }
     }
 
-    public static Jsoniter parse(InputStream in, int bufSize) throws IOException {
+    public static Jsoniter parse(InputStream in, int bufSize) {
         return new Jsoniter(in, new byte[bufSize]);
     }
 
-    public static Jsoniter parse(byte[] buf) throws IOException {
+    public static Jsoniter parse(byte[] buf) {
         return new Jsoniter(null, buf);
     }
 
-    public static Jsoniter parse(String str) throws IOException {
+    public static Jsoniter parse(String str) {
         return parse(str.getBytes());
     }
 
-    public final void reset(byte[] buf) throws IOException {
+    public final void reset(byte[] buf) {
         this.buf = buf;
         this.head = 0;
         this.tail = buf.length;
         this.eof = false;
     }
 
-    public final void reset(InputStream in) throws IOException {
+    public final void reset(InputStream in) {
         this.in = in;
         this.head = 0;
         this.tail = 0;
         this.eof = false;
+    }
+
+    public void reset() {
+        reset(this.buf);
     }
 
     public final void close() throws IOException {
@@ -586,143 +590,20 @@ public class Jsoniter implements Closeable {
         }
     }
 
-    final String readNumber() throws IOException {
-        int j = 0;
-        for (byte c = nextToken(); !eof; c = readByte()) {
-            if (j == reusableChars.length) {
-                char[] newBuf = new char[reusableChars.length * 2];
-                System.arraycopy(reusableChars, 0, newBuf, 0, reusableChars.length);
-                reusableChars = newBuf;
-            }
-            switch (c) {
-                case '-':
-                case '+':
-                case '.':
-                case 'e':
-                case 'E':
-                case '0':
-                case '1':
-                case '2':
-                case '3':
-                case '4':
-                case '5':
-                case '6':
-                case '7':
-                case '8':
-                case '9':
-                    reusableChars[j++] = (char) c;
-                    break;
-                default:
-                    unreadByte();
-                    return new String(reusableChars, 0, j);
-            }
-        }
-        return new String(reusableChars, 0, j);
-    }
-
     public final float readFloat() throws IOException {
-        return Float.valueOf(readNumber());
-    }
-
-    public final double readDoubleSlowPath() throws IOException {
-        return Double.valueOf(readNumber());
+        return NumberReader.readFloat(this);
     }
 
     public final double readDouble() throws IOException {
-        if (head == tail) {
-            if (!loadMore()) {
-                throw reportError("readDouble", "no more to read");
-            }
-        }
-        final byte ch = buf[head];
-        if (ch == '-') {
-            return parseNegativeDouble(head + 1);
-        } else if (ch == '+') {
-            return parsePositiveDouble(head + 1);
-        }
-        return parsePositiveDouble(head);
-    }
-
-    private final double parsePositiveDouble(int start) throws IOException {
-        long value = 0;
-        byte c = ' ';
-        int i = start;
-        for (; i < tail; i++) {
-            c = buf[i];
-            if (c == ',' || c == '}' || c == ']' || c == ' ') {
-                head = i;
-                return value;
-            }
-            if (c == '.') break;
-            final int ind = digits[c];
-            value = (value << 3) + (value << 1) + ind;
-            if (ind < 0 || ind > 9) {
-                return readDoubleSlowPath();
-            }
-        }
-        if (c == '.') {
-            i++;
-            long div = 1;
-            for (; i < tail; i++) {
-                c = buf[i];
-                if (c == ',' || c == '}' || c == ']' || c == ' ') {
-                    head = i;
-                    return value / (double) div;
-                }
-                final int ind = digits[c];
-                div = (div << 3) + (div << 1);
-                value = (value << 3) + (value << 1) + ind;
-                if (ind < 0 || ind > 9) {
-                    return readDoubleSlowPath();
-                }
-            }
-        }
-        return readDoubleSlowPath();
-    }
-
-    private final double parseNegativeDouble(int start) throws IOException {
-        long value = 0;
-        byte c = ' ';
-        int i = start;
-        for (; i < tail; i++) {
-            c = buf[i];
-            if (c == ',' || c == '}' || c == ']' || c == ' ') {
-                head = i;
-                return value;
-            }
-            if (c == '.') break;
-            final int ind = digits[c];
-            value = (value << 3) + (value << 1) - ind;
-            if (ind < 0 || ind > 9) {
-                return readDoubleSlowPath();
-            }
-        }
-        if (c == '.') {
-            i++;
-            long div = 1;
-            for (; i < tail; i++) {
-                c = buf[i];
-                if (c == ',' || c == '}' || c == ']' || c == ' ') {
-                    head = i;
-                    return value / (double) div;
-                }
-                final int ind = digits[c];
-                div = (div << 3) + (div << 1);
-                value = (value << 3) + (value << 1) - ind;
-                if (ind < 0 || ind > 9) {
-                    return readDoubleSlowPath();
-                }
-            }
-        }
-        return readDoubleSlowPath();
+        return NumberReader.readDouble(this);
     }
 
     public final BigDecimal readBigDecimal() throws IOException {
-        return new BigDecimal(readNumber());
+        return new BigDecimal(NumberReader.readNumber(this));
     }
 
     public final BigInteger readBigInteger() throws IOException {
-        return new BigInteger(readNumber());
+        return new BigInteger(NumberReader.readNumber(this));
     }
 
     public final Any readAny() throws IOException {

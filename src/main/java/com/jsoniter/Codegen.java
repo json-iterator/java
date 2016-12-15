@@ -25,7 +25,8 @@ class Codegen {
         put(Float.class.getName(), "Float.valueOf(iter.readFloat())");
         put(Double.class.getName(), "Double.valueOf(iter.readDouble())");
         put(Boolean.class.getName(), "Boolean.valueOf(iter.readBoolean())");
-        put(Byte.class.getName(), "Byte.valueOf(iter.readShort())");
+        put(Byte.class.getName(), "Byte.valueOf((byte)iter.readShort())");
+        put(Character.class.getName(), "Character.valueOf((char)iter.readShort())");
         put(Short.class.getName(), "Short.valueOf(iter.readShort())");
         put(Integer.class.getName(), "Integer.valueOf(iter.readInt())");
         put(Long.class.getName(), "Long.valueOf(iter.readLong())");
@@ -166,9 +167,30 @@ class Codegen {
     }
 
     private static String genNative(String nativeReadKey) {
+        if ("boolean".equals(nativeReadKey)) {
+            nativeReadKey = Boolean.class.getName();
+        } else if ("byte".equals(nativeReadKey)) {
+            nativeReadKey = Byte.class.getName();
+        } else if ("char".equals(nativeReadKey)) {
+            nativeReadKey = Character.class.getName();
+        } else if ("short".equals(nativeReadKey)) {
+            nativeReadKey = Short.class.getName();
+        } else if ("int".equals(nativeReadKey)) {
+            nativeReadKey = Integer.class.getName();
+        } else if ("long".equals(nativeReadKey)) {
+            nativeReadKey = Long.class.getName();
+        } else if ("float".equals(nativeReadKey)) {
+            nativeReadKey = Float.class.getName();
+        } else if ("double".equals(nativeReadKey)) {
+            nativeReadKey = Double.class.getName();
+        }
+        String op = NATIVE_READS.get(nativeReadKey);
+        if (op == null) {
+            throw new RuntimeException("do not know how to read: " + nativeReadKey);
+        }
         StringBuilder lines = new StringBuilder();
         append(lines, "public static Object decode_(com.jsoniter.Jsoniter iter) {");
-        append(lines, "return " + NATIVE_READS.get(nativeReadKey) + ";");
+        append(lines, "return " + op + ";");
         append(lines, "}");
         return lines.toString();
     }
