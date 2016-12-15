@@ -55,7 +55,7 @@ public class CodegenAccess {
     public static boolean readObjectStart(Jsoniter iter) throws IOException {
         byte c = iter.nextToken();
         if (c != '{') {
-            throw iter.reportError("readObjectStart", "expect { or n");
+            throw iter.reportError("readObjectStart", "expect { or n, found: " + (char)c);
         }
         c = iter.nextToken();
         if (c == '}') {

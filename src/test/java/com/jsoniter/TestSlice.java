@@ -4,6 +4,7 @@ import junit.framework.TestCase;
 import org.junit.Assert;
 
 public class TestSlice extends TestCase {
+
     public void test_append() {
         Slice slice = Slice.make(0, 1);
         slice.append((byte) 1);

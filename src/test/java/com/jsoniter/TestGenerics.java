@@ -3,10 +3,7 @@ package com.jsoniter;
 import junit.framework.TestCase;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.Assert.assertArrayEquals;
 
@@ -22,6 +19,13 @@ public class TestGenerics extends TestCase {
     public void test_string_list() throws IOException {
         Jsoniter iter = Jsoniter.parse("['hello', 'world']".replace('\'', '"'));
         List<String> val = iter.read(new TypeLiteral<List<String>>() {
+        });
+        assertArrayEquals(new String[]{"hello", "world"}, val.toArray(new String[0]));
+    }
+
+    public void test_linked_list() throws IOException {
+        Jsoniter iter = Jsoniter.parse("['hello', 'world']".replace('\'', '"'));
+        List<String> val = iter.read(new TypeLiteral<LinkedList<String>>() {
         });
         assertArrayEquals(new String[]{"hello", "world"}, val.toArray(new String[0]));
     }

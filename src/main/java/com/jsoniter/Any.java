@@ -42,6 +42,15 @@ public class Any {
         }
     }
 
+
+    public Map<String, Object> getMap(Object... keys) {
+        return get(keys);
+    }
+
+    public List<Object> getList(Object... keys) {
+        return get(keys);
+    }
+
     public <T> T get(Object... keys) {
         try {
             return (T) (lastAccessed = getPath(val, keys));
@@ -202,13 +211,13 @@ public class Any {
             }
         }
         if (key instanceof Integer) {
-            Object nextVal = getFromArrayOrList(val, (Integer)key);
+            Object nextVal = getFromArrayOrList(val, (Integer) key);
             Object[] nextKeys = new Object[keys.length - 1];
             System.arraycopy(keys, 1, nextKeys, 0, nextKeys.length);
             return getPath(nextVal, nextKeys);
         }
         if (key instanceof String) {
-            Object nextVal = getFromMap(val, (String)key);
+            Object nextVal = getFromMap(val, (String) key);
             Object[] nextKeys = new Object[keys.length - 1];
             System.arraycopy(keys, 1, nextKeys, 0, nextKeys.length);
             return getPath(nextVal, nextKeys);
@@ -218,6 +227,9 @@ public class Any {
 
     private static Object getFromMap(Object val, String key) {
         Map map = (Map) val;
+        if (!map.containsKey(key)) {
+            throw new IndexOutOfBoundsException(key + " not in " + map);
+        }
         return map.get(key);
     }
 

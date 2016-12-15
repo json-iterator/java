@@ -1,11 +1,11 @@
 package com.jsoniter;
 
-import com.jsoniter.Jsoniter;
 import junit.framework.TestCase;
 
 import java.io.IOException;
 
 public class TestSkip extends TestCase {
+
     public void test_skip_number() throws IOException {
         Jsoniter iter = Jsoniter.parse("[1,2]");
         assertTrue(iter.readArray());
@@ -33,19 +33,21 @@ public class TestSkip extends TestCase {
         assertFalse(iter.readArray());
     }
 
-//    public void test_large_file() throws IOException {
-//        for (int i = 0; i < 100; i++) {
-//            FileInputStream fileInputStream = new FileInputStream("/tmp/large-file.json");
-//            Jsoniter iter = Jsoniter.parse(fileInputStream, 4096);
-//            int total = 0;
-//            while (iter.readArray()) {
-//                iter.skip();
-//                total++;
-//            }
-//            if (total != 11351) {
-//                throw new RuntimeException();
-//            }
-//            fileInputStream.close();
-//        }
-//    }
+    public void test_skip_array() throws IOException {
+        Jsoniter iter = Jsoniter.parse("[ [1,  3] ,2]".replace('\'', '"'));
+        assertTrue(iter.readArray());
+        iter.skip();
+        assertTrue(iter.readArray());
+        assertEquals(2, iter.readInt());
+        assertFalse(iter.readArray());
+    }
+
+    public void test_skip_nested() throws IOException {
+        Jsoniter iter = Jsoniter.parse("[ [1, {'a': ['b'] },  3] ,2]".replace('\'', '"'));
+        assertTrue(iter.readArray());
+        iter.skip();
+        assertTrue(iter.readArray());
+        assertEquals(2, iter.readInt());
+        assertFalse(iter.readArray());
+    }
 }
