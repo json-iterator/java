@@ -10,18 +10,20 @@ public class TestString extends TestCase {
 
     public void test_string() throws IOException {
         Jsoniter iter = Jsoniter.parse("'hello''world'".replace('\'', '"'));
-        assertEquals("hello", iter.readSlice().toString());
-        assertEquals("world", iter.readSlice().toString());
+        assertEquals("hello", iter.readString());
+        assertEquals("world", iter.readString());
         iter = Jsoniter.parse("'hello''world'".replace('\'', '"'));
         assertEquals("hello", iter.readString());
         assertEquals("world", iter.readString());
     }
 
+    public void test_base64() throws IOException {
+        Jsoniter iter = Jsoniter.parse("'YWJj'".replace('\'', '"'));
+        assertEquals("abc", new String(iter.readBase64()));
+    }
+
     public void test_string_across_buffer() throws IOException {
         Jsoniter iter = Jsoniter.parse(new ByteArrayInputStream("'hello''world'".replace('\'', '"').getBytes()), 2);
-        assertEquals("hello", iter.readSlice().toString());
-        assertEquals("world", iter.readSlice().toString());
-        iter = Jsoniter.parse(new ByteArrayInputStream("'hello''world'".replace('\'', '"').getBytes()), 2);
         assertEquals("hello", iter.readString());
         assertEquals("world", iter.readString());
     }
@@ -44,4 +46,8 @@ public class TestString extends TestCase {
         assertEquals("中", iter.readString());
     }
 
+    public void test_null_string() throws IOException {
+        Jsoniter iter = Jsoniter.parse("null".replace('\'', '"'));
+        assertEquals(null, iter.readString());
+    }
 }

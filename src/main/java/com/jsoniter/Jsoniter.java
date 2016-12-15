@@ -1,6 +1,5 @@
 package com.jsoniter;
 
-import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,34 +10,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import static java.lang.Character.*;
-
 public class Jsoniter implements Closeable {
 
     private static final boolean[] breaks = new boolean[256];
     final static ValueType[] valueTypes = new ValueType[256];
-    int[] base64Tbl = {
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1, -1, 63, 52, 53, 54,
-            55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -1, -1, -1, -1, 0, 1, 2,
-            3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-            20, 21, 22, 23, 24, 25, -1, -1, -1, -1, -1, -1, 26, 27, 28, 29, 30,
-            31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
-            48, 49, 50, 51, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
     InputStream in;
     byte[] buf;
     int head;
     int tail;
     boolean eof;
-    private final Slice reusableSlice = new Slice(null, 0, 0);
+    final Slice reusableSlice = new Slice(null, 0, 0);
     char[] reusableChars = new char[32];
 
     static {
@@ -252,214 +233,12 @@ public class Jsoniter implements Closeable {
         }
     }
 
-    final Slice readSlice() throws IOException {
-        int end = findSliceEnd();
-        if (end != -1) {
-            // reuse current buffer
-            reusableSlice.data = buf;
-            reusableSlice.head = head;
-            reusableSlice.len = end - head - 1;
-            head = end;
-            return reusableSlice;
-        }
-        byte[] part1 = new byte[tail - head];
-        System.arraycopy(buf, head, part1, 0, part1.length);
-        for (; ; ) {
-            if (!loadMore()) {
-                throw reportError("readSlice", "unmatched quote");
-            }
-            end = findSliceEnd();
-            if (end == -1) {
-                byte[] part2 = new byte[part1.length + buf.length];
-                System.arraycopy(part1, 0, part2, 0, part1.length);
-                System.arraycopy(buf, 0, part2, part1.length, buf.length);
-                part1 = part2;
-            } else {
-                byte[] part2 = new byte[part1.length + end - 1];
-                System.arraycopy(part1, 0, part2, 0, part1.length);
-                System.arraycopy(buf, 0, part2, part1.length, end - 1);
-                head = end;
-                reusableSlice.data = part2;
-                reusableSlice.head = 0;
-                reusableSlice.len = part2.length;
-                return reusableSlice;
-            }
-        }
+    public final String readString() throws IOException {
+        return StringReader.readString(this);
     }
 
     public final byte[] readBase64() throws IOException {
-        // from https://gist.github.com/EmilHernvall/953733
-        if (nextToken() != '"') {
-            throw reportError("readBase64", "expect \" for base64");
-        }
-        Slice slice = readSlice();
-        if (slice == null) {
-            return null;
-        }
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        int end = slice.head + slice.len;
-        for (int i = slice.head; i < end; i++) {
-            int b = 0;
-            if (base64Tbl[slice.data[i]] != -1) {
-                b = (base64Tbl[slice.data[i]] & 0xFF) << 18;
-            }
-            // skip unknown characters
-            else {
-                i++;
-                continue;
-            }
-
-            int num = 0;
-            if (i + 1 < end && base64Tbl[slice.data[i + 1]] != -1) {
-                b = b | ((base64Tbl[slice.data[i + 1]] & 0xFF) << 12);
-                num++;
-            }
-            if (i + 2 < end && base64Tbl[slice.data[i + 2]] != -1) {
-                b = b | ((base64Tbl[slice.data[i + 2]] & 0xFF) << 6);
-                num++;
-            }
-            if (i + 3 < end && base64Tbl[slice.data[i + 3]] != -1) {
-                b = b | (base64Tbl[slice.data[i + 3]] & 0xFF);
-                num++;
-            }
-
-            while (num > 0) {
-                int c = (b & 0xFF0000) >> 16;
-                buffer.write((char) c);
-                b <<= 8;
-                num--;
-            }
-            i += 4;
-        }
-        return buffer.toByteArray();
-    }
-
-    public final String readString() throws IOException {
-        byte c = nextToken();
-        if (c == 'n') {
-            skipUntilBreak();
-            return null;
-        }
-        if (c != '"') {
-            throw reportError("readString", "expect n or \"");
-        }
-        // try fast path first
-        for (int i = head, j = 0; i < tail && j < reusableChars.length; i++, j++) {
-            c = buf[i];
-            if (c == '"') {
-                head = i + 1;
-                return new String(reusableChars, 0, j);
-            }
-            // If we encounter a backslash, which is a beginning of an escape sequence
-            // or a high bit was set - indicating an UTF-8 encoded multibyte character,
-            // there is no chance that we can decode the string without instantiating
-            // a temporary buffer, so quit this loop
-            if ((c ^ '\\') < 1) break;
-            reusableChars[j] = (char) c;
-        }
-        return readStringSlowPath();
-    }
-
-    final String readStringSlowPath() throws IOException {
-        // http://grepcode.com/file_/repository.grepcode.com/java/root/jdk/openjdk/8u40-b25/sun/nio/cs/UTF_8.java/?v=source
-        // byte => char with support of escape in one pass
-        int j = 0;
-        int minimumCapacity = reusableChars.length - 2;
-        for (; ; ) {
-            if (j == minimumCapacity) {
-                char[] newBuf = new char[reusableChars.length * 2];
-                System.arraycopy(reusableChars, 0, newBuf, 0, reusableChars.length);
-                reusableChars = newBuf;
-                minimumCapacity = reusableChars.length - 2;
-            }
-            int b1 = readByte();
-            if (b1 >= 0) {
-                if (b1 == '"') {
-                    return new String(reusableChars, 0, j);
-                } else if (b1 == '\\') {
-                    int b2 = readByte();
-                    switch (b2) {
-                        case '"':
-                            reusableChars[j++] = '"';
-                            break;
-                        case '\\':
-                            reusableChars[j++] = '\\';
-                            break;
-                        case '/':
-                            reusableChars[j++] = '/';
-                            break;
-                        case 'b':
-                            reusableChars[j++] = '\b';
-                            break;
-                        case 'f':
-                            reusableChars[j++] = '\f';
-                            break;
-                        case 'n':
-                            reusableChars[j++] = '\n';
-                            break;
-                        case 'r':
-                            reusableChars[j++] = '\r';
-                            break;
-                        case 't':
-                            reusableChars[j++] = '\t';
-                            break;
-                        case 'u':
-                            reusableChars[j++] = NumberReader.readU4(this);
-                            break;
-                        default:
-                            throw new RuntimeException("unexpected escape char: " + b2);
-                    }
-                } else {
-                    // 1 byte, 7 bits: 0xxxxxxx
-                    reusableChars[j++] = (char) b1;
-                }
-            } else if ((b1 >> 5) == -2 && (b1 & 0x1e) != 0) {
-                // 2 bytes, 11 bits: 110xxxxx 10xxxxxx
-                int b2 = readByte();
-                reusableChars[j++] = (char) (((b1 << 6) ^ b2)
-                        ^
-                        (((byte) 0xC0 << 6) ^
-                                ((byte) 0x80 << 0)));
-            } else if ((b1 >> 4) == -2) {
-                // 3 bytes, 16 bits: 1110xxxx 10xxxxxx 10xxxxxx
-                int b2 = readByte();
-                int b3 = readByte();
-                char c = (char)
-                        ((b1 << 12) ^
-                                (b2 << 6) ^
-                                (b3 ^
-                                        (((byte) 0xE0 << 12) ^
-                                                ((byte) 0x80 << 6) ^
-                                                ((byte) 0x80 << 0))));
-                reusableChars[j++] = c;
-            } else if ((b1 >> 3) == -2) {
-                // 4 bytes, 21 bits: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
-                int b2 = readByte();
-                int b3 = readByte();
-                int b4 = readByte();
-                int uc = ((b1 << 18) ^
-                        (b2 << 12) ^
-                        (b3 << 6) ^
-                        (b4 ^
-                                (((byte) 0xF0 << 18) ^
-                                        ((byte) 0x80 << 12) ^
-                                        ((byte) 0x80 << 6) ^
-                                        ((byte) 0x80 << 0))));
-                reusableChars[j++] = highSurrogate(uc);
-                reusableChars[j++] = lowSurrogate(uc);
-            } else {
-                throw new RuntimeException("unexpected input");
-            }
-        }
-    }
-
-    private static char highSurrogate(int codePoint) {
-        return (char) ((codePoint >>> 10)
-                + (MIN_HIGH_SURROGATE - (MIN_SUPPLEMENTARY_CODE_POINT >>> 10)));
-    }
-
-    private static char lowSurrogate(int codePoint) {
-        return (char) ((codePoint & 0x3ff) + MIN_LOW_SURROGATE);
+        return StringReader.readBase64(this);
     }
 
     public final String readObject() throws IOException {
@@ -731,18 +510,6 @@ public class Jsoniter implements Closeable {
         return -1;
     }
 
-    // slice does not allow escape
-    final int findSliceEnd() {
-        for (int i = head; i < tail; i++) {
-            byte c = buf[i];
-            if (c == '"') {
-                return i + 1;
-            } else if (c == '\\') {
-                throw reportError("findSliceEnd", "slice does not support escape char");
-            }
-        }
-        return -1;
-    }
 
     public ValueType whatIsNext() throws IOException {
         ValueType valueType = valueTypes[nextToken()];

@@ -106,7 +106,7 @@ public class CodegenAccess {
         if (iter.nextToken() != '"') {
             throw iter.reportError("readObjectFieldAsSlice", "expect \"");
         }
-        Slice field = iter.readSlice();
+        Slice field = StringReader.readSlice(iter);
         boolean notCopied = field != null;
         if (skipWhitespacesWithoutLoadMore(iter)) {
             if (notCopied) {
