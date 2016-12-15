@@ -5,14 +5,14 @@ import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.CtNewMethod;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
+import java.io.IOException;
+import java.lang.reflect.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
 
 class Codegen {
+    static boolean strictMode = false;
     final static Map<String, String> NATIVE_READS = new HashMap<String, String>() {{
         put("float", "iter.readFloat()");
         put("double", "iter.readDouble()");
@@ -141,17 +141,22 @@ class Codegen {
                 return genCollection(clazz, compType);
             }
         }
-        if (clazz.getFields().length == 0) {
-            StringBuilder lines = new StringBuilder();
-            append(lines, "public static Object decode_(com.jsoniter.Jsoniter iter) {");
-            append(lines, "if (iter.readNull()) { return null; }");
-            append(lines, "{{clazz}} obj = {{newInst}};");
-            append(lines, "iter.skip();");
-            append(lines, "return obj;");
-            append(lines, "}");
-            return lines.toString().replace("{{clazz}}", clazz.getCanonicalName()).replace("{{newInst}}", genNewInstCode(clazz));
+        // TODO: re-enable this optimization
+//        if (clazz.getFields().length == 0) {
+//            StringBuilder lines = new StringBuilder();
+//            append(lines, "public static Object decode_(com.jsoniter.Jsoniter iter) {");
+//            append(lines, "if (iter.readNull()) { return null; }");
+//            append(lines, "{{clazz}} obj = {{newInst}};");
+//            append(lines, "iter.skip();");
+//            append(lines, "return obj;");
+//            append(lines, "}");
+//            return lines.toString().replace("{{clazz}}", clazz.getCanonicalName()).replace("{{newInst}}", genNewInstCode(clazz, getCtor(clazz)));
+//        }
+        if (strictMode) {
+            return genObjectUsingSlice(clazz, cacheKey);
+        } else {
+            return genObjectUsingHash(clazz, cacheKey);
         }
-        return genObjectUsingHash(clazz, cacheKey);
     }
 
     private static String genMap(Class clazz, Type valueType) {
@@ -202,72 +207,125 @@ class Codegen {
     }
 
     private static String genObjectUsingHash(Class clazz, String cacheKey) {
+        CustomizedConstructor ctor = getCtor(clazz);
+        List<Binding> fields = getFields(clazz);
+        ArrayList<Binding> allBindings = new ArrayList<Binding>(fields);
+        allBindings.addAll(ctor.parameters);
         StringBuilder lines = new StringBuilder();
         append(lines, "public static Object decode_(com.jsoniter.Jsoniter iter) {");
         append(lines, "if (iter.readNull()) { return null; }");
-        append(lines, "{{clazz}} obj = {{newInst}};");
-        append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) { return obj; }");
+        for (Binding parameter : ctor.parameters) {
+            append(lines, String.format("%s _%s_ = null;", getTypeName(parameter.valueType), parameter.name));
+        }
+        append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) { return {{newInst}}; }");
+        for (Binding field : fields) {
+            append(lines, String.format("%s _%s_;", getTypeName(field.valueType), field.name));
+        }
         append(lines, "switch (com.jsoniter.CodegenAccess.readObjectFieldAsHash(iter)) {");
         HashSet<Integer> knownHashes = new HashSet<Integer>();
-        for (Field field : clazz.getFields()) {
-            long hash = 0x811c9dc5;
-            for (byte b : field.getName().getBytes()) {
-                hash ^= b;
-                hash *= 0x1000193;
+        for (Binding field : allBindings) {
+            for (String fromName : field.fromNames) {
+                long hash = 0x811c9dc5;
+                for (byte b : fromName.getBytes()) {
+                    hash ^= b;
+                    hash *= 0x1000193;
+                }
+                int intHash = (int) hash;
+                if (intHash == 0) {
+                    // hash collision, 0 can not be used as sentinel
+                    return genObjectUsingSlice(clazz, cacheKey);
+                }
+                if (knownHashes.contains(intHash)) {
+                    // hash collision with other field can not be used as sentinel
+                    return genObjectUsingSlice(clazz, cacheKey);
+                }
+                knownHashes.add(intHash);
+                append(lines, "case " + intHash + ": ");
+                append(lines, String.format("_%s_ = %s;", field.name, genField(field, cacheKey)));
+                append(lines, "break;");
             }
-            int intHash = (int) hash;
-            if (intHash == 0) {
-                // hash collision, 0 can not be used as sentinel
-                return genObjectUsingSlice(clazz, cacheKey);
-            }
-            if (knownHashes.contains(intHash)) {
-                // hash collision with other field can not be used as sentinel
-                return genObjectUsingSlice(clazz, cacheKey);
-            }
-            knownHashes.add(intHash);
-            append(lines, "case " + intHash + ": ");
-            genField(lines, field, cacheKey);
-            append(lines, "break;");
         }
         append(lines, "default:");
         append(lines, "iter.skip();");
         append(lines, "}");
         append(lines, "while (com.jsoniter.CodegenAccess.nextToken(iter) == ',') {");
         append(lines, "switch (com.jsoniter.CodegenAccess.readObjectFieldAsHash(iter)) {");
-        for (Field field : clazz.getFields()) {
-            long hash = 0x811c9dc5;
-            for (byte b : field.getName().getBytes()) {
-                hash ^= b;
-                hash *= 0x1000193;
+        for (Binding field : allBindings) {
+            for (String fromName : field.fromNames) {
+                long hash = 0x811c9dc5;
+                for (byte b : fromName.getBytes()) {
+                    hash ^= b;
+                    hash *= 0x1000193;
+                }
+                int intHash = (int) hash;
+                append(lines, "case " + intHash + ": ");
+                append(lines, String.format("_%s_ = %s;", field.name, genField(field, cacheKey)));
+                append(lines, "continue;");
             }
-            int intHash = (int) hash;
-            append(lines, "case " + intHash + ": ");
-            genField(lines, field, cacheKey);
-            append(lines, "continue;");
         }
         append(lines, "}");
         append(lines, "iter.skip();");
         append(lines, "}");
-//        append(lines, "if (c != '}') { com.jsoniter.CodegenAccess.reportIncompleteObject(iter); }");
+        append(lines, getTypeName(clazz) + " obj = {{newInst}};");
+        for (Binding field : fields) {
+            append(lines, String.format("obj.%s = _%s_;", field.name, field.name));
+        }
         append(lines, "return obj;");
         append(lines, "}");
         return lines.toString()
                 .replace("{{clazz}}", clazz.getCanonicalName())
-                .replace("{{newInst}}", genNewInstCode(clazz));
+                .replace("{{newInst}}", genNewInstCode(clazz, ctor));
     }
 
-    private static String genNewInstCode(Class clazz) {
-        String newInstanceCode = null;
+    private static String genNewInstCode(Class clazz, CustomizedConstructor ctor) {
+        StringBuilder code = new StringBuilder();
+        if (ctor.staticMethodName == null) {
+            code.append(String.format("new %s", clazz.getCanonicalName()));
+        } else {
+            code.append(String.format("%s.%s", clazz.getCanonicalName(), ctor.staticMethodName));
+        }
+        code.append("(");
+        boolean isFirst = true;
+        for (Binding ctorParam : ctor.parameters) {
+            if (isFirst) {
+                isFirst = false;
+            } else {
+                code.append(",");
+            }
+            code.append("_" + ctorParam.name + "_");
+        }
+        code.append(")");
+        return code.toString();
+    }
+
+    private static CustomizedConstructor getCtor(Class clazz) {
         for (Extension extension : extensions) {
-            newInstanceCode = extension.codegenNewInstance(clazz);
-            if (newInstanceCode != null) {
-                break;
+            CustomizedConstructor ctor = extension.getConstructor(clazz);
+            if (ctor != null) {
+                return ctor;
             }
         }
-        if (newInstanceCode == null) {
-            newInstanceCode = "new " + clazz.getCanonicalName() + "()";
+        return CustomizedConstructor.DEFAULT_INSTANCE;
+    }
+
+    private static List<Binding> getFields(Class clazz) {
+        ArrayList<Binding> bindings = new ArrayList<Binding>();
+        for (Field field : clazz.getFields()) {
+            Binding binding = new Binding();
+            binding.fromNames = new String[]{field.getName()};
+            for (Extension extension : extensions) {
+                String[] fromNames = extension.getAlternativeFieldNames(binding);
+                if (fromNames != null) {
+                    binding.fromNames = fromNames;
+                    break;
+                }
+            }
+            binding.name = field.getName();
+            binding.valueType = field.getType();
+            binding.clazz = clazz;
+            bindings.add(binding);
         }
-        return newInstanceCode;
+        return bindings;
     }
 
     private static String genObjectUsingSlice(Class clazz, String cacheKey) {
@@ -310,31 +368,21 @@ class Codegen {
         append(lines, "}");
         return lines.toString()
                 .replace("{{clazz}}", clazz.getCanonicalName())
-                .replace("{{newInst}}", genNewInstCode(clazz));
+                .replace("{{newInst}}", genNewInstCode(clazz, getCtor(clazz)));
     }
 
     private static Map<Integer, Object> buildTriTree(Class clazz) {
         Map<Integer, Object> trieTree = new HashMap<Integer, Object>();
-        for (Field field : clazz.getFields()) {
-            String[] alternativeFieldNames = null;
-            for (Extension extension : extensions) {
-                alternativeFieldNames = extension.getAlternativeFieldNames(field);
-                if (alternativeFieldNames != null) {
-                    break;
-                }
-            }
-            if (alternativeFieldNames == null) {
-                alternativeFieldNames = new String[]{field.getName()};
-            }
-            for (String alternativeFieldName : alternativeFieldNames) {
-                byte[] fieldName = alternativeFieldName.getBytes();
-                Map<Byte, Object> current = (Map<Byte, Object>) trieTree.get(fieldName.length);
+        for (Binding field : getFields(clazz)) {
+            for (String fromName : field.fromNames) {
+                byte[] fromNameBytes = fromName.getBytes();
+                Map<Byte, Object> current = (Map<Byte, Object>) trieTree.get(fromNameBytes.length);
                 if (current == null) {
                     current = new HashMap<Byte, Object>();
-                    trieTree.put(fieldName.length, current);
+                    trieTree.put(fromNameBytes.length, current);
                 }
-                for (int i = 0; i < fieldName.length - 1; i++) {
-                    byte b = fieldName[i];
+                for (int i = 0; i < fromNameBytes.length - 1; i++) {
+                    byte b = fromNameBytes[i];
                     Map<Byte, Object> next = (Map<Byte, Object>) current.get(b);
                     if (next == null) {
                         next = new HashMap<Byte, Object>();
@@ -342,13 +390,13 @@ class Codegen {
                     }
                     current = next;
                 }
-                current.put(fieldName[fieldName.length - 1], field);
+                current.put(fromNameBytes[fromNameBytes.length - 1], field);
             }
         }
         return trieTree;
     }
 
-    private static Decoder createFieldDecoder(String fieldCacheKey, Field field) {
+    private static Decoder createFieldDecoder(String fieldCacheKey, Binding field) {
         for (Extension extension : extensions) {
             Decoder decoder = extension.createDecoder(field);
             if (decoder != null) {
@@ -372,7 +420,7 @@ class Codegen {
                 }
                 append(lines, String.format("field.at(%d)==%s", i, b));
                 append(lines, ") {");
-                genField(lines, (Field) entry.getValue(), cacheKey);
+                genField((Binding) entry.getValue(), cacheKey);
                 append(lines, "continue;");
                 append(lines, "}");
                 continue;
@@ -397,74 +445,77 @@ class Codegen {
         }
     }
 
-    private static void genField(StringBuilder lines, Field field, String cacheKey) {
-        Class<?> fieldType = field.getType();
-        String fieldTypeName = fieldType.getCanonicalName();
-        String fieldCacheKey = field.getName() + "@" + cacheKey;
+    private static String genField(Binding field, String cacheKey) {
+        Type fieldType = field.valueType;
+        String fieldCacheKey = field.name + "@" + cacheKey;
         Decoder decoder = createFieldDecoder(fieldCacheKey, field);
-        if (decoder != null) {
-            if (fieldType == boolean.class) {
-                if (!(decoder instanceof Decoder.BooleanDecoder)) {
-                    throw new RuntimeException("decoder for field " + field + "must implement Decoder.BooleanDecoder");
-                }
-                append(lines, String.format("obj.%s = com.jsoniter.CodegenAccess.readBoolean(\"%s\", iter);", field.getName(), fieldCacheKey));
-                return;
-            }
-            if (fieldType == byte.class) {
-                if (!(decoder instanceof Decoder.ShortDecoder)) {
-                    throw new RuntimeException("decoder for field " + field + "must implement Decoder.ShortDecoder");
-                }
-                append(lines, String.format("obj.%s = com.jsoniter.CodegenAccess.readShort(\"%s\", iter);", field.getName(), fieldCacheKey));
-                return;
-            }
-            if (fieldType == short.class) {
-                if (!(decoder instanceof Decoder.ShortDecoder)) {
-                    throw new RuntimeException("decoder for field " + field + "must implement Decoder.ShortDecoder");
-                }
-                append(lines, String.format("obj.%s = com.jsoniter.CodegenAccess.readShort(\"%s\", iter);", field.getName(), fieldCacheKey));
-                return;
-            }
-            if (fieldType == char.class) {
-                if (!(decoder instanceof Decoder.IntDecoder)) {
-                    throw new RuntimeException("decoder for field " + field + "must implement Decoder.IntDecoder");
-                }
-                append(lines, String.format("obj.%s = com.jsoniter.CodegenAccess.readInt(\"%s\", iter);", field.getName(), fieldCacheKey));
-                return;
-            }
-            if (fieldType == int.class) {
-                if (!(decoder instanceof Decoder.IntDecoder)) {
-                    throw new RuntimeException("decoder for field " + field + "must implement Decoder.IntDecoder");
-                }
-                append(lines, String.format("obj.%s = com.jsoniter.CodegenAccess.readInt(\"%s\", iter);", field.getName(), fieldCacheKey));
-                return;
-            }
-            if (fieldType == long.class) {
-                if (!(decoder instanceof Decoder.LongDecoder)) {
-                    throw new RuntimeException("decoder for field " + field + "must implement Decoder.LongDecoder");
-                }
-                append(lines, String.format("obj.%s = com.jsoniter.CodegenAccess.readLong(\"%s\", iter);", field.getName(), fieldCacheKey));
-                return;
-            }
-            if (fieldType == float.class) {
-                if (!(decoder instanceof Decoder.FloatDecoder)) {
-                    throw new RuntimeException("decoder for field " + field + "must implement Decoder.FloatDecoder");
-                }
-                append(lines, String.format("obj.%s = com.jsoniter.CodegenAccess.readFloat(\"%s\", iter);", field.getName(), fieldCacheKey));
-                return;
-            }
-            if (fieldType == double.class) {
-                if (!(decoder instanceof Decoder.DoubleDecoder)) {
-                    throw new RuntimeException("decoder for field " + field + "must implement Decoder.DoubleDecoder");
-                }
-                append(lines, String.format("obj.%s = com.jsoniter.CodegenAccess.readDouble(\"%s\", iter);", field.getName(), fieldCacheKey));
-                return;
-            }
-            getDecoder(fieldCacheKey, fieldType); // put decoder into cache
-            append(lines, String.format("obj.%s = (%s)com.jsoniter.CodegenAccess.read(\"%s\", iter);",
-                    field.getName(), fieldTypeName, fieldCacheKey));
-            return;
+        if (decoder == null) {
+            return String.format("(%s)%s", getTypeName(fieldType), genReadOp(fieldType));
         }
-        append(lines, String.format("obj.%s = (%s)%s;", field.getName(), fieldTypeName, genReadOp(field.getGenericType())));
+        if (fieldType == boolean.class) {
+            if (!(decoder instanceof Decoder.BooleanDecoder)) {
+                throw new RuntimeException("decoder for field " + field + "must implement Decoder.BooleanDecoder");
+            }
+            return String.format("com.jsoniter.CodegenAccess.readBoolean(\"%s\", iter)", fieldCacheKey);
+        }
+        if (fieldType == byte.class) {
+            if (!(decoder instanceof Decoder.ShortDecoder)) {
+                throw new RuntimeException("decoder for field " + field + "must implement Decoder.ShortDecoder");
+            }
+            return String.format("com.jsoniter.CodegenAccess.readShort(\"%s\", iter)", fieldCacheKey);
+        }
+        if (fieldType == short.class) {
+            if (!(decoder instanceof Decoder.ShortDecoder)) {
+                throw new RuntimeException("decoder for field " + field + "must implement Decoder.ShortDecoder");
+            }
+            return String.format("com.jsoniter.CodegenAccess.readShort(\"%s\", iter)", fieldCacheKey);
+        }
+        if (fieldType == char.class) {
+            if (!(decoder instanceof Decoder.IntDecoder)) {
+                throw new RuntimeException("decoder for field " + field + "must implement Decoder.IntDecoder");
+            }
+            return String.format("com.jsoniter.CodegenAccess.readInt(\"%s\", iter)", fieldCacheKey);
+        }
+        if (fieldType == int.class) {
+            if (!(decoder instanceof Decoder.IntDecoder)) {
+                throw new RuntimeException("decoder for field " + field + "must implement Decoder.IntDecoder");
+            }
+            return String.format("com.jsoniter.CodegenAccess.readInt(\"%s\", iter)", fieldCacheKey);
+        }
+        if (fieldType == long.class) {
+            if (!(decoder instanceof Decoder.LongDecoder)) {
+                throw new RuntimeException("decoder for field " + field + "must implement Decoder.LongDecoder");
+            }
+            return String.format("com.jsoniter.CodegenAccess.readLong(\"%s\", iter)", fieldCacheKey);
+        }
+        if (fieldType == float.class) {
+            if (!(decoder instanceof Decoder.FloatDecoder)) {
+                throw new RuntimeException("decoder for field " + field + "must implement Decoder.FloatDecoder");
+            }
+            return String.format("com.jsoniter.CodegenAccess.readFloat(\"%s\", iter)", fieldCacheKey);
+        }
+        if (fieldType == double.class) {
+            if (!(decoder instanceof Decoder.DoubleDecoder)) {
+                throw new RuntimeException("decoder for field " + field + "must implement Decoder.DoubleDecoder");
+            }
+            return String.format("com.jsoniter.CodegenAccess.readDouble(\"%s\", iter)", fieldCacheKey);
+        }
+        getDecoder(fieldCacheKey, fieldType); // put decoder into cache
+        return String.format("(%s)com.jsoniter.CodegenAccess.read(\"%s\", iter);",
+                getTypeName(fieldType), fieldCacheKey);
+    }
+
+    private static String getTypeName(Type fieldType) {
+        if (fieldType instanceof Class) {
+            Class clazz = (Class) fieldType;
+            return clazz.getCanonicalName();
+        } else if (fieldType instanceof  ParameterizedType) {
+            ParameterizedType pType = (ParameterizedType) fieldType;
+            Class clazz = (Class) pType.getRawType();
+            return clazz.getCanonicalName();
+        } else {
+            throw new RuntimeException("unsupported type: " + fieldType);
+        }
     }
 
     private static String genReadOp(Type type) {
@@ -647,5 +698,9 @@ class Codegen {
 
     public static Decoder.DoubleDecoder getDoubleDecoder(String cacheKey) {
         return (Decoder.DoubleDecoder) cache.get(cacheKey);
+    }
+
+    public static void enableStrictMode() {
+        strictMode = true;
     }
 }

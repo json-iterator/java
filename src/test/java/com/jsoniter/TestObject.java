@@ -7,6 +7,10 @@ import java.util.Map;
 
 public class TestObject extends TestCase {
 
+    static {
+//        Jsoniter.enableStrictMode();
+    }
+
     public void test_empty_object() throws IOException {
         Jsoniter iter = Jsoniter.parse("{}");
         assertNull(iter.readObject());

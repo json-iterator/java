@@ -2,21 +2,22 @@ package com.jsoniter;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
+import java.util.List;
 
 public class EmptyExtension implements Extension {
 
     @Override
-    public Decoder createDecoder(Field field) {
+    public Decoder createDecoder(Binding field) {
         return null;
     }
 
     @Override
-    public String[] getAlternativeFieldNames(Field field) {
+    public String[] getAlternativeFieldNames(Binding field) {
         return null;
     }
 
     @Override
-    public String codegenNewInstance(Type type) {
+    public CustomizedConstructor getConstructor(Class clazz) {
         return null;
     }
 }

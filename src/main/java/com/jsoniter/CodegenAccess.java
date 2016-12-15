@@ -1,8 +1,6 @@
 package com.jsoniter;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 // only uesd by generated code to access decoder
 public class CodegenAccess {

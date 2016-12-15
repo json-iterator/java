@@ -36,8 +36,8 @@ public class TestCustomize extends TestCase {
     public void test_customize_all_fields() throws IOException {
         Jsoniter.registerExtension(new EmptyExtension() {
             @Override
-            public Decoder createDecoder(Field field) {
-                if (field.getDeclaringClass() == CustomizedObject.class && field.getName().equals("field1")) {
+            public Decoder createDecoder(Binding field) {
+                if (field.clazz == CustomizedObject.class && field.name.equals("field1")) {
                     return new Decoder() {
 
                         @Override
@@ -57,8 +57,8 @@ public class TestCustomize extends TestCase {
     public void test_change_field_name() throws IOException {
         Jsoniter.registerExtension(new EmptyExtension() {
             @Override
-            public Decoder createDecoder(Field field) {
-                if (field.getDeclaringClass() == CustomizedObject.class && field.getName().equals("field1")) {
+            public Decoder createDecoder(Binding field) {
+                if (field.clazz == CustomizedObject.class && field.name.equals("field1")) {
                     return new Decoder() {
                         @Override
                         public Object decode(Jsoniter iter) throws IOException {
@@ -70,8 +70,8 @@ public class TestCustomize extends TestCase {
             }
 
             @Override
-            public String[] getAlternativeFieldNames(Field field) {
-                if (field.getDeclaringClass() == CustomizedObject.class && field.getName().equals("field1")) {
+            public String[] getAlternativeFieldNames(Binding field) {
+                if (field.clazz == CustomizedObject.class && field.name.equals("field1")) {
                     return new String[]{"field_1", "Field1"};
                 }
                 return null;
@@ -100,20 +100,5 @@ public class TestCustomize extends TestCase {
         Jsoniter iter = Jsoniter.parse("{'field3': 100}".replace('\'', '"'));
         CustomizedObject myObject = iter.read(CustomizedObject.class);
         assertEquals(100 * 5, myObject.field3);
-    }
-
-    public void test_customized_constructor() throws IOException {
-        Jsoniter.registerExtension(new EmptyExtension(){
-            @Override
-            public String codegenNewInstance(Type type) {
-                if (type == CtorCustomizedObject.class) {
-                    return "new " + CtorCustomizedObject.class.getName() + "(iter.readInt())";
-                }
-                return null;
-            }
-        });
-        Jsoniter iter = Jsoniter.parse("100".replace('\'', '"'));
-        CtorCustomizedObject myObject = iter.read(CtorCustomizedObject.class);
-        assertEquals(100, myObject.getField1());
     }
 }
