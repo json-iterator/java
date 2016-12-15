@@ -16,7 +16,6 @@ import static java.lang.Character.*;
 public class Jsoniter implements Closeable {
 
     private static final boolean[] breaks = new boolean[256];
-    final static int[] digits = new int[256];
     final static ValueType[] valueTypes = new ValueType[256];
     int[] base64Tbl = {
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -43,18 +42,6 @@ public class Jsoniter implements Closeable {
     char[] reusableChars = new char[32];
 
     static {
-        for (int i = 0; i < digits.length; i++) {
-            digits[i] = -1;
-        }
-        for (int i = '0'; i <= '9'; ++i) {
-            digits[i] = (i - '0');
-        }
-        for (int i = 'a'; i <= 'f'; ++i) {
-            digits[i] = ((i - 'a') + 10);
-        }
-        for (int i = 'A'; i <= 'F'; ++i) {
-            digits[i] = ((i - 'A') + 10);
-        }
         for (int i = 0; i < valueTypes.length; i++) {
             valueTypes[i] = ValueType.INVALID;
         }
@@ -164,6 +151,24 @@ public class Jsoniter implements Closeable {
         head--;
     }
 
+    public final RuntimeException reportError(String op, String msg) {
+        int peekStart = head - 10;
+        if (peekStart < 0) {
+            peekStart = 0;
+        }
+        String peek = new String(buf, peekStart, head - peekStart);
+        throw new RuntimeException(op + ": " + msg + ", head: " + head + ", peek: " + peek + ", buf: " + new String(buf));
+    }
+
+    public final String currentBuffer() {
+        int peekStart = head - 10;
+        if (peekStart < 0) {
+            peekStart = 0;
+        }
+        String peek = new String(buf, peekStart, head - peekStart);
+        return "head: " + head + ", peek: " + peek + ", buf: " + new String(buf);
+    }
+
     public final boolean readNull() throws IOException {
         byte c = nextToken();
         if (c == 'n') {
@@ -198,87 +203,11 @@ public class Jsoniter implements Closeable {
     }
 
     public final int readInt() throws IOException {
-        byte c = nextToken();
-        if (c == '-') {
-            return -readUnsignedInt();
-        } else {
-            unreadByte();
-            return readUnsignedInt();
-        }
-    }
-
-    public final int readUnsignedInt() throws IOException {
-        // TODO: throw overflow
-        byte c = readByte();
-        int v = digits[c];
-        if (v == 0) {
-            return 0;
-        }
-        if (v == -1) {
-            throw reportError("readUnsignedInt", "expect 0~9");
-        }
-        int result = 0;
-        for (; ; ) {
-            result = result * 10 + v;
-            c = readByte();
-            v = digits[c];
-            if (v == -1) {
-                unreadByte();
-                break;
-            }
-        }
-        return result;
+        return NumberReader.readInt(this);
     }
 
     public final long readLong() throws IOException {
-        byte c = nextToken();
-        if (c == '-') {
-            return -readUnsignedLong();
-        } else {
-            unreadByte();
-            return readUnsignedLong();
-        }
-    }
-
-    public final long readUnsignedLong() throws IOException {
-        // TODO: throw overflow
-        byte c = readByte();
-        int v = digits[c];
-        if (v == 0) {
-            return 0;
-        }
-        if (v == -1) {
-            throw reportError("readUnsignedLong", "expect 0~9");
-        }
-        long result = 0;
-        for (; ; ) {
-            result = result * 10 + v;
-            c = readByte();
-            v = digits[c];
-            if (v == -1) {
-                unreadByte();
-                break;
-            }
-        }
-        return result;
-    }
-
-    public final RuntimeException reportError(String op, String msg) {
-        int peekStart = head - 10;
-        if (peekStart < 0) {
-            peekStart = 0;
-        }
-        String peek = new String(buf, peekStart, head - peekStart);
-        throw new RuntimeException(op + ": " + msg + ", head: " + head + ", peek: " + peek + ", buf: " + new String(buf));
-    }
-
-    public final String currentBuffer() {
-        int peekStart = head - 10;
-        if (peekStart < 0) {
-            peekStart = 0;
-        }
-        String peek = new String(buf, peekStart, head - peekStart);
-        return "head: " + head + ", peek: " + peek + ", buf: " + new String(buf);
+        return NumberReader.readLong(this);
     }
 
     public final boolean readArray() throws IOException {
@@ -475,30 +404,7 @@ public class Jsoniter implements Closeable {
                             reusableChars[j++] = '\t';
                             break;
                         case 'u':
-                            int v = digits[readByte()];
-                            if (v == -1) {
-                                throw new RuntimeException("bad unicode");
-                            }
-                            char b = (char) v;
-                            v = digits[readByte()];
-                            if (v == -1) {
-                                throw new RuntimeException("bad unicode");
-                            }
-                            b = (char) (b << 4);
-                            b += v;
-                            v = digits[readByte()];
-                            if (v == -1) {
-                                throw new RuntimeException("bad unicode");
-                            }
-                            b = (char) (b << 4);
-                            b += v;
-                            v = digits[readByte()];
-                            if (v == -1) {
-                                throw new RuntimeException("bad unicode");
-                            }
-                            b = (char) (b << 4);
-                            b += v;
-                            reusableChars[j++] = b;
+                            reusableChars[j++] = NumberReader.readU4(this);
                             break;
                         default:
                             throw new RuntimeException("unexpected escape char: " + b2);

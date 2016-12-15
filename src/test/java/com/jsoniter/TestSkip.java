@@ -11,7 +11,7 @@ public class TestSkip extends TestCase {
         assertTrue(iter.readArray());
         iter.skip();
         assertTrue(iter.readArray());
-        assertEquals(2, iter.readUnsignedInt());
+        assertEquals(2, iter.readInt());
         assertFalse(iter.readArray());
     }
 
@@ -20,7 +20,7 @@ public class TestSkip extends TestCase {
         assertTrue(iter.readArray());
         iter.skip();
         assertTrue(iter.readArray());
-        assertEquals(2, iter.readUnsignedInt());
+        assertEquals(2, iter.readInt());
         assertFalse(iter.readArray());
     }
 
@@ -29,7 +29,7 @@ public class TestSkip extends TestCase {
         assertTrue(iter.readArray());
         iter.skip();
         assertTrue(iter.readArray());
-        assertEquals(2, iter.readUnsignedInt());
+        assertEquals(2, iter.readInt());
         assertFalse(iter.readArray());
     }
 
