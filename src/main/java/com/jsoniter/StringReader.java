@@ -29,7 +29,7 @@ class StringReader {
     public static final String readString(Jsoniter iter) throws IOException {
         byte c = iter.nextToken();
         if (c == 'n') {
-            iter.skipUntilBreak();
+            Skip.skipUntilBreak(iter);
             return null;
         }
         if (c != '"') {

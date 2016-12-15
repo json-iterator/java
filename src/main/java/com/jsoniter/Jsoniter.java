@@ -12,7 +12,6 @@ import java.util.Map;
 
 public class Jsoniter implements Closeable {
 
-    private static final boolean[] breaks = new boolean[256];
     final static ValueType[] valueTypes = new ValueType[256];
     InputStream in;
     byte[] buf;
@@ -43,13 +42,6 @@ public class Jsoniter implements Closeable {
         valueTypes['n'] = ValueType.NULL;
         valueTypes['['] = ValueType.ARRAY;
         valueTypes['{'] = ValueType.OBJECT;
-        breaks[' '] = true;
-        breaks['\t'] = true;
-        breaks['\n'] = true;
-        breaks['\r'] = true;
-        breaks[','] = true;
-        breaks['}'] = true;
-        breaks[']'] = true;
     }
 
     public Jsoniter(InputStream in, byte[] buf) {
@@ -153,7 +145,7 @@ public class Jsoniter implements Closeable {
     public final boolean readNull() throws IOException {
         byte c = nextToken();
         if (c == 'n') {
-            skipUntilBreak();
+            Skip.skipUntilBreak(this);
             return true;
         }
         unreadByte();
@@ -164,10 +156,10 @@ public class Jsoniter implements Closeable {
         byte c = nextToken();
         switch (c) {
             case 't':
-                skipUntilBreak();
+                Skip.skipUntilBreak(this);
                 return true;
             case 'f':
-                skipUntilBreak();
+                Skip.skipUntilBreak(this);
                 return false;
             default:
                 throw reportError("readBoolean", "expect t or f, found: " + c);
@@ -245,7 +237,7 @@ public class Jsoniter implements Closeable {
         byte c = nextToken();
         switch (c) {
             case 'n':
-                skipUntilBreak();
+                Skip.skipUntilBreak(this);
                 return null;
             case '{':
                 c = nextToken();
@@ -332,189 +324,14 @@ public class Jsoniter implements Closeable {
         return (T) Codegen.getDecoder(typeLiteral.cacheKey, type).decode(this);
     }
 
-    public final void skip() throws IOException {
-        byte c = nextToken();
-        switch (c) {
-            case '"':
-                skipString();
-                return;
-            case '-':
-            case '0':
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-            case '7':
-            case '8':
-            case '9':
-            case 't':
-            case 'f':
-            case 'n':
-                skipUntilBreak();
-                return;
-            case '[':
-                skipArray();
-                return;
-            case '{':
-                skipObject();
-                return;
-            default:
-                throw reportError("Skip", "do not know how to skip: " + c);
-        }
-    }
-
-    final void skipObject() throws IOException {
-        int level = 1;
-        for (; ; ) {
-            for (int i = head; i < tail; i++) {
-                switch (buf[i]) {
-                    case '"': // If inside string, skip it
-                        head = i + 1;
-                        skipString();
-                        i = head - 1; // it will be i++ soon
-                        break;
-                    case '{': // If open symbol, increase level
-                        level++;
-                        break;
-                    case '}': // If close symbol, increase level
-                        level--;
-
-                        // If we have returned to the original level, we're done
-                        if (level == 0) {
-                            head = i + 1;
-                            return;
-                        }
-                        break;
-                }
-            }
-            if (!loadMore()) {
-                return;
-            }
-        }
-    }
-
-    final void skipArray() throws IOException {
-        int level = 1;
-        for (; ; ) {
-            for (int i = head; i < tail; i++) {
-                switch (buf[i]) {
-                    case '"': // If inside string, skip it
-                        head = i + 1;
-                        skipString();
-                        i = head - 1; // it will be i++ soon
-                        break;
-                    case '[': // If open symbol, increase level
-                        level++;
-                        break;
-                    case ']': // If close symbol, increase level
-                        level--;
-
-                        // If we have returned to the original level, we're done
-                        if (level == 0) {
-                            head = i + 1;
-                            return;
-                        }
-                        break;
-                }
-            }
-            if (!loadMore()) {
-                return;
-            }
-        }
-    }
-
-    final void skipUntilBreak() throws IOException {
-        // true, false, null, number
-        for (; ; ) {
-            for (int i = head; i < tail; i++) {
-                byte c = buf[i];
-                if (breaks[c]) {
-                    head = i;
-                    return;
-                }
-            }
-            if (!loadMore()) {
-                return;
-            }
-        }
-    }
-
-    final void skipString() throws IOException {
-        for (; ; ) {
-            int end = findStringEnd();
-            if (end == -1) {
-                int j = tail - 1;
-                boolean escaped = true;
-                for (; ; ) {
-                    if (j < head || buf[j] != '\\') {
-                        // even number of backslashes
-                        // either end of buffer, or " found
-                        escaped = false;
-                        break;
-                    }
-                    j--;
-                    if (j < head || buf[j] != '\\') {
-                        // odd number of backslashes
-                        // it is \" or \\\"
-                        break;
-                    }
-                    j--;
-
-                }
-                if (!loadMore()) {
-                    return;
-                }
-                if (escaped) {
-                    head = 1; // skip the first char as last char readAny is \
-                }
-            } else {
-                head = end;
-                return;
-            }
-        }
-    }
-
-    // adapted from: https://github.com/buger/jsonparser/blob/master/parser.go
-    // Tries to find the end of string
-    // Support if string contains escaped quote symbols.
-    final int findStringEnd() {
-        boolean escaped = false;
-        for (int i = head; i < tail; i++) {
-            byte c = buf[i];
-            if (c == '"') {
-                if (!escaped) {
-                    return i + 1;
-                } else {
-                    int j = i - 1;
-                    for (; ; ) {
-                        if (j < head || buf[j] != '\\') {
-                            // even number of backslashes
-                            // either end of buffer, or " found
-                            return i + 1;
-                        }
-                        j--;
-                        if (j < head || buf[j] != '\\') {
-                            // odd number of backslashes
-                            // it is \" or \\\"
-                            break;
-                        }
-                        j--;
-                    }
-                }
-            } else if (c == '\\') {
-                escaped = true;
-            }
-        }
-        return -1;
-    }
-
-
     public ValueType whatIsNext() throws IOException {
         ValueType valueType = valueTypes[nextToken()];
         unreadByte();
         return valueType;
+    }
+
+    public void skip() throws IOException {
+        Skip.skip(this);
     }
 
     public static void registerTypeDecoder(Class clazz, Decoder decoder) {

@@ -33,11 +33,6 @@ public class TestSkip extends TestCase {
         assertFalse(iter.readArray());
     }
 
-    public void test_find_string_end() throws IOException {
-        Jsoniter iter = Jsoniter.parse("\"a");
-        assertEquals(1, iter.findStringEnd());
-    }
-
 //    public void test_large_file() throws IOException {
 //        for (int i = 0; i < 100; i++) {
 //            FileInputStream fileInputStream = new FileInputStream("/tmp/large-file.json");
