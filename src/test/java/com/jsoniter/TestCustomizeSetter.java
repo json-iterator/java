@@ -8,6 +8,10 @@ import java.util.List;
 
 public class TestCustomizeSetter extends TestCase {
 
+    static {
+//        JsonIterator.enableStrictMode();
+    }
+
     public static class ObjectWithDefaultSetter {
         String field;
 

@@ -9,7 +9,7 @@ import java.util.List;
 public class TestCustomizeCtor extends TestCase {
 
     static {
-        JsonIterator.enableStrictMode();
+//        JsonIterator.enableStrictMode();
     }
 
     public static class OneArgCtor {

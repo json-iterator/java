@@ -15,13 +15,32 @@ class CodegenImplObject {
         put("long", "0");
     }};
 
-    public static String genObjectUsingSlice(Class clazz, String cacheKey) {
-        Map<Integer, Object> trieTree = buildTriTree(clazz);
+    public static String genObjectUsingSlice(Class clazz, String cacheKey, CustomizedConstructor ctor,
+                                             List<CustomizedSetter> setters, List<Binding> fields) {
+        ArrayList<Binding> allBindings = new ArrayList<Binding>(fields);
+        allBindings.addAll(ctor.parameters);
+        for (CustomizedSetter setter : setters) {
+            allBindings.addAll(setter.parameters);
+        }
+        if (allBindings.isEmpty()) {
+            return genObjectUsingSkip(clazz, ctor);
+        }
+        Map<Integer, Object> trieTree = buildTriTree(allBindings);
         StringBuilder lines = new StringBuilder();
         append(lines, "public static Object decode_(com.jsoniter.JsonIterator iter) {");
         append(lines, "if (iter.readNull()) { return null; }");
-        append(lines, "{{clazz}} obj = {{newInst}};");
-        append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) { return obj; }");
+        for (Binding parameter : ctor.parameters) {
+            appendVarDef(lines, parameter);
+        }
+        append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) { return {{newInst}}; }");
+        for (Binding field : fields) {
+            appendVarDef(lines, field);
+        }
+        for (CustomizedSetter setter : setters) {
+            for (Binding param : setter.parameters) {
+                appendVarDef(lines, param);
+            }
+        }
         append(lines, "com.jsoniter.Slice field = com.jsoniter.CodegenAccess.readObjectFieldAsSlice(iter);");
         append(lines, "boolean once = true;");
         append(lines, "while (once) {");
@@ -50,7 +69,16 @@ class CodegenImplObject {
         append(lines, "}"); // end of switch
         append(lines, "iter.skip();");
         append(lines, "}"); // end of while
-//        append(lines, "if (c != '}') { com.jsoniter.CodegenAccess.reportIncompleteObject(iter); }");
+        append(lines, String.format("%s obj = {{newInst}};", CodegenImplNative.getTypeName(clazz)));
+        for (Binding field : fields) {
+            append(lines, String.format("obj.%s = _%s_;", field.name, field.name));
+        }
+        for (CustomizedSetter setter : setters) {
+            lines.append("obj.");
+            lines.append(setter.methodName);
+            appendInvocation(lines, setter.parameters);
+            lines.append(";\n");
+        }
         append(lines, "return obj;");
         append(lines, "}");
         return lines.toString()
@@ -58,9 +86,9 @@ class CodegenImplObject {
                 .replace("{{newInst}}", genNewInstCode(clazz, ExtensionManager.getCtor(clazz)));
     }
 
-    private static Map<Integer, Object> buildTriTree(Class clazz) {
+    private static Map<Integer, Object> buildTriTree(ArrayList<Binding> allBindings) {
         Map<Integer, Object> trieTree = new HashMap<Integer, Object>();
-        for (Binding field : ExtensionManager.getFields(clazz)) {
+        for (Binding field : allBindings) {
             for (String fromName : field.fromNames) {
                 byte[] fromNameBytes = fromName.getBytes();
                 Map<Byte, Object> current = (Map<Byte, Object>) trieTree.get(fromNameBytes.length);
@@ -94,7 +122,8 @@ class CodegenImplObject {
                 }
                 append(lines, String.format("field.at(%d)==%s", i, b));
                 append(lines, ") {");
-                CodegenImplNative.genField((Binding) entry.getValue(), cacheKey);
+                Binding field = (Binding) entry.getValue();
+                append(lines, String.format("_%s_ = %s;", field.name, CodegenImplNative.genField(field, cacheKey)));
                 append(lines, "continue;");
                 append(lines, "}");
                 continue;
@@ -119,10 +148,8 @@ class CodegenImplObject {
         }
     }
 
-    public static String genObjectUsingHash(Class clazz, String cacheKey) {
-        CustomizedConstructor ctor = ExtensionManager.getCtor(clazz);
-        List<Binding> fields = ExtensionManager.getFields(clazz);
-        List<CustomizedSetter> setters = ExtensionManager.getSetters(clazz);
+    public static String genObjectUsingHash(Class clazz, String cacheKey, CustomizedConstructor ctor,
+                                            List<CustomizedSetter> setters, List<Binding> fields) {
         ArrayList<Binding> allBindings = new ArrayList<Binding>(fields);
         allBindings.addAll(ctor.parameters);
         for (CustomizedSetter setter : setters) {
@@ -158,11 +185,11 @@ class CodegenImplObject {
                 int intHash = (int) hash;
                 if (intHash == 0) {
                     // hash collision, 0 can not be used as sentinel
-                    return genObjectUsingSlice(clazz, cacheKey);
+                    return genObjectUsingSlice(clazz, cacheKey, ctor, setters, fields);
                 }
                 if (knownHashes.contains(intHash)) {
                     // hash collision with other field can not be used as sentinel
-                    return genObjectUsingSlice(clazz, cacheKey);
+                    return genObjectUsingSlice(clazz, cacheKey, ctor, setters, fields);
                 }
                 knownHashes.add(intHash);
                 append(lines, "case " + intHash + ": ");

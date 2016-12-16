@@ -76,10 +76,13 @@ class Codegen {
         if (Collection.class.isAssignableFrom(clazz)) {
             return CodegenImplArray.genCollection(clazz, typeArgs);
         }
+        CustomizedConstructor ctor = ExtensionManager.getCtor(clazz);
+        List<CustomizedSetter> setters = ExtensionManager.getSetters(clazz);
+        List<Binding> fields = ExtensionManager.getFields(clazz);
         if (strictMode) {
-            return CodegenImplObject.genObjectUsingSlice(clazz, cacheKey);
+            return CodegenImplObject.genObjectUsingSlice(clazz, cacheKey, ctor, setters, fields);
         } else {
-            return CodegenImplObject.genObjectUsingHash(clazz, cacheKey);
+            return CodegenImplObject.genObjectUsingHash(clazz, cacheKey, ctor, setters, fields);
         }
     }
 
