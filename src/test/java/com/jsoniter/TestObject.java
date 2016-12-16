@@ -11,6 +11,13 @@ public class TestObject extends TestCase {
 //        Jsoniter.enableStrictMode();
     }
 
+    public static class EmptyClass {}
+
+    public void test_empty_class() throws IOException {
+        Jsoniter iter = Jsoniter.parse("{}");
+        assertNotNull(iter.read(EmptyClass.class));
+    }
+
     public void test_empty_object() throws IOException {
         Jsoniter iter = Jsoniter.parse("{}");
         assertNull(iter.readObject());

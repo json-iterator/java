@@ -11,7 +11,7 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
     }
 
     @Override
-    public String[] getAlternativeFieldNames(Binding field) {
+    public String[] getBindFrom(Binding field) {
         JsonIgnore jsonIgnore = field.field.getAnnotation(JsonIgnore.class);
         if (jsonIgnore != null) {
             return new String[0];

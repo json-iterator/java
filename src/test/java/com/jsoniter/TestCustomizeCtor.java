@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-public class TestCtor extends TestCase {
+public class TestCustomizeCtor extends TestCase {
 
     public static class OneArgCtor {
         String field1;

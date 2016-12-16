@@ -351,7 +351,7 @@ public class Jsoniter implements Closeable {
     }
 
     public static void registerExtension(Extension extension) {
-        Codegen.registerExtension(extension);
+        ExtensionManager.registerExtension(extension);
     }
 
     public static void enableStrictMode() {

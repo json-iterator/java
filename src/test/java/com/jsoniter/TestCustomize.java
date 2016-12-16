@@ -70,7 +70,7 @@ public class TestCustomize extends TestCase {
             }
 
             @Override
-            public String[] getAlternativeFieldNames(Binding field) {
+            public String[] getBindFrom(Binding field) {
                 if (field.clazz == CustomizedObject.class && field.name.equals("field1")) {
                     return new String[]{"field_1", "Field1"};
                 }

@@ -5,7 +5,6 @@ import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.CtNewMethod;
 
-import java.io.IOException;
 import java.lang.reflect.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -13,6 +12,16 @@ import java.util.*;
 
 class Codegen {
     static boolean strictMode = false;
+    final static Map<String, String> DEFAULT_VALUES = new HashMap<String, String>() {{
+        put("float", "0.0f");
+        put("double", "0.0d");
+        put("boolean", "false");
+        put("byte", "0");
+        put("short", "0");
+        put("int", "0");
+        put("char", "0");
+        put("long", "0");
+    }};
     final static Map<String, String> NATIVE_READS = new HashMap<String, String>() {{
         put("float", "iter.readFloat()");
         put("double", "iter.readDouble()");
@@ -42,7 +51,6 @@ class Codegen {
         add(Vector.class);
     }};
     static volatile Map<String, Decoder> cache = new HashMap<String, Decoder>();
-    static List<Extension> extensions = new ArrayList<Extension>();
     static ClassPool pool = ClassPool.getDefault();
 
     static Decoder getDecoder(String cacheKey, Type type, Type... typeArgs) {
@@ -141,17 +149,6 @@ class Codegen {
                 return genCollection(clazz, compType);
             }
         }
-        // TODO: re-enable this optimization
-//        if (clazz.getFields().length == 0) {
-//            StringBuilder lines = new StringBuilder();
-//            append(lines, "public static Object decode_(com.jsoniter.Jsoniter iter) {");
-//            append(lines, "if (iter.readNull()) { return null; }");
-//            append(lines, "{{clazz}} obj = {{newInst}};");
-//            append(lines, "iter.skip();");
-//            append(lines, "return obj;");
-//            append(lines, "}");
-//            return lines.toString().replace("{{clazz}}", clazz.getCanonicalName()).replace("{{newInst}}", genNewInstCode(clazz, getCtor(clazz)));
-//        }
         if (strictMode) {
             return genObjectUsingSlice(clazz, cacheKey);
         } else {
@@ -207,19 +204,31 @@ class Codegen {
     }
 
     private static String genObjectUsingHash(Class clazz, String cacheKey) {
-        CustomizedConstructor ctor = getCtor(clazz);
-        List<Binding> fields = getFields(clazz);
+        CustomizedConstructor ctor = ExtensionManager.getCtor(clazz);
+        List<Binding> fields = ExtensionManager.getFields(clazz);
+        List<CustomizedSetter> setters = ExtensionManager.getSetters(clazz);
         ArrayList<Binding> allBindings = new ArrayList<Binding>(fields);
         allBindings.addAll(ctor.parameters);
+        for (CustomizedSetter setter : setters) {
+            allBindings.addAll(setter.parameters);
+        }
+        if (allBindings.isEmpty()) {
+            return genObjectUsingSkip(clazz, ctor);
+        }
         StringBuilder lines = new StringBuilder();
         append(lines, "public static Object decode_(com.jsoniter.Jsoniter iter) {");
         append(lines, "if (iter.readNull()) { return null; }");
         for (Binding parameter : ctor.parameters) {
-            append(lines, String.format("%s _%s_ = null;", getTypeName(parameter.valueType), parameter.name));
+            appendVarDef(lines, parameter);
         }
         append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) { return {{newInst}}; }");
         for (Binding field : fields) {
-            append(lines, String.format("%s _%s_;", getTypeName(field.valueType), field.name));
+            appendVarDef(lines, field);
+        }
+        for (CustomizedSetter setter : setters) {
+            for (Binding param : setter.parameters) {
+                appendVarDef(lines, param);
+            }
         }
         append(lines, "switch (com.jsoniter.CodegenAccess.readObjectFieldAsHash(iter)) {");
         HashSet<Integer> knownHashes = new HashSet<Integer>();
@@ -270,6 +279,30 @@ class Codegen {
         for (Binding field : fields) {
             append(lines, String.format("obj.%s = _%s_;", field.name, field.name));
         }
+        for (CustomizedSetter setter : setters) {
+            lines.append("obj.");
+            lines.append(setter.methodName);
+            appendInvocation(lines, setter.parameters);
+            lines.append(";\n");
+        }
+        append(lines, "return obj;");
+        append(lines, "}");
+        return lines.toString()
+                .replace("{{clazz}}", clazz.getCanonicalName())
+                .replace("{{newInst}}", genNewInstCode(clazz, ctor));
+    }
+
+    private static void appendVarDef(StringBuilder lines, Binding parameter) {
+        String typeName = getTypeName(parameter.valueType);
+        append(lines, String.format("%s _%s_ = %s;", typeName, parameter.name, DEFAULT_VALUES.get(typeName)));
+    }
+
+    private static String genObjectUsingSkip(Class clazz, CustomizedConstructor ctor) {
+        StringBuilder lines = new StringBuilder();
+        append(lines, "public static Object decode_(com.jsoniter.Jsoniter iter) {");
+        append(lines, "if (iter.readNull()) { return null; }");
+        append(lines, "{{clazz}} obj = {{newInst}};");
+        append(lines, "iter.skip();");
         append(lines, "return obj;");
         append(lines, "}");
         return lines.toString()
@@ -284,48 +317,23 @@ class Codegen {
         } else {
             code.append(String.format("%s.%s", clazz.getCanonicalName(), ctor.staticMethodName));
         }
+        List<Binding> params = ctor.parameters;
+        appendInvocation(code, params);
+        return code.toString();
+    }
+
+    private static void appendInvocation(StringBuilder code, List<Binding> params) {
         code.append("(");
         boolean isFirst = true;
-        for (Binding ctorParam : ctor.parameters) {
+        for (Binding ctorParam : params) {
             if (isFirst) {
                 isFirst = false;
             } else {
                 code.append(",");
             }
-            code.append("_" + ctorParam.name + "_");
+            code.append(String.format("_%s_", ctorParam.name));
         }
         code.append(")");
-        return code.toString();
-    }
-
-    private static CustomizedConstructor getCtor(Class clazz) {
-        for (Extension extension : extensions) {
-            CustomizedConstructor ctor = extension.getConstructor(clazz);
-            if (ctor != null) {
-                return ctor;
-            }
-        }
-        return CustomizedConstructor.DEFAULT_INSTANCE;
-    }
-
-    private static List<Binding> getFields(Class clazz) {
-        ArrayList<Binding> bindings = new ArrayList<Binding>();
-        for (Field field : clazz.getFields()) {
-            Binding binding = new Binding();
-            binding.fromNames = new String[]{field.getName()};
-            for (Extension extension : extensions) {
-                String[] fromNames = extension.getAlternativeFieldNames(binding);
-                if (fromNames != null) {
-                    binding.fromNames = fromNames;
-                    break;
-                }
-            }
-            binding.name = field.getName();
-            binding.valueType = field.getType();
-            binding.clazz = clazz;
-            bindings.add(binding);
-        }
-        return bindings;
     }
 
     private static String genObjectUsingSlice(Class clazz, String cacheKey) {
@@ -368,12 +376,12 @@ class Codegen {
         append(lines, "}");
         return lines.toString()
                 .replace("{{clazz}}", clazz.getCanonicalName())
-                .replace("{{newInst}}", genNewInstCode(clazz, getCtor(clazz)));
+                .replace("{{newInst}}", genNewInstCode(clazz, ExtensionManager.getCtor(clazz)));
     }
 
     private static Map<Integer, Object> buildTriTree(Class clazz) {
         Map<Integer, Object> trieTree = new HashMap<Integer, Object>();
-        for (Binding field : getFields(clazz)) {
+        for (Binding field : ExtensionManager.getFields(clazz)) {
             for (String fromName : field.fromNames) {
                 byte[] fromNameBytes = fromName.getBytes();
                 Map<Byte, Object> current = (Map<Byte, Object>) trieTree.get(fromNameBytes.length);
@@ -397,16 +405,18 @@ class Codegen {
     }
 
     private static Decoder createFieldDecoder(String fieldCacheKey, Binding field) {
-        for (Extension extension : extensions) {
-            Decoder decoder = extension.createDecoder(field);
-            if (decoder != null) {
-                addNewDecoder(fieldCacheKey, decoder);
-                break;
-            }
+        // directly registered field decoder
+        Decoder decoder = cache.get(fieldCacheKey);
+        if (decoder != null) {
+            return decoder;
         }
-        // the decoder can be just created by the factory
-        // or it can be registered directly
-        return cache.get(fieldCacheKey);
+        // provided by extension
+        decoder = ExtensionManager.createFieldDecoder(fieldCacheKey, field);
+        if (decoder != null) {
+            addNewDecoder(fieldCacheKey, decoder);
+            return decoder;
+        }
+        return null;
     }
 
     private static void addFieldDispatch(StringBuilder lines, int len, int i, Map<Byte, Object> current, String cacheKey, List<Byte> bytesToCompare) {
@@ -670,10 +680,6 @@ class Codegen {
     private static void append(StringBuilder lines, String str) {
         lines.append(str);
         lines.append("\n");
-    }
-
-    public static void registerExtension(Extension extension) {
-        extensions.add(extension);
     }
 
     public static Decoder.IntDecoder getIntDecoder(String cacheKey) {
