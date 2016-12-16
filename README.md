@@ -61,7 +61,7 @@ Notice you can extract from nested data structure, and convert any type to the t
 <dependency>
     <groupId>com.jsoniter</groupId>
     <artifactId>jsoniter</artifactId>
-    <version>0.9.1</version>
+    <version>0.9.2</version>
 </dependency>
 ```
 
