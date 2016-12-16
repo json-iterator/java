@@ -171,4 +171,12 @@ class CodegenImplNative {
         lines.append(str);
         lines.append("\n");
     }
+
+    public static boolean isNative(Type valueType) {
+        if (valueType instanceof  Class) {
+            Class clazz  = (Class) valueType;
+            return NATIVE_READS.containsKey(clazz.getCanonicalName());
+        }
+        return false;
+    }
 }

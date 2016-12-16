@@ -114,7 +114,8 @@ class Codegen {
         }
         StringBuilder lines = new StringBuilder();
         append(lines, "public static Object decode_(com.jsoniter.JsonIterator iter) {");
-        append(lines, "{{clazz}} map = new {{clazz}}();");
+        append(lines, "{{clazz}} map = ({{clazz}})com.jsoniter.CodegenAccess.resetExistingObject(iter);");
+        append(lines, "if (map == null) { map = new {{clazz}}(); }");
         append(lines, "for (String field = iter.readObject(); field != null; field = iter.readObject()) {");
         append(lines, "map.put(field, {{op}});");
         append(lines, "}");

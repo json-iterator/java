@@ -1,5 +1,6 @@
 package com.jsoniter;
 
+import java.lang.reflect.Type;
 import java.util.*;
 
 class CodegenImplObject {
@@ -46,6 +47,7 @@ class CodegenImplObject {
                 appendVarDef(lines, param);
             }
         }
+        append(lines, "com.jsoniter.CodegenAccess.resetExistingObject(iter);");
         append(lines, "com.jsoniter.Slice field = com.jsoniter.CodegenAccess.readObjectFieldAsSlice(iter);");
         append(lines, "boolean once = true;");
         append(lines, "while (once) {");
@@ -53,7 +55,14 @@ class CodegenImplObject {
         append(lines, "switch (field.len) {");
         String rendered = renderTriTree(cacheKey, trieTree);
         for (Binding field : fields) {
-            rendered = rendered.replace("_" + field.name + "_", "obj." + field.name);
+            if (ctor.parameters.isEmpty() && fields.contains(field)) {
+                if (shouldReuseObject(field.valueType)) {
+                    rendered = rendered.replace("_" + field.name + "_", String.format("obj.%s", field.name));
+                } else {
+                    rendered = rendered.replace("_" + field.name + "_", String.format(
+                            "com.jsoniter.CodegenAccess.setExistingObject(iter, obj.%s);\nobj.%s", field.name, field.name));
+                }
+            }
         }
         append(lines, rendered);
         append(lines, "}"); // end of switch
@@ -187,6 +196,7 @@ class CodegenImplObject {
                 appendVarDef(lines, param);
             }
         }
+        append(lines, "com.jsoniter.CodegenAccess.resetExistingObject(iter);");
         append(lines, "switch (com.jsoniter.CodegenAccess.readObjectFieldAsHash(iter)) {");
         HashSet<Integer> knownHashes = new HashSet<Integer>();
         for (Binding field : allBindings) {
@@ -207,11 +217,7 @@ class CodegenImplObject {
                 }
                 knownHashes.add(intHash);
                 append(lines, "case " + intHash + ": ");
-                if (ctor.parameters.isEmpty() && fields.contains(field)) {
-                    append(lines, String.format("obj.%s = %s;", field.name, CodegenImplNative.genField(field, cacheKey)));
-                } else {
-                    append(lines, String.format("_%s_ = %s;", field.name, CodegenImplNative.genField(field, cacheKey)));
-                }
+                appendFieldSet(lines, cacheKey, ctor, fields, field);
                 append(lines, "break;");
             }
         }
@@ -229,11 +235,7 @@ class CodegenImplObject {
                 }
                 int intHash = (int) hash;
                 append(lines, "case " + intHash + ": ");
-                if (ctor.parameters.isEmpty() && fields.contains(field)) {
-                    append(lines, String.format("obj.%s = %s;", field.name, CodegenImplNative.genField(field, cacheKey)));
-                } else {
-                    append(lines, String.format("_%s_ = %s;", field.name, CodegenImplNative.genField(field, cacheKey)));
-                }
+                appendFieldSet(lines, cacheKey, ctor, fields, field);
                 append(lines, "continue;");
             }
         }
@@ -252,6 +254,17 @@ class CodegenImplObject {
         return lines.toString()
                 .replace("{{clazz}}", clazz.getCanonicalName())
                 .replace("{{newInst}}", genNewInstCode(clazz, ctor));
+    }
+
+    private static void appendFieldSet(StringBuilder lines, String cacheKey, CustomizedConstructor ctor, List<Binding> fields, Binding field) {
+        if (ctor.parameters.isEmpty() && fields.contains(field)) {
+            if (!shouldReuseObject(field.valueType)) {
+                append(lines, String.format("com.jsoniter.CodegenAccess.setExistingObject(iter, obj.%s);", field.name));
+            }
+            append(lines, String.format("obj.%s = %s;", field.name, CodegenImplNative.genField(field, cacheKey)));
+        } else {
+            append(lines, String.format("_%s_ = %s;", field.name, CodegenImplNative.genField(field, cacheKey)));
+        }
     }
 
     private static void appendSetter(List<CustomizedSetter> setters, StringBuilder lines) {
@@ -283,6 +296,10 @@ class CodegenImplObject {
 
     private static String genNewInstCode(Class clazz, CustomizedConstructor ctor) {
         StringBuilder code = new StringBuilder();
+        if (ctor.parameters.isEmpty()) {
+            // nothing to bind, safe to reuse existing object
+            code.append("(com.jsoniter.CodegenAccess.existingObject(iter) == null ? ");
+        }
         if (ctor.staticMethodName == null) {
             code.append(String.format("new %s", clazz.getCanonicalName()));
         } else {
@@ -290,6 +307,10 @@ class CodegenImplObject {
         }
         List<Binding> params = ctor.parameters;
         appendInvocation(code, params);
+        if (ctor.parameters.isEmpty()) {
+            // nothing to bind, safe to reuse existing object
+            code.append(String.format(" : (%s)com.jsoniter.CodegenAccess.existingObject(iter))", clazz.getCanonicalName()));
+        }
         return code.toString();
     }
 
@@ -310,5 +331,15 @@ class CodegenImplObject {
     private static void append(StringBuilder lines, String str) {
         lines.append(str);
         lines.append("\n");
+    }
+
+    public static boolean shouldReuseObject(Type valueType) {
+        if (valueType instanceof  Class) {
+            Class clazz = (Class) valueType;
+            if (clazz.isArray()) {
+                return false;
+            }
+        }
+        return CodegenImplNative.isNative(valueType);
     }
 }

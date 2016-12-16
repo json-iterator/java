@@ -20,6 +20,7 @@ public class JsonIterator implements Closeable {
     boolean eof;
     final Slice reusableSlice = new Slice(null, 0, 0);
     char[] reusableChars = new char[32];
+    Object existingObject = null; // the object should be bind to next
 
     static {
         for (int i = 0; i < valueTypes.length; i++) {
@@ -315,13 +316,23 @@ public class JsonIterator implements Closeable {
         }
     }
 
+    public final <T> T read(T existingObject) throws IOException {
+        this.existingObject = existingObject;
+        Class<?> clazz = existingObject.getClass();
+        return (T) Codegen.getDecoder(TypeLiteral.generateCacheKey(clazz), clazz).decode(this);
+    }
+
+    public final <T> T read(TypeLiteral<T> typeLiteral, T existingObject) throws IOException {
+        this.existingObject = existingObject;
+        return (T) Codegen.getDecoder(typeLiteral.cacheKey, typeLiteral.getType()).decode(this);
+    }
+
     public final <T> T read(Class<T> clazz) throws IOException {
         return (T) Codegen.getDecoder(TypeLiteral.generateCacheKey(clazz), clazz).decode(this);
     }
 
     public final <T> T read(TypeLiteral<T> typeLiteral) throws IOException {
-        Type type = typeLiteral.getType();
-        return (T) Codegen.getDecoder(typeLiteral.cacheKey, type).decode(this);
+        return (T) Codegen.getDecoder(typeLiteral.cacheKey, typeLiteral.getType()).decode(this);
     }
 
     public ValueType whatIsNext() throws IOException {

@@ -24,6 +24,9 @@ public class TypeLiteral<T> {
         StringBuilder decoderClassName = new StringBuilder("codegen.");
         if (type instanceof Class) {
             Class clazz = (Class) type;
+            if (clazz.isAnonymousClass()) {
+                throw new RuntimeException("anonymous class not supported: " + clazz);
+            }
             decoderClassName.append(clazz.getCanonicalName().replace("[]", "_array"));
         } else if (type instanceof ParameterizedType) {
             ParameterizedType pType = (ParameterizedType) type;

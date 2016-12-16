@@ -1,9 +1,29 @@
 package com.jsoniter;
 
 import java.io.IOException;
+import java.util.Collection;
 
 // only uesd by generated code to access decoder
 public class CodegenAccess {
+
+    public static <T extends Collection> T reuseCollection(T col) {
+        col.clear();
+        return col;
+    }
+
+    public static Object existingObject(JsonIterator iter) {
+        return iter.existingObject;
+    }
+
+    public static Object resetExistingObject(JsonIterator iter) {
+        Object obj = iter.existingObject;
+        iter.existingObject = null;
+        return obj;
+    }
+
+    public static void setExistingObject(JsonIterator iter, Object obj) {
+        iter.existingObject = obj;
+    }
 
     public static byte nextToken(JsonIterator iter) throws IOException {
         return iter.nextToken();
@@ -53,7 +73,7 @@ public class CodegenAccess {
     public static boolean readObjectStart(JsonIterator iter) throws IOException {
         byte c = iter.nextToken();
         if (c != '{') {
-            throw iter.reportError("readObjectStart", "expect { or n, found: " + (char)c);
+            throw iter.reportError("readObjectStart", "expect { or n, found: " + (char) c);
         }
         c = iter.nextToken();
         if (c == '}') {
@@ -79,7 +99,7 @@ public class CodegenAccess {
         for (; ; ) {
             byte c = 0;
             int i = iter.head;
-            for ( ;i < iter.tail; i++) {
+            for (; i < iter.tail; i++) {
                 c = iter.buf[i];
                 if (c == '"') {
                     break;
