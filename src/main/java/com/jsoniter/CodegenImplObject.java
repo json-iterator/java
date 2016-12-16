@@ -29,12 +29,17 @@ class CodegenImplObject {
         StringBuilder lines = new StringBuilder();
         append(lines, "public static Object decode_(com.jsoniter.JsonIterator iter) {");
         append(lines, "if (iter.readNull()) { return null; }");
-        for (Binding parameter : ctor.parameters) {
-            appendVarDef(lines, parameter);
-        }
-        append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) { return {{newInst}}; }");
-        for (Binding field : fields) {
-            appendVarDef(lines, field);
+        if (ctor.parameters.isEmpty()) {
+            append(lines, "{{clazz}} obj = {{newInst}};");
+            append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) { return obj; }");
+        } else {
+            for (Binding parameter : ctor.parameters) {
+                appendVarDef(lines, parameter);
+            }
+            append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) { return {{newInst}}; }");
+            for (Binding field : fields) {
+                appendVarDef(lines, field);
+            }
         }
         for (CustomizedSetter setter : setters) {
             for (Binding param : setter.parameters) {
@@ -46,44 +51,45 @@ class CodegenImplObject {
         append(lines, "while (once) {");
         append(lines, "once = false;");
         append(lines, "switch (field.len) {");
-        for (Map.Entry<Integer, Object> entry : trieTree.entrySet()) {
-            Integer len = entry.getKey();
-            append(lines, "case " + len + ": ");
-            Map<Byte, Object> current = (Map<Byte, Object>) entry.getValue();
-            addFieldDispatch(lines, len, 0, current, cacheKey, new ArrayList<Byte>());
-            append(lines, "break;");
+        String rendered = renderTriTree(cacheKey, trieTree);
+        for (Binding field : fields) {
+            rendered = rendered.replace("_" + field.name + "_", "obj." + field.name);
         }
+        append(lines, rendered);
         append(lines, "}"); // end of switch
         append(lines, "iter.skip();");
         append(lines, "}"); // end of while
         append(lines, "while (com.jsoniter.CodegenAccess.nextToken(iter) == ',') {");
         append(lines, "field = com.jsoniter.CodegenAccess.readObjectFieldAsSlice(iter);");
         append(lines, "switch (field.len) {");
-        for (Map.Entry<Integer, Object> entry : trieTree.entrySet()) {
-            Integer len = entry.getKey();
-            append(lines, "case " + len + ": ");
-            Map<Byte, Object> current = (Map<Byte, Object>) entry.getValue();
-            addFieldDispatch(lines, len, 0, current, cacheKey, new ArrayList<Byte>());
-            append(lines, "break;");
-        }
+        append(lines, rendered);
         append(lines, "}"); // end of switch
         append(lines, "iter.skip();");
         append(lines, "}"); // end of while
-        append(lines, String.format("%s obj = {{newInst}};", CodegenImplNative.getTypeName(clazz)));
-        for (Binding field : fields) {
-            append(lines, String.format("obj.%s = _%s_;", field.name, field.name));
+        if (!ctor.parameters.isEmpty()) {
+            append(lines, String.format("%s obj = {{newInst}};", CodegenImplNative.getTypeName(clazz)));
+            for (Binding field : fields) {
+                append(lines, String.format("obj.%s = _%s_;", field.name, field.name));
+            }
         }
-        for (CustomizedSetter setter : setters) {
-            lines.append("obj.");
-            lines.append(setter.methodName);
-            appendInvocation(lines, setter.parameters);
-            lines.append(";\n");
-        }
+        appendSetter(setters, lines);
         append(lines, "return obj;");
         append(lines, "}");
         return lines.toString()
                 .replace("{{clazz}}", clazz.getCanonicalName())
                 .replace("{{newInst}}", genNewInstCode(clazz, ExtensionManager.getCtor(clazz)));
+    }
+
+    private static String renderTriTree(String cacheKey, Map<Integer, Object> trieTree) {
+        StringBuilder switchBody = new StringBuilder();
+        for (Map.Entry<Integer, Object> entry : trieTree.entrySet()) {
+            Integer len = entry.getKey();
+            append(switchBody, "case " + len + ": ");
+            Map<Byte, Object> current = (Map<Byte, Object>) entry.getValue();
+            addFieldDispatch(switchBody, len, 0, current, cacheKey, new ArrayList<Byte>());
+            append(switchBody, "break;");
+        }
+        return switchBody.toString();
     }
 
     private static Map<Integer, Object> buildTriTree(ArrayList<Binding> allBindings) {
@@ -111,7 +117,8 @@ class CodegenImplObject {
         return trieTree;
     }
 
-    private static void addFieldDispatch(StringBuilder lines, int len, int i, Map<Byte, Object> current, String cacheKey, List<Byte> bytesToCompare) {
+    private static void addFieldDispatch(
+            StringBuilder lines, int len, int i, Map<Byte, Object> current, String cacheKey, List<Byte> bytesToCompare) {
         for (Map.Entry<Byte, Object> entry : current.entrySet()) {
             Byte b = entry.getKey();
             if (i == len - 1) {
@@ -161,12 +168,19 @@ class CodegenImplObject {
         StringBuilder lines = new StringBuilder();
         append(lines, "public static Object decode_(com.jsoniter.JsonIterator iter) {");
         append(lines, "if (iter.readNull()) { return null; }");
-        for (Binding parameter : ctor.parameters) {
-            appendVarDef(lines, parameter);
-        }
-        append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) { return {{newInst}}; }");
-        for (Binding field : fields) {
-            appendVarDef(lines, field);
+        if (ctor.parameters.isEmpty()) {
+            // has default ctor
+            append(lines, "{{clazz}} obj = {{newInst}};");
+            append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) { return obj; }");
+        } else {
+            // ctor requires binding
+            for (Binding parameter : ctor.parameters) {
+                appendVarDef(lines, parameter);
+            }
+            append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) { return {{newInst}}; }");
+            for (Binding field : fields) {
+                appendVarDef(lines, field);
+            }
         }
         for (CustomizedSetter setter : setters) {
             for (Binding param : setter.parameters) {
@@ -193,7 +207,11 @@ class CodegenImplObject {
                 }
                 knownHashes.add(intHash);
                 append(lines, "case " + intHash + ": ");
-                append(lines, String.format("_%s_ = %s;", field.name, CodegenImplNative.genField(field, cacheKey)));
+                if (ctor.parameters.isEmpty() && fields.contains(field)) {
+                    append(lines, String.format("obj.%s = %s;", field.name, CodegenImplNative.genField(field, cacheKey)));
+                } else {
+                    append(lines, String.format("_%s_ = %s;", field.name, CodegenImplNative.genField(field, cacheKey)));
+                }
                 append(lines, "break;");
             }
         }
@@ -211,28 +229,38 @@ class CodegenImplObject {
                 }
                 int intHash = (int) hash;
                 append(lines, "case " + intHash + ": ");
-                append(lines, String.format("_%s_ = %s;", field.name, CodegenImplNative.genField(field, cacheKey)));
+                if (ctor.parameters.isEmpty() && fields.contains(field)) {
+                    append(lines, String.format("obj.%s = %s;", field.name, CodegenImplNative.genField(field, cacheKey)));
+                } else {
+                    append(lines, String.format("_%s_ = %s;", field.name, CodegenImplNative.genField(field, cacheKey)));
+                }
                 append(lines, "continue;");
             }
         }
         append(lines, "}");
         append(lines, "iter.skip();");
         append(lines, "}");
-        append(lines, CodegenImplNative.getTypeName(clazz) + " obj = {{newInst}};");
-        for (Binding field : fields) {
-            append(lines, String.format("obj.%s = _%s_;", field.name, field.name));
+        if (!ctor.parameters.isEmpty()) {
+            append(lines, CodegenImplNative.getTypeName(clazz) + " obj = {{newInst}};");
+            for (Binding field : fields) {
+                append(lines, String.format("obj.%s = _%s_;", field.name, field.name));
+            }
         }
+        appendSetter(setters, lines);
+        append(lines, "return obj;");
+        append(lines, "}");
+        return lines.toString()
+                .replace("{{clazz}}", clazz.getCanonicalName())
+                .replace("{{newInst}}", genNewInstCode(clazz, ctor));
+    }
+
+    private static void appendSetter(List<CustomizedSetter> setters, StringBuilder lines) {
         for (CustomizedSetter setter : setters) {
             lines.append("obj.");
             lines.append(setter.methodName);
             appendInvocation(lines, setter.parameters);
             lines.append(";\n");
         }
-        append(lines, "return obj;");
-        append(lines, "}");
-        return lines.toString()
-                .replace("{{clazz}}", clazz.getCanonicalName())
-                .replace("{{newInst}}", genNewInstCode(clazz, ctor));
     }
 
     private static void appendVarDef(StringBuilder lines, Binding parameter) {
