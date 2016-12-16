@@ -11,7 +11,7 @@ import static org.junit.Assert.assertArrayEquals;
 public class TestArray extends TestCase {
 
     public void test_empty_array() throws IOException {
-        Jsoniter iter = Jsoniter.parse("[]");
+        JsonIterator iter = JsonIterator.parse("[]");
         assertFalse(iter.readArray());
         iter.reset();
         int[] array = iter.read(int[].class);
@@ -26,7 +26,7 @@ public class TestArray extends TestCase {
     }
 
     public void test_one_element() throws IOException {
-        Jsoniter iter = Jsoniter.parse("[1]");
+        JsonIterator iter = JsonIterator.parse("[1]");
         assertTrue(iter.readArray());
         assertEquals(1, iter.readInt());
         assertFalse(iter.readArray());
@@ -46,7 +46,7 @@ public class TestArray extends TestCase {
     }
 
     public void test_two_elements() throws IOException {
-        Jsoniter iter = Jsoniter.parse(" [ 1 , 2 ] ");
+        JsonIterator iter = JsonIterator.parse(" [ 1 , 2 ] ");
         assertTrue(iter.readArray());
         assertEquals(1, iter.readInt());
         assertTrue(iter.readArray());
@@ -68,7 +68,7 @@ public class TestArray extends TestCase {
     }
 
     public void test_three_elements() throws IOException {
-        Jsoniter iter = Jsoniter.parse(" [ 1 , 2, 3 ] ");
+        JsonIterator iter = JsonIterator.parse(" [ 1 , 2, 3 ] ");
         assertTrue(iter.readArray());
         assertEquals(1, iter.readInt());
         assertTrue(iter.readArray());
@@ -92,7 +92,7 @@ public class TestArray extends TestCase {
     }
 
     public void test_four_elements() throws IOException {
-        Jsoniter iter = Jsoniter.parse(" [ 1 , 2, 3, 4 ] ");
+        JsonIterator iter = JsonIterator.parse(" [ 1 , 2, 3, 4 ] ");
         assertTrue(iter.readArray());
         assertEquals(1, iter.readInt());
         assertTrue(iter.readArray());
@@ -118,7 +118,7 @@ public class TestArray extends TestCase {
     }
 
     public void test_five_elements() throws IOException {
-        Jsoniter iter = Jsoniter.parse(" [ 1 , 2, 3, 4, 5  ] ");
+        JsonIterator iter = JsonIterator.parse(" [ 1 , 2, 3, 4, 5  ] ");
         assertTrue(iter.readArray());
         assertEquals(1, iter.readInt());
         assertTrue(iter.readArray());
@@ -146,12 +146,12 @@ public class TestArray extends TestCase {
     }
 
     public void test_null() throws IOException {
-        Jsoniter iter = Jsoniter.parse("null");
+        JsonIterator iter = JsonIterator.parse("null");
         assertNull(iter.read(double[].class));
     }
 
     public void test_boolean_array() throws IOException {
-        Jsoniter iter = Jsoniter.parse("[true, false, true]");
+        JsonIterator iter = JsonIterator.parse("[true, false, true]");
         assertArrayEquals(new boolean[]{true, false, true}, iter.read(boolean[].class));
     }
 }

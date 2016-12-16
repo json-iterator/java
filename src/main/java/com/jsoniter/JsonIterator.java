@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Jsoniter implements Closeable {
+public class JsonIterator implements Closeable {
 
     final static ValueType[] valueTypes = new ValueType[256];
     InputStream in;
@@ -44,7 +44,7 @@ public class Jsoniter implements Closeable {
         valueTypes['{'] = ValueType.OBJECT;
     }
 
-    public Jsoniter(InputStream in, byte[] buf) {
+    public JsonIterator(InputStream in, byte[] buf) {
         this.in = in;
         this.buf = buf;
         if (this.in == null) {
@@ -52,15 +52,15 @@ public class Jsoniter implements Closeable {
         }
     }
 
-    public static Jsoniter parse(InputStream in, int bufSize) {
-        return new Jsoniter(in, new byte[bufSize]);
+    public static JsonIterator parse(InputStream in, int bufSize) {
+        return new JsonIterator(in, new byte[bufSize]);
     }
 
-    public static Jsoniter parse(byte[] buf) {
-        return new Jsoniter(null, buf);
+    public static JsonIterator parse(byte[] buf) {
+        return new JsonIterator(null, buf);
     }
 
-    public static Jsoniter parse(String str) {
+    public static JsonIterator parse(String str) {
         return parse(str.getBytes());
     }
 
@@ -145,7 +145,7 @@ public class Jsoniter implements Closeable {
     public final boolean readNull() throws IOException {
         byte c = nextToken();
         if (c == 'n') {
-            Skip.skipUntilBreak(this);
+            IterImplSkip.skipUntilBreak(this);
             return true;
         }
         unreadByte();
@@ -156,10 +156,10 @@ public class Jsoniter implements Closeable {
         byte c = nextToken();
         switch (c) {
             case 't':
-                Skip.skipUntilBreak(this);
+                IterImplSkip.skipUntilBreak(this);
                 return true;
             case 'f':
-                Skip.skipUntilBreak(this);
+                IterImplSkip.skipUntilBreak(this);
                 return false;
             default:
                 throw reportError("readBoolean", "expect t or f, found: " + c);
@@ -176,11 +176,11 @@ public class Jsoniter implements Closeable {
     }
 
     public final int readInt() throws IOException {
-        return NumberReader.readInt(this);
+        return IterImplNumber.readInt(this);
     }
 
     public final long readLong() throws IOException {
-        return NumberReader.readLong(this);
+        return IterImplNumber.readLong(this);
     }
 
     public final boolean readArray() throws IOException {
@@ -226,18 +226,18 @@ public class Jsoniter implements Closeable {
     }
 
     public final String readString() throws IOException {
-        return StringReader.readString(this);
+        return IterImplString.readString(this);
     }
 
     public final byte[] readBase64() throws IOException {
-        return StringReader.readBase64(this);
+        return IterImplString.readBase64(this);
     }
 
     public final String readObject() throws IOException {
         byte c = nextToken();
         switch (c) {
             case 'n':
-                Skip.skipUntilBreak(this);
+                IterImplSkip.skipUntilBreak(this);
                 return null;
             case '{':
                 c = nextToken();
@@ -268,19 +268,19 @@ public class Jsoniter implements Closeable {
     }
 
     public final float readFloat() throws IOException {
-        return NumberReader.readFloat(this);
+        return IterImplNumber.readFloat(this);
     }
 
     public final double readDouble() throws IOException {
-        return NumberReader.readDouble(this);
+        return IterImplNumber.readDouble(this);
     }
 
     public final BigDecimal readBigDecimal() throws IOException {
-        return new BigDecimal(NumberReader.readNumber(this));
+        return new BigDecimal(IterImplNumber.readNumber(this));
     }
 
     public final BigInteger readBigInteger() throws IOException {
-        return new BigInteger(NumberReader.readNumber(this));
+        return new BigInteger(IterImplNumber.readNumber(this));
     }
 
     public final Any readAny() throws IOException {
@@ -331,7 +331,7 @@ public class Jsoniter implements Closeable {
     }
 
     public void skip() throws IOException {
-        Skip.skip(this);
+        IterImplSkip.skip(this);
     }
 
     public static void registerTypeDecoder(Class clazz, Decoder decoder) {

@@ -8,6 +8,10 @@ import java.util.List;
 
 public class TestCustomizeCtor extends TestCase {
 
+    static {
+        JsonIterator.enableStrictMode();
+    }
+
     public static class OneArgCtor {
         String field1;
 
@@ -17,7 +21,7 @@ public class TestCustomizeCtor extends TestCase {
     }
 
     public void test_one_argument() throws IOException {
-        Jsoniter.registerExtension(new EmptyExtension() {
+        JsonIterator.registerExtension(new EmptyExtension() {
             @Override
             public CustomizedConstructor getConstructor(Class clazz) {
                 if (clazz == OneArgCtor.class) {
@@ -32,7 +36,7 @@ public class TestCustomizeCtor extends TestCase {
                 return null;
             }
         });
-        Jsoniter iter = Jsoniter.parse("{'param1': 'hello'}".replace('\'', '"'));
+        JsonIterator iter = JsonIterator.parse("{'param1': 'hello'}".replace('\'', '"'));
         OneArgCtor obj = iter.read(OneArgCtor.class);
         assertEquals("hello", obj.field1);
     }

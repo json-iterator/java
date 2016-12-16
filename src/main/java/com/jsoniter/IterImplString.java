@@ -7,7 +7,7 @@ import static java.lang.Character.MIN_HIGH_SURROGATE;
 import static java.lang.Character.MIN_LOW_SURROGATE;
 import static java.lang.Character.MIN_SUPPLEMENTARY_CODE_POINT;
 
-class StringReader {
+class IterImplString {
 
     static int[] base64Tbl = {
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -26,10 +26,10 @@ class StringReader {
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
 
-    public static final String readString(Jsoniter iter) throws IOException {
+    public static final String readString(JsonIterator iter) throws IOException {
         byte c = iter.nextToken();
         if (c == 'n') {
-            Skip.skipUntilBreak(iter);
+            IterImplSkip.skipUntilBreak(iter);
             return null;
         }
         if (c != '"') {
@@ -52,7 +52,7 @@ class StringReader {
         return readStringSlowPath(iter);
     }
 
-    final static String readStringSlowPath(Jsoniter iter) throws IOException {
+    final static String readStringSlowPath(JsonIterator iter) throws IOException {
         // http://grepcode.com/file_/repository.grepcode.com/java/root/jdk/openjdk/8u40-b25/sun/nio/cs/UTF_8.java/?v=source
         // byte => char with support of escape in one pass
         int j = 0;
@@ -96,7 +96,7 @@ class StringReader {
                             iter.reusableChars[j++] = '\t';
                             break;
                         case 'u':
-                            iter.reusableChars[j++] = NumberReader.readU4(iter);
+                            iter.reusableChars[j++] = IterImplNumber.readU4(iter);
                             break;
                         default:
                             throw iter.reportError("readStringSlowPath", "unexpected escape char: " + b2);
@@ -154,7 +154,7 @@ class StringReader {
         return (char) ((codePoint & 0x3ff) + MIN_LOW_SURROGATE);
     }
 
-    public static final byte[] readBase64(Jsoniter iter) throws IOException {
+    public static final byte[] readBase64(JsonIterator iter) throws IOException {
         // from https://gist.github.com/EmilHernvall/953733
         if (iter.nextToken() != '"') {
             throw iter.reportError("readBase64", "expect \" for base64");
@@ -202,7 +202,7 @@ class StringReader {
     }
 
     // read the bytes between " "
-    final static Slice readSlice(Jsoniter iter) throws IOException {
+    final static Slice readSlice(JsonIterator iter) throws IOException {
         int end = findSliceEnd(iter);
         if (end != -1) {
             // reuse current buffer
@@ -238,7 +238,7 @@ class StringReader {
     }
 
     // slice does not allow escape
-    final static int findSliceEnd(Jsoniter iter) {
+    final static int findSliceEnd(JsonIterator iter) {
         for (int i = iter.head; i < iter.tail; i++) {
             byte c = iter.buf[i];
             if (c == '"') {

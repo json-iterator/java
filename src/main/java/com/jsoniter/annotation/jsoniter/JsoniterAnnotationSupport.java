@@ -2,12 +2,12 @@ package com.jsoniter.annotation.jsoniter;
 
 import com.jsoniter.Binding;
 import com.jsoniter.EmptyExtension;
-import com.jsoniter.Jsoniter;
+import com.jsoniter.JsonIterator;
 
 public class JsoniterAnnotationSupport extends EmptyExtension {
 
     public static void enable() {
-        Jsoniter.registerExtension(new JsoniterAnnotationSupport());
+        JsonIterator.registerExtension(new JsoniterAnnotationSupport());
     }
 
     @Override

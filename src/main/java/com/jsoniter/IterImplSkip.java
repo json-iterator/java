@@ -2,7 +2,7 @@ package com.jsoniter;
 
 import java.io.IOException;
 
-class Skip {
+class IterImplSkip {
 
     private static final boolean[] breaks = new boolean[256];
 
@@ -16,7 +16,7 @@ class Skip {
         breaks[']'] = true;
     }
 
-    public static final void skip(Jsoniter iter) throws IOException {
+    public static final void skip(JsonIterator iter) throws IOException {
         byte c = iter.nextToken();
         switch (c) {
             case '"':
@@ -45,11 +45,11 @@ class Skip {
                 skipObject(iter);
                 return;
             default:
-                throw iter.reportError("Skip", "do not know how to skip: " + c);
+                throw iter.reportError("IterImplSkip", "do not know how to skip: " + c);
         }
     }
 
-    final static void skipObject(Jsoniter iter) throws IOException {
+    final static void skipObject(JsonIterator iter) throws IOException {
         int level = 1;
         for (; ; ) {
             for (int i = iter.head; i < iter.tail; i++) {
@@ -79,7 +79,7 @@ class Skip {
         }
     }
 
-    final static void skipArray(Jsoniter iter) throws IOException {
+    final static void skipArray(JsonIterator iter) throws IOException {
         int level = 1;
         for (; ; ) {
             for (int i = iter.head; i < iter.tail; i++) {
@@ -109,7 +109,7 @@ class Skip {
         }
     }
 
-    final static void skipUntilBreak(Jsoniter iter) throws IOException {
+    final static void skipUntilBreak(JsonIterator iter) throws IOException {
         // true, false, null, number
         for (; ; ) {
             for (int i = iter.head; i < iter.tail; i++) {
@@ -125,7 +125,7 @@ class Skip {
         }
     }
 
-    final static void skipString(Jsoniter iter) throws IOException {
+    final static void skipString(JsonIterator iter) throws IOException {
         for (; ; ) {
             int end = findStringEnd(iter);
             if (end == -1) {
@@ -163,7 +163,7 @@ class Skip {
     // adapted from: https://github.com/buger/jsonparser/blob/master/parser.go
     // Tries to find the end of string
     // Support if string contains escaped quote symbols.
-    final static int findStringEnd(Jsoniter iter) {
+    final static int findStringEnd(JsonIterator iter) {
         boolean escaped = false;
         for (int i = iter.head; i < iter.tail; i++) {
             byte c = iter.buf[i];

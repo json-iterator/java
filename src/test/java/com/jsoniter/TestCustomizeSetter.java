@@ -17,7 +17,7 @@ public class TestCustomizeSetter extends TestCase {
     }
 
     public void test_default_setter() throws IOException {
-        Jsoniter iter = Jsoniter.parse("{'field': 'hello'}".replace('\'', '"'));
+        JsonIterator iter = JsonIterator.parse("{'field': 'hello'}".replace('\'', '"'));
         ObjectWithDefaultSetter obj = iter.read(ObjectWithDefaultSetter.class);
         assertEquals("hello", obj.field);
     }
@@ -33,7 +33,7 @@ public class TestCustomizeSetter extends TestCase {
     }
 
     public void test_customized_setter() throws IOException {
-        Jsoniter.registerExtension(new EmptyExtension() {
+        JsonIterator.registerExtension(new EmptyExtension() {
             @Override
             public List<CustomizedSetter> getSetters(Class clazz) {
                 if (clazz == ObjectWithCustomizedSetter.class) {
@@ -51,7 +51,7 @@ public class TestCustomizeSetter extends TestCase {
                 return null;
             }
         });
-        Jsoniter iter = Jsoniter.parse("{'field1': 'hello', 'field2': 'world'}".replace('\'', '"'));
+        JsonIterator iter = JsonIterator.parse("{'field1': 'hello', 'field2': 'world'}".replace('\'', '"'));
         ObjectWithCustomizedSetter obj = iter.read(ObjectWithCustomizedSetter.class);
         assertEquals("hello", obj.field1);
         assertEquals("world", obj.field2);

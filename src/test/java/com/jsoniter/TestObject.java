@@ -8,18 +8,18 @@ import java.util.Map;
 public class TestObject extends TestCase {
 
     static {
-//        Jsoniter.enableStrictMode();
+//        JsonIterator.enableStrictMode();
     }
 
     public static class EmptyClass {}
 
     public void test_empty_class() throws IOException {
-        Jsoniter iter = Jsoniter.parse("{}");
+        JsonIterator iter = JsonIterator.parse("{}");
         assertNotNull(iter.read(EmptyClass.class));
     }
 
     public void test_empty_object() throws IOException {
-        Jsoniter iter = Jsoniter.parse("{}");
+        JsonIterator iter = JsonIterator.parse("{}");
         assertNull(iter.readObject());
         iter.reset();
         SimpleObject simpleObj = iter.read(SimpleObject.class);
@@ -33,7 +33,7 @@ public class TestObject extends TestCase {
     }
 
     public void test_one_field() throws IOException {
-        Jsoniter iter = Jsoniter.parse("{ 'field1' : 'hello' }".replace('\'', '"'));
+        JsonIterator iter = JsonIterator.parse("{ 'field1' : 'hello' }".replace('\'', '"'));
         assertEquals("field1", iter.readObject());
         assertEquals("hello", iter.readString());
         assertNull(iter.readObject());
@@ -48,7 +48,7 @@ public class TestObject extends TestCase {
     }
 
     public void test_two_fields() throws IOException {
-        Jsoniter iter = Jsoniter.parse("{ 'field1' : 'hello' , 'field2': 'world' }".replace('\'', '"'));
+        JsonIterator iter = JsonIterator.parse("{ 'field1' : 'hello' , 'field2': 'world' }".replace('\'', '"'));
         assertEquals("field1", iter.readObject());
         assertEquals("hello", iter.readString());
         assertEquals("field2", iter.readObject());
@@ -65,7 +65,7 @@ public class TestObject extends TestCase {
     }
 
     public void test_read_null() throws IOException {
-        Jsoniter iter = Jsoniter.parse("null".replace('\'', '"'));
+        JsonIterator iter = JsonIterator.parse("null".replace('\'', '"'));
         assertTrue(iter.readNull());
         iter.reset();
         SimpleObject simpleObj = iter.read(SimpleObject.class);
@@ -76,7 +76,7 @@ public class TestObject extends TestCase {
     }
 
     public void test_native_field() throws IOException {
-        Jsoniter iter = Jsoniter.parse("{ 'field1' : 100 }".replace('\'', '"'));
+        JsonIterator iter = JsonIterator.parse("{ 'field1' : 100 }".replace('\'', '"'));
         ComplexObject complexObject = iter.read(ComplexObject.class);
         assertEquals(100, complexObject.field1);
         iter.reset();
@@ -85,7 +85,7 @@ public class TestObject extends TestCase {
     }
 
     public void test_inheritance() throws IOException {
-        Jsoniter iter = Jsoniter.parse("{'inheritedField': 'hello'}".replace('\'', '"'));
+        JsonIterator iter = JsonIterator.parse("{'inheritedField': 'hello'}".replace('\'', '"'));
         InheritedObject inheritedObject = iter.read(InheritedObject.class);
         assertEquals("hello", inheritedObject.inheritedField);
     }

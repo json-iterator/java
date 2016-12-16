@@ -19,7 +19,7 @@ Given this JSON document `[0,1,2,3]`
 Parse with Java bind-api
 
 ```java
-import com.jsoniter.Jsoniter;
+import com.jsoniter.JsonIterator;
 Jsoniter iter = Jsoniter.parse("[0,1,2,3]");
 int[] val = iter.read(int[].class);
 System.out.println(val[3]);
@@ -28,7 +28,7 @@ System.out.println(val[3]);
 Parse with Java any-api
 
 ```java
-import com.jsoniter.Jsoniter;
+import com.jsoniter.JsonIterator;
 Jsoniter iter = Jsoniter.parse("[0,1,2,3]");
 Any val = iter.readAny();
 System.out.println(any.get(3));
@@ -37,7 +37,7 @@ System.out.println(any.get(3));
 Parse with Java iterator-api
 
 ```java
-import com.jsoniter.Jsoniter;
+import com.jsoniter.JsonIterator;
 Jsoniter iter = Jsoniter.parse("[0,1,2,3]");
 int total = 0;
 while(iter.readArray()) {

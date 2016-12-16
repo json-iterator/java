@@ -5,39 +5,39 @@ import java.io.IOException;
 // only uesd by generated code to access decoder
 public class CodegenAccess {
 
-    public static byte nextToken(Jsoniter iter) throws IOException {
+    public static byte nextToken(JsonIterator iter) throws IOException {
         return iter.nextToken();
     }
 
-    public static final boolean readBoolean(String cacheKey, Jsoniter iter) throws IOException {
+    public static final boolean readBoolean(String cacheKey, JsonIterator iter) throws IOException {
         return Codegen.getBooleanDecoder(cacheKey).decodeBoolean(iter);
     }
 
-    public static final short readShort(String cacheKey, Jsoniter iter) throws IOException {
+    public static final short readShort(String cacheKey, JsonIterator iter) throws IOException {
         return Codegen.getShortDecoder(cacheKey).decodeShort(iter);
     }
 
-    public static final int readInt(String cacheKey, Jsoniter iter) throws IOException {
+    public static final int readInt(String cacheKey, JsonIterator iter) throws IOException {
         return Codegen.getIntDecoder(cacheKey).decodeInt(iter);
     }
 
-    public static final long readLong(String cacheKey, Jsoniter iter) throws IOException {
+    public static final long readLong(String cacheKey, JsonIterator iter) throws IOException {
         return Codegen.getLongDecoder(cacheKey).decodeLong(iter);
     }
 
-    public static final float readFloat(String cacheKey, Jsoniter iter) throws IOException {
+    public static final float readFloat(String cacheKey, JsonIterator iter) throws IOException {
         return Codegen.getFloatDecoder(cacheKey).decodeFloat(iter);
     }
 
-    public static final double readDouble(String cacheKey, Jsoniter iter) throws IOException {
+    public static final double readDouble(String cacheKey, JsonIterator iter) throws IOException {
         return Codegen.getDoubleDecoder(cacheKey).decodeDouble(iter);
     }
 
-    public static final <T> T read(String cacheKey, Jsoniter iter) throws IOException {
+    public static final <T> T read(String cacheKey, JsonIterator iter) throws IOException {
         return (T) Codegen.getDecoder(cacheKey, null).decode(iter);
     }
 
-    public static boolean readArrayStart(Jsoniter iter) throws IOException {
+    public static boolean readArrayStart(JsonIterator iter) throws IOException {
         byte c = iter.nextToken();
         if (c != '[') {
             throw iter.reportError("readArrayStart", "expect [ or n");
@@ -50,7 +50,7 @@ public class CodegenAccess {
         return true;
     }
 
-    public static boolean readObjectStart(Jsoniter iter) throws IOException {
+    public static boolean readObjectStart(JsonIterator iter) throws IOException {
         byte c = iter.nextToken();
         if (c != '{') {
             throw iter.reportError("readObjectStart", "expect { or n, found: " + (char)c);
@@ -63,15 +63,15 @@ public class CodegenAccess {
         return true;
     }
 
-    public static void reportIncompleteObject(Jsoniter iter) {
+    public static void reportIncompleteObject(JsonIterator iter) {
         throw iter.reportError("genObject", "expect }");
     }
 
-    public static void reportIncompleteArray(Jsoniter iter) {
+    public static void reportIncompleteArray(JsonIterator iter) {
         throw iter.reportError("genArray", "expect ]");
     }
 
-    public static final int readObjectFieldAsHash(Jsoniter iter) throws IOException {
+    public static final int readObjectFieldAsHash(JsonIterator iter) throws IOException {
         if (iter.nextToken() != '"') {
             throw iter.reportError("readObjectFieldAsHash", "expect \"");
         }
@@ -100,11 +100,11 @@ public class CodegenAccess {
         }
     }
 
-    public static final Slice readObjectFieldAsSlice(Jsoniter iter) throws IOException {
+    public static final Slice readObjectFieldAsSlice(JsonIterator iter) throws IOException {
         if (iter.nextToken() != '"') {
             throw iter.reportError("readObjectFieldAsSlice", "expect \"");
         }
-        Slice field = StringReader.readSlice(iter);
+        Slice field = IterImplString.readSlice(iter);
         boolean notCopied = field != null;
         if (skipWhitespacesWithoutLoadMore(iter)) {
             if (notCopied) {
@@ -137,7 +137,7 @@ public class CodegenAccess {
         return field;
     }
 
-    private final static boolean skipWhitespacesWithoutLoadMore(Jsoniter iter) throws IOException {
+    private final static boolean skipWhitespacesWithoutLoadMore(JsonIterator iter) throws IOException {
         for (int i = iter.head; i < iter.tail; i++) {
             byte c = iter.buf[i];
             switch (c) {

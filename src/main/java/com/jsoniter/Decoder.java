@@ -10,29 +10,29 @@ public interface Decoder {
      * @return the value to set
      * @throws IOException when reading from iterator triggered error
      */
-    Object decode(Jsoniter iter) throws IOException;
+    Object decode(JsonIterator iter) throws IOException;
 
     interface BooleanDecoder extends Decoder {
-        boolean decodeBoolean(Jsoniter iter) throws IOException;
+        boolean decodeBoolean(JsonIterator iter) throws IOException;
     }
 
     interface ShortDecoder extends Decoder {
-        short decodeShort(Jsoniter iter) throws IOException;
+        short decodeShort(JsonIterator iter) throws IOException;
     }
 
     interface IntDecoder extends Decoder {
-        int decodeInt(Jsoniter iter) throws IOException;
+        int decodeInt(JsonIterator iter) throws IOException;
     }
 
     interface LongDecoder extends Decoder {
-        long decodeLong(Jsoniter iter) throws IOException;
+        long decodeLong(JsonIterator iter) throws IOException;
     }
 
     interface FloatDecoder extends Decoder {
-        float decodeFloat(Jsoniter iter) throws IOException;
+        float decodeFloat(JsonIterator iter) throws IOException;
     }
 
     interface DoubleDecoder extends Decoder {
-        double decodeDouble(Jsoniter iter) throws IOException;
+        double decodeDouble(JsonIterator iter) throws IOException;
     }
 }

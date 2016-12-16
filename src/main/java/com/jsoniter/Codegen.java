@@ -85,7 +85,7 @@ class Codegen {
             CtMethod staticMethod = CtNewMethod.make(source, ctClass);
             ctClass.addMethod(staticMethod);
             CtMethod interfaceMethod = CtNewMethod.make("" +
-                    "public Object decode(com.jsoniter.Jsoniter iter) {" +
+                    "public Object decode(com.jsoniter.JsonIterator iter) {" +
                     "return decode_(iter);" +
                     "}", ctClass);
             ctClass.addMethod(interfaceMethod);
@@ -158,7 +158,7 @@ class Codegen {
 
     private static String genMap(Class clazz, Type valueType) {
         StringBuilder lines = new StringBuilder();
-        append(lines, "public static Object decode_(com.jsoniter.Jsoniter iter) {");
+        append(lines, "public static Object decode_(com.jsoniter.JsonIterator iter) {");
         append(lines, "{{clazz}} map = new {{clazz}}();");
         append(lines, "for (String field = iter.readObject(); field != null; field = iter.readObject()) {");
         append(lines, "map.put(field, {{op}});");
@@ -191,7 +191,7 @@ class Codegen {
             throw new RuntimeException("do not know how to read: " + nativeReadKey);
         }
         StringBuilder lines = new StringBuilder();
-        append(lines, "public static Object decode_(com.jsoniter.Jsoniter iter) {");
+        append(lines, "public static Object decode_(com.jsoniter.JsonIterator iter) {");
         append(lines, "return " + op + ";");
         append(lines, "}");
         return lines.toString();
@@ -216,7 +216,7 @@ class Codegen {
             return genObjectUsingSkip(clazz, ctor);
         }
         StringBuilder lines = new StringBuilder();
-        append(lines, "public static Object decode_(com.jsoniter.Jsoniter iter) {");
+        append(lines, "public static Object decode_(com.jsoniter.JsonIterator iter) {");
         append(lines, "if (iter.readNull()) { return null; }");
         for (Binding parameter : ctor.parameters) {
             appendVarDef(lines, parameter);
@@ -299,7 +299,7 @@ class Codegen {
 
     private static String genObjectUsingSkip(Class clazz, CustomizedConstructor ctor) {
         StringBuilder lines = new StringBuilder();
-        append(lines, "public static Object decode_(com.jsoniter.Jsoniter iter) {");
+        append(lines, "public static Object decode_(com.jsoniter.JsonIterator iter) {");
         append(lines, "if (iter.readNull()) { return null; }");
         append(lines, "{{clazz}} obj = {{newInst}};");
         append(lines, "iter.skip();");
@@ -339,7 +339,7 @@ class Codegen {
     private static String genObjectUsingSlice(Class clazz, String cacheKey) {
         Map<Integer, Object> trieTree = buildTriTree(clazz);
         StringBuilder lines = new StringBuilder();
-        append(lines, "public static Object decode_(com.jsoniter.Jsoniter iter) {");
+        append(lines, "public static Object decode_(com.jsoniter.JsonIterator iter) {");
         append(lines, "if (iter.readNull()) { return null; }");
         append(lines, "{{clazz}} obj = {{newInst}};");
         append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) { return obj; }");
@@ -547,7 +547,7 @@ class Codegen {
             throw new IllegalArgumentException("nested array not supported: " + clazz.getCanonicalName());
         }
         StringBuilder lines = new StringBuilder();
-        append(lines, "public static Object decode_(com.jsoniter.Jsoniter iter) {");
+        append(lines, "public static Object decode_(com.jsoniter.JsonIterator iter) {");
         append(lines, "if (iter.readNull()) { return null; }");
         append(lines, "if (!com.jsoniter.CodegenAccess.readArrayStart(iter)) {");
         append(lines, "return new {{comp}}[0];");
@@ -591,7 +591,7 @@ class Codegen {
 
     private static String genCollectionWithCapacity(Class clazz, Type compType) {
         StringBuilder lines = new StringBuilder();
-        append(lines, "public static Object decode_(com.jsoniter.Jsoniter iter) {");
+        append(lines, "public static Object decode_(com.jsoniter.JsonIterator iter) {");
         append(lines, "if (!com.jsoniter.CodegenAccess.readArrayStart(iter)) {");
         append(lines, "return new {{clazz}}(0);");
         append(lines, "}");
@@ -635,7 +635,7 @@ class Codegen {
 
     private static String genCollection(Class clazz, Type compType) {
         StringBuilder lines = new StringBuilder();
-        append(lines, "public static Object decode_(com.jsoniter.Jsoniter iter) {");
+        append(lines, "public static Object decode_(com.jsoniter.JsonIterator iter) {");
         append(lines, "if (!com.jsoniter.CodegenAccess.readArrayStart(iter)) {");
         append(lines, "return new {{clazz}}();");
         append(lines, "}");

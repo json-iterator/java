@@ -2,7 +2,7 @@ package com.jsoniter;
 
 import java.io.IOException;
 
-class NumberReader {
+class IterImplNumber {
     
     final static int[] digits = new int[256];
 
@@ -21,7 +21,7 @@ class NumberReader {
         }
     }
 
-    public static final double readDouble(Jsoniter iter) throws IOException {
+    public static final double readDouble(JsonIterator iter) throws IOException {
         final byte c = iter.nextToken();
         // when re-read using slowpath, it should include the first byte
         iter.unreadByte();
@@ -32,7 +32,7 @@ class NumberReader {
         return readPositiveDouble(iter, iter.head);
     }
 
-    private static final double readPositiveDouble(Jsoniter iter, int start) throws IOException {
+    private static final double readPositiveDouble(JsonIterator iter, int start) throws IOException {
         long value = 0;
         byte c = ' ';
         int i = start;
@@ -69,7 +69,7 @@ class NumberReader {
         return readDoubleSlowPath(iter);
     }
 
-    private static final double readNegativeDouble(Jsoniter iter, int start) throws IOException {
+    private static final double readNegativeDouble(JsonIterator iter, int start) throws IOException {
         long value = 0;
         byte c = ' ';
         int i = start;
@@ -106,11 +106,11 @@ class NumberReader {
         return readDoubleSlowPath(iter);
     }
 
-    public static final double readDoubleSlowPath(Jsoniter iter) throws IOException {
+    public static final double readDoubleSlowPath(JsonIterator iter) throws IOException {
         return Double.valueOf(readNumber(iter));
     }
 
-    public static final float readFloat(Jsoniter iter) throws IOException {
+    public static final float readFloat(JsonIterator iter) throws IOException {
         final byte c = iter.nextToken();
         // when re-read using slowpath, it should include the first byte
         iter.unreadByte();
@@ -121,7 +121,7 @@ class NumberReader {
         return readPositiveFloat(iter, iter.head);
     }
 
-    private static final float readPositiveFloat(Jsoniter iter, int start) throws IOException {
+    private static final float readPositiveFloat(JsonIterator iter, int start) throws IOException {
         long value = 0;
         byte c = ' ';
         int i = start;
@@ -158,7 +158,7 @@ class NumberReader {
         return readFloatSlowPath(iter);
     }
 
-    private static final float readNegativeFloat(Jsoniter iter, int start) throws IOException {
+    private static final float readNegativeFloat(JsonIterator iter, int start) throws IOException {
         long value = 0;
         byte c = ' ';
         int i = start;
@@ -195,11 +195,11 @@ class NumberReader {
         return readFloatSlowPath(iter);
     }
 
-    public static final float readFloatSlowPath(Jsoniter iter) throws IOException {
+    public static final float readFloatSlowPath(JsonIterator iter) throws IOException {
         return Float.valueOf(readNumber(iter));
     }
 
-    public static final String readNumber(Jsoniter iter) throws IOException {
+    public static final String readNumber(JsonIterator iter) throws IOException {
         int j = 0;
         for (byte c = iter.nextToken(); !iter.eof; c = iter.readByte()) {
             if (j == iter.reusableChars.length) {
@@ -233,7 +233,7 @@ class NumberReader {
         return new String(iter.reusableChars, 0, j);
     }
 
-    public static final int readInt(Jsoniter iter) throws IOException {
+    public static final int readInt(JsonIterator iter) throws IOException {
         byte c = iter.nextToken();
         if (c == '-') {
             return -readUnsignedInt(iter);
@@ -243,7 +243,7 @@ class NumberReader {
         }
     }
 
-    public static final int readUnsignedInt(Jsoniter iter) throws IOException {
+    public static final int readUnsignedInt(JsonIterator iter) throws IOException {
         // TODO: throw overflow
         byte c = iter.readByte();
         int v = digits[c];
@@ -266,7 +266,7 @@ class NumberReader {
         return result;
     }
 
-    public static final long readLong(Jsoniter iter) throws IOException {
+    public static final long readLong(JsonIterator iter) throws IOException {
         byte c = iter.nextToken();
         if (c == '-') {
             return -readUnsignedLong(iter);
@@ -276,7 +276,7 @@ class NumberReader {
         }
     }
 
-    public static final long readUnsignedLong(Jsoniter iter) throws IOException {
+    public static final long readUnsignedLong(JsonIterator iter) throws IOException {
         // TODO: throw overflow
         byte c = iter.readByte();
         int v = digits[c];
@@ -299,7 +299,7 @@ class NumberReader {
         return result;
     }
 
-    public static final char readU4(Jsoniter iter) throws IOException {
+    public static final char readU4(JsonIterator iter) throws IOException {
         int v = digits[iter.readByte()];
         if (v == -1) {
             throw iter.reportError("readU4", "bad unicode");
