@@ -28,7 +28,11 @@ class ExtensionManager {
             CustomizedConstructor ctor = extension.getConstructor(clazz);
             if (ctor != null) {
                 for (Binding param : ctor.parameters) {
+                    if (param.fromNames == null) {
+                        param.fromNames = new String[]{param.name};
+                    }
                     param.clazz = clazz;
+                    updateFromNames(param);
                 }
                 return ctor;
             }
@@ -41,20 +45,24 @@ class ExtensionManager {
         for (Field field : clazz.getFields()) {
             Binding binding = new Binding();
             binding.fromNames = new String[]{field.getName()};
-            for (Extension extension : extensions) {
-                String[] fromNames = extension.getBindFrom(binding);
-                if (fromNames != null) {
-                    binding.fromNames = fromNames;
-                    break;
-                }
-            }
             binding.name = field.getName();
             binding.valueType = field.getType();
             binding.clazz = clazz;
-            binding.field = field;
+            binding.annotations = field.getAnnotations();
+            updateFromNames(binding);
             bindings.add(binding);
         }
         return bindings;
+    }
+
+    private static void updateFromNames(Binding binding) {
+        for (Extension extension : extensions) {
+            String[] fromNames = extension.getBindFrom(binding);
+            if (fromNames != null) {
+                binding.fromNames = fromNames;
+                break;
+            }
+        }
     }
 
     public static List<CustomizedSetter> getSetters(Class clazz) {
@@ -77,12 +85,13 @@ class ExtensionManager {
             fromName = new String(fromNameChars);
             CustomizedSetter setter = new CustomizedSetter();
             setter.methodName = methodName;
-            Binding binding = new Binding();
-            binding.fromNames = new String[]{fromName};
-            binding.name = fromName;
-            binding.valueType = paramTypes[0];
-            binding.clazz = clazz;
-            setter.parameters.add(binding);
+            Binding param = new Binding();
+            param.fromNames = new String[]{fromName};
+            param.name = fromName;
+            param.valueType = paramTypes[0];
+            param.clazz = clazz;
+            updateFromNames(param);
+            setter.parameters.add(param);
             setters.add(setter);
         }
         for (Extension extension : extensions) {
@@ -94,6 +103,7 @@ class ExtensionManager {
                             param.fromNames = new String[]{param.name};
                         }
                         param.clazz = clazz;
+                        updateFromNames(param);
                     }
                 }
                 setters.addAll(moreSetters);

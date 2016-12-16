@@ -30,6 +30,13 @@ class Codegen {
         if (decoder != null) {
             return decoder;
         }
+        for (Extension extension : ExtensionManager.extensions) {
+            decoder = extension.createDecoder(type, typeArgs);
+            if (decoder != null) {
+                addNewDecoder(cacheKey, decoder);
+                return decoder;
+            }
+        }
         Class clazz;
         if (type instanceof ParameterizedType) {
             ParameterizedType pType = (ParameterizedType) type;

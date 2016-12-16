@@ -1,8 +1,18 @@
 package com.jsoniter;
 
+import java.lang.reflect.Type;
 import java.util.List;
 
 public interface Extension {
+    /**
+     * Customize type decoding
+     *
+     * @param type change how to decode the type
+     * @param typeArgs for generic type
+     * @return null, if no special customization needed
+     */
+    Decoder createDecoder(Type type, Type... typeArgs);
+
     /**
      * Customize field of certain kind, for example having certain annotation
      *

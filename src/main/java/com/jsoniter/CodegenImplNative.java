@@ -70,8 +70,13 @@ class CodegenImplNative {
             }
         }
         String cacheKey = TypeLiteral.generateCacheKey(type);
-        Codegen.getDecoder(cacheKey, type); // set the decoder to cache
-        return String.format("%s.decode_(iter)", cacheKey);
+        Decoder decoder = Codegen.getDecoder(cacheKey, type);// set the decoder to cache
+        if (cacheKey.equals(decoder.getClass().getCanonicalName())) {
+            return String.format("%s.decode_(iter)", cacheKey);
+        } else {
+            // can not use static "decode_" method to access, go through codegen cache
+            return String.format("com.jsoniter.CodegenAccess.read(\"%s\", iter);", cacheKey);
+        }
     }
 
     public static String genField(Binding field, String cacheKey) {

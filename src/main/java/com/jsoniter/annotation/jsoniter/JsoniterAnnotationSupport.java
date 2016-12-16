@@ -12,11 +12,11 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
 
     @Override
     public String[] getBindFrom(Binding field) {
-        JsonIgnore jsonIgnore = field.field.getAnnotation(JsonIgnore.class);
+        JsonIgnore jsonIgnore = field.getAnnotation(JsonIgnore.class);
         if (jsonIgnore != null) {
             return new String[0];
         }
-        JsonProperty jsonProperty = field.field.getAnnotation(JsonProperty.class);
+        JsonProperty jsonProperty = field.getAnnotation(JsonProperty.class);
         if (jsonProperty != null) {
             String alternativeField = jsonProperty.value();
             if (alternativeField.equals(JsonProperty.USE_DEFAULT_NAME)) {

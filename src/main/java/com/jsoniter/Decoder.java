@@ -12,27 +12,35 @@ public interface Decoder {
      */
     Object decode(JsonIterator iter) throws IOException;
 
-    interface BooleanDecoder extends Decoder {
-        boolean decodeBoolean(JsonIterator iter) throws IOException;
+    class EmptyDecoder implements Decoder {
+
+        @Override
+        public Object decode(JsonIterator iter) throws IOException {
+            return null;
+        }
     }
 
-    interface ShortDecoder extends Decoder {
-        short decodeShort(JsonIterator iter) throws IOException;
+    abstract class BooleanDecoder extends EmptyDecoder {
+        public abstract boolean decodeBoolean(JsonIterator iter) throws IOException;
     }
 
-    interface IntDecoder extends Decoder {
-        int decodeInt(JsonIterator iter) throws IOException;
+    abstract class ShortDecoder extends EmptyDecoder {
+        public abstract short decodeShort(JsonIterator iter) throws IOException;
     }
 
-    interface LongDecoder extends Decoder {
-        long decodeLong(JsonIterator iter) throws IOException;
+    abstract class IntDecoder extends EmptyDecoder {
+        public abstract int decodeInt(JsonIterator iter) throws IOException;
     }
 
-    interface FloatDecoder extends Decoder {
-        float decodeFloat(JsonIterator iter) throws IOException;
+    abstract class LongDecoder extends EmptyDecoder {
+        public abstract long decodeLong(JsonIterator iter) throws IOException;
     }
 
-    interface DoubleDecoder extends Decoder {
-        double decodeDouble(JsonIterator iter) throws IOException;
+    abstract class FloatDecoder extends EmptyDecoder {
+        public abstract float decodeFloat(JsonIterator iter) throws IOException;
+    }
+
+    abstract class DoubleDecoder extends EmptyDecoder {
+        public abstract double decodeDouble(JsonIterator iter) throws IOException;
     }
 }
