@@ -10,27 +10,27 @@ public class CodegenAccess {
     }
 
     public static final boolean readBoolean(String cacheKey, JsonIterator iter) throws IOException {
-        return Codegen.getBooleanDecoder(cacheKey).decodeBoolean(iter);
+        return ((Decoder.BooleanDecoder) Codegen.cache.get(cacheKey)).decodeBoolean(iter);
     }
 
     public static final short readShort(String cacheKey, JsonIterator iter) throws IOException {
-        return Codegen.getShortDecoder(cacheKey).decodeShort(iter);
+        return ((Decoder.ShortDecoder) Codegen.cache.get(cacheKey)).decodeShort(iter);
     }
 
     public static final int readInt(String cacheKey, JsonIterator iter) throws IOException {
-        return Codegen.getIntDecoder(cacheKey).decodeInt(iter);
+        return ((Decoder.IntDecoder) Codegen.cache.get(cacheKey)).decodeInt(iter);
     }
 
     public static final long readLong(String cacheKey, JsonIterator iter) throws IOException {
-        return Codegen.getLongDecoder(cacheKey).decodeLong(iter);
+        return ((Decoder.LongDecoder) Codegen.cache.get(cacheKey)).decodeLong(iter);
     }
 
     public static final float readFloat(String cacheKey, JsonIterator iter) throws IOException {
-        return Codegen.getFloatDecoder(cacheKey).decodeFloat(iter);
+        return ((Decoder.FloatDecoder) Codegen.cache.get(cacheKey)).decodeFloat(iter);
     }
 
     public static final double readDouble(String cacheKey, JsonIterator iter) throws IOException {
-        return Codegen.getDoubleDecoder(cacheKey).decodeDouble(iter);
+        return ((Decoder.DoubleDecoder) Codegen.cache.get(cacheKey)).decodeDouble(iter);
     }
 
     public static final <T> T read(String cacheKey, JsonIterator iter) throws IOException {
