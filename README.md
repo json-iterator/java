@@ -12,39 +12,48 @@ Here is a quick show off, for more complete report you can checkout the full [be
 
 ![java1](http://jsoniter.com/benchmarks/java1.png)
 
-# 1 Minute Tutorial
+# Bind-API is the best
 
-Given this JSON document `[0,1,2,3]`
+Bind-api should always be the first choice. Given this JSON document `[0,1,2,3]`
 
 Parse with Java bind-api
 
 ```java
-import com.jsoniter.JsonIterator;
+import com.jsoniter.Jsoniter;
 Jsoniter iter = Jsoniter.parse("[0,1,2,3]");
 int[] val = iter.read(int[].class);
 System.out.println(val[3]);
 ```
 
-Parse with Java any-api
+# Iterator-API for quick extraction
 
-```java
-import com.jsoniter.JsonIterator;
-Jsoniter iter = Jsoniter.parse("[0,1,2,3]");
-Any val = iter.readAny();
-System.out.println(any.get(3));
-```
+When you do not need to get all the data back, just extract some.
 
 Parse with Java iterator-api
 
 ```java
-import com.jsoniter.JsonIterator;
-Jsoniter iter = Jsoniter.parse("[0,1,2,3]");
-int total = 0;
+import com.jsoniter.Jsoniter;
+Jsoniter iter = Jsoniter.parse("[0, [1, 2], [3, 4], 5]");
+int count = 0;
 while(iter.readArray()) {
-    total += iter.readInt();
+    iter.skip();
+    count++;
 }
-System.out.println(total);
+System.out.println(count); // 4
 ```
+
+# Any-API for maximum flexibility
+
+Parse with Java any-api
+
+```java
+import com.jsoniter.Jsoniter;
+Jsoniter iter = Jsoniter.parse("[{'field1':'11','field2':'12'},{'field1':'21','field2':'22'}]".replace('\'', '"'));
+Any val = iter.readAny();
+System.out.println(val.toInt(1, "field2")); // 22
+```
+
+Notice you can extract from nested data structure, and convert any type to the type to you want. 
 
 # How to get
 
