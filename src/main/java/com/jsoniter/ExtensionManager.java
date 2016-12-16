@@ -2,6 +2,7 @@ package com.jsoniter;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,6 +44,9 @@ class ExtensionManager {
     public static List<Binding> getFields(Class clazz) {
         ArrayList<Binding> bindings = new ArrayList<Binding>();
         for (Field field : clazz.getFields()) {
+            if (Modifier.isStatic(field.getModifiers())) {
+                continue;
+            }
             Binding binding = new Binding();
             binding.fromNames = new String[]{field.getName()};
             binding.name = field.getName();
@@ -68,6 +72,9 @@ class ExtensionManager {
     public static List<CustomizedSetter> getSetters(Class clazz) {
         ArrayList<CustomizedSetter> setters = new ArrayList<CustomizedSetter>();
         for (Method method : clazz.getMethods()) {
+            if (Modifier.isStatic(method.getModifiers())) {
+                continue;
+            }
             String methodName = method.getName();
             if (methodName.length() < 4) {
                 continue;

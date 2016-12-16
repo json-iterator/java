@@ -19,8 +19,8 @@ Bind-api should always be the first choice. Given this JSON document `[0,1,2,3]`
 Parse with Java bind-api
 
 ```java
-import com.jsoniter.Jsoniter;
-Jsoniter iter = Jsoniter.parse("[0,1,2,3]");
+import com.jsoniter.JsonIterator;
+Jsoniter iter = JsonIterator.parse("[0,1,2,3]");
 int[] val = iter.read(int[].class);
 System.out.println(val[3]);
 ```
@@ -32,8 +32,8 @@ When you do not need to get all the data back, just extract some.
 Parse with Java iterator-api
 
 ```java
-import com.jsoniter.Jsoniter;
-Jsoniter iter = Jsoniter.parse("[0, [1, 2], [3, 4], 5]");
+import com.jsoniter.JsonIterator;
+Jsoniter iter = JsonIterator.parse("[0, [1, 2], [3, 4], 5]");
 int count = 0;
 while(iter.readArray()) {
     iter.skip();
@@ -47,13 +47,13 @@ System.out.println(count); // 4
 Parse with Java any-api
 
 ```java
-import com.jsoniter.Jsoniter;
-Jsoniter iter = Jsoniter.parse("[{'field1':'11','field2':'12'},{'field1':'21','field2':'22'}]".replace('\'', '"'));
+import com.jsoniter.JsonIterator;
+Jsoniter iter = JsonIterator.parse("[{'field1':'11','field2':'12'},{'field1':'21','field2':'22'}]".replace('\'', '"'));
 Any val = iter.readAny();
 System.out.println(val.toInt(1, "field2")); // 22
 ```
 
-Notice you can extract from nested data structure, and convert any type to the type to you want. 
+Notice you can extract from nested data structure, and convert any type to the type to you want.
 
 # How to get
 
