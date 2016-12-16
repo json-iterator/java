@@ -56,6 +56,6 @@ public class TestGenerics extends TestCase {
         JsonIterator iter = JsonIterator.parse("{'field1': 100, 'field2': [[1,2],[3,4]]}".replace('\'', '"'));
         ComplexObject val = iter.read(ComplexObject.class);
         assertEquals(100, val.field1);
-        assertEquals(Integer.valueOf(4), val.field2.get(1).get(1));
+        assertEquals(4.0d, val.field2.get(1).get(1));
     }
 }

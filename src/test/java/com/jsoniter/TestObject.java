@@ -84,6 +84,10 @@ public class TestObject extends TestCase {
         assertEquals(100, any.toInt("field1"));
     }
 
+    public static class InheritedObject extends SimpleObject {
+        public String inheritedField;
+    }
+
     public void test_inheritance() throws IOException {
         JsonIterator iter = JsonIterator.parse("{'inheritedField': 'hello'}".replace('\'', '"'));
         InheritedObject inheritedObject = iter.read(InheritedObject.class);

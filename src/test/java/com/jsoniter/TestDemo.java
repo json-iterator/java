@@ -25,6 +25,10 @@ public class TestDemo extends TestCase {
         System.out.println(total);
     }
 
+    public static class ABC {
+        public Any a;
+    }
+
     public void test_abc() throws IOException {
         JsonIterator iter = JsonIterator.parse("{'a': {'b': {'c': 'd'}}}".replace('\'', '"'));
         ABC abc = iter.read(ABC.class);
