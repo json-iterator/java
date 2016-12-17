@@ -79,6 +79,9 @@ class Codegen {
         if (clazz.isArray()) {
             return CodegenImplArray.genArray(clazz);
         }
+        if (Map.class.isAssignableFrom(clazz)) {
+            return CodegenImplMap.genMap(clazz, typeArgs);
+        }
         if (Collection.class.isAssignableFrom(clazz)) {
             return CodegenImplArray.genCollection(clazz, typeArgs);
         }

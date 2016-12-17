@@ -13,8 +13,10 @@ class CodegenImplArray {
         }
         StringBuilder lines = new StringBuilder();
         append(lines, "public static void encode_(Object obj, com.jsoniter.output.JsonStream stream) {");
-        append(lines, "stream.startArray();");
+        append(lines, "if (obj == null) { stream.writeNull(); return; }");
         append(lines, "{{comp}}[] arr = ({{comp}}[])obj;");
+        append(lines, "if (arr.length == 0) { stream.writeEmptyArray(); return; }");
+        append(lines, "stream.startArray();");
         append(lines, "for (int i = 0; i < arr.length; i++) {");
         append(lines, "stream.writeVal(({{comp}})arr[i]);");
         append(lines, "stream.writeMore();");
@@ -51,8 +53,12 @@ class CodegenImplArray {
     private static String genCollection(Class clazz, Type compType) {
         StringBuilder lines = new StringBuilder();
         append(lines, "public static void encode_(Object obj, com.jsoniter.output.JsonStream stream) {");
-        append(lines, "stream.startArray();");
+        append(lines, "if (obj == null) { stream.writeNull(); return; }");
         append(lines, "java.util.Iterator iter = ((java.util.Collection)obj).iterator();");
+        append(lines, "if (!iter.hasNext()) { stream.writeEmptyArray(); return; }");
+        append(lines, "stream.startArray();");
+        append(lines, "stream.writeVal(({{comp}})iter.next());");
+        append(lines, "stream.writeMore();");
         append(lines, "while (iter.hasNext()) {");
         append(lines, "stream.writeVal(({{comp}})iter.next());");
         append(lines, "stream.writeMore();");

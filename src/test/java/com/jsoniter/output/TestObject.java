@@ -1,5 +1,6 @@
 package com.jsoniter.output;
 
+import com.jsoniter.TypeLiteral;
 import junit.framework.TestCase;
 
 import java.io.ByteArrayOutputStream;
@@ -29,6 +30,7 @@ public class TestObject extends TestCase {
 
     public static class TestObject2 {
         private String field1;
+
         public String getField1() {
             return field1;
         }
@@ -40,5 +42,21 @@ public class TestObject extends TestCase {
         stream.writeVal(obj);
         stream.close();
         assertEquals("{'field1':'hello'}".replace('\'', '"'), baos.toString());
+    }
+
+    public void test_null() throws IOException {
+        stream.writeVal(new TypeLiteral<TestObject2>() {
+        }, null);
+        stream.close();
+        assertEquals("null".replace('\'', '"'), baos.toString());
+    }
+
+    public static class TestObject3 {
+    }
+
+    public void test_empty_object() throws IOException {
+        stream.writeVal(new TestObject3());
+        stream.close();
+        assertEquals("{}".replace('\'', '"'), baos.toString());
     }
 }

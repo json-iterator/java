@@ -11,16 +11,16 @@ import java.util.List;
 public class TestArray extends TestCase {
 
     private ByteArrayOutputStream baos;
-    private JsonStream generator;
+    private JsonStream stream;
 
     public void setUp() {
         baos = new ByteArrayOutputStream();
-        generator = new JsonStream(baos, 4096);
+        stream = new JsonStream(baos, 4096);
     }
 
     public void test_gen_array() throws IOException {
-        generator.writeVal(new String[] {"hello", "world"});
-        generator.close();
+        stream.writeVal(new String[] {"hello", "world"});
+        stream.close();
         assertEquals("['hello','world']".replace('\'', '"'), baos.toString());
     }
 
@@ -28,8 +28,8 @@ public class TestArray extends TestCase {
         ArrayList list = new ArrayList();
         list.add("hello");
         list.add("world");
-        generator.writeVal(new TypeLiteral<List<String>>(){}, list);
-        generator.close();
+        stream.writeVal(new TypeLiteral<List<String>>(){}, list);
+        stream.close();
         assertEquals("['hello','world']".replace('\'', '"'), baos.toString());
     }
 
@@ -37,8 +37,32 @@ public class TestArray extends TestCase {
         ArrayList list = new ArrayList();
         list.add("hello");
         list.add("world");
-        generator.writeVal(list);
-        generator.close();
+        stream.writeVal(list);
+        stream.close();
         assertEquals("['hello','world']".replace('\'', '"'), baos.toString());
+    }
+
+    public void test_empty_array() throws IOException {
+        stream.writeVal(new String[0]);
+        stream.close();
+        assertEquals("[]".replace('\'', '"'), baos.toString());
+    }
+
+    public void test_null_array() throws IOException {
+        stream.writeVal(new TypeLiteral<String[]>(){}, null);
+        stream.close();
+        assertEquals("null".replace('\'', '"'), baos.toString());
+    }
+
+    public void test_empty_collection() throws IOException {
+        stream.writeVal(new ArrayList());
+        stream.close();
+        assertEquals("[]".replace('\'', '"'), baos.toString());
+    }
+
+    public void test_null_collection() throws IOException {
+        stream.writeVal(new TypeLiteral<ArrayList>(){}, null);
+        stream.close();
+        assertEquals("null".replace('\'', '"'), baos.toString());
     }
 }

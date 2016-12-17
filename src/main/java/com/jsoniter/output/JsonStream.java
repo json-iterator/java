@@ -69,7 +69,7 @@ public class JsonStream extends OutputStream {
 
     public final void writeVal(String val) throws IOException {
         if (val == null) {
-            write(NULL, 0, NULL.length);
+            writeNull();
         } else {
             write((int) (byte) '"');
             flushBuffer();
@@ -86,7 +86,7 @@ public class JsonStream extends OutputStream {
     public final void writeVal(Boolean val) throws IOException {
         // TODO: convert boolean directly into bytes
         if (val == null) {
-            write(NULL, 0, NULL.length);
+            writeNull();
         } else {
             writeRaw(Boolean.toString(val));
         }
@@ -100,7 +100,7 @@ public class JsonStream extends OutputStream {
     public final void writeVal(Short val) throws IOException {
         // TODO: convert short directly into bytes
         if (val == null) {
-            write(NULL, 0, NULL.length);
+            writeNull();
         } else {
             writeRaw(Short.toString(val));
         }
@@ -114,7 +114,7 @@ public class JsonStream extends OutputStream {
     public final void writeVal(Integer val) throws IOException {
         // TODO: convert int directly into bytes
         if (val == null) {
-            write(NULL, 0, NULL.length);
+            writeNull();
         } else {
             writeRaw(Integer.toString(val));
         }
@@ -128,7 +128,7 @@ public class JsonStream extends OutputStream {
     public final void writeVal(Long val) throws IOException {
         // TODO: convert long directly into bytes
         if (val == null) {
-            write(NULL, 0, NULL.length);
+            writeNull();
         } else {
             writeRaw(Long.toString(val));
         }
@@ -141,7 +141,7 @@ public class JsonStream extends OutputStream {
 
     public final void writeVal(Float val) throws IOException {
         if (val == null) {
-            write(NULL, 0, NULL.length);
+            writeNull();
         } else {
             writeRaw(Float.toString(val));
         }
@@ -153,10 +153,24 @@ public class JsonStream extends OutputStream {
 
     public final void writeVal(Double val) throws IOException {
         if (val == null) {
-            write(NULL, 0, NULL.length);
+            writeNull();
         } else {
             writeRaw(Double.toString(val));
         }
+    }
+
+    public final  void writeNull() throws IOException {
+        write(NULL, 0, NULL.length);
+    }
+
+    public final void writeEmptyObject() throws IOException {
+        write('{');
+        write('}');
+    }
+
+    public final void writeEmptyArray() throws IOException {
+        write('[');
+        write(']');
     }
 
     public final void writeVal(double val) throws IOException {

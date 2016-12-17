@@ -79,7 +79,7 @@ class Codegen {
             return CodegenImplArray.genArray(clazz);
         }
         if (Map.class.isAssignableFrom(clazz)) {
-            return genMap(clazz, typeArgs);
+            return CodegenImplMap.genMap(clazz, typeArgs);
         }
         if (Collection.class.isAssignableFrom(clazz)) {
             return CodegenImplArray.genCollection(clazz, typeArgs);
@@ -94,46 +94,9 @@ class Codegen {
         }
     }
 
-    private static String genMap(Class clazz, Type[] typeArgs) {
-        Type keyType = String.class;
-        Type valueType = Object.class;
-        if (typeArgs.length == 0) {
-            // default to Map<String, Object>
-        } else if (typeArgs.length == 2) {
-            keyType = typeArgs[0];
-            valueType = typeArgs[1];
-        } else {
-            throw new IllegalArgumentException(
-                    "can not bind to generic collection without argument types, " +
-                            "try syntax like TypeLiteral<Map<String, String>>{}");
-        }
-        if (keyType != String.class) {
-            throw new IllegalArgumentException("map key must be String");
-        }
-        if (clazz == Map.class) {
-            clazz = HashMap.class;
-        }
-        StringBuilder lines = new StringBuilder();
-        append(lines, "public static Object decode_(com.jsoniter.JsonIterator iter) {");
-        append(lines, "{{clazz}} map = ({{clazz}})com.jsoniter.CodegenAccess.resetExistingObject(iter);");
-        append(lines, "if (map == null) { map = new {{clazz}}(); }");
-        append(lines, "for (String field = iter.readObject(); field != null; field = iter.readObject()) {");
-        append(lines, "map.put(field, {{op}});");
-        append(lines, "}");
-        append(lines, "return map;");
-        append(lines, "}");
-        return lines.toString().replace("{{clazz}}", clazz.getName()).replace("{{op}}", CodegenImplNative.genReadOp(valueType));
-    }
-
     public static void addNewDecoder(String cacheKey, Decoder decoder) {
         HashMap<String, Decoder> newCache = new HashMap<String, Decoder>(cache);
         newCache.put(cacheKey, decoder);
         cache = newCache;
     }
-
-    private static void append(StringBuilder lines, String str) {
-        lines.append(str);
-        lines.append("\n");
-    }
-
 }
