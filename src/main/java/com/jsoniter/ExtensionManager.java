@@ -14,16 +14,6 @@ class ExtensionManager {
         extensions.add(extension);
     }
 
-    public static Decoder createFieldDecoder(String fieldCacheKey, Binding field) {
-        for (Extension extension : extensions) {
-            Decoder decoder = extension.createDecoder(field);
-            if (decoder != null) {
-                return decoder;
-            }
-        }
-        return null;
-    }
-
     public static CustomizedConstructor getCtor(Class clazz) {
         for (Extension extension : extensions) {
             CustomizedConstructor ctor = extension.getConstructor(clazz);
@@ -61,9 +51,7 @@ class ExtensionManager {
 
     private static void updateFromNames(Binding binding) {
         for (Extension extension : extensions) {
-            String[] fromNames = extension.getBindFrom(binding);
-            if (fromNames != null) {
-                binding.fromNames = fromNames;
+            if (extension.updateBinding(binding)) {
                 break;
             }
         }

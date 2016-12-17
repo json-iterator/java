@@ -80,9 +80,13 @@ class CodegenImplNative {
     }
 
     public static String genField(Binding field, String cacheKey) {
-        Type fieldType = field.valueType;
         String fieldCacheKey = field.name + "@" + cacheKey;
-        Decoder decoder = createFieldDecoder(fieldCacheKey, field);
+        if (field.decoder != null) {
+            Codegen.cache.put(fieldCacheKey, field.decoder);
+        }
+        // the field decoder might be registered directly
+        Decoder decoder = Codegen.cache.get(fieldCacheKey);
+        Type fieldType = field.valueType;
         if (decoder == null) {
             return String.format("(%s)%s", getTypeName(fieldType), CodegenImplNative.genReadOp(fieldType));
         }
@@ -137,21 +141,6 @@ class CodegenImplNative {
         Codegen.getDecoder(fieldCacheKey, fieldType); // put decoder into cache
         return String.format("(%s)com.jsoniter.CodegenAccess.read(\"%s\", iter);",
                 getTypeName(fieldType), fieldCacheKey);
-    }
-
-    private static Decoder createFieldDecoder(String fieldCacheKey, Binding field) {
-        // directly registered field decoder
-        Decoder decoder = Codegen.cache.get(fieldCacheKey);
-        if (decoder != null) {
-            return decoder;
-        }
-        // provided by extension
-        decoder = ExtensionManager.createFieldDecoder(fieldCacheKey, field);
-        if (decoder != null) {
-            Codegen.addNewDecoder(fieldCacheKey, decoder);
-            return decoder;
-        }
-        return null;
     }
 
     public static String getTypeName(Type fieldType) {

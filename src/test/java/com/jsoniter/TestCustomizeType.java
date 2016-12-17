@@ -17,7 +17,7 @@ public class TestCustomizeType extends TestCase {
         JsonIterator.registerTypeDecoder(MyDate.class, new Decoder() {
             @Override
             public Object decode(final JsonIterator iter) throws IOException {
-                return new MyDate(){{
+                return new MyDate() {{
                     date = new Date(iter.readLong());
                 }};
             }
@@ -57,12 +57,12 @@ public class TestCustomizeType extends TestCase {
     public void test_customize_through_extension() throws IOException {
         JsonIterator.registerExtension(new EmptyExtension() {
             @Override
-            public Decoder createDecoder(Type type, Type... typeArgs) {
+            public Decoder createDecoder(String cacheKey, Type type) {
                 if (type == MyDate2.class) {
                     return new Decoder() {
                         @Override
                         public Object decode(final JsonIterator iter) throws IOException {
-                            return new MyDate2(){{
+                            return new MyDate2() {{
                                 date = new Date(iter.readLong());
                             }};
                         }

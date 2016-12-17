@@ -54,7 +54,7 @@ public class TestAnnotation extends TestCase {
         }
 
         @JsonCreator
-        public static StaticFactory createObject(@JsonProperty("field1") int field1) {
+        public static StaticFactory createObject(@JsonProperty(value = "field1") int field1) {
             StaticFactory obj = new StaticFactory();
             obj.field1 = field1;
             return obj;

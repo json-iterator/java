@@ -17,26 +17,27 @@ class Codegen {
         strictMode = true;
     }
 
-    static Decoder getDecoder(String cacheKey, Type type, Type... typeArgs) {
+    static Decoder getDecoder(String cacheKey, Type type) {
         Decoder decoder = cache.get(cacheKey);
         if (decoder != null) {
             return decoder;
         }
-        return gen(cacheKey, type, typeArgs);
+        return gen(cacheKey, type);
     }
 
-    private synchronized static Decoder gen(String cacheKey, Type type, Type[] typeArgs) {
+    private synchronized static Decoder gen(String cacheKey, Type type) {
         Decoder decoder = cache.get(cacheKey);
         if (decoder != null) {
             return decoder;
         }
         for (Extension extension : ExtensionManager.extensions) {
-            decoder = extension.createDecoder(type, typeArgs);
+            decoder = extension.createDecoder(cacheKey, type);
             if (decoder != null) {
                 addNewDecoder(cacheKey, decoder);
                 return decoder;
             }
         }
+        Type[] typeArgs = null;
         Class clazz;
         if (type instanceof ParameterizedType) {
             ParameterizedType pType = (ParameterizedType) type;

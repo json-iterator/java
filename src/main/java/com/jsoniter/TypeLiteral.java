@@ -20,6 +20,11 @@ public class TypeLiteral<T> {
 
     }
 
+    private TypeLiteral(Type type, String cacheKey) {
+        this.type = type;
+        this.cacheKey = cacheKey;
+    }
+
     public static String generateCacheKey(Type type) {
         StringBuilder decoderClassName = new StringBuilder("codegen.");
         if (type instanceof Class) {
@@ -75,5 +80,17 @@ public class TypeLiteral<T> {
 
     public String getCacheKey() {
         return cacheKey;
+    }
+
+    public static TypeLiteral create(Type type, String suffix) {
+        return new TypeLiteral(type, generateCacheKey(type) + "." + suffix);
+    }
+
+    @Override
+    public String toString() {
+        return "TypeLiteral{" +
+                "type=" + type +
+                ", cacheKey='" + cacheKey + '\'' +
+                '}';
     }
 }

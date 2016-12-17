@@ -6,18 +6,13 @@ import java.util.List;
 public class EmptyExtension implements Extension {
 
     @Override
-    public Decoder createDecoder(Type type, Type... typeArgs) {
+    public Decoder createDecoder(String cacheKey, Type type) {
         return null;
     }
 
     @Override
-    public Decoder createDecoder(Binding field) {
-        return null;
-    }
-
-    @Override
-    public String[] getBindFrom(Binding field) {
-        return null;
+    public boolean updateBinding(Binding field) {
+        return false;
     }
 
     @Override

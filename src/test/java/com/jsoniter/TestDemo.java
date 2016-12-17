@@ -3,6 +3,8 @@ package com.jsoniter;
 import junit.framework.TestCase;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
+import java.util.Date;
 
 public class TestDemo extends TestCase {
     public void test_bind_api() throws IOException {
@@ -44,5 +46,39 @@ public class TestDemo extends TestCase {
         user.userId = userId;
         iter.readArray(); // end of array
         System.out.println(user);
+    }
+
+    public void test_empty_array_as_null() throws IOException {
+        JsonIterator.registerExtension(new EmptyExtension() {
+            @Override
+            public Decoder createDecoder(final String cacheKey, final Type type) {
+                if (cacheKey.endsWith(".original")) {
+                    // avoid infinite loop
+                    return null;
+                }
+                if (type != Date.class) {
+                    return null;
+                }
+                return new Decoder() {
+                    @Override
+                    public Object decode(JsonIterator iter) throws IOException {
+                        if (iter.whatIsNext() == ValueType.ARRAY) {
+                            if (iter.readArray()) {
+                                // none empty array
+                                throw iter.reportError("decode [] as null", "only empty array is expected");
+                            } else {
+                                return null;
+                            }
+                        } else {
+                            // just use original decoder
+                            TypeLiteral typeLiteral = TypeLiteral.create(type, "original");
+                            return iter.read(typeLiteral);
+                        }
+                    }
+                };
+            }
+        });
+        JsonIterator iter = JsonIterator.parse("[]");
+        assertNull(iter.read(Date.class));
     }
 }
