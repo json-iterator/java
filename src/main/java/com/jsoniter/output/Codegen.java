@@ -1,6 +1,5 @@
 package com.jsoniter.output;
 
-import com.jsoniter.Decoder;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
@@ -9,10 +8,11 @@ import javassist.CtNewMethod;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Codegen {
+class Codegen {
 
     static volatile Map<String, Encoder> cache = new HashMap<String, Encoder>();
     static ClassPool pool = ClassPool.getDefault();
@@ -30,7 +30,12 @@ public class Codegen {
         if (encoder != null) {
             return encoder;
         }
-        Type[] typeArgs = null;
+        encoder = CodegenImplNative.NATIVE_ENCODERS.get(type);
+        if (encoder != null) {
+            addNewEncoder(cacheKey, encoder);
+            return encoder;
+        }
+        Type[] typeArgs = new Type[0];
         Class clazz;
         if (type instanceof ParameterizedType) {
             ParameterizedType pType = (ParameterizedType) type;
@@ -74,6 +79,9 @@ public class Codegen {
         if (clazz.isArray()) {
             return CodegenImplArray.genArray(clazz);
         }
-        throw new RuntimeException("unsupported type: " + clazz);
+        if (Collection.class.isAssignableFrom(clazz)) {
+            return CodegenImplArray.genCollection(clazz, typeArgs);
+        }
+        return CodegenImplObject.genObject(clazz);
     }
 }

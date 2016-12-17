@@ -5,6 +5,8 @@ import com.jsoniter.TypeLiteral;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
 
 public class JsonStream extends OutputStream {
 
@@ -19,16 +21,6 @@ public class JsonStream extends OutputStream {
     public JsonStream(OutputStream out, int bufSize) {
         this.out = out;
         this.buf = new byte[bufSize];
-    }
-
-    public final void reset() throws IOException {
-        if (count > 0) {
-            flushBuffer();
-        }
-        out.close();
-        this.out = null;
-        count = 0;
-        level = 0;
     }
 
     public final void write(int b) throws IOException {
@@ -57,6 +49,17 @@ public class JsonStream extends OutputStream {
     public synchronized void flush() throws IOException {
         flushBuffer();
         out.flush();
+    }
+
+    @Override
+    public void close() throws IOException {
+        if (count > 0) {
+            flushBuffer();
+        }
+        out.close();
+        this.out = null;
+        count = 0;
+        level = 0;
     }
 
     private final void flushBuffer() throws IOException {
@@ -191,5 +194,9 @@ public class JsonStream extends OutputStream {
         Class<?> clazz = obj.getClass();
         String cacheKey = TypeLiteral.generateEncoderCacheKey(clazz);
         Codegen.getEncoder(cacheKey, clazz).encode(obj, this);
+    }
+
+    public final <T> void writeVal(TypeLiteral<T> typeLiteral, T obj) throws IOException {
+        Codegen.getEncoder(typeLiteral.getCacheKey(), typeLiteral.getType()).encode(obj, this);
     }
 }

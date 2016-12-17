@@ -37,7 +37,7 @@ class Codegen {
                 return decoder;
             }
         }
-        Type[] typeArgs = null;
+        Type[] typeArgs = new Type[0];
         Class clazz;
         if (type instanceof ParameterizedType) {
             ParameterizedType pType = (ParameterizedType) type;

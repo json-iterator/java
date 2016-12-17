@@ -7,7 +7,8 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
-class ExtensionManager {
+public class ExtensionManager {
+
     static List<Extension> extensions = new ArrayList<Extension>();
 
     public static void registerExtension(Extension extension) {
@@ -105,5 +106,38 @@ class ExtensionManager {
             }
         }
         return setters;
+    }
+
+    public static List<Binding> getGetters(Class clazz) {
+        ArrayList<Binding> getters = new ArrayList<Binding>();
+        for (Method method : clazz.getMethods()) {
+            if (Modifier.isStatic(method.getModifiers())) {
+                continue;
+            }
+            String methodName = method.getName();
+            if ("getClass".equals(methodName)) {
+                continue;
+            }
+            if (methodName.length() < 4) {
+                continue;
+            }
+            if (!methodName.startsWith("get")) {
+                continue;
+            }
+            if (method.getGenericParameterTypes().length != 0) {
+                continue;
+            }
+            String fromName = methodName.substring("get".length());
+            char[] fromNameChars = fromName.toCharArray();
+            fromNameChars[0] = Character.toLowerCase(fromNameChars[0]);
+            fromName = new String(fromNameChars);
+            Binding getter = new Binding();
+            getter.fromNames = new String[]{methodName + "()"};
+            getter.name = fromName;
+            getter.valueType = method.getGenericReturnType();
+            getter.clazz = clazz;
+            getters.add(getter);
+        }
+        return getters;
     }
 }

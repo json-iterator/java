@@ -17,20 +17,20 @@ public class TestDirect extends TestCase {
 
     public void test_string() throws IOException {
         generator.writeVal("hello");
-        generator.reset();
+        generator.close();
         assertEquals("'hello'".replace('\'', '"'), baos.toString());
     }
 
     public void test_int() throws IOException {
         generator.writeVal(100);
-        generator.reset();
+        generator.close();
         assertEquals("100".replace('\'', '"'), baos.toString());
     }
 
     public void test_boolean() throws IOException {
         generator.writeVal(true);
         generator.writeVal(false);
-        generator.reset();
+        generator.close();
         assertEquals("truefalse".replace('\'', '"'), baos.toString());
     }
 
@@ -39,7 +39,7 @@ public class TestDirect extends TestCase {
         generator.writeVal("hello");
         generator.writeMore();
         generator.endArray();
-        generator.reset();
+        generator.close();
         assertEquals("['hello']".replace('\'', '"'), baos.toString());
     }
 
@@ -49,7 +49,7 @@ public class TestDirect extends TestCase {
         generator.writeVal("world");
         generator.writeMore();
         generator.endObject();
-        generator.reset();
+        generator.close();
         assertEquals("{'hello':'world'}".replace('\'', '"'), baos.toString());
     }
 }
