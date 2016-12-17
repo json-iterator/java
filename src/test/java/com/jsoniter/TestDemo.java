@@ -71,7 +71,7 @@ public class TestDemo extends TestCase {
                             }
                         } else {
                             // just use original decoder
-                            TypeLiteral typeLiteral = TypeLiteral.create(type, "original");
+                            TypeLiteral typeLiteral = new TypeLiteral(type, cacheKey + ".original");
                             return iter.read(typeLiteral);
                         }
                     }

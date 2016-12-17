@@ -3,7 +3,6 @@ package com.jsoniter;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -319,7 +318,7 @@ public class JsonIterator implements Closeable {
     public final <T> T read(T existingObject) throws IOException {
         this.existingObject = existingObject;
         Class<?> clazz = existingObject.getClass();
-        return (T) Codegen.getDecoder(TypeLiteral.generateCacheKey(clazz), clazz).decode(this);
+        return (T) Codegen.getDecoder(TypeLiteral.generateDecoderCacheKey(clazz), clazz).decode(this);
     }
 
     public final <T> T read(TypeLiteral<T> typeLiteral, T existingObject) throws IOException {
@@ -328,7 +327,7 @@ public class JsonIterator implements Closeable {
     }
 
     public final <T> T read(Class<T> clazz) throws IOException {
-        return (T) Codegen.getDecoder(TypeLiteral.generateCacheKey(clazz), clazz).decode(this);
+        return (T) Codegen.getDecoder(TypeLiteral.generateDecoderCacheKey(clazz), clazz).decode(this);
     }
 
     public final <T> T read(TypeLiteral<T> typeLiteral) throws IOException {
@@ -346,7 +345,7 @@ public class JsonIterator implements Closeable {
     }
 
     public static void registerTypeDecoder(Class clazz, Decoder decoder) {
-        Codegen.addNewDecoder(TypeLiteral.generateCacheKey(clazz), decoder);
+        Codegen.addNewDecoder(TypeLiteral.generateDecoderCacheKey(clazz), decoder);
     }
 
     public static void registerTypeDecoder(TypeLiteral typeLiteral, Decoder decoder) {
@@ -354,7 +353,7 @@ public class JsonIterator implements Closeable {
     }
 
     public static void registerFieldDecoder(Class clazz, String field, Decoder decoder) {
-        Codegen.addNewDecoder(field + "@" + TypeLiteral.generateCacheKey(clazz), decoder);
+        Codegen.addNewDecoder(field + "@" + TypeLiteral.generateDecoderCacheKey(clazz), decoder);
     }
 
     public static void registerFieldDecoder(TypeLiteral typeLiteral, String field, Decoder decoder) {

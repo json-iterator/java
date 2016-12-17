@@ -65,7 +65,7 @@ class Codegen {
             addNewDecoder(cacheKey, decoder);
             return decoder;
         } catch (Exception e) {
-            System.err.println("failed to generate encoder for: " + type + " with " + Arrays.toString(typeArgs));
+            System.err.println("failed to generate decoder for: " + type + " with " + Arrays.toString(typeArgs));
             System.err.println(source);
             throw new RuntimeException(e);
         }

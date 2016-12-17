@@ -16,17 +16,25 @@ public class TypeLiteral<T> {
     @SuppressWarnings("unchecked")
     protected TypeLiteral() {
         this.type = getSuperclassTypeParameter(getClass());
-        cacheKey = generateCacheKey(type);
+        cacheKey = generateDecoderCacheKey(type);
 
     }
 
-    private TypeLiteral(Type type, String cacheKey) {
+    public TypeLiteral(Type type, String cacheKey) {
         this.type = type;
         this.cacheKey = cacheKey;
     }
 
-    public static String generateCacheKey(Type type) {
-        StringBuilder decoderClassName = new StringBuilder("codegen.");
+    public static String generateDecoderCacheKey(Type type) {
+        return generateCacheKey(type, "decoder.");
+    }
+
+    public static String generateEncoderCacheKey(Type type) {
+        return generateCacheKey(type, "encoder.");
+    }
+
+    private static String generateCacheKey(Type type, String prefix) {
+        StringBuilder decoderClassName = new StringBuilder(prefix);
         if (type instanceof Class) {
             Class clazz = (Class) type;
             if (clazz.isAnonymousClass()) {
@@ -80,10 +88,6 @@ public class TypeLiteral<T> {
 
     public String getCacheKey() {
         return cacheKey;
-    }
-
-    public static TypeLiteral create(Type type, String suffix) {
-        return new TypeLiteral(type, generateCacheKey(type) + "." + suffix);
     }
 
     @Override
