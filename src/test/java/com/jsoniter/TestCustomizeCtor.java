@@ -12,19 +12,19 @@ public class TestCustomizeCtor extends TestCase {
 //        JsonIterator.enableStrictMode();
     }
 
-    public static class OneArgCtor {
+    public static class WithPublicCtor {
         String field1;
 
-        public OneArgCtor(String param1) {
+        public WithPublicCtor(String param1) {
             field1 = param1;
         }
     }
 
-    public void test_one_argument() throws IOException {
-        JsonIterator.registerExtension(new EmptyExtension() {
+    public void test_codegen() throws IOException {
+        ExtensionManager.registerExtension(new EmptyExtension() {
             @Override
             public CustomizedConstructor getConstructor(Class clazz) {
-                if (clazz == OneArgCtor.class) {
+                if (clazz == WithPublicCtor.class) {
                     return new CustomizedConstructor() {{
                         parameters = (List) Arrays.asList(new Binding() {{
                             fromNames = new String[]{"param1"};
@@ -37,7 +37,47 @@ public class TestCustomizeCtor extends TestCase {
             }
         });
         JsonIterator iter = JsonIterator.parse("{'param1': 'hello'}".replace('\'', '"'));
-        OneArgCtor obj = iter.read(OneArgCtor.class);
+        WithPublicCtor obj = iter.read(WithPublicCtor.class);
+        assertEquals("hello", obj.field1);
+    }
+
+    public static class WithPrivateCtor {
+        String field1;
+
+        private WithPrivateCtor(String param1) {
+            field1 = param1;
+        }
+    }
+
+    public void test_reflection() throws IOException {
+        ExtensionManager.registerExtension(new EmptyExtension() {
+            @Override
+            public CustomizedConstructor getConstructor(Class clazz) {
+                if (clazz == WithPrivateCtor.class) {
+                    return new CustomizedConstructor() {{
+                        parameters = (List) Arrays.asList(new Binding() {{
+                            fromNames = new String[]{"param1"};
+                            name="param1";
+                            valueType = String.class;
+                        }});
+                        ctor = WithPrivateCtor.class.getDeclaredConstructors()[0];
+                    }};
+                }
+                return null;
+            }
+
+            @Override
+            public boolean updateBinding(Binding field) {
+                if (field.clazz == WithPrivateCtor.class && "field1".equals(field.name)) {
+                    field.fromNames = new String[0];
+                    return true;
+                }
+                return false;
+            }
+        });
+        ExtensionManager.registerTypeDecoder(WithPrivateCtor.class, new ReflectionDecoder(WithPrivateCtor.class));
+        JsonIterator iter = JsonIterator.parse("{'param1': 'hello'}".replace('\'', '"'));
+        WithPrivateCtor obj = iter.read(WithPrivateCtor.class);
         assertEquals("hello", obj.field1);
     }
 }

@@ -14,7 +14,7 @@ public class TestCustomizeType extends TestCase {
 
     static {
 //        JsonIterator.enableStrictMode();
-        JsonIterator.registerTypeDecoder(MyDate.class, new Decoder() {
+        ExtensionManager.registerTypeDecoder(MyDate.class, new Decoder() {
             @Override
             public Object decode(final JsonIterator iter) throws IOException {
                 return new MyDate() {{
@@ -55,15 +55,15 @@ public class TestCustomizeType extends TestCase {
     }
 
     public void test_customize_through_extension() throws IOException {
-        JsonIterator.registerExtension(new EmptyExtension() {
+        ExtensionManager.registerExtension(new EmptyExtension() {
             @Override
             public Decoder createDecoder(String cacheKey, Type type) {
                 if (type == MyDate2.class) {
                     return new Decoder() {
                         @Override
-                        public Object decode(final JsonIterator iter) throws IOException {
+                        public Object decode(final JsonIterator iter1) throws IOException {
                             return new MyDate2() {{
-                                date = new Date(iter.readLong());
+                                date = new Date(iter1.readLong());
                             }};
                         }
                     };

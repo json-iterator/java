@@ -344,26 +344,6 @@ public class JsonIterator implements Closeable {
         IterImplSkip.skip(this);
     }
 
-    public static void registerTypeDecoder(Class clazz, Decoder decoder) {
-        Codegen.addNewDecoder(TypeLiteral.generateDecoderCacheKey(clazz), decoder);
-    }
-
-    public static void registerTypeDecoder(TypeLiteral typeLiteral, Decoder decoder) {
-        Codegen.addNewDecoder(typeLiteral.cacheKey, decoder);
-    }
-
-    public static void registerFieldDecoder(Class clazz, String field, Decoder decoder) {
-        Codegen.addNewDecoder(field + "@" + TypeLiteral.generateDecoderCacheKey(clazz), decoder);
-    }
-
-    public static void registerFieldDecoder(TypeLiteral typeLiteral, String field, Decoder decoder) {
-        Codegen.addNewDecoder(field + "@" + typeLiteral.cacheKey, decoder);
-    }
-
-    public static void registerExtension(Extension extension) {
-        ExtensionManager.registerExtension(extension);
-    }
-
     public static void enableStrictMode() {
         Codegen.enableStrictMode();
     }

@@ -12,7 +12,7 @@ import java.util.List;
 public class JsoniterAnnotationSupport extends EmptyExtension {
 
     public static void enable() {
-        JsonIterator.registerExtension(new JsoniterAnnotationSupport());
+        ExtensionManager.registerExtension(new JsoniterAnnotationSupport());
     }
 
     @Override

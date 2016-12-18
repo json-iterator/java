@@ -1,6 +1,7 @@
 package com.jsoniter;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 
 public class Binding {
@@ -8,10 +9,14 @@ public class Binding {
     public Class clazz;
     public String name;
     public Type valueType;
+    public TypeLiteral valueTypeLiteral;
     public Annotation[] annotations;
     // output
     public String[] fromNames;
     public Decoder decoder;
+    // optional
+    public Field field;
+    public int idx;
 
     public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
         if (annotations == null) {

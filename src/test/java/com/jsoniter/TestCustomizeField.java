@@ -17,7 +17,7 @@ public class TestCustomizeField extends TestCase {
     }
 
     public void test_customize_field_decoder() throws IOException {
-        JsonIterator.registerFieldDecoder(TestObject1.class, "field1", new Decoder() {
+        ExtensionManager.registerFieldDecoder(TestObject1.class, "field1", new Decoder() {
 
             @Override
             public Object decode(JsonIterator iter) throws IOException {
@@ -34,7 +34,7 @@ public class TestCustomizeField extends TestCase {
     }
 
     public void test_customize_int_field() throws IOException {
-        JsonIterator.registerFieldDecoder(TestObject2.class, "field1", new Decoder.IntDecoder() {
+        ExtensionManager.registerFieldDecoder(TestObject2.class, "field1", new Decoder.IntDecoder() {
 
             @Override
             public int decodeInt(JsonIterator iter) throws IOException {
@@ -51,7 +51,7 @@ public class TestCustomizeField extends TestCase {
     }
 
     public void test_rename_field() throws IOException {
-        JsonIterator.registerExtension(new EmptyExtension() {
+        ExtensionManager.registerExtension(new EmptyExtension() {
             @Override
             public boolean updateBinding(Binding field) {
                 if (field.clazz == TestObject4.class && field.name.equals("field1")) {
@@ -76,7 +76,7 @@ public class TestCustomizeField extends TestCase {
     }
 
     public void test_rename_ctor_param() throws IOException {
-        JsonIterator.registerExtension(new EmptyExtension() {
+        ExtensionManager.registerExtension(new EmptyExtension() {
             @Override
             public CustomizedConstructor getConstructor(Class clazz) {
                 if (clazz == TestObject5.class) {
@@ -113,7 +113,7 @@ public class TestCustomizeField extends TestCase {
     }
 
     public void test_rename_setter() throws IOException {
-        JsonIterator.registerExtension(new EmptyExtension() {
+        ExtensionManager.registerExtension(new EmptyExtension() {
             @Override
             public boolean updateBinding(Binding field) {
                 if (field.clazz == TestObject6.class && field.name.equals("field")) {
@@ -133,15 +133,15 @@ public class TestCustomizeField extends TestCase {
     }
 
     public void test_customize_field_decoding_using_extension() throws IOException {
-        JsonIterator.registerExtension(new EmptyExtension() {
+        ExtensionManager.registerExtension(new EmptyExtension() {
             @Override
             public boolean updateBinding(Binding field) {
                 if (field.clazz == TestObject7.class && field.name.equals("field1")) {
                     field.decoder = new Decoder.IntDecoder() {
 
                         @Override
-                        public int decodeInt(JsonIterator iter) throws IOException {
-                            return Integer.valueOf(iter.readString());
+                        public int decodeInt(JsonIterator iter1) throws IOException {
+                            return Integer.valueOf(iter1.readString());
                         }
                     };
                     return true;

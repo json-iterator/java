@@ -1,5 +1,6 @@
 package com.jsoniter;
 
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,11 +10,11 @@ public class CustomizedConstructor {
      * otherwise use static method
      */
     public String staticMethodName;
+    // optional
+    public Constructor ctor;
 
     /**
      * the parameters to call constructor or static method
      */
     public List<Binding> parameters = new ArrayList<Binding>();
-
-    public static CustomizedConstructor DEFAULT_INSTANCE = new CustomizedConstructor();
 }

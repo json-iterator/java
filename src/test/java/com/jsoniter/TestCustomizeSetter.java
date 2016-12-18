@@ -37,7 +37,7 @@ public class TestCustomizeSetter extends TestCase {
     }
 
     public void test_customized_setter() throws IOException {
-        JsonIterator.registerExtension(new EmptyExtension() {
+        ExtensionManager.registerExtension(new EmptyExtension() {
             @Override
             public List<CustomizedSetter> getSetters(Class clazz) {
                 if (clazz == ObjectWithCustomizedSetter.class) {

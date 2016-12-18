@@ -49,7 +49,7 @@ public class TestDemo extends TestCase {
     }
 
     public void test_empty_array_as_null() throws IOException {
-        JsonIterator.registerExtension(new EmptyExtension() {
+        ExtensionManager.registerExtension(new EmptyExtension() {
             @Override
             public Decoder createDecoder(final String cacheKey, final Type type) {
                 if (cacheKey.endsWith(".original")) {
@@ -61,18 +61,18 @@ public class TestDemo extends TestCase {
                 }
                 return new Decoder() {
                     @Override
-                    public Object decode(JsonIterator iter) throws IOException {
-                        if (iter.whatIsNext() == ValueType.ARRAY) {
-                            if (iter.readArray()) {
+                    public Object decode(JsonIterator iter1) throws IOException {
+                        if (iter1.whatIsNext() == ValueType.ARRAY) {
+                            if (iter1.readArray()) {
                                 // none empty array
-                                throw iter.reportError("decode [] as null", "only empty array is expected");
+                                throw iter1.reportError("decode [] as null", "only empty array is expected");
                             } else {
                                 return null;
                             }
                         } else {
                             // just use original decoder
                             TypeLiteral typeLiteral = new TypeLiteral(type, cacheKey + ".original");
-                            return iter.read(typeLiteral);
+                            return iter1.read(typeLiteral);
                         }
                     }
                 };

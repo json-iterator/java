@@ -5,6 +5,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class ExtensionManager {
@@ -16,38 +17,77 @@ public class ExtensionManager {
     }
 
     public static CustomizedConstructor getCtor(Class clazz) {
+        return getCtor(clazz, false);
+    }
+
+    public static CustomizedConstructor getCtor(Class clazz, boolean includingPrivate) {
         for (Extension extension : extensions) {
             CustomizedConstructor ctor = extension.getConstructor(clazz);
             if (ctor != null) {
+                if (ctor.ctor != null && includingPrivate) {
+                    ctor.ctor.setAccessible(true);
+                }
                 for (Binding param : ctor.parameters) {
                     if (param.fromNames == null) {
                         param.fromNames = new String[]{param.name};
                     }
                     param.clazz = clazz;
+                    param.valueTypeLiteral = createTypeLiteral(param.valueType);
                     updateFromNames(param);
                 }
                 return ctor;
             }
         }
-        return CustomizedConstructor.DEFAULT_INSTANCE;
+        CustomizedConstructor cctor = new CustomizedConstructor();
+        try {
+            cctor.ctor = clazz.getDeclaredConstructor();
+            if (includingPrivate) {
+                cctor.ctor.setAccessible(true);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return cctor;
     }
 
     public static List<Binding> getFields(Class clazz) {
+        return getFields(clazz, false);
+    }
+
+    public static List<Binding> getFields(Class clazz, boolean includingPrivate) {
         ArrayList<Binding> bindings = new ArrayList<Binding>();
-        for (Field field : clazz.getFields()) {
+        List<Field> allFields = Arrays.asList(clazz.getFields());
+        if (includingPrivate) {
+            allFields = new ArrayList<Field>();
+            Class current = clazz;
+            while (current != null) {
+                allFields.addAll(Arrays.asList(current.getDeclaredFields()));
+                current = current.getSuperclass();
+            }
+        }
+        for (Field field : allFields) {
             if (Modifier.isStatic(field.getModifiers())) {
                 continue;
+            }
+            if (includingPrivate) {
+                field.setAccessible(true);
             }
             Binding binding = new Binding();
             binding.fromNames = new String[]{field.getName()};
             binding.name = field.getName();
             binding.valueType = field.getType();
+            binding.valueTypeLiteral = createTypeLiteral(binding.valueType);
             binding.clazz = clazz;
             binding.annotations = field.getAnnotations();
+            binding.field = field;
             updateFromNames(binding);
             bindings.add(binding);
         }
         return bindings;
+    }
+
+    private static TypeLiteral createTypeLiteral(Type valueType) {
+        return new TypeLiteral(valueType, TypeLiteral.generateDecoderCacheKey(valueType));
     }
 
     private static void updateFromNames(Binding binding) {
@@ -59,6 +99,10 @@ public class ExtensionManager {
     }
 
     public static List<CustomizedSetter> getSetters(Class clazz) {
+        return getSetters(clazz, false);
+    }
+
+    public static List<CustomizedSetter> getSetters(Class clazz, boolean includingPrivate) {
         ArrayList<CustomizedSetter> setters = new ArrayList<CustomizedSetter>();
         for (Method method : clazz.getMethods()) {
             if (Modifier.isStatic(method.getModifiers())) {
@@ -109,6 +153,10 @@ public class ExtensionManager {
     }
 
     public static List<Binding> getGetters(Class clazz) {
+        return getGetters(clazz, false);
+    }
+
+    public static List<Binding> getGetters(Class clazz, boolean includingPrivate) {
         ArrayList<Binding> getters = new ArrayList<Binding>();
         for (Method method : clazz.getMethods()) {
             if (Modifier.isStatic(method.getModifiers())) {
@@ -139,5 +187,21 @@ public class ExtensionManager {
             getters.add(getter);
         }
         return getters;
+    }
+
+    public static void registerTypeDecoder(Class clazz, Decoder decoder) {
+        Codegen.addNewDecoder(TypeLiteral.generateDecoderCacheKey(clazz), decoder);
+    }
+
+    public static void registerTypeDecoder(TypeLiteral typeLiteral, Decoder decoder) {
+        Codegen.addNewDecoder(typeLiteral.cacheKey, decoder);
+    }
+
+    public static void registerFieldDecoder(Class clazz, String field, Decoder decoder) {
+        Codegen.addNewDecoder(field + "@" + TypeLiteral.generateDecoderCacheKey(clazz), decoder);
+    }
+
+    public static void registerFieldDecoder(TypeLiteral typeLiteral, String field, Decoder decoder) {
+        Codegen.addNewDecoder(field + "@" + typeLiteral.cacheKey, decoder);
     }
 }
