@@ -20,7 +20,7 @@ Parse with Java bind-api
 
 ```java
 import com.jsoniter.JsonIterator;
-Jsoniter iter = JsonIterator.parse("[0,1,2,3]");
+JsonIterator iter = JsonIterator.parse("[0,1,2,3]");
 int[] val = iter.read(int[].class);
 System.out.println(val[3]);
 ```
@@ -33,7 +33,7 @@ Parse with Java iterator-api
 
 ```java
 import com.jsoniter.JsonIterator;
-Jsoniter iter = JsonIterator.parse("[0, [1, 2], [3, 4], 5]");
+JsonIterator iter = JsonIterator.parse("[0, [1, 2], [3, 4], 5]");
 int count = 0;
 while(iter.readArray()) {
     iter.skip();
@@ -48,7 +48,7 @@ Parse with Java any-api
 
 ```java
 import com.jsoniter.JsonIterator;
-Jsoniter iter = JsonIterator.parse("[{'field1':'11','field2':'12'},{'field1':'21','field2':'22'}]".replace('\'', '"'));
+JsonIterator iter = JsonIterator.parse("[{'field1':'11','field2':'12'},{'field1':'21','field2':'22'}]".replace('\'', '"'));
 Any val = iter.readAny();
 System.out.println(val.toInt(1, "field2")); // 22
 ```
