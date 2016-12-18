@@ -21,7 +21,7 @@ class CodegenImplObject {
             for (Binding field : allBindings) {
                 for (String fromName : field.fromNames) {
                     append(lines, String.format("stream.writeField(\"%s\");", field.name));
-                    append(lines, String.format("stream.writeVal(obj.%s);", fromName));
+                    append(lines, CodegenImplNative.genWriteOp("obj." + fromName, field.valueType));
                     append(lines, "stream.writeMore();");
                 }
             }

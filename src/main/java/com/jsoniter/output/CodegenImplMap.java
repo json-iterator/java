@@ -33,17 +33,19 @@ class CodegenImplMap {
         append(lines, "java.util.Map.Entry entry = iter.next();");
         append(lines, "stream.startObject();");
         append(lines, "stream.writeField((String)entry.getKey());");
-        append(lines, "stream.writeVal(entry.getValue());");
+        append(lines, "{{op}}");
         append(lines, "stream.writeMore();");
         append(lines, "while(iter.hasNext()) {");
         append(lines, "entry = iter.next();");
         append(lines, "stream.writeField((String)entry.getKey());");
-        append(lines, "stream.writeVal(entry.getValue());");
+        append(lines, "{{op}}");
         append(lines, "stream.writeMore();");
         append(lines, "}");
         append(lines, "stream.endObject();");
         append(lines, "}");
-        return lines.toString().replace("{{clazz}}", clazz.getName());
+        return lines.toString()
+                .replace("{{clazz}}", clazz.getName())
+                .replace("{{op}}", CodegenImplNative.genWriteOp("entry.getValue()", valueType));
     }
 
     private static void append(StringBuilder lines, String str) {
