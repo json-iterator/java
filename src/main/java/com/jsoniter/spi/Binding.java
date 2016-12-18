@@ -1,7 +1,5 @@
 package com.jsoniter.spi;
 
-import com.jsoniter.TypeLiteral;
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;

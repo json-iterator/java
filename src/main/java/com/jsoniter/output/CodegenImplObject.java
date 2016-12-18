@@ -2,7 +2,7 @@ package com.jsoniter.output;
 
 import com.jsoniter.spi.Binding;
 import com.jsoniter.spi.ClassDescriptor;
-import com.jsoniter.ExtensionManager;
+import com.jsoniter.spi.ExtensionManager;
 
 class CodegenImplObject {
     public static String genObject(Class clazz) {

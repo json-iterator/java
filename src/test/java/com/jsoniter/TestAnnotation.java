@@ -1,6 +1,7 @@
 package com.jsoniter;
 
 import com.jsoniter.annotation.*;
+import com.jsoniter.spi.ExtensionManager;
 import junit.framework.TestCase;
 
 import java.io.IOException;

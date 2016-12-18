@@ -2,6 +2,8 @@ package com.jsoniter;
 
 import com.jsoniter.spi.Binding;
 import com.jsoniter.spi.Decoder;
+import com.jsoniter.spi.ExtensionManager;
+import com.jsoniter.spi.TypeLiteral;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -85,10 +87,10 @@ class CodegenImplNative {
     public static String genField(Binding field, String cacheKey) {
         String fieldCacheKey = field.name + "@" + cacheKey;
         if (field.decoder != null) {
-            Codegen.cache.put(fieldCacheKey, field.decoder);
+            ExtensionManager.addNewDecoder(fieldCacheKey, field.decoder);
         }
         // the field decoder might be registered directly
-        Decoder decoder = Codegen.cache.get(fieldCacheKey);
+        Decoder decoder = ExtensionManager.getDecoder(fieldCacheKey);
         Type fieldType = field.valueType;
         if (decoder == null) {
             return String.format("(%s)%s", getTypeName(fieldType), CodegenImplNative.genReadOp(fieldType));

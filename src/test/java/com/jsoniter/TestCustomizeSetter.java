@@ -1,9 +1,6 @@
 package com.jsoniter;
 
-import com.jsoniter.spi.Binding;
-import com.jsoniter.spi.ClassDescriptor;
-import com.jsoniter.spi.EmptyExtension;
-import com.jsoniter.spi.SetterDescriptor;
+import com.jsoniter.spi.*;
 import junit.framework.TestCase;
 
 import java.io.IOException;

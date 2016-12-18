@@ -1,5 +1,7 @@
 package com.jsoniter;
 
+import com.jsoniter.spi.TypeLiteral;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -323,7 +325,7 @@ public class JsonIterator implements Closeable {
 
     public final <T> T read(TypeLiteral<T> typeLiteral, T existingObject) throws IOException {
         this.existingObject = existingObject;
-        return (T) Codegen.getDecoder(typeLiteral.cacheKey, typeLiteral.getType()).decode(this);
+        return (T) Codegen.getDecoder(typeLiteral.getCacheKey(), typeLiteral.getType()).decode(this);
     }
 
     public final <T> T read(Class<T> clazz) throws IOException {
@@ -331,7 +333,7 @@ public class JsonIterator implements Closeable {
     }
 
     public final <T> T read(TypeLiteral<T> typeLiteral) throws IOException {
-        return (T) Codegen.getDecoder(typeLiteral.cacheKey, typeLiteral.getType()).decode(this);
+        return (T) Codegen.getDecoder(typeLiteral.getCacheKey(), typeLiteral.getType()).decode(this);
     }
 
     public ValueType whatIsNext() throws IOException {

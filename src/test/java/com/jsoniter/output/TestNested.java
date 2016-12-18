@@ -1,6 +1,6 @@
 package com.jsoniter.output;
 
-import com.jsoniter.TypeLiteral;
+import com.jsoniter.spi.TypeLiteral;
 import junit.framework.TestCase;
 
 import java.io.ByteArrayOutputStream;

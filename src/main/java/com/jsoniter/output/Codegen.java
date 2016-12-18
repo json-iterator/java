@@ -1,5 +1,6 @@
 package com.jsoniter.output;
 
+import com.jsoniter.spi.ExtensionManager;
 import com.jsoniter.JsonException;
 import com.jsoniter.spi.Encoder;
 import javassist.ClassPool;
@@ -11,16 +12,14 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 
 class Codegen {
 
-    static volatile Map<String, Encoder> cache = new HashMap<String, Encoder>();
     static ClassPool pool = ClassPool.getDefault();
 
     public static Encoder getEncoder(String cacheKey, Type type) {
-        Encoder encoder = cache.get(cacheKey);
+        Encoder encoder = ExtensionManager.getEncoder(cacheKey);
         if (encoder != null) {
             return encoder;
         }
@@ -28,13 +27,13 @@ class Codegen {
     }
 
     private static synchronized Encoder gen(String cacheKey, Type type) {
-        Encoder encoder = cache.get(cacheKey);
+        Encoder encoder = ExtensionManager.getEncoder(cacheKey);
         if (encoder != null) {
             return encoder;
         }
         encoder = CodegenImplNative.NATIVE_ENCODERS.get(type);
         if (encoder != null) {
-            addNewEncoder(cacheKey, encoder);
+            ExtensionManager.addNewEncoder(cacheKey, encoder);
             return encoder;
         }
         Type[] typeArgs = new Type[0];
@@ -62,7 +61,7 @@ class Codegen {
                     "}", ctClass);
             ctClass.addMethod(interfaceMethod);
             encoder = (Encoder) ctClass.toClass().newInstance();
-            addNewEncoder(cacheKey, encoder);
+            ExtensionManager.addNewEncoder(cacheKey, encoder);
             return encoder;
         } catch (Exception e) {
             System.err.println("failed to generate encoder for: " + type + " with " + Arrays.toString(typeArgs));
@@ -71,11 +70,6 @@ class Codegen {
         }
     }
 
-    public static void addNewEncoder(String cacheKey, Encoder encoder) {
-        HashMap<String, Encoder> newCache = new HashMap<String, Encoder>(cache);
-        newCache.put(cacheKey, encoder);
-        cache = newCache;
-    }
 
     private static String genSource(String cacheKey, Class clazz, Type[] typeArgs) {
         if (clazz.isArray()) {

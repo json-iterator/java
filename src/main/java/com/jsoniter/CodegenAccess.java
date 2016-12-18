@@ -1,6 +1,7 @@
 package com.jsoniter;
 
 import com.jsoniter.spi.Decoder;
+import com.jsoniter.spi.ExtensionManager;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -32,27 +33,27 @@ public class CodegenAccess {
     }
 
     public static final boolean readBoolean(String cacheKey, JsonIterator iter) throws IOException {
-        return ((Decoder.BooleanDecoder) Codegen.cache.get(cacheKey)).decodeBoolean(iter);
+        return ((Decoder.BooleanDecoder) ExtensionManager.getDecoder(cacheKey)).decodeBoolean(iter);
     }
 
     public static final short readShort(String cacheKey, JsonIterator iter) throws IOException {
-        return ((Decoder.ShortDecoder) Codegen.cache.get(cacheKey)).decodeShort(iter);
+        return ((Decoder.ShortDecoder) ExtensionManager.getDecoder(cacheKey)).decodeShort(iter);
     }
 
     public static final int readInt(String cacheKey, JsonIterator iter) throws IOException {
-        return ((Decoder.IntDecoder) Codegen.cache.get(cacheKey)).decodeInt(iter);
+        return ((Decoder.IntDecoder) ExtensionManager.getDecoder(cacheKey)).decodeInt(iter);
     }
 
     public static final long readLong(String cacheKey, JsonIterator iter) throws IOException {
-        return ((Decoder.LongDecoder) Codegen.cache.get(cacheKey)).decodeLong(iter);
+        return ((Decoder.LongDecoder) ExtensionManager.getDecoder(cacheKey)).decodeLong(iter);
     }
 
     public static final float readFloat(String cacheKey, JsonIterator iter) throws IOException {
-        return ((Decoder.FloatDecoder) Codegen.cache.get(cacheKey)).decodeFloat(iter);
+        return ((Decoder.FloatDecoder) ExtensionManager.getDecoder(cacheKey)).decodeFloat(iter);
     }
 
     public static final double readDouble(String cacheKey, JsonIterator iter) throws IOException {
-        return ((Decoder.DoubleDecoder) Codegen.cache.get(cacheKey)).decodeDouble(iter);
+        return ((Decoder.DoubleDecoder) ExtensionManager.getDecoder(cacheKey)).decodeDouble(iter);
     }
 
     public static final <T> T read(String cacheKey, JsonIterator iter) throws IOException {

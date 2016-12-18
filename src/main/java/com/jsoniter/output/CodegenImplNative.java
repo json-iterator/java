@@ -1,7 +1,7 @@
 package com.jsoniter.output;
 
 import com.jsoniter.JsonException;
-import com.jsoniter.TypeLiteral;
+import com.jsoniter.spi.TypeLiteral;
 import com.jsoniter.spi.Encoder;
 
 import java.io.IOException;
@@ -16,6 +16,12 @@ class CodegenImplNative {
             @Override
             public void encode(Object obj, JsonStream stream) throws IOException {
                 stream.writeVal((String) obj);
+            }
+        });
+        put(Object.class, new Encoder() {
+            @Override
+            public void encode(Object obj, JsonStream stream) throws IOException {
+                stream.writeVal(obj);
             }
         });
     }};

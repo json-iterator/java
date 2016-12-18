@@ -1,37 +1,63 @@
-package com.jsoniter;
-
-import com.jsoniter.spi.*;
+package com.jsoniter.spi;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class ExtensionManager {
 
     static List<Extension> extensions = new ArrayList<Extension>();
+    static volatile Map<String, Encoder> encoders = new HashMap<String, Encoder>();
+    static volatile Map<String, Decoder> decoders = new HashMap<String, Decoder>();
 
     public static void registerExtension(Extension extension) {
         extensions.add(extension);
     }
 
+    public static List<Extension> getExtensions() {
+        return Collections.unmodifiableList(extensions);
+    }
+
     public static void registerTypeDecoder(Class clazz, Decoder decoder) {
-        Codegen.addNewDecoder(TypeLiteral.generateDecoderCacheKey(clazz), decoder);
+        addNewDecoder(TypeLiteral.generateDecoderCacheKey(clazz), decoder);
     }
 
     public static void registerTypeDecoder(TypeLiteral typeLiteral, Decoder decoder) {
-        Codegen.addNewDecoder(typeLiteral.cacheKey, decoder);
+        addNewDecoder(typeLiteral.getCacheKey(), decoder);
     }
 
     public static void registerFieldDecoder(Class clazz, String field, Decoder decoder) {
-        Codegen.addNewDecoder(field + "@" + TypeLiteral.generateDecoderCacheKey(clazz), decoder);
+        addNewDecoder(field + "@" + TypeLiteral.generateDecoderCacheKey(clazz), decoder);
     }
 
     public static void registerFieldDecoder(TypeLiteral typeLiteral, String field, Decoder decoder) {
-        Codegen.addNewDecoder(field + "@" + typeLiteral.cacheKey, decoder);
+        addNewDecoder(field + "@" + typeLiteral.getCacheKey(), decoder);
+    }
+
+    public static void registerTypeEncoder(Class clazz, Encoder encoder) {
+        addNewEncoder(TypeLiteral.generateEncoderCacheKey(clazz), encoder);
+    }
+
+    public static Decoder getDecoder(String cacheKey) {
+        return decoders.get(cacheKey);
+    }
+
+    public synchronized static void addNewDecoder(String cacheKey, Decoder decoder) {
+        HashMap<String, Decoder> newCache = new HashMap<String, Decoder>(decoders);
+        newCache.put(cacheKey, decoder);
+        decoders = newCache;
+    }
+
+    public static Encoder getEncoder(String cacheKey) {
+        return encoders.get(cacheKey);
+    }
+
+    public synchronized static void addNewEncoder(String cacheKey, Encoder encoder) {
+        HashMap<String, Encoder> newCache = new HashMap<String, Encoder>(encoders);
+        newCache.put(cacheKey, encoder);
+        encoders = newCache;
     }
 
     public static ClassDescriptor getClassDescriptor(Class clazz, boolean includingPrivate) {

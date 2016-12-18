@@ -1,5 +1,6 @@
 package com.jsoniter;
 
+import com.jsoniter.spi.TypeLiteral;
 import junit.framework.TestCase;
 
 import java.io.IOException;

@@ -1,12 +1,10 @@
 package com.jsoniter.output;
 
-import com.jsoniter.TypeLiteral;
+import com.jsoniter.spi.TypeLiteral;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.List;
 
 public class JsonStream extends OutputStream {
 

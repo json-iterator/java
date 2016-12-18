@@ -1,4 +1,6 @@
-package com.jsoniter;
+package com.jsoniter.spi;
+
+import com.jsoniter.JsonException;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;

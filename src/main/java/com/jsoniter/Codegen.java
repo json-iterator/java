@@ -1,9 +1,6 @@
 package com.jsoniter;
 
-import com.jsoniter.spi.Binding;
-import com.jsoniter.spi.ClassDescriptor;
-import com.jsoniter.spi.Decoder;
-import com.jsoniter.spi.Extension;
+import com.jsoniter.spi.*;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
@@ -14,7 +11,6 @@ import java.util.*;
 
 class Codegen {
     static boolean strictMode = false;
-    static volatile Map<String, Decoder> cache = new HashMap<String, Decoder>();
     static ClassPool pool = ClassPool.getDefault();
 
     public static void enableStrictMode() {
@@ -22,7 +18,7 @@ class Codegen {
     }
 
     static Decoder getDecoder(String cacheKey, Type type) {
-        Decoder decoder = cache.get(cacheKey);
+        Decoder decoder = ExtensionManager.getDecoder(cacheKey);
         if (decoder != null) {
             return decoder;
         }
@@ -30,14 +26,14 @@ class Codegen {
     }
 
     private synchronized static Decoder gen(String cacheKey, Type type) {
-        Decoder decoder = cache.get(cacheKey);
+        Decoder decoder = ExtensionManager.getDecoder(cacheKey);
         if (decoder != null) {
             return decoder;
         }
-        for (Extension extension : ExtensionManager.extensions) {
+        for (Extension extension : ExtensionManager.getExtensions()) {
             decoder = extension.createDecoder(cacheKey, type);
             if (decoder != null) {
-                addNewDecoder(cacheKey, decoder);
+                ExtensionManager.addNewDecoder(cacheKey, decoder);
                 return decoder;
             }
         }
@@ -66,7 +62,7 @@ class Codegen {
                     "}", ctClass);
             ctClass.addMethod(interfaceMethod);
             decoder = (Decoder) ctClass.toClass().newInstance();
-            addNewDecoder(cacheKey, decoder);
+            ExtensionManager.addNewDecoder(cacheKey, decoder);
             return decoder;
         } catch (Exception e) {
             System.err.println("failed to generate decoder for: " + type + " with " + Arrays.toString(typeArgs));
@@ -107,11 +103,5 @@ class Codegen {
             return CodegenImplObject.genObjectUsingSlice(clazz, cacheKey, desc);
         }
         return CodegenImplObject.genObjectUsingHash(clazz, cacheKey, desc);
-    }
-
-    public static void addNewDecoder(String cacheKey, Decoder decoder) {
-        HashMap<String, Decoder> newCache = new HashMap<String, Decoder>(cache);
-        newCache.put(cacheKey, decoder);
-        cache = newCache;
     }
 }

@@ -2,6 +2,8 @@ package com.jsoniter;
 
 import com.jsoniter.spi.Decoder;
 import com.jsoniter.spi.EmptyExtension;
+import com.jsoniter.spi.ExtensionManager;
+import com.jsoniter.spi.TypeLiteral;
 import junit.framework.TestCase;
 
 import java.io.IOException;
