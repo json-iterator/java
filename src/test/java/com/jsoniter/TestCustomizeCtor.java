@@ -1,5 +1,9 @@
 package com.jsoniter;
 
+import com.jsoniter.spi.Binding;
+import com.jsoniter.spi.ClassDescriptor;
+import com.jsoniter.spi.ConstructorDescriptor;
+import com.jsoniter.spi.EmptyExtension;
 import junit.framework.TestCase;
 
 import java.io.IOException;
@@ -23,9 +27,9 @@ public class TestCustomizeCtor extends TestCase {
     public void test_codegen() throws IOException {
         ExtensionManager.registerExtension(new EmptyExtension() {
             @Override
-            public CustomizedConstructor getConstructor(Class clazz) {
-                if (clazz == WithPublicCtor.class) {
-                    return new CustomizedConstructor() {{
+            public void updateClassDescriptor(ClassDescriptor desc) {
+                if (desc.clazz == WithPublicCtor.class) {
+                    desc.ctor = new ConstructorDescriptor() {{
                         parameters = (List) Arrays.asList(new Binding() {{
                             fromNames = new String[]{"param1"};
                             name="field1";
@@ -33,7 +37,6 @@ public class TestCustomizeCtor extends TestCase {
                         }});
                     }};
                 }
-                return null;
             }
         });
         JsonIterator iter = JsonIterator.parse("{'param1': 'hello'}".replace('\'', '"'));
@@ -52,9 +55,9 @@ public class TestCustomizeCtor extends TestCase {
     public void test_reflection() throws IOException {
         ExtensionManager.registerExtension(new EmptyExtension() {
             @Override
-            public CustomizedConstructor getConstructor(Class clazz) {
-                if (clazz == WithPrivateCtor.class) {
-                    return new CustomizedConstructor() {{
+            public void updateClassDescriptor(ClassDescriptor desc) {
+                if (desc.clazz == WithPrivateCtor.class) {
+                    desc.ctor = new ConstructorDescriptor() {{
                         parameters = (List) Arrays.asList(new Binding() {{
                             fromNames = new String[]{"param1"};
                             name="param1";
@@ -63,16 +66,11 @@ public class TestCustomizeCtor extends TestCase {
                         ctor = WithPrivateCtor.class.getDeclaredConstructors()[0];
                     }};
                 }
-                return null;
-            }
-
-            @Override
-            public boolean updateBinding(Binding field) {
-                if (field.clazz == WithPrivateCtor.class && "field1".equals(field.name)) {
-                    field.fromNames = new String[0];
-                    return true;
+                for (Binding field : desc.allDecoderBindings()) {
+                    if (field.clazz == WithPrivateCtor.class && "field1".equals(field.name)) {
+                        field.fromNames = new String[0];
+                    }
                 }
-                return false;
             }
         });
         ExtensionManager.registerTypeDecoder(WithPrivateCtor.class, new ReflectionDecoder(WithPrivateCtor.class));

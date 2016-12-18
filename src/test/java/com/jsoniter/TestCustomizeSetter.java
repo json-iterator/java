@@ -1,5 +1,9 @@
 package com.jsoniter;
 
+import com.jsoniter.spi.Binding;
+import com.jsoniter.spi.ClassDescriptor;
+import com.jsoniter.spi.EmptyExtension;
+import com.jsoniter.spi.SetterDescriptor;
 import junit.framework.TestCase;
 
 import java.io.IOException;
@@ -54,9 +58,9 @@ public class TestCustomizeSetter extends TestCase {
     public void test_customized_setter() throws IOException {
         ExtensionManager.registerExtension(new EmptyExtension() {
             @Override
-            public List<CustomizedSetter> getSetters(Class clazz) {
-                if (clazz == ObjectWithCustomizedSetter.class) {
-                    return (List) Arrays.asList(new CustomizedSetter(){{
+            public void updateClassDescriptor(ClassDescriptor desc) {
+                if (desc.clazz == ObjectWithCustomizedSetter.class) {
+                    desc.setters = (List) Arrays.asList(new SetterDescriptor(){{
                         methodName = "initialize";
                         parameters = (List) Arrays.asList(new Binding() {{
                             name = "field1";
@@ -67,7 +71,6 @@ public class TestCustomizeSetter extends TestCase {
                         }});
                     }});
                 }
-                return null;
             }
         });
         JsonIterator iter = JsonIterator.parse("{'field1': 'hello', 'field2': 'world'}".replace('\'', '"'));

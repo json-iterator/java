@@ -1,6 +1,7 @@
 package com.jsoniter.output;
 
 import com.jsoniter.TypeLiteral;
+import com.jsoniter.spi.Encoder;
 
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;

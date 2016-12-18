@@ -1,5 +1,7 @@
 package com.jsoniter;
 
+import com.jsoniter.spi.*;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -16,46 +18,92 @@ public class ExtensionManager {
         extensions.add(extension);
     }
 
-    public static CustomizedConstructor getCtor(Class clazz) {
-        return getCtor(clazz, false);
+    public static void registerTypeDecoder(Class clazz, Decoder decoder) {
+        Codegen.addNewDecoder(TypeLiteral.generateDecoderCacheKey(clazz), decoder);
     }
 
-    public static CustomizedConstructor getCtor(Class clazz, boolean includingPrivate) {
+    public static void registerTypeDecoder(TypeLiteral typeLiteral, Decoder decoder) {
+        Codegen.addNewDecoder(typeLiteral.cacheKey, decoder);
+    }
+
+    public static void registerFieldDecoder(Class clazz, String field, Decoder decoder) {
+        Codegen.addNewDecoder(field + "@" + TypeLiteral.generateDecoderCacheKey(clazz), decoder);
+    }
+
+    public static void registerFieldDecoder(TypeLiteral typeLiteral, String field, Decoder decoder) {
+        Codegen.addNewDecoder(field + "@" + typeLiteral.cacheKey, decoder);
+    }
+
+    public static ClassDescriptor getClassDescriptor(Class clazz, boolean includingPrivate) {
+        ClassDescriptor desc = new ClassDescriptor();
+        desc.clazz = clazz;
+        desc.ctor = getCtor(clazz);
+        desc.fields = getFields(clazz, includingPrivate);
+        desc.setters = getSetters(clazz, includingPrivate);
+        desc.getters = getGetters(clazz, includingPrivate);
         for (Extension extension : extensions) {
-            CustomizedConstructor ctor = extension.getConstructor(clazz);
-            if (ctor != null) {
-                if (ctor.ctor != null && includingPrivate) {
-                    ctor.ctor.setAccessible(true);
-                }
-                for (Binding param : ctor.parameters) {
-                    if (param.fromNames == null) {
-                        param.fromNames = new String[]{param.name};
-                    }
-                    param.clazz = clazz;
-                    param.valueTypeLiteral = createTypeLiteral(param.valueType);
-                    updateFromNames(param);
-                }
-                return ctor;
+            extension.updateClassDescriptor(desc);
+        }
+        if (includingPrivate) {
+            if (desc.ctor.ctor != null) {
+                desc.ctor.ctor.setAccessible(true);
+            }
+            if (desc.ctor.staticFactory != null) {
+                desc.ctor.staticFactory.setAccessible(true);
             }
         }
-        CustomizedConstructor cctor = new CustomizedConstructor();
+        for (Binding binding : desc.allDecoderBindings()) {
+            if (binding.fromNames == null) {
+                binding.fromNames = new String[]{binding.name};
+            }
+            binding.clazz = clazz;
+            binding.valueTypeLiteral = createTypeLiteral(binding.valueType);
+        }
+        return desc;
+    }
+
+    private static ConstructorDescriptor getCtor(Class clazz) {
+        ConstructorDescriptor cctor = new ConstructorDescriptor();
         try {
             cctor.ctor = clazz.getDeclaredConstructor();
-            if (includingPrivate) {
-                cctor.ctor.setAccessible(true);
-            }
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            cctor.ctor = null;
         }
         return cctor;
     }
 
-    public static List<Binding> getFields(Class clazz) {
-        return getFields(clazz, false);
+    private static List<Binding> getFields(Class clazz, boolean includingPrivate) {
+        ArrayList<Binding> bindings = new ArrayList<Binding>();
+        for (Field field : getAllFields(clazz, includingPrivate)) {
+            if (Modifier.isStatic(field.getModifiers())) {
+                continue;
+            }
+            if (includingPrivate) {
+                field.setAccessible(true);
+            }
+            Binding binding = createBindingFromField(clazz, field);
+            bindings.add(binding);
+        }
+        Binding binding = new Binding();
+        binding.fromNames = new String[0];
+        binding.name = "*";
+        binding.clazz = clazz;
+        return bindings;
     }
 
-    public static List<Binding> getFields(Class clazz, boolean includingPrivate) {
-        ArrayList<Binding> bindings = new ArrayList<Binding>();
+    private static Binding createBindingFromField(Class clazz, Field field) {
+        Binding binding = new Binding();
+        binding.fromNames = new String[]{field.getName()};
+        binding.name = field.getName();
+        binding.valueType = field.getType();
+        binding.valueTypeLiteral = createTypeLiteral(binding.valueType);
+        binding.clazz = clazz;
+        binding.annotations = field.getAnnotations();
+        binding.field = field;
+        return binding;
+    }
+
+    private static List<Field> getAllFields(Class clazz, boolean includingPrivate) {
         List<Field> allFields = Arrays.asList(clazz.getFields());
         if (includingPrivate) {
             allFields = new ArrayList<Field>();
@@ -65,45 +113,15 @@ public class ExtensionManager {
                 current = current.getSuperclass();
             }
         }
-        for (Field field : allFields) {
-            if (Modifier.isStatic(field.getModifiers())) {
-                continue;
-            }
-            if (includingPrivate) {
-                field.setAccessible(true);
-            }
-            Binding binding = new Binding();
-            binding.fromNames = new String[]{field.getName()};
-            binding.name = field.getName();
-            binding.valueType = field.getType();
-            binding.valueTypeLiteral = createTypeLiteral(binding.valueType);
-            binding.clazz = clazz;
-            binding.annotations = field.getAnnotations();
-            binding.field = field;
-            updateFromNames(binding);
-            bindings.add(binding);
-        }
-        return bindings;
+        return allFields;
     }
 
     private static TypeLiteral createTypeLiteral(Type valueType) {
         return new TypeLiteral(valueType, TypeLiteral.generateDecoderCacheKey(valueType));
     }
 
-    private static void updateFromNames(Binding binding) {
-        for (Extension extension : extensions) {
-            if (extension.updateBinding(binding)) {
-                break;
-            }
-        }
-    }
-
-    public static List<CustomizedSetter> getSetters(Class clazz) {
-        return getSetters(clazz, false);
-    }
-
-    public static List<CustomizedSetter> getSetters(Class clazz, boolean includingPrivate) {
-        ArrayList<CustomizedSetter> setters = new ArrayList<CustomizedSetter>();
+    private static List<SetterDescriptor> getSetters(Class clazz, boolean includingPrivate) {
+        ArrayList<SetterDescriptor> setters = new ArrayList<SetterDescriptor>();
         List<Method> allMethods = Arrays.asList(clazz.getMethods());
         if (includingPrivate) {
             allMethods = new ArrayList<Method>();
@@ -135,7 +153,7 @@ public class ExtensionManager {
             char[] fromNameChars = fromName.toCharArray();
             fromNameChars[0] = Character.toLowerCase(fromNameChars[0]);
             fromName = new String(fromNameChars);
-            CustomizedSetter setter = new CustomizedSetter();
+            SetterDescriptor setter = new SetterDescriptor();
             setter.method = method;
             setter.methodName = methodName;
             Binding param = new Binding();
@@ -144,34 +162,13 @@ public class ExtensionManager {
             param.valueType = paramTypes[0];
             param.valueTypeLiteral = createTypeLiteral(param.valueType);
             param.clazz = clazz;
-            updateFromNames(param);
             setter.parameters.add(param);
             setters.add(setter);
-        }
-        for (Extension extension : extensions) {
-            List<CustomizedSetter> moreSetters = extension.getSetters(clazz);
-            if (moreSetters != null) {
-                for (CustomizedSetter moreSetter : moreSetters) {
-                    for (Binding param : moreSetter.parameters) {
-                        if (param.fromNames == null) {
-                            param.fromNames = new String[]{param.name};
-                        }
-                        param.clazz = clazz;
-                        param.valueTypeLiteral = createTypeLiteral(param.valueType);
-                        updateFromNames(param);
-                    }
-                }
-                setters.addAll(moreSetters);
-            }
         }
         return setters;
     }
 
-    public static List<Binding> getGetters(Class clazz) {
-        return getGetters(clazz, false);
-    }
-
-    public static List<Binding> getGetters(Class clazz, boolean includingPrivate) {
+    private static List<Binding> getGetters(Class clazz, boolean includingPrivate) {
         ArrayList<Binding> getters = new ArrayList<Binding>();
         for (Method method : clazz.getMethods()) {
             if (Modifier.isStatic(method.getModifiers())) {
@@ -202,21 +199,5 @@ public class ExtensionManager {
             getters.add(getter);
         }
         return getters;
-    }
-
-    public static void registerTypeDecoder(Class clazz, Decoder decoder) {
-        Codegen.addNewDecoder(TypeLiteral.generateDecoderCacheKey(clazz), decoder);
-    }
-
-    public static void registerTypeDecoder(TypeLiteral typeLiteral, Decoder decoder) {
-        Codegen.addNewDecoder(typeLiteral.cacheKey, decoder);
-    }
-
-    public static void registerFieldDecoder(Class clazz, String field, Decoder decoder) {
-        Codegen.addNewDecoder(field + "@" + TypeLiteral.generateDecoderCacheKey(clazz), decoder);
-    }
-
-    public static void registerFieldDecoder(TypeLiteral typeLiteral, String field, Decoder decoder) {
-        Codegen.addNewDecoder(field + "@" + typeLiteral.cacheKey, decoder);
     }
 }

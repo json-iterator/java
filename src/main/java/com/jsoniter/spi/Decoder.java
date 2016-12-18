@@ -1,4 +1,6 @@
-package com.jsoniter;
+package com.jsoniter.spi;
+
+import com.jsoniter.JsonIterator;
 
 import java.io.IOException;
 
@@ -18,6 +20,10 @@ public interface Decoder {
         public Object decode(JsonIterator iter) throws IOException {
             return null;
         }
+    }
+
+    abstract class FieldDecoder extends EmptyDecoder {
+        public abstract void decode(JsonIterator iter, Object obj, String fieldName) throws IOException;
     }
 
     abstract class BooleanDecoder extends EmptyDecoder {

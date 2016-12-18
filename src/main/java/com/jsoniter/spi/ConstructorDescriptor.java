@@ -1,11 +1,11 @@
-package com.jsoniter;
+package com.jsoniter.spi;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CustomizedConstructor {
+public class ConstructorDescriptor {
     /**
      * set to null if use constructor
      * otherwise use static method

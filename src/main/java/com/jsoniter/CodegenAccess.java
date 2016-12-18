@@ -1,5 +1,7 @@
 package com.jsoniter;
 
+import com.jsoniter.spi.Decoder;
+
 import java.io.IOException;
 import java.util.Collection;
 

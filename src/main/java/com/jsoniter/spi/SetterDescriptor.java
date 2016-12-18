@@ -1,10 +1,10 @@
-package com.jsoniter;
+package com.jsoniter.spi;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CustomizedSetter {
+public class SetterDescriptor {
     /**
      * which method to call to set value
      */

@@ -1,5 +1,6 @@
 package com.jsoniter;
 
+import com.jsoniter.spi.*;
 import junit.framework.TestCase;
 
 import java.io.IOException;
@@ -53,12 +54,12 @@ public class TestCustomizeField extends TestCase {
     public void test_rename_field() throws IOException {
         ExtensionManager.registerExtension(new EmptyExtension() {
             @Override
-            public boolean updateBinding(Binding field) {
-                if (field.clazz == TestObject4.class && field.name.equals("field1")) {
-                    field.fromNames = new String[]{"field_1", "Field1"};
-                    return true;
+            public void updateClassDescriptor(ClassDescriptor desc) {
+                for (Binding field : desc.allDecoderBindings()) {
+                    if (field.clazz == TestObject4.class && field.name.equals("field1")) {
+                        field.fromNames = new String[]{"field_1", "Field1"};
+                    }
                 }
-                return false;
             }
         });
         JsonIterator iter = JsonIterator.parse("{'field_1': 100}{'Field1': 101}".replace('\'', '"'));
@@ -78,25 +79,15 @@ public class TestCustomizeField extends TestCase {
     public void test_rename_ctor_param() throws IOException {
         ExtensionManager.registerExtension(new EmptyExtension() {
             @Override
-            public CustomizedConstructor getConstructor(Class clazz) {
-                if (clazz == TestObject5.class) {
-                    return new CustomizedConstructor() {{
+            public void updateClassDescriptor(ClassDescriptor desc) {
+                if (desc.clazz == TestObject5.class) {
+                    desc.ctor = new ConstructorDescriptor() {{
                         parameters = (List) Arrays.asList(new Binding() {{
-                            name="param1";
+                            name="param2";
                             valueType = int.class;
                         }});
                     }};
                 }
-                return null;
-            }
-
-            @Override
-            public boolean updateBinding(Binding field) {
-                if (field.clazz == TestObject5.class && "param1".equals(field.name)) {
-                    field.fromNames = new String[]{"param2"};
-                    return true;
-                }
-                return false;
             }
         });
         JsonIterator iter = JsonIterator.parse("{'param2': 1000}".replace('\'', '"'));
@@ -115,12 +106,12 @@ public class TestCustomizeField extends TestCase {
     public void test_rename_setter() throws IOException {
         ExtensionManager.registerExtension(new EmptyExtension() {
             @Override
-            public boolean updateBinding(Binding field) {
-                if (field.clazz == TestObject6.class && field.name.equals("field")) {
-                    field.fromNames = new String[]{"field_1", "Field1"};
-                    return true;
+            public void updateClassDescriptor(ClassDescriptor desc) {
+                for (Binding field : desc.allDecoderBindings()) {
+                    if (field.clazz == TestObject6.class && field.name.equals("field")) {
+                        field.fromNames = new String[]{"field_1", "Field1"};
+                    }
                 }
-                return false;
             }
         });
         JsonIterator iter = JsonIterator.parse("{'field_1': 'hello'}".replace('\'', '"'));
@@ -134,23 +125,36 @@ public class TestCustomizeField extends TestCase {
 
     public void test_customize_field_decoding_using_extension() throws IOException {
         ExtensionManager.registerExtension(new EmptyExtension() {
-            @Override
-            public boolean updateBinding(Binding field) {
-                if (field.clazz == TestObject7.class && field.name.equals("field1")) {
-                    field.decoder = new Decoder.IntDecoder() {
+            public void updateClassDescriptor(ClassDescriptor desc) {
+                for (Binding field : desc.allDecoderBindings()) {
 
-                        @Override
-                        public int decodeInt(JsonIterator iter1) throws IOException {
-                            return Integer.valueOf(iter1.readString());
-                        }
-                    };
-                    return true;
+                    if (field.clazz == TestObject7.class && field.name.equals("field1")) {
+                        field.decoder = new Decoder.IntDecoder() {
+
+                            @Override
+                            public int decodeInt(JsonIterator iter1) throws IOException {
+                                return Integer.valueOf(iter1.readString());
+                            }
+                        };
+                    }
                 }
-                return false;
             }
         });
         JsonIterator iter = JsonIterator.parse("{'field1': '100'}".replace('\'', '"'));
         TestObject7 myObject = iter.read(TestObject7.class);
         assertEquals(100, myObject.field1);
+    }
+
+    public static class TestObject8 {
+    }
+
+    public void test_throw_exception_on_unknown_field() throws IOException {
+        ExtensionManager.registerExtension(new EmptyExtension() {
+            @Override
+            public void updateClassDescriptor(ClassDescriptor desc) {
+            }
+        });
+        JsonIterator iter = JsonIterator.parse("{'field1': '100'}".replace('\'', '"'));
+        TestObject8 myObject = iter.read(TestObject8.class);
     }
 }

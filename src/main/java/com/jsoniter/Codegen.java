@@ -1,5 +1,8 @@
 package com.jsoniter;
 
+import com.jsoniter.spi.ClassDescriptor;
+import com.jsoniter.spi.Decoder;
+import com.jsoniter.spi.Extension;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
@@ -84,14 +87,14 @@ class Codegen {
         if (Collection.class.isAssignableFrom(clazz)) {
             return CodegenImplArray.genCollection(clazz, typeArgs);
         }
-        CustomizedConstructor ctor = ExtensionManager.getCtor(clazz);
-        List<CustomizedSetter> setters = ExtensionManager.getSetters(clazz);
-        List<Binding> fields = ExtensionManager.getFields(clazz);
-        if (strictMode) {
-            return CodegenImplObject.genObjectUsingSlice(clazz, cacheKey, ctor, setters, fields);
-        } else {
-            return CodegenImplObject.genObjectUsingHash(clazz, cacheKey, ctor, setters, fields);
+        ClassDescriptor desc = ExtensionManager.getClassDescriptor(clazz, false);
+        if (desc.allDecoderBindings().isEmpty()) {
+            return CodegenImplObject.genObjectUsingSkip(clazz, desc.ctor);
         }
+        if (strictMode) {
+            return CodegenImplObject.genObjectUsingSlice(clazz, cacheKey, desc);
+        }
+        return CodegenImplObject.genObjectUsingHash(clazz, cacheKey, desc);
     }
 
     public static void addNewDecoder(String cacheKey, Decoder decoder) {

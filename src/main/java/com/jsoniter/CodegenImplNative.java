@@ -1,5 +1,8 @@
 package com.jsoniter;
 
+import com.jsoniter.spi.Binding;
+import com.jsoniter.spi.Decoder;
+
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;

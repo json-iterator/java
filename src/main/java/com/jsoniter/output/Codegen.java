@@ -1,5 +1,6 @@
 package com.jsoniter.output;
 
+import com.jsoniter.spi.Encoder;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;

@@ -1,5 +1,10 @@
 package com.jsoniter;
 
+import com.jsoniter.spi.Binding;
+import com.jsoniter.spi.ClassDescriptor;
+import com.jsoniter.spi.ConstructorDescriptor;
+import com.jsoniter.spi.SetterDescriptor;
+
 import java.lang.reflect.Type;
 import java.util.*;
 
@@ -16,47 +21,40 @@ class CodegenImplObject {
         put("long", "0");
     }};
 
-    public static String genObjectUsingSlice(Class clazz, String cacheKey, CustomizedConstructor ctor,
-                                             List<CustomizedSetter> setters, List<Binding> fields) {
-        ArrayList<Binding> allBindings = new ArrayList<Binding>(fields);
-        allBindings.addAll(ctor.parameters);
+
+    public static String genObjectUsingSlice(Class clazz, String cacheKey, ClassDescriptor desc) {
         // TODO: when setter is single argument, decode like field
-        for (CustomizedSetter setter : setters) {
-            allBindings.addAll(setter.parameters);
-        }
-        if (allBindings.isEmpty()) {
-            return genObjectUsingSkip(clazz, ctor);
-        }
-        Map<Integer, Object> trieTree = buildTriTree(allBindings);
+        Map<Integer, Object> trieTree = buildTriTree(desc.allDecoderBindings());
         StringBuilder lines = new StringBuilder();
         append(lines, "public static Object decode_(com.jsoniter.JsonIterator iter) {");
-        append(lines, "if (iter.readNull()) { return null; }");
-        if (ctor.parameters.isEmpty()) {
+        // if null, return null
+        append(lines, "if (iter.readNull()) { com.jsoniter.CodegenAccess.resetExistingObject(iter); return null; }");
+        // if input is empty object, return empty object
+        if (desc.ctor.parameters.isEmpty()) {
             append(lines, "{{clazz}} obj = {{newInst}};");
             append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) { return obj; }");
         } else {
-            for (Binding parameter : ctor.parameters) {
+            for (Binding parameter : desc.ctor.parameters) {
                 appendVarDef(lines, parameter);
             }
             append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) { return {{newInst}}; }");
-            for (Binding field : fields) {
+            for (Binding field : desc.fields) {
                 appendVarDef(lines, field);
             }
         }
-        for (CustomizedSetter setter : setters) {
+        for (SetterDescriptor setter : desc.setters) {
             for (Binding param : setter.parameters) {
                 appendVarDef(lines, param);
             }
         }
-        append(lines, "com.jsoniter.CodegenAccess.resetExistingObject(iter);");
         append(lines, "com.jsoniter.Slice field = com.jsoniter.CodegenAccess.readObjectFieldAsSlice(iter);");
         append(lines, "boolean once = true;");
         append(lines, "while (once) {");
         append(lines, "once = false;");
         append(lines, "switch (field.len) {");
         String rendered = renderTriTree(cacheKey, trieTree);
-        for (Binding field : fields) {
-            if (ctor.parameters.isEmpty() && fields.contains(field)) {
+        for (Binding field : desc.fields) {
+            if (desc.ctor.parameters.isEmpty() && desc.fields.contains(field)) {
                 if (shouldReuseObject(field.valueType)) {
                     rendered = rendered.replace("_" + field.name + "_", String.format("obj.%s", field.name));
                 } else {
@@ -76,18 +74,18 @@ class CodegenImplObject {
         append(lines, "}"); // end of switch
         append(lines, "iter.skip();");
         append(lines, "}"); // end of while
-        if (!ctor.parameters.isEmpty()) {
+        if (!desc.ctor.parameters.isEmpty()) {
             append(lines, String.format("%s obj = {{newInst}};", CodegenImplNative.getTypeName(clazz)));
-            for (Binding field : fields) {
+            for (Binding field : desc.fields) {
                 append(lines, String.format("obj.%s = _%s_;", field.name, field.name));
             }
         }
-        appendSetter(setters, lines);
+        appendSetter(desc.setters, lines);
         append(lines, "return obj;");
         append(lines, "}");
         return lines.toString()
                 .replace("{{clazz}}", clazz.getCanonicalName())
-                .replace("{{newInst}}", genNewInstCode(clazz, ExtensionManager.getCtor(clazz)));
+                .replace("{{newInst}}", genNewInstCode(clazz, desc.ctor));
     }
 
     private static String renderTriTree(String cacheKey, Map<Integer, Object> trieTree) {
@@ -102,7 +100,7 @@ class CodegenImplObject {
         return switchBody.toString();
     }
 
-    private static Map<Integer, Object> buildTriTree(ArrayList<Binding> allBindings) {
+    private static Map<Integer, Object> buildTriTree(List<Binding> allBindings) {
         Map<Integer, Object> trieTree = new HashMap<Integer, Object>();
         for (Binding field : allBindings) {
             for (String fromName : field.fromNames) {
@@ -165,43 +163,36 @@ class CodegenImplObject {
         }
     }
 
-    public static String genObjectUsingHash(Class clazz, String cacheKey, CustomizedConstructor ctor,
-                                            List<CustomizedSetter> setters, List<Binding> fields) {
-        ArrayList<Binding> allBindings = new ArrayList<Binding>(fields);
-        allBindings.addAll(ctor.parameters);
+    public static String genObjectUsingHash(Class clazz, String cacheKey, ClassDescriptor desc) {
         // TODO: when setter is single argument, decode like field
-        for (CustomizedSetter setter : setters) {
-            allBindings.addAll(setter.parameters);
-        }
-        if (allBindings.isEmpty()) {
-            return genObjectUsingSkip(clazz, ctor);
-        }
         StringBuilder lines = new StringBuilder();
         append(lines, "public static Object decode_(com.jsoniter.JsonIterator iter) {");
-        append(lines, "if (iter.readNull()) { return null; }");
-        if (ctor.parameters.isEmpty()) {
+        // === if null, return null
+        append(lines, "if (iter.readNull()) { com.jsoniter.CodegenAccess.resetExistingObject(iter); return null; }");
+        // === if empty, return empty
+        if (desc.ctor.parameters.isEmpty()) {
             // has default ctor
             append(lines, "{{clazz}} obj = {{newInst}};");
             append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) { return obj; }");
         } else {
             // ctor requires binding
-            for (Binding parameter : ctor.parameters) {
+            for (Binding parameter : desc.ctor.parameters) {
                 appendVarDef(lines, parameter);
             }
             append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) { return {{newInst}}; }");
-            for (Binding field : fields) {
+            for (Binding field : desc.fields) {
                 appendVarDef(lines, field);
             }
         }
-        for (CustomizedSetter setter : setters) {
+        for (SetterDescriptor setter : desc.setters) {
             for (Binding param : setter.parameters) {
                 appendVarDef(lines, param);
             }
         }
-        append(lines, "com.jsoniter.CodegenAccess.resetExistingObject(iter);");
+        // === bind fields
         append(lines, "switch (com.jsoniter.CodegenAccess.readObjectFieldAsHash(iter)) {");
         HashSet<Integer> knownHashes = new HashSet<Integer>();
-        for (Binding field : allBindings) {
+        for (Binding field : desc.allDecoderBindings()) {
             for (String fromName : field.fromNames) {
                 long hash = 0x811c9dc5;
                 for (byte b : fromName.getBytes()) {
@@ -211,24 +202,25 @@ class CodegenImplObject {
                 int intHash = (int) hash;
                 if (intHash == 0) {
                     // hash collision, 0 can not be used as sentinel
-                    return genObjectUsingSlice(clazz, cacheKey, ctor, setters, fields);
+                    return genObjectUsingSlice(clazz, cacheKey, desc);
                 }
                 if (knownHashes.contains(intHash)) {
                     // hash collision with other field can not be used as sentinel
-                    return genObjectUsingSlice(clazz, cacheKey, ctor, setters, fields);
+                    return genObjectUsingSlice(clazz, cacheKey, desc);
                 }
                 knownHashes.add(intHash);
                 append(lines, "case " + intHash + ": ");
-                appendFieldSet(lines, cacheKey, ctor, fields, field);
+                appendFieldSet(lines, cacheKey, desc.ctor, desc.fields, field);
                 append(lines, "break;");
             }
         }
         append(lines, "default:");
         append(lines, "iter.skip();");
         append(lines, "}");
+        // === bind more fields
         append(lines, "while (com.jsoniter.CodegenAccess.nextToken(iter) == ',') {");
         append(lines, "switch (com.jsoniter.CodegenAccess.readObjectFieldAsHash(iter)) {");
-        for (Binding field : allBindings) {
+        for (Binding field : desc.allDecoderBindings()) {
             for (String fromName : field.fromNames) {
                 long hash = 0x811c9dc5;
                 for (byte b : fromName.getBytes()) {
@@ -237,28 +229,28 @@ class CodegenImplObject {
                 }
                 int intHash = (int) hash;
                 append(lines, "case " + intHash + ": ");
-                appendFieldSet(lines, cacheKey, ctor, fields, field);
+                appendFieldSet(lines, cacheKey, desc.ctor, desc.fields, field);
                 append(lines, "continue;");
             }
         }
         append(lines, "}");
         append(lines, "iter.skip();");
         append(lines, "}");
-        if (!ctor.parameters.isEmpty()) {
+        if (!desc.ctor.parameters.isEmpty()) {
             append(lines, CodegenImplNative.getTypeName(clazz) + " obj = {{newInst}};");
-            for (Binding field : fields) {
+            for (Binding field : desc.fields) {
                 append(lines, String.format("obj.%s = _%s_;", field.name, field.name));
             }
         }
-        appendSetter(setters, lines);
+        appendSetter(desc.setters, lines);
         append(lines, "return obj;");
         append(lines, "}");
         return lines.toString()
                 .replace("{{clazz}}", clazz.getCanonicalName())
-                .replace("{{newInst}}", genNewInstCode(clazz, ctor));
+                .replace("{{newInst}}", genNewInstCode(clazz, desc.ctor));
     }
 
-    private static void appendFieldSet(StringBuilder lines, String cacheKey, CustomizedConstructor ctor, List<Binding> fields, Binding field) {
+    private static void appendFieldSet(StringBuilder lines, String cacheKey, ConstructorDescriptor ctor, List<Binding> fields, Binding field) {
         if (ctor.parameters.isEmpty() && fields.contains(field)) {
             if (!shouldReuseObject(field.valueType)) {
                 append(lines, String.format("com.jsoniter.CodegenAccess.setExistingObject(iter, obj.%s);", field.name));
@@ -269,8 +261,8 @@ class CodegenImplObject {
         }
     }
 
-    private static void appendSetter(List<CustomizedSetter> setters, StringBuilder lines) {
-        for (CustomizedSetter setter : setters) {
+    private static void appendSetter(List<SetterDescriptor> setters, StringBuilder lines) {
+        for (SetterDescriptor setter : setters) {
             lines.append("obj.");
             lines.append(setter.methodName);
             appendInvocation(lines, setter.parameters);
@@ -283,7 +275,7 @@ class CodegenImplObject {
         append(lines, String.format("%s _%s_ = %s;", typeName, parameter.name, DEFAULT_VALUES.get(typeName)));
     }
 
-    private static String genObjectUsingSkip(Class clazz, CustomizedConstructor ctor) {
+    public static String genObjectUsingSkip(Class clazz, ConstructorDescriptor ctor) {
         StringBuilder lines = new StringBuilder();
         append(lines, "public static Object decode_(com.jsoniter.JsonIterator iter) {");
         append(lines, "if (iter.readNull()) { return null; }");
@@ -296,7 +288,7 @@ class CodegenImplObject {
                 .replace("{{newInst}}", genNewInstCode(clazz, ctor));
     }
 
-    private static String genNewInstCode(Class clazz, CustomizedConstructor ctor) {
+    private static String genNewInstCode(Class clazz, ConstructorDescriptor ctor) {
         StringBuilder code = new StringBuilder();
         if (ctor.parameters.isEmpty()) {
             // nothing to bind, safe to reuse existing object
@@ -311,7 +303,7 @@ class CodegenImplObject {
         appendInvocation(code, params);
         if (ctor.parameters.isEmpty()) {
             // nothing to bind, safe to reuse existing object
-            code.append(String.format(" : (%s)com.jsoniter.CodegenAccess.existingObject(iter))", clazz.getCanonicalName()));
+            code.append(String.format(" : (%s)com.jsoniter.CodegenAccess.resetExistingObject(iter))", clazz.getCanonicalName()));
         }
         return code.toString();
     }

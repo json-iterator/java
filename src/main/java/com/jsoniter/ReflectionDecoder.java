@@ -1,5 +1,10 @@
 package com.jsoniter;
 
+import com.jsoniter.spi.Binding;
+import com.jsoniter.spi.ClassDescriptor;
+import com.jsoniter.spi.Decoder;
+import com.jsoniter.spi.SetterDescriptor;
+
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -20,7 +25,7 @@ public class ReflectionDecoder implements Decoder {
     private ThreadLocal<Object[]> tempTls;
     private ThreadLocal<Object[]> ctorArgsTls;
     private List<Binding> fields;
-    private List<CustomizedSetter> setters;
+    private List<SetterDescriptor> setters;
 
     public ReflectionDecoder(Class clazz) {
         try {
@@ -31,20 +36,20 @@ public class ReflectionDecoder implements Decoder {
     }
 
     private final void init(Class clazz) throws Exception {
-        CustomizedConstructor cctor = ExtensionManager.getCtor(clazz, true);
-        ctorParams = cctor.parameters;
+        ClassDescriptor desc = ExtensionManager.getClassDescriptor(clazz, true);
+        ctorParams = desc.ctor.parameters;
         int tempIdx = 0;
         for (Binding param : ctorParams) {
             tempIdx = addBinding(clazz, tempIdx, param);
         }
-        this.ctor = cctor.ctor;
-        this.staticFactory = cctor.staticFactory;
-        fields = ExtensionManager.getFields(clazz, true);
+        this.ctor = desc.ctor.ctor;
+        this.staticFactory = desc.ctor.staticFactory;
+        fields = desc.fields;
         for (Binding field : fields) {
             tempIdx = addBinding(clazz, tempIdx, field);
         }
-        setters = ExtensionManager.getSetters(clazz, true);
-        for (CustomizedSetter setter : setters) {
+        setters = desc.setters;
+        for (SetterDescriptor setter : setters) {
             for (Binding param : setter.parameters) {
                 tempIdx = addBinding(clazz, tempIdx, param);
             }
@@ -126,7 +131,7 @@ public class ReflectionDecoder implements Decoder {
     }
 
     private void applySetters(Object[] temp, Object obj) throws Exception {
-        for (CustomizedSetter setter : setters) {
+        for (SetterDescriptor setter : setters) {
             Object[] args = new Object[setter.parameters.size()];
             for (int i = 0; i < setter.parameters.size(); i++) {
                 args[i] = temp[setter.parameters.get(i).idx];

@@ -1,13 +1,15 @@
 package com.jsoniter.annotation;
 
 import com.jsoniter.*;
+import com.jsoniter.spi.Binding;
+import com.jsoniter.spi.ClassDescriptor;
+import com.jsoniter.spi.EmptyExtension;
+import com.jsoniter.spi.SetterDescriptor;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.List;
 
 public class JsoniterAnnotationSupport extends EmptyExtension {
 
@@ -16,35 +18,30 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
     }
 
     @Override
-    public boolean updateBinding(Binding field) {
-        JsonIgnore jsonIgnore = field.getAnnotation(JsonIgnore.class);
-        if (jsonIgnore != null) {
-            field.fromNames = new String[0];
-            return true;
-        }
-        JsonProperty jsonProperty = field.getAnnotation(JsonProperty.class);
-        if (jsonProperty != null) {
-            String alternativeField = jsonProperty.value();
-            if (!alternativeField.isEmpty()) {
-                field.fromNames = new String[]{alternativeField};
-                return true;
+    public void updateClassDescriptor(ClassDescriptor desc) {
+        for (Binding field : desc.allDecoderBindings()) {
+            JsonIgnore jsonIgnore = field.getAnnotation(JsonIgnore.class);
+            if (jsonIgnore != null) {
+                field.fromNames = new String[0];
+            }
+            JsonProperty jsonProperty = field.getAnnotation(JsonProperty.class);
+            if (jsonProperty != null) {
+                String alternativeField = jsonProperty.value();
+                if (!alternativeField.isEmpty()) {
+                    field.fromNames = new String[]{alternativeField};
+                }
             }
         }
-        return false;
-    }
-
-    @Override
-    public CustomizedConstructor getConstructor(Class clazz) {
-        for (Constructor ctor : clazz.getConstructors()) {
+        for (Constructor ctor : desc.clazz.getConstructors()) {
             Annotation jsonCreator = ctor.getAnnotation(JsonCreator.class);
             if (jsonCreator == null) {
                 continue;
             }
-            CustomizedConstructor cctor = new CustomizedConstructor();
-            cctor.staticMethodName = null;
-            cctor.ctor = ctor;
-            for (int i = 0; i < ctor.getParameterAnnotations().length; i++) {
-                Annotation[] paramAnnotations = ctor.getParameterAnnotations()[i];
+            desc.ctor.staticMethodName = null;
+            desc.ctor.ctor = ctor;
+            Annotation[][] annotations = ctor.getParameterAnnotations();
+            for (int i = 0; i < annotations.length; i++) {
+                Annotation[] paramAnnotations = annotations[i];
                 JsonProperty jsonProperty = getAnnotation(paramAnnotations, JsonProperty.class);
                 if (jsonProperty == null) {
                     throw new RuntimeException("must mark all parameters using @JsonProperty: " + ctor);
@@ -52,11 +49,11 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
                 Binding binding = new Binding();
                 binding.name = jsonProperty.value();
                 binding.valueType = ctor.getParameterTypes()[i];
-                cctor.parameters.add(binding);
+                binding.annotations = paramAnnotations;
+                desc.ctor.parameters.add(binding);
             }
-            return cctor;
         }
-        for (Method method : clazz.getMethods()) {
+        for (Method method : desc.clazz.getMethods()) {
             if (!Modifier.isStatic(method.getModifiers())) {
                 continue;
             }
@@ -64,11 +61,11 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
             if (jsonCreator == null) {
                 continue;
             }
-            CustomizedConstructor cctor = new CustomizedConstructor();
-            cctor.staticMethodName = method.getName();
-            cctor.staticFactory = method;
-            for (int i = 0; i < method.getParameterAnnotations().length; i++) {
-                Annotation[] paramAnnotations = method.getParameterAnnotations()[i];
+            desc.ctor.staticMethodName = method.getName();
+            desc.ctor.staticFactory = method;
+            Annotation[][] annotations = method.getParameterAnnotations();
+            for (int i = 0; i < annotations.length; i++) {
+                Annotation[] paramAnnotations = annotations[i];
                 JsonProperty jsonProperty = getAnnotation(paramAnnotations, JsonProperty.class);
                 if (jsonProperty == null) {
                     throw new RuntimeException("must mark all parameters using @JsonProperty: " + method);
@@ -76,11 +73,34 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
                 Binding binding = new Binding();
                 binding.name = jsonProperty.value();
                 binding.valueType = method.getParameterTypes()[i];
-                cctor.parameters.add(binding);
+                binding.annotations = paramAnnotations;
+                desc.ctor.parameters.add(binding);
             }
-            return cctor;
         }
-        return null;
+        for (Method method : desc.clazz.getMethods()) {
+            if (Modifier.isStatic(method.getModifiers())) {
+                continue;
+            }
+            if (method.getAnnotation(JsonSetter.class) == null) {
+                continue;
+            }
+            SetterDescriptor setter = new SetterDescriptor();
+            setter.methodName = method.getName();
+            Annotation[][] annotations = method.getParameterAnnotations();
+            for (int i = 0; i < annotations.length; i++) {
+                Annotation[] paramAnnotations = annotations[i];
+                JsonProperty jsonProperty = getAnnotation(paramAnnotations, JsonProperty.class);
+                if (jsonProperty == null) {
+                    throw new RuntimeException("must mark all parameters using @JsonProperty: " + method);
+                }
+                Binding binding = new Binding();
+                binding.name = jsonProperty.value();
+                binding.valueType = method.getParameterTypes()[i];
+                binding.annotations = paramAnnotations;
+                setter.parameters.add(binding);
+            }
+            desc.setters.add(setter);
+        }
     }
 
     private static <T extends Annotation> T getAnnotation(Annotation[] annotations, Class<T> annotationClass) {
@@ -93,36 +113,5 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
             }
         }
         return null;
-    }
-
-    @Override
-    public List<CustomizedSetter> getSetters(Class clazz) {
-        List<CustomizedSetter> setters = null;
-        for (Method method : clazz.getMethods()) {
-            if (Modifier.isStatic(method.getModifiers())) {
-                continue;
-            }
-            if (method.getAnnotation(JsonSetter.class) == null) {
-                continue;
-            }
-            if (setters == null) {
-                setters = new ArrayList<CustomizedSetter>();
-            }
-            CustomizedSetter setter = new CustomizedSetter();
-            setter.methodName = method.getName();
-            for (int i = 0; i < method.getParameterAnnotations().length; i++) {
-                Annotation[] paramAnnotations = method.getParameterAnnotations()[i];
-                JsonProperty jsonProperty = getAnnotation(paramAnnotations, JsonProperty.class);
-                if (jsonProperty == null) {
-                    throw new RuntimeException("must mark all parameters using @JsonProperty: " + method);
-                }
-                Binding binding = new Binding();
-                binding.name = jsonProperty.value();
-                binding.valueType = method.getParameterTypes()[i];
-                setter.parameters.add(binding);
-            }
-            setters.add(setter);
-        }
-        return setters;
     }
 }
