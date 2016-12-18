@@ -55,7 +55,7 @@ class CodegenImplNative {
         }
         String op = NATIVE_READS.get(nativeReadKey);
         if (op == null) {
-            throw new RuntimeException("do not know how to read: " + nativeReadKey);
+            throw new JsonException("do not know how to read: " + nativeReadKey);
         }
         StringBuilder lines = new StringBuilder();
         append(lines, "public static Object decode_(com.jsoniter.JsonIterator iter) {");
@@ -95,49 +95,49 @@ class CodegenImplNative {
         }
         if (fieldType == boolean.class) {
             if (!(decoder instanceof Decoder.BooleanDecoder)) {
-                throw new RuntimeException("decoder for field " + field + "must implement Decoder.BooleanDecoder");
+                throw new JsonException("decoder for field " + field + "must implement Decoder.BooleanDecoder");
             }
             return String.format("com.jsoniter.CodegenAccess.readBoolean(\"%s\", iter)", fieldCacheKey);
         }
         if (fieldType == byte.class) {
             if (!(decoder instanceof Decoder.ShortDecoder)) {
-                throw new RuntimeException("decoder for field " + field + "must implement Decoder.ShortDecoder");
+                throw new JsonException("decoder for field " + field + "must implement Decoder.ShortDecoder");
             }
             return String.format("com.jsoniter.CodegenAccess.readShort(\"%s\", iter)", fieldCacheKey);
         }
         if (fieldType == short.class) {
             if (!(decoder instanceof Decoder.ShortDecoder)) {
-                throw new RuntimeException("decoder for field " + field + "must implement Decoder.ShortDecoder");
+                throw new JsonException("decoder for field " + field + "must implement Decoder.ShortDecoder");
             }
             return String.format("com.jsoniter.CodegenAccess.readShort(\"%s\", iter)", fieldCacheKey);
         }
         if (fieldType == char.class) {
             if (!(decoder instanceof Decoder.IntDecoder)) {
-                throw new RuntimeException("decoder for field " + field + "must implement Decoder.IntDecoder");
+                throw new JsonException("decoder for field " + field + "must implement Decoder.IntDecoder");
             }
             return String.format("com.jsoniter.CodegenAccess.readInt(\"%s\", iter)", fieldCacheKey);
         }
         if (fieldType == int.class) {
             if (!(decoder instanceof Decoder.IntDecoder)) {
-                throw new RuntimeException("decoder for field " + field + "must implement Decoder.IntDecoder");
+                throw new JsonException("decoder for field " + field + "must implement Decoder.IntDecoder");
             }
             return String.format("com.jsoniter.CodegenAccess.readInt(\"%s\", iter)", fieldCacheKey);
         }
         if (fieldType == long.class) {
             if (!(decoder instanceof Decoder.LongDecoder)) {
-                throw new RuntimeException("decoder for field " + field + "must implement Decoder.LongDecoder");
+                throw new JsonException("decoder for field " + field + "must implement Decoder.LongDecoder");
             }
             return String.format("com.jsoniter.CodegenAccess.readLong(\"%s\", iter)", fieldCacheKey);
         }
         if (fieldType == float.class) {
             if (!(decoder instanceof Decoder.FloatDecoder)) {
-                throw new RuntimeException("decoder for field " + field + "must implement Decoder.FloatDecoder");
+                throw new JsonException("decoder for field " + field + "must implement Decoder.FloatDecoder");
             }
             return String.format("com.jsoniter.CodegenAccess.readFloat(\"%s\", iter)", fieldCacheKey);
         }
         if (fieldType == double.class) {
             if (!(decoder instanceof Decoder.DoubleDecoder)) {
-                throw new RuntimeException("decoder for field " + field + "must implement Decoder.DoubleDecoder");
+                throw new JsonException("decoder for field " + field + "must implement Decoder.DoubleDecoder");
             }
             return String.format("com.jsoniter.CodegenAccess.readDouble(\"%s\", iter)", fieldCacheKey);
         }
@@ -155,7 +155,7 @@ class CodegenImplNative {
             Class clazz = (Class) pType.getRawType();
             return clazz.getCanonicalName();
         } else {
-            throw new RuntimeException("unsupported type: " + fieldType);
+            throw new JsonException("unsupported type: " + fieldType);
         }
     }
 

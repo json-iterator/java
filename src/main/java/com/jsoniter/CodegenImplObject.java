@@ -24,7 +24,8 @@ class CodegenImplObject {
 
     public static String genObjectUsingSlice(Class clazz, String cacheKey, ClassDescriptor desc) {
         // TODO: when setter is single argument, decode like field
-        Map<Integer, Object> trieTree = buildTriTree(desc.allDecoderBindings());
+        List<Binding> allBindings = desc.allDecoderBindings();
+        Map<Integer, Object> trieTree = buildTriTree(allBindings);
         StringBuilder lines = new StringBuilder();
         append(lines, "public static Object decode_(com.jsoniter.JsonIterator iter) {");
         // if null, return null
@@ -51,7 +52,6 @@ class CodegenImplObject {
         append(lines, "boolean once = true;");
         append(lines, "while (once) {");
         append(lines, "once = false;");
-        append(lines, "switch (field.len) {");
         String rendered = renderTriTree(cacheKey, trieTree);
         for (Binding field : desc.fields) {
             if (desc.ctor.parameters.isEmpty() && desc.fields.contains(field)) {
@@ -63,16 +63,21 @@ class CodegenImplObject {
                 }
             }
         }
-        append(lines, rendered);
-        append(lines, "}"); // end of switch
-        append(lines, "iter.skip();");
+        if (!desc.ctor.parameters.isEmpty()) {
+            append(lines, "switch (field.len) {");
+            append(lines, rendered);
+            append(lines, "}"); // end of switch
+        }
+        appendOnUnknownField(lines, desc);
         append(lines, "}"); // end of while
         append(lines, "while (com.jsoniter.CodegenAccess.nextToken(iter) == ',') {");
         append(lines, "field = com.jsoniter.CodegenAccess.readObjectFieldAsSlice(iter);");
-        append(lines, "switch (field.len) {");
-        append(lines, rendered);
-        append(lines, "}"); // end of switch
-        append(lines, "iter.skip();");
+        if (!allBindings.isEmpty()) {
+            append(lines, "switch (field.len) {");
+            append(lines, rendered);
+            append(lines, "}"); // end of switch
+        }
+        appendOnUnknownField(lines, desc);
         append(lines, "}"); // end of while
         if (!desc.ctor.parameters.isEmpty()) {
             append(lines, String.format("%s obj = {{newInst}};", CodegenImplNative.getTypeName(clazz)));
@@ -86,6 +91,14 @@ class CodegenImplObject {
         return lines.toString()
                 .replace("{{clazz}}", clazz.getCanonicalName())
                 .replace("{{newInst}}", genNewInstCode(clazz, desc.ctor));
+    }
+
+    private static void appendOnUnknownField(StringBuilder lines, ClassDescriptor desc) {
+        if (desc.forbidUnknownFields) {
+            append(lines, "throw new com.jsoniter.JsonException('unknown field: ' + field.toString());".replace('\'', '"'));
+        } else {
+            append(lines, "iter.skip();");
+        }
     }
 
     private static String renderTriTree(String cacheKey, Map<Integer, Object> trieTree) {

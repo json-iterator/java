@@ -38,7 +38,7 @@ public class TypeLiteral<T> {
         if (type instanceof Class) {
             Class clazz = (Class) type;
             if (clazz.isAnonymousClass()) {
-                throw new RuntimeException("anonymous class not supported: " + clazz);
+                throw new JsonException("anonymous class not supported: " + clazz);
             }
             decoderClassName.append(clazz.getCanonicalName().replace("[]", "_array"));
         } else if (type instanceof ParameterizedType) {
@@ -70,13 +70,13 @@ public class TypeLiteral<T> {
             }
             return typeName;
         }
-        throw new RuntimeException("unsupported type: " + type);
+        throw new JsonException("unsupported type: " + type);
     }
 
     static Type getSuperclassTypeParameter(Class<?> subclass) {
         Type superclass = subclass.getGenericSuperclass();
         if (superclass instanceof Class) {
-            throw new RuntimeException("Missing type parameter.");
+            throw new JsonException("Missing type parameter.");
         }
         ParameterizedType parameterized = (ParameterizedType) superclass;
         return parameterized.getActualTypeArguments()[0];

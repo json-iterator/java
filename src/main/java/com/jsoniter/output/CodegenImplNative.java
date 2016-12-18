@@ -1,5 +1,6 @@
 package com.jsoniter.output;
 
+import com.jsoniter.JsonException;
 import com.jsoniter.TypeLiteral;
 import com.jsoniter.spi.Encoder;
 
@@ -39,7 +40,7 @@ class CodegenImplNative {
             Class clazz = (Class) pType.getRawType();
             return clazz.getCanonicalName();
         } else {
-            throw new RuntimeException("unsupported type: " + fieldType);
+            throw new JsonException("unsupported type: " + fieldType);
         }
     }
 }

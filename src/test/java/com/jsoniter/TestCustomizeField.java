@@ -152,9 +152,17 @@ public class TestCustomizeField extends TestCase {
         ExtensionManager.registerExtension(new EmptyExtension() {
             @Override
             public void updateClassDescriptor(ClassDescriptor desc) {
+                if (desc.clazz == TestObject8.class) {
+                    desc.forbidUnknownFields = true;
+                }
             }
         });
         JsonIterator iter = JsonIterator.parse("{'field1': '100'}".replace('\'', '"'));
-        TestObject8 myObject = iter.read(TestObject8.class);
+        try {
+            iter.read(TestObject8.class);
+            fail("should throw exception");
+        } catch (Exception e) {
+//            System.out.println(e);
+        }
     }
 }

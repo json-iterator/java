@@ -31,7 +31,7 @@ public class ReflectionDecoder implements Decoder {
         try {
             init(clazz);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new JsonException(e);
         }
     }
 
@@ -75,7 +75,7 @@ public class ReflectionDecoder implements Decoder {
         param.idx = tempIdx;
         for (String fromName : param.fromNames) {
             if (allBindings.containsKey(fromName)) {
-                throw new RuntimeException("name conflict found in " + clazz +": " + fromName);
+                throw new JsonException("name conflict found in " + clazz +": " + fromName);
             }
             allBindings.put(fromName, param);
         }
@@ -96,7 +96,7 @@ public class ReflectionDecoder implements Decoder {
                 return decodeWithCtorBinding(iter);
             }
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new JsonException(e);
         }
     }
 

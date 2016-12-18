@@ -16,6 +16,7 @@ public class Binding {
     // output
     public String[] fromNames;
     public Decoder decoder;
+    public boolean isMandatory;
     // optional
     public Field field;
     public int idx;

@@ -44,7 +44,7 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
                 Annotation[] paramAnnotations = annotations[i];
                 JsonProperty jsonProperty = getAnnotation(paramAnnotations, JsonProperty.class);
                 if (jsonProperty == null) {
-                    throw new RuntimeException("must mark all parameters using @JsonProperty: " + ctor);
+                    throw new JsonException("must mark all parameters using @JsonProperty: " + ctor);
                 }
                 Binding binding = new Binding();
                 binding.name = jsonProperty.value();
@@ -68,7 +68,7 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
                 Annotation[] paramAnnotations = annotations[i];
                 JsonProperty jsonProperty = getAnnotation(paramAnnotations, JsonProperty.class);
                 if (jsonProperty == null) {
-                    throw new RuntimeException("must mark all parameters using @JsonProperty: " + method);
+                    throw new JsonException("must mark all parameters using @JsonProperty: " + method);
                 }
                 Binding binding = new Binding();
                 binding.name = jsonProperty.value();
@@ -91,7 +91,7 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
                 Annotation[] paramAnnotations = annotations[i];
                 JsonProperty jsonProperty = getAnnotation(paramAnnotations, JsonProperty.class);
                 if (jsonProperty == null) {
-                    throw new RuntimeException("must mark all parameters using @JsonProperty: " + method);
+                    throw new JsonException("must mark all parameters using @JsonProperty: " + method);
                 }
                 Binding binding = new Binding();
                 binding.name = jsonProperty.value();

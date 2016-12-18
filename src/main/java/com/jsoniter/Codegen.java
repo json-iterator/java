@@ -70,7 +70,7 @@ class Codegen {
         } catch (Exception e) {
             System.err.println("failed to generate decoder for: " + type + " with " + Arrays.toString(typeArgs));
             System.err.println(source);
-            throw new RuntimeException(e);
+            throw new JsonException(e);
         }
     }
 
@@ -88,6 +88,9 @@ class Codegen {
             return CodegenImplArray.genCollection(clazz, typeArgs);
         }
         ClassDescriptor desc = ExtensionManager.getClassDescriptor(clazz, false);
+        if (desc.forbidUnknownFields) {
+            return CodegenImplObject.genObjectUsingSlice(clazz, cacheKey, desc);
+        }
         if (desc.allDecoderBindings().isEmpty()) {
             return CodegenImplObject.genObjectUsingSkip(clazz, desc.ctor);
         }

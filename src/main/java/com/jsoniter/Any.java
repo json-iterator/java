@@ -222,7 +222,7 @@ public class Any {
             System.arraycopy(keys, 1, nextKeys, 0, nextKeys.length);
             return getPath(nextVal, nextKeys);
         }
-        throw new RuntimeException("invalid key type: " + key);
+        throw new JsonException("invalid key type: " + key);
     }
 
     private static Object getFromMap(Object val, String key) {

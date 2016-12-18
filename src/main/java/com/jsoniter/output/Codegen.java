@@ -1,5 +1,6 @@
 package com.jsoniter.output;
 
+import com.jsoniter.JsonException;
 import com.jsoniter.spi.Encoder;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -66,7 +67,7 @@ class Codegen {
         } catch (Exception e) {
             System.err.println("failed to generate encoder for: " + type + " with " + Arrays.toString(typeArgs));
             System.err.println(source);
-            throw new RuntimeException(e);
+            throw new JsonException(e);
         }
     }
 

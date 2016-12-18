@@ -124,13 +124,13 @@ public class JsonIterator implements Closeable {
         head--;
     }
 
-    public final RuntimeException reportError(String op, String msg) {
+    public final JsonException reportError(String op, String msg) {
         int peekStart = head - 10;
         if (peekStart < 0) {
             peekStart = 0;
         }
         String peek = new String(buf, peekStart, head - peekStart);
-        throw new RuntimeException(op + ": " + msg + ", head: " + head + ", peek: " + peek + ", buf: " + new String(buf));
+        throw new JsonException(op + ": " + msg + ", head: " + head + ", peek: " + peek + ", buf: " + new String(buf));
     }
 
     public final String currentBuffer() {
@@ -171,7 +171,7 @@ public class JsonIterator implements Closeable {
         if (Short.MIN_VALUE <= v && v <= Short.MAX_VALUE) {
             return (short) v;
         } else {
-            throw new RuntimeException("short overflow: " + v);
+            throw new JsonException("short overflow: " + v);
         }
     }
 

@@ -9,7 +9,7 @@ public class ClassDescriptor {
     public List<Binding> fields;
     public List<SetterDescriptor> setters;
     public List<Binding> getters;
-    public Decoder.FieldDecoder unknownFieldDecoder;
+    public boolean forbidUnknownFields;
 
     public List<Binding> allDecoderBindings() {
         ArrayList<Binding> bindings = new ArrayList<Binding>(8);
