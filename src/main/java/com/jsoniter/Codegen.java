@@ -1,5 +1,6 @@
 package com.jsoniter;
 
+import com.jsoniter.spi.Binding;
 import com.jsoniter.spi.ClassDescriptor;
 import com.jsoniter.spi.Decoder;
 import com.jsoniter.spi.Extension;
@@ -88,10 +89,18 @@ class Codegen {
             return CodegenImplArray.genCollection(clazz, typeArgs);
         }
         ClassDescriptor desc = ExtensionManager.getClassDescriptor(clazz, false);
+        List<Binding> allBindings = desc.allDecoderBindings();
+        for (Binding allBinding : allBindings) {
+            if (allBinding.isMandatory) {
+                // only slice support mandatory tracking
+                return CodegenImplObject.genObjectUsingSlice(clazz, cacheKey, desc);
+            }
+        }
         if (desc.forbidUnknownFields) {
+            // only slice support unknown field tracking
             return CodegenImplObject.genObjectUsingSlice(clazz, cacheKey, desc);
         }
-        if (desc.allDecoderBindings().isEmpty()) {
+        if (allBindings.isEmpty()) {
             return CodegenImplObject.genObjectUsingSkip(clazz, desc.ctor);
         }
         if (strictMode) {

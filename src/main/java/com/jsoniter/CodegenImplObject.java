@@ -25,20 +25,46 @@ class CodegenImplObject {
     public static String genObjectUsingSlice(Class clazz, String cacheKey, ClassDescriptor desc) {
         // TODO: when setter is single argument, decode like field
         List<Binding> allBindings = desc.allDecoderBindings();
+        int currentIdx = 0;
+        for (Binding binding : allBindings) {
+            if (binding.isMandatory) {
+                binding.idx = currentIdx++;
+            } else {
+                binding.idx = -1;
+            }
+        }
+        if (currentIdx > 63) {
+            throw new JsonException("too many mandatory fields to track");
+        }
+        boolean hasMandatoryField = currentIdx > 0;
+        long expectedTracker = Long.MAX_VALUE >> (63 - currentIdx);
         Map<Integer, Object> trieTree = buildTriTree(allBindings);
         StringBuilder lines = new StringBuilder();
         append(lines, "public static Object decode_(com.jsoniter.JsonIterator iter) {");
         // if null, return null
         append(lines, "if (iter.readNull()) { com.jsoniter.CodegenAccess.resetExistingObject(iter); return null; }");
         // if input is empty object, return empty object
+        append(lines, "long tracker = 0;");
         if (desc.ctor.parameters.isEmpty()) {
             append(lines, "{{clazz}} obj = {{newInst}};");
-            append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) { return obj; }");
+            append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) {");
+            if (hasMandatoryField) {
+                appendMissingMandatoryFields(lines);
+            } else {
+                append(lines, "return obj;");
+            }
+            append(lines, "}");
         } else {
             for (Binding parameter : desc.ctor.parameters) {
                 appendVarDef(lines, parameter);
             }
-            append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) { return {{newInst}}; }");
+            append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) {");
+            if (hasMandatoryField) {
+                appendMissingMandatoryFields(lines);
+            } else {
+                append(lines, "return {{newInst}};");
+            }
+            append(lines, "}");
             for (Binding field : desc.fields) {
                 appendVarDef(lines, field);
             }
@@ -63,7 +89,7 @@ class CodegenImplObject {
                 }
             }
         }
-        if (!desc.ctor.parameters.isEmpty()) {
+        if (!allBindings.isEmpty()) {
             append(lines, "switch (field.len) {");
             append(lines, rendered);
             append(lines, "}"); // end of switch
@@ -79,6 +105,9 @@ class CodegenImplObject {
         }
         appendOnUnknownField(lines, desc);
         append(lines, "}"); // end of while
+        append(lines, "if (tracker != " + expectedTracker + "L) {");
+        appendMissingMandatoryFields(lines);
+        append(lines, "}");
         if (!desc.ctor.parameters.isEmpty()) {
             append(lines, String.format("%s obj = {{newInst}};", CodegenImplNative.getTypeName(clazz)));
             for (Binding field : desc.fields) {
@@ -91,6 +120,10 @@ class CodegenImplObject {
         return lines.toString()
                 .replace("{{clazz}}", clazz.getCanonicalName())
                 .replace("{{newInst}}", genNewInstCode(clazz, desc.ctor));
+    }
+
+    private static void appendMissingMandatoryFields(StringBuilder lines) {
+        append(lines, "throw new com.jsoniter.JsonException('missing mandatory fields');".replace('\'', '"'));
     }
 
     private static void appendOnUnknownField(StringBuilder lines, ClassDescriptor desc) {
@@ -152,6 +185,10 @@ class CodegenImplObject {
                 append(lines, ") {");
                 Binding field = (Binding) entry.getValue();
                 append(lines, String.format("_%s_ = %s;", field.name, CodegenImplNative.genField(field, cacheKey)));
+                if (field.isMandatory) {
+                    long mask = 1L << field.idx;
+                    append(lines, "tracker = tracker | " + mask + "L;");
+                }
                 append(lines, "continue;");
                 append(lines, "}");
                 continue;
@@ -176,6 +213,8 @@ class CodegenImplObject {
         }
     }
 
+    // the implementation from dsljson is not exactly correct
+    // hash will collide, even the chance is small
     public static String genObjectUsingHash(Class clazz, String cacheKey, ClassDescriptor desc) {
         // TODO: when setter is single argument, decode like field
         StringBuilder lines = new StringBuilder();
