@@ -1,6 +1,7 @@
 package com.jsoniter;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,6 +13,8 @@ public class CustomizedConstructor {
     public String staticMethodName;
     // optional
     public Constructor ctor;
+    // optional
+    public Method staticFactory;
 
     /**
      * the parameters to call constructor or static method

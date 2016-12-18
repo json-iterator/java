@@ -67,6 +67,28 @@ public class TestAnnotation extends TestCase {
         assertEquals(100, obj.field1);
     }
 
+    public static class StaticFactory2 {
+
+        private int _field1;
+
+        private StaticFactory2() {
+        }
+
+        @JsonCreator
+        public static StaticFactory2 createObject(@JsonProperty(value = "field1") int field1) {
+            StaticFactory2 obj = new StaticFactory2();
+            obj._field1 = field1;
+            return obj;
+        }
+    }
+
+    public void test_static_factory_with_reflection() throws IOException {
+        ExtensionManager.registerTypeDecoder(StaticFactory2.class, new ReflectionDecoder(StaticFactory2.class));
+        JsonIterator iter = JsonIterator.parse("{'field1': 100}".replace('\'', '"'));
+        StaticFactory2 obj = iter.read(StaticFactory2.class);
+        assertEquals(100, obj._field1);
+    }
+
     public static class WithSetter {
 
         private int field1;

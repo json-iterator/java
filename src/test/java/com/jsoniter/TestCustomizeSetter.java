@@ -26,6 +26,21 @@ public class TestCustomizeSetter extends TestCase {
         assertEquals("hello", obj.field);
     }
 
+    public static class ObjectWithDefaultSetter2 {
+        String _field;
+
+        private void setField(String field) {
+            this._field = field;
+        }
+    }
+
+    public void test_default_setter_with_reflection() throws IOException {
+        ExtensionManager.registerTypeDecoder(ObjectWithDefaultSetter2.class, new ReflectionDecoder(ObjectWithDefaultSetter2.class));
+        JsonIterator iter = JsonIterator.parse("{'field': 'hello'}".replace('\'', '"'));
+        ObjectWithDefaultSetter2 obj = iter.read(ObjectWithDefaultSetter2.class);
+        assertEquals("hello", obj._field);
+    }
+
     public static class ObjectWithCustomizedSetter {
         String field1;
         String field2;

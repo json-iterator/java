@@ -1,5 +1,6 @@
 package com.jsoniter;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,4 +14,7 @@ public class CustomizedSetter {
      * the parameters to bind
      */
     public List<Binding> parameters = new ArrayList<Binding>();
+
+    // optional
+    public Method method;
 }

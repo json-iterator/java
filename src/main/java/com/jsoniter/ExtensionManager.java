@@ -104,7 +104,16 @@ public class ExtensionManager {
 
     public static List<CustomizedSetter> getSetters(Class clazz, boolean includingPrivate) {
         ArrayList<CustomizedSetter> setters = new ArrayList<CustomizedSetter>();
-        for (Method method : clazz.getMethods()) {
+        List<Method> allMethods = Arrays.asList(clazz.getMethods());
+        if (includingPrivate) {
+            allMethods = new ArrayList<Method>();
+            Class current = clazz;
+            while (current != null) {
+                allMethods.addAll(Arrays.asList(current.getDeclaredMethods()));
+                current = current.getSuperclass();
+            }
+        }
+        for (Method method : allMethods) {
             if (Modifier.isStatic(method.getModifiers())) {
                 continue;
             }
@@ -119,16 +128,21 @@ public class ExtensionManager {
             if (paramTypes.length != 1) {
                 continue;
             }
+            if (includingPrivate) {
+                method.setAccessible(true);
+            }
             String fromName = methodName.substring("set".length());
             char[] fromNameChars = fromName.toCharArray();
             fromNameChars[0] = Character.toLowerCase(fromNameChars[0]);
             fromName = new String(fromNameChars);
             CustomizedSetter setter = new CustomizedSetter();
+            setter.method = method;
             setter.methodName = methodName;
             Binding param = new Binding();
             param.fromNames = new String[]{fromName};
             param.name = fromName;
             param.valueType = paramTypes[0];
+            param.valueTypeLiteral = createTypeLiteral(param.valueType);
             param.clazz = clazz;
             updateFromNames(param);
             setter.parameters.add(param);
@@ -143,6 +157,7 @@ public class ExtensionManager {
                             param.fromNames = new String[]{param.name};
                         }
                         param.clazz = clazz;
+                        param.valueTypeLiteral = createTypeLiteral(param.valueType);
                         updateFromNames(param);
                     }
                 }

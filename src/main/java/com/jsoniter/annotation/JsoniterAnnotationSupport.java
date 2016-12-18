@@ -42,6 +42,7 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
             }
             CustomizedConstructor cctor = new CustomizedConstructor();
             cctor.staticMethodName = null;
+            cctor.ctor = ctor;
             for (int i = 0; i < ctor.getParameterAnnotations().length; i++) {
                 Annotation[] paramAnnotations = ctor.getParameterAnnotations()[i];
                 JsonProperty jsonProperty = getAnnotation(paramAnnotations, JsonProperty.class);
@@ -65,6 +66,7 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
             }
             CustomizedConstructor cctor = new CustomizedConstructor();
             cctor.staticMethodName = method.getName();
+            cctor.staticFactory = method;
             for (int i = 0; i < method.getParameterAnnotations().length; i++) {
                 Annotation[] paramAnnotations = method.getParameterAnnotations()[i];
                 JsonProperty jsonProperty = getAnnotation(paramAnnotations, JsonProperty.class);

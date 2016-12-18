@@ -20,6 +20,7 @@ class CodegenImplObject {
                                              List<CustomizedSetter> setters, List<Binding> fields) {
         ArrayList<Binding> allBindings = new ArrayList<Binding>(fields);
         allBindings.addAll(ctor.parameters);
+        // TODO: when setter is single argument, decode like field
         for (CustomizedSetter setter : setters) {
             allBindings.addAll(setter.parameters);
         }
@@ -168,6 +169,7 @@ class CodegenImplObject {
                                             List<CustomizedSetter> setters, List<Binding> fields) {
         ArrayList<Binding> allBindings = new ArrayList<Binding>(fields);
         allBindings.addAll(ctor.parameters);
+        // TODO: when setter is single argument, decode like field
         for (CustomizedSetter setter : setters) {
             allBindings.addAll(setter.parameters);
         }
