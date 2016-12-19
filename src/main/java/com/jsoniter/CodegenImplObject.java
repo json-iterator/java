@@ -38,9 +38,9 @@ class CodegenImplObject {
         Map<Integer, Object> trieTree = buildTriTree(allBindings);
         StringBuilder lines = new StringBuilder();
         append(lines, "public static Object decode_(com.jsoniter.JsonIterator iter) {");
-        // if null, return null
+        // === if null, return null
         append(lines, "if (iter.readNull()) { com.jsoniter.CodegenAccess.resetExistingObject(iter); return null; }");
-        // if input is empty object, return empty object
+        // === if input is empty object, return empty object
         append(lines, "long tracker = 0;");
         if (desc.ctor.parameters.isEmpty()) {
             append(lines, "{{clazz}} obj = {{newInst}};");
@@ -71,6 +71,7 @@ class CodegenImplObject {
                 appendVarDef(lines, param);
             }
         }
+        // === bind first field
         append(lines, "com.jsoniter.Slice field = com.jsoniter.CodegenAccess.readObjectFieldAsSlice(iter);");
         append(lines, "boolean once = true;");
         append(lines, "while (once) {");
@@ -93,6 +94,7 @@ class CodegenImplObject {
         }
         appendOnUnknownField(lines, desc);
         append(lines, "}"); // end of while
+        // === bind all fields
         append(lines, "while (com.jsoniter.CodegenAccess.nextToken(iter) == ',') {");
         append(lines, "field = com.jsoniter.CodegenAccess.readObjectFieldAsSlice(iter);");
         if (!allBindings.isEmpty()) {
@@ -181,12 +183,18 @@ class CodegenImplObject {
                 append(lines, String.format("field.at(%d)==%s", i, b));
                 append(lines, ") {");
                 Binding field = (Binding) entry.getValue();
-                append(lines, String.format("_%s_ = %s;", field.name, genField(field, cacheKey)));
-                if (field.failOnMissing) {
-                    long mask = 1L << field.idx;
-                    append(lines, "tracker = tracker | " + mask + "L;");
+                if (field.failOnPresent) {
+                    append(lines, String.format(
+                            "throw new com.jsoniter.JsonException('found should not present field: %s');".replace('\'', '"'),
+                            field.name));
+                } else {
+                    append(lines, String.format("_%s_ = %s;", field.name, genField(field, cacheKey)));
+                    if (field.failOnMissing) {
+                        long mask = 1L << field.idx;
+                        append(lines, "tracker = tracker | " + mask + "L;");
+                    }
+                    append(lines, "continue;");
                 }
-                append(lines, "continue;");
                 append(lines, "}");
                 continue;
             }

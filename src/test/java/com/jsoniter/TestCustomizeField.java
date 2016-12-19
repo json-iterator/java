@@ -71,6 +71,7 @@ public class TestCustomizeField extends TestCase {
 
     public static class TestObject5 {
         private int field1;
+
         public TestObject5(int field1) {
             this.field1 = field1;
         }
@@ -83,7 +84,7 @@ public class TestCustomizeField extends TestCase {
                 if (desc.clazz == TestObject5.class) {
                     desc.ctor = new ConstructorDescriptor() {{
                         parameters = (List) Arrays.asList(new Binding() {{
-                            name="param2";
+                            name = "param2";
                             valueType = int.class;
                         }});
                     }};
@@ -214,8 +215,27 @@ public class TestCustomizeField extends TestCase {
         }
     }
 
-    public void test_java() {
-        long i = Long.MAX_VALUE >> 60;
-        System.out.println(i);
+    public static class TestObject11 {
+        public String field1;
+    }
+
+    public void test_fail_on_present() throws IOException {
+        ExtensionManager.registerExtension(new EmptyExtension() {
+            @Override
+            public void updateClassDescriptor(ClassDescriptor desc) {
+                if (desc.clazz != TestObject11.class) {
+                    return;
+                }
+                for (Binding field : desc.allDecoderBindings()) {
+                    field.failOnPresent = true;
+                }
+            }
+        });
+        JsonIterator iter = JsonIterator.parse("{'field1': '100'}".replace('\'', '"'));
+        try {
+            iter.read(TestObject11.class);
+            fail("should throw exception");
+        } catch (Exception e) {
+        }
     }
 }
