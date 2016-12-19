@@ -78,7 +78,7 @@ public class JsonStream extends OutputStream {
 
     public final void writeRaw(String val) throws IOException {
         // TODO: do not allocate new buffer every time, encode utf16 into utf8 directly
-        out.write(val.getBytes(charset));
+        write(val.getBytes(charset));
     }
 
     public final void writeVal(Boolean val) throws IOException {

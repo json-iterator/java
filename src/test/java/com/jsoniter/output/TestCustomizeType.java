@@ -4,16 +4,25 @@ import com.jsoniter.spi.ExtensionManager;
 import com.jsoniter.spi.Encoder;
 import junit.framework.TestCase;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Date;
 
 public class TestCustomizeType extends TestCase {
 
+    private ByteArrayOutputStream baos;
+    private JsonStream stream;
+
+    public void setUp() {
+        baos = new ByteArrayOutputStream();
+        stream = new JsonStream(baos, 4096);
+    }
+
     public static class MyDate {
         Date date;
     }
 
-    public void test() {
+    public void test() throws IOException {
         ExtensionManager.registerTypeEncoder(MyDate.class, new Encoder() {
             @Override
             public void encode(Object obj, JsonStream stream) throws IOException {
@@ -21,5 +30,10 @@ public class TestCustomizeType extends TestCase {
                 stream.writeVal(date.date.getTime());
             }
         });
+        MyDate myDate = new MyDate();
+        myDate.date = new Date(1481365190000L);
+        stream.writeVal(myDate);
+        stream.close();
+        assertEquals("1481365190000", baos.toString());
     }
 }

@@ -1,11 +1,10 @@
 package com.jsoniter.output;
 
-import com.jsoniter.spi.Binding;
-import com.jsoniter.spi.ClassDescriptor;
-import com.jsoniter.spi.ExtensionManager;
+import com.jsoniter.*;
+import com.jsoniter.spi.*;
 
 class CodegenImplObject {
-    public static String genObject(Class clazz) {
+    public static String genObject(String cacheKey, Class clazz) {
         ClassDescriptor desc = ExtensionManager.getClassDescriptor(clazz, false);
         StringBuilder lines = new StringBuilder();
         append(lines, "public static void encode_(Object rawObj, com.jsoniter.output.JsonStream stream) {");
@@ -16,9 +15,9 @@ class CodegenImplObject {
             append(lines, "{{clazz}} obj = ({{clazz}})rawObj;");
             append(lines, "stream.startObject();");
             for (Binding field : desc.allEncoderBindings()) {
-                for (String fromName : field.fromNames) {
-                    append(lines, String.format("stream.writeField(\"%s\");", field.name));
-                    append(lines, CodegenImplNative.genWriteOp("obj." + fromName, field.valueType));
+                for (String toName : field.toNames) {
+                    append(lines, String.format("stream.writeField(\"%s\");", toName));
+                    append(lines, genField(cacheKey, field));
                     append(lines, "stream.writeMore();");
                 }
             }
@@ -26,6 +25,20 @@ class CodegenImplObject {
         }
         append(lines, "}");
         return lines.toString().replace("{{clazz}}", clazz.getCanonicalName());
+    }
+
+    private static String genField(String cacheKey, Binding field) {
+        String fieldCacheKey = field.name + "@" + cacheKey;
+        if (field.encoder != null) {
+            ExtensionManager.addNewEncoder(fieldCacheKey, field.encoder);
+        }
+        // the field decoder might be registered directly
+        Encoder encoder = ExtensionManager.getEncoder(fieldCacheKey);
+        if (encoder == null) {
+            return CodegenImplNative.genWriteOp("obj." + field.name, field.valueType);
+        }
+        return String.format("com.jsoniter.output.CodegenAccess.writeVal(\"%s\", obj.%s, stream);",
+                fieldCacheKey, field.name);
     }
 
     private static void append(StringBuilder lines, String str) {

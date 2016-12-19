@@ -1,9 +1,6 @@
 package com.jsoniter;
 
-import com.jsoniter.spi.Binding;
-import com.jsoniter.spi.ClassDescriptor;
-import com.jsoniter.spi.ConstructorDescriptor;
-import com.jsoniter.spi.SetterDescriptor;
+import com.jsoniter.spi.*;
 
 import java.lang.reflect.Type;
 import java.util.*;
@@ -27,7 +24,7 @@ class CodegenImplObject {
         List<Binding> allBindings = desc.allDecoderBindings();
         int currentIdx = 0;
         for (Binding binding : allBindings) {
-            if (binding.isMandatory) {
+            if (binding.failOnMissing) {
                 binding.idx = currentIdx++;
             } else {
                 binding.idx = -1;
@@ -184,8 +181,8 @@ class CodegenImplObject {
                 append(lines, String.format("field.at(%d)==%s", i, b));
                 append(lines, ") {");
                 Binding field = (Binding) entry.getValue();
-                append(lines, String.format("_%s_ = %s;", field.name, CodegenImplNative.genField(field, cacheKey)));
-                if (field.isMandatory) {
+                append(lines, String.format("_%s_ = %s;", field.name, genField(field, cacheKey)));
+                if (field.failOnMissing) {
                     long mask = 1L << field.idx;
                     append(lines, "tracker = tracker | " + mask + "L;");
                 }
@@ -307,9 +304,9 @@ class CodegenImplObject {
             if (!shouldReuseObject(field.valueType)) {
                 append(lines, String.format("com.jsoniter.CodegenAccess.setExistingObject(iter, obj.%s);", field.name));
             }
-            append(lines, String.format("obj.%s = %s;", field.name, CodegenImplNative.genField(field, cacheKey)));
+            append(lines, String.format("obj.%s = %s;", field.name, genField(field, cacheKey)));
         } else {
-            append(lines, String.format("_%s_ = %s;", field.name, CodegenImplNative.genField(field, cacheKey)));
+            append(lines, String.format("_%s_ = %s;", field.name, genField(field, cacheKey)));
         }
     }
 
@@ -387,5 +384,68 @@ class CodegenImplObject {
             }
         }
         return CodegenImplNative.isNative(valueType);
+    }
+
+    public static String genField(Binding field, String cacheKey) {
+        String fieldCacheKey = field.name + "@" + cacheKey;
+        if (field.decoder != null) {
+            ExtensionManager.addNewDecoder(fieldCacheKey, field.decoder);
+        }
+        // the field decoder might be registered directly
+        Decoder decoder = ExtensionManager.getDecoder(fieldCacheKey);
+        Type fieldType = field.valueType;
+        if (decoder == null) {
+            return String.format("(%s)%s", CodegenImplNative.getTypeName(fieldType), CodegenImplNative.genReadOp(fieldType));
+        }
+        if (fieldType == boolean.class) {
+            if (!(decoder instanceof Decoder.BooleanDecoder)) {
+                throw new JsonException("decoder for field " + field + "must implement Decoder.BooleanDecoder");
+            }
+            return String.format("com.jsoniter.CodegenAccess.readBoolean(\"%s\", iter)", fieldCacheKey);
+        }
+        if (fieldType == byte.class) {
+            if (!(decoder instanceof Decoder.ShortDecoder)) {
+                throw new JsonException("decoder for field " + field + "must implement Decoder.ShortDecoder");
+            }
+            return String.format("com.jsoniter.CodegenAccess.readShort(\"%s\", iter)", fieldCacheKey);
+        }
+        if (fieldType == short.class) {
+            if (!(decoder instanceof Decoder.ShortDecoder)) {
+                throw new JsonException("decoder for field " + field + "must implement Decoder.ShortDecoder");
+            }
+            return String.format("com.jsoniter.CodegenAccess.readShort(\"%s\", iter)", fieldCacheKey);
+        }
+        if (fieldType == char.class) {
+            if (!(decoder instanceof Decoder.IntDecoder)) {
+                throw new JsonException("decoder for field " + field + "must implement Decoder.IntDecoder");
+            }
+            return String.format("com.jsoniter.CodegenAccess.readInt(\"%s\", iter)", fieldCacheKey);
+        }
+        if (fieldType == int.class) {
+            if (!(decoder instanceof Decoder.IntDecoder)) {
+                throw new JsonException("decoder for field " + field + "must implement Decoder.IntDecoder");
+            }
+            return String.format("com.jsoniter.CodegenAccess.readInt(\"%s\", iter)", fieldCacheKey);
+        }
+        if (fieldType == long.class) {
+            if (!(decoder instanceof Decoder.LongDecoder)) {
+                throw new JsonException("decoder for field " + field + "must implement Decoder.LongDecoder");
+            }
+            return String.format("com.jsoniter.CodegenAccess.readLong(\"%s\", iter)", fieldCacheKey);
+        }
+        if (fieldType == float.class) {
+            if (!(decoder instanceof Decoder.FloatDecoder)) {
+                throw new JsonException("decoder for field " + field + "must implement Decoder.FloatDecoder");
+            }
+            return String.format("com.jsoniter.CodegenAccess.readFloat(\"%s\", iter)", fieldCacheKey);
+        }
+        if (fieldType == double.class) {
+            if (!(decoder instanceof Decoder.DoubleDecoder)) {
+                throw new JsonException("decoder for field " + field + "must implement Decoder.DoubleDecoder");
+            }
+            return String.format("com.jsoniter.CodegenAccess.readDouble(\"%s\", iter)", fieldCacheKey);
+        }
+        return String.format("(%s)com.jsoniter.CodegenAccess.read(\"%s\", iter);",
+                CodegenImplNative.getTypeName(fieldType), fieldCacheKey);
     }
 }

@@ -81,6 +81,6 @@ class Codegen {
         if (Collection.class.isAssignableFrom(clazz)) {
             return CodegenImplArray.genCollection(clazz, typeArgs);
         }
-        return CodegenImplObject.genObject(clazz);
+        return CodegenImplObject.genObject(cacheKey, clazz);
     }
 }

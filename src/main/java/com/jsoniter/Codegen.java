@@ -87,7 +87,7 @@ class Codegen {
         ClassDescriptor desc = ExtensionManager.getClassDescriptor(clazz, false);
         List<Binding> allBindings = desc.allDecoderBindings();
         for (Binding allBinding : allBindings) {
-            if (allBinding.isMandatory) {
+            if (allBinding.failOnMissing) {
                 // only slice support mandatory tracking
                 return CodegenImplObject.genObjectUsingSlice(clazz, cacheKey, desc);
             }

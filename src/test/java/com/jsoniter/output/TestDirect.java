@@ -8,48 +8,48 @@ import java.io.IOException;
 public class TestDirect extends TestCase {
 
     private ByteArrayOutputStream baos;
-    private JsonStream generator;
+    private JsonStream stream;
 
     public void setUp() {
         baos = new ByteArrayOutputStream();
-        generator = new JsonStream(baos, 4096);
+        stream = new JsonStream(baos, 4096);
     }
 
     public void test_string() throws IOException {
-        generator.writeVal("hello");
-        generator.close();
+        stream.writeVal("hello");
+        stream.close();
         assertEquals("'hello'".replace('\'', '"'), baos.toString());
     }
 
     public void test_int() throws IOException {
-        generator.writeVal(100);
-        generator.close();
+        stream.writeVal(100);
+        stream.close();
         assertEquals("100".replace('\'', '"'), baos.toString());
     }
 
     public void test_boolean() throws IOException {
-        generator.writeVal(true);
-        generator.writeVal(false);
-        generator.close();
+        stream.writeVal(true);
+        stream.writeVal(false);
+        stream.close();
         assertEquals("truefalse".replace('\'', '"'), baos.toString());
     }
 
     public void test_array() throws IOException {
-        generator.startArray();
-        generator.writeVal("hello");
-        generator.writeMore();
-        generator.endArray();
-        generator.close();
+        stream.startArray();
+        stream.writeVal("hello");
+        stream.writeMore();
+        stream.endArray();
+        stream.close();
         assertEquals("['hello']".replace('\'', '"'), baos.toString());
     }
 
     public void test_object() throws IOException {
-        generator.startObject();
-        generator.writeField("hello");
-        generator.writeVal("world");
-        generator.writeMore();
-        generator.endObject();
-        generator.close();
+        stream.startObject();
+        stream.writeField("hello");
+        stream.writeVal("world");
+        stream.writeMore();
+        stream.endObject();
+        stream.close();
         assertEquals("{'hello':'world'}".replace('\'', '"'), baos.toString());
     }
 }

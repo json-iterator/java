@@ -12,9 +12,11 @@ public class Binding {
     public TypeLiteral valueTypeLiteral;
     public Annotation[] annotations;
     // output
-    public String[] fromNames;
+    public String[] fromNames; // for decoder
+    public String[] toNames; // for encoder
     public Decoder decoder;
-    public boolean isMandatory;
+    public Encoder encoder;
+    public boolean failOnMissing;
     // optional
     public Field field;
     public int idx;

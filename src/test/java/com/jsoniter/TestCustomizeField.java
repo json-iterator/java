@@ -180,7 +180,7 @@ public class TestCustomizeField extends TestCase {
                     return;
                 }
                 for (Binding field : desc.allDecoderBindings()) {
-                    field.isMandatory = true;
+                    field.failOnMissing = true;
                 }
             }
         });
@@ -202,7 +202,7 @@ public class TestCustomizeField extends TestCase {
                     return;
                 }
                 for (Binding field : desc.allDecoderBindings()) {
-                    field.isMandatory = true;
+                    field.failOnMissing = true;
                 }
             }
         });

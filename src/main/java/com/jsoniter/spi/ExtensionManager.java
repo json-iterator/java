@@ -40,6 +40,18 @@ public class ExtensionManager {
         addNewEncoder(TypeLiteral.generateEncoderCacheKey(clazz), encoder);
     }
 
+    public static void registerTypeEncoder(TypeLiteral typeLiteral, Encoder encoder) {
+        addNewEncoder(typeLiteral.getCacheKey(), encoder);
+    }
+
+    public static void registerFieldEncoder(Class clazz, String field, Encoder encoder) {
+        addNewEncoder(field + "@" + TypeLiteral.generateEncoderCacheKey(clazz), encoder);
+    }
+
+    public static void registerFieldEncoder(TypeLiteral typeLiteral, String field, Encoder encoder) {
+        addNewEncoder(field + "@" + typeLiteral.getCacheKey(), encoder);
+    }
+
     public static Decoder getDecoder(String cacheKey) {
         return decoders.get(cacheKey);
     }
@@ -77,10 +89,19 @@ public class ExtensionManager {
             if (desc.ctor.staticFactory != null) {
                 desc.ctor.staticFactory.setAccessible(true);
             }
+            for (SetterDescriptor setter : desc.setters) {
+                setter.method.setAccessible(true);
+            }
         }
         for (Binding binding : desc.allDecoderBindings()) {
             if (binding.fromNames == null) {
                 binding.fromNames = new String[]{binding.name};
+            }
+            if (binding.toNames == null) {
+                binding.toNames = new String[]{binding.name};
+            }
+            if (binding.field != null && includingPrivate) {
+                binding.field.setAccessible(true);
             }
             binding.clazz = clazz;
             binding.valueTypeLiteral = createTypeLiteral(binding.valueType);
