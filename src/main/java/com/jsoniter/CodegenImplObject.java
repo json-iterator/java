@@ -41,7 +41,9 @@ class CodegenImplObject {
         // === if null, return null
         append(lines, "if (iter.readNull()) { com.jsoniter.CodegenAccess.resetExistingObject(iter); return null; }");
         // === if input is empty object, return empty object
-        append(lines, "long tracker = 0;");
+        if (hasMandatoryField) {
+            append(lines, "long tracker = 0;");
+        }
         if (desc.ctor.parameters.isEmpty()) {
             append(lines, "{{clazz}} obj = {{newInst}};");
             append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) {");
@@ -104,9 +106,11 @@ class CodegenImplObject {
         }
         appendOnUnknownField(lines, desc);
         append(lines, "}"); // end of while
-        append(lines, "if (tracker != " + expectedTracker + "L) {");
-        appendMissingMandatoryFields(lines);
-        append(lines, "}");
+        if (hasMandatoryField) {
+            append(lines, "if (tracker != " + expectedTracker + "L) {");
+            appendMissingMandatoryFields(lines);
+            append(lines, "}");
+        }
         if (!desc.ctor.parameters.isEmpty()) {
             append(lines, String.format("%s obj = {{newInst}};", CodegenImplNative.getTypeName(clazz)));
             for (Binding field : desc.fields) {
@@ -213,7 +217,6 @@ class CodegenImplObject {
             append(lines, String.format("field.at(%d)==%s", i, b));
             append(lines, ") {");
             addFieldDispatch(lines, len, i + 1, next, cacheKey, new ArrayList<Byte>());
-            append(lines, "continue;");
             append(lines, "}");
         }
     }

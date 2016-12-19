@@ -7,10 +7,13 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
 import com.jsoniter.JsonIterator;
+import com.jsoniter.ReflectionDecoder;
+import com.jsoniter.spi.ExtensionManager;
 import com.jsoniter.spi.TypeLiteral;
 import org.junit.Test;
 import org.openjdk.jmh.Main;
 import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.infra.BenchmarkParams;
 import org.openjdk.jmh.infra.Blackhole;
 
 import java.io.IOException;
@@ -25,6 +28,7 @@ public class SimpleObjectBinding {
     private DslJson dslJson;
     private Class<TestObject> clazz;
     private String inputStr;
+    private TestObject testObject;
 
     @CompiledJson
     public static class TestObject {
@@ -44,7 +48,7 @@ public class SimpleObjectBinding {
     private JsonIterator iter;
 
     @Setup(Level.Trial)
-    public void benchSetup() {
+    public void benchSetup(BenchmarkParams params) {
         inputStr = "{'field1':100,'field2':101}";
         input = inputStr.replace('\'', '"').getBytes();
         iter = JsonIterator.parse(input);
@@ -54,49 +58,32 @@ public class SimpleObjectBinding {
         };
         clazz = TestObject.class;
         jackson = new ObjectMapper();
-        jackson.registerModule(new AfterburnerModule());
         dslJson = new DslJson();
+        testObject = new TestObject();
+        if (params != null) {
+            if (params.getBenchmark().contains("withReflection")) {
+                ExtensionManager.registerTypeDecoder(TestObject.class, new ReflectionDecoder(TestObject.class));
+            }
+            if (params.getBenchmark().contains("withBindApiStrictMode")) {
+                JsonIterator.enableStrictMode();
+            }
+            if (params.getBenchmark().contains("withJacksonAfterburner")) {
+                jackson.registerModule(new AfterburnerModule());
+            }
+        }
     }
 
     @Test
     public void test() throws IOException {
-        benchSetup();
+        benchSetup(null);
         System.out.println(withIterator());
-        System.out.println(withBindApiNoneStrictMode());
-        System.out.println(withBindApiStrictMode());
+        System.out.println(withIteratorIfElse());
+        System.out.println(withIteratorIntern());
+        System.out.println(withBindApi());
+        System.out.println(withExistingObject());
         System.out.println(withJackson());
         System.out.println(withDsljson());
         System.out.println(withFastjson());
-    }
-
-    @Benchmark
-    public void withIterator(Blackhole bh) throws IOException {
-        bh.consume(withIterator());
-    }
-
-    @Benchmark
-    public void withBindApiNoneStrictMode(Blackhole bh) throws IOException {
-        bh.consume(withBindApiNoneStrictMode());
-    }
-
-    @Benchmark
-    public void withBindApiStrictMode(Blackhole bh) throws IOException {
-        bh.consume(withBindApiStrictMode());
-    }
-
-    @Benchmark
-    public void withJackson(Blackhole bh) throws IOException {
-        bh.consume(withJackson());
-    }
-
-    @Benchmark
-    public void withDsljson(Blackhole bh) throws IOException {
-        bh.consume(withDsljson());
-    }
-
-    @Benchmark
-    public void withFastjson(Blackhole bh) throws IOException {
-        bh.consume(withFastjson());
     }
 
     public static void main(String[] args) throws Exception {
@@ -106,6 +93,61 @@ public class SimpleObjectBinding {
                 "-wi", "5",
                 "-f", "1"
         });
+    }
+
+//    @Benchmark
+    public void withIterator(Blackhole bh) throws IOException {
+        bh.consume(withIterator());
+    }
+
+//    @Benchmark
+    public void withIteratorIfElse(Blackhole bh) throws IOException {
+        bh.consume(withIteratorIfElse());
+    }
+
+//    @Benchmark
+    public void withIteratorIntern(Blackhole bh) throws IOException {
+        bh.consume(withIteratorIntern());
+    }
+
+//    @Benchmark
+    public void withoutExistingObject(Blackhole bh) throws IOException {
+        bh.consume(withBindApi());
+    }
+
+//    @Benchmark
+    public void withBindApiStrictMode(Blackhole bh) throws IOException {
+        bh.consume(withBindApi());
+    }
+
+//    @Benchmark
+    public void withReflection(Blackhole bh) throws IOException {
+        bh.consume(withBindApi());
+    }
+
+//    @Benchmark
+    public void withExistingObject(Blackhole bh) throws IOException {
+        bh.consume(withExistingObject());
+    }
+
+    @Benchmark
+    public void withJacksonAfterburner(Blackhole bh) throws IOException {
+        bh.consume(withJackson());
+    }
+
+    @Benchmark
+    public void withJacksonNoAfterburner(Blackhole bh) throws IOException {
+        bh.consume(withJackson());
+    }
+
+//    @Benchmark
+    public void withDsljson(Blackhole bh) throws IOException {
+        bh.consume(withDsljson());
+    }
+
+//    @Benchmark
+    public void withFastjson(Blackhole bh) throws IOException {
+        bh.consume(withFastjson());
     }
 
     private TestObject withIterator() throws IOException {
@@ -126,15 +168,49 @@ public class SimpleObjectBinding {
         return obj;
     }
 
-    private TestObject withBindApiNoneStrictMode() throws IOException {
+    private TestObject withIteratorIfElse() throws IOException {
+        iter.reset();
+        TestObject obj = new TestObject();
+        for (String field = iter.readObject(); field != null; field = iter.readObject()) {
+            if (field.equals("field1")) {
+                obj.field1 = iter.readInt();
+                continue;
+            }
+            if (field.equals("field2")) {
+                obj.field2 = iter.readInt();
+                continue;
+            }
+            iter.skip();
+        }
+        return obj;
+    }
+
+    private TestObject withIteratorIntern() throws IOException {
+        iter.reset();
+        TestObject obj = new TestObject();
+        for (String field = iter.readObject(); field != null; field = iter.readObject()) {
+            field = field.intern();
+            if (field == "field1") {
+                obj.field1 = iter.readInt();
+                continue;
+            }
+            if (field == "field2") {
+                obj.field2 = iter.readInt();
+                continue;
+            }
+            iter.skip();
+        }
+        return obj;
+    }
+
+    private TestObject withBindApi() throws IOException {
         iter.reset();
         return iter.read(typeLiteral);
     }
 
-    private TestObject withBindApiStrictMode() throws IOException {
-        JsonIterator.enableStrictMode();
+    private TestObject withExistingObject() throws IOException {
         iter.reset();
-        return iter.read(typeLiteral);
+        return iter.read(typeLiteral, testObject);
     }
 
     private TestObject withJackson() throws IOException {

@@ -55,8 +55,11 @@ public class TestCustomizeField extends TestCase {
         ExtensionManager.registerExtension(new EmptyExtension() {
             @Override
             public void updateClassDescriptor(ClassDescriptor desc) {
+                if (desc.clazz != TestObject4.class) {
+                    return;
+                }
                 for (Binding field : desc.allDecoderBindings()) {
-                    if (field.clazz == TestObject4.class && field.name.equals("field1")) {
+                    if (field.name.equals("field1")) {
                         field.fromNames = new String[]{"field_1", "Field1"};
                     }
                 }
