@@ -8,7 +8,8 @@ import java.lang.reflect.Type;
 public class TypeLiteral<T> {
 
     final Type type;
-    final String cacheKey;
+    final String decoderCacheKey;
+    final String encoderCacheKey;
 
     /**
      * Constructs a new type literal. Derives represented class from type parameter.
@@ -18,13 +19,14 @@ public class TypeLiteral<T> {
     @SuppressWarnings("unchecked")
     protected TypeLiteral() {
         this.type = getSuperclassTypeParameter(getClass());
-        cacheKey = generateDecoderCacheKey(type);
-
+        decoderCacheKey = generateDecoderCacheKey(type);
+        encoderCacheKey = generateEncoderCacheKey(type);
     }
 
-    public TypeLiteral(Type type, String cacheKey) {
+    public TypeLiteral(Type type, String decoderCacheKey, String encoderCacheKey) {
         this.type = type;
-        this.cacheKey = cacheKey;
+        this.decoderCacheKey = decoderCacheKey;
+        this.encoderCacheKey = encoderCacheKey;
     }
 
     public static String generateDecoderCacheKey(Type type) {
@@ -84,19 +86,28 @@ public class TypeLiteral<T> {
         return parameterized.getActualTypeArguments()[0];
     }
 
+    public static TypeLiteral create(Type valueType) {
+        return new TypeLiteral(valueType, generateDecoderCacheKey(valueType), generateEncoderCacheKey(valueType));
+    }
+
     public Type getType() {
         return type;
     }
 
-    public String getCacheKey() {
-        return cacheKey;
+    public String getDecoderCacheKey() {
+        return decoderCacheKey;
+    }
+
+    public String getEncoderCacheKey() {
+        return encoderCacheKey;
     }
 
     @Override
     public String toString() {
         return "TypeLiteral{" +
                 "type=" + type +
-                ", cacheKey='" + cacheKey + '\'' +
+                ", decoderCacheKey='" + decoderCacheKey + '\'' +
+                ", encoderCacheKey='" + encoderCacheKey + '\'' +
                 '}';
     }
 }

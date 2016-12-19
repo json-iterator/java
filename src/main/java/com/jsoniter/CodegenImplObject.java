@@ -124,7 +124,7 @@ class CodegenImplObject {
     }
 
     private static void appendOnUnknownField(StringBuilder lines, ClassDescriptor desc) {
-        if (desc.forbidUnknownFields) {
+        if (desc.failOnUnknownFields) {
             append(lines, "throw new com.jsoniter.JsonException('unknown field: ' + field.toString());".replace('\'', '"'));
         } else {
             append(lines, "iter.skip();");

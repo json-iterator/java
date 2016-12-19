@@ -209,6 +209,6 @@ public class JsonStream extends OutputStream {
     }
 
     public final <T> void writeVal(TypeLiteral<T> typeLiteral, T obj) throws IOException {
-        Codegen.getEncoder(typeLiteral.getCacheKey(), typeLiteral.getType()).encode(obj, this);
+        Codegen.getEncoder(typeLiteral.getEncoderCacheKey(), typeLiteral.getType()).encode(obj, this);
     }
 }

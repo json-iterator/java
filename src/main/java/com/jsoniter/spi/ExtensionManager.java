@@ -25,7 +25,7 @@ public class ExtensionManager {
     }
 
     public static void registerTypeDecoder(TypeLiteral typeLiteral, Decoder decoder) {
-        addNewDecoder(typeLiteral.getCacheKey(), decoder);
+        addNewDecoder(typeLiteral.getDecoderCacheKey(), decoder);
     }
 
     public static void registerFieldDecoder(Class clazz, String field, Decoder decoder) {
@@ -33,7 +33,7 @@ public class ExtensionManager {
     }
 
     public static void registerFieldDecoder(TypeLiteral typeLiteral, String field, Decoder decoder) {
-        addNewDecoder(field + "@" + typeLiteral.getCacheKey(), decoder);
+        addNewDecoder(field + "@" + typeLiteral.getDecoderCacheKey(), decoder);
     }
 
     public static void registerTypeEncoder(Class clazz, Encoder encoder) {
@@ -41,7 +41,7 @@ public class ExtensionManager {
     }
 
     public static void registerTypeEncoder(TypeLiteral typeLiteral, Encoder encoder) {
-        addNewEncoder(typeLiteral.getCacheKey(), encoder);
+        addNewEncoder(typeLiteral.getDecoderCacheKey(), encoder);
     }
 
     public static void registerFieldEncoder(Class clazz, String field, Encoder encoder) {
@@ -49,7 +49,7 @@ public class ExtensionManager {
     }
 
     public static void registerFieldEncoder(TypeLiteral typeLiteral, String field, Encoder encoder) {
-        addNewEncoder(field + "@" + typeLiteral.getCacheKey(), encoder);
+        addNewEncoder(field + "@" + typeLiteral.getDecoderCacheKey(), encoder);
     }
 
     public static Decoder getDecoder(String cacheKey) {
@@ -63,6 +63,9 @@ public class ExtensionManager {
     }
 
     public static Encoder getEncoder(String cacheKey) {
+        if (cacheKey.startsWith("decoder")) {
+            throw new RuntimeException();
+        }
         return encoders.get(cacheKey);
     }
 
@@ -97,6 +100,13 @@ public class ExtensionManager {
             if (binding.fromNames == null) {
                 binding.fromNames = new String[]{binding.name};
             }
+            if (binding.field != null && includingPrivate) {
+                binding.field.setAccessible(true);
+            }
+            binding.clazz = clazz;
+            binding.valueTypeLiteral = TypeLiteral.create(binding.valueType);
+        }
+        for (Binding binding : desc.allEncoderBindings()) {
             if (binding.toNames == null) {
                 binding.toNames = new String[]{binding.name};
             }
@@ -104,7 +114,7 @@ public class ExtensionManager {
                 binding.field.setAccessible(true);
             }
             binding.clazz = clazz;
-            binding.valueTypeLiteral = createTypeLiteral(binding.valueType);
+            binding.valueTypeLiteral = TypeLiteral.create(binding.valueType);
         }
         return desc;
     }
@@ -143,7 +153,7 @@ public class ExtensionManager {
         binding.fromNames = new String[]{field.getName()};
         binding.name = field.getName();
         binding.valueType = field.getType();
-        binding.valueTypeLiteral = createTypeLiteral(binding.valueType);
+        binding.valueTypeLiteral = TypeLiteral.create(binding.valueType);
         binding.clazz = clazz;
         binding.annotations = field.getAnnotations();
         binding.field = field;
@@ -161,10 +171,6 @@ public class ExtensionManager {
             }
         }
         return allFields;
-    }
-
-    private static TypeLiteral createTypeLiteral(Type valueType) {
-        return new TypeLiteral(valueType, TypeLiteral.generateDecoderCacheKey(valueType));
     }
 
     private static List<SetterDescriptor> getSetters(Class clazz, boolean includingPrivate) {
@@ -207,7 +213,7 @@ public class ExtensionManager {
             param.fromNames = new String[]{fromName};
             param.name = fromName;
             param.valueType = paramTypes[0];
-            param.valueTypeLiteral = createTypeLiteral(param.valueType);
+            param.valueTypeLiteral = TypeLiteral.create(param.valueType);
             param.clazz = clazz;
             setter.parameters.add(param);
             setters.add(setter);
@@ -234,17 +240,26 @@ public class ExtensionManager {
             if (method.getGenericParameterTypes().length != 0) {
                 continue;
             }
-            String fromName = methodName.substring("get".length());
-            char[] fromNameChars = fromName.toCharArray();
+            String toName = methodName.substring("get".length());
+            char[] fromNameChars = toName.toCharArray();
             fromNameChars[0] = Character.toLowerCase(fromNameChars[0]);
-            fromName = new String(fromNameChars);
+            toName = new String(fromNameChars);
             Binding getter = new Binding();
-            getter.fromNames = new String[]{methodName + "()"};
-            getter.name = fromName;
+            getter.toNames = new String[]{toName};
+            getter.name = methodName + "()";
             getter.valueType = method.getGenericReturnType();
             getter.clazz = clazz;
             getters.add(getter);
         }
         return getters;
+    }
+
+    public static void dump() {
+        for (String cacheKey : decoders.keySet()) {
+            System.err.println(cacheKey);
+        }
+        for (String cacheKey : encoders.keySet()) {
+            System.err.println(cacheKey);
+        }
     }
 }

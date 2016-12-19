@@ -36,6 +36,7 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
             }
             desc.ctor.staticMethodName = null;
             desc.ctor.ctor = ctor;
+            desc.ctor.staticFactory = null;
             Annotation[][] annotations = ctor.getParameterAnnotations();
             for (int i = 0; i < annotations.length; i++) {
                 Annotation[] paramAnnotations = annotations[i];
@@ -60,6 +61,7 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
             }
             desc.ctor.staticMethodName = method.getName();
             desc.ctor.staticFactory = method;
+            desc.ctor.ctor = null;
             Annotation[][] annotations = method.getParameterAnnotations();
             for (int i = 0; i < annotations.length; i++) {
                 Annotation[] paramAnnotations = annotations[i];

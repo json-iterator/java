@@ -1,5 +1,6 @@
 package com.jsoniter.output;
 
+import com.jsoniter.spi.Extension;
 import com.jsoniter.spi.ExtensionManager;
 import com.jsoniter.JsonException;
 import com.jsoniter.spi.Encoder;
@@ -66,6 +67,7 @@ class Codegen {
         } catch (Exception e) {
             System.err.println("failed to generate encoder for: " + type + " with " + Arrays.toString(typeArgs));
             System.err.println(source);
+            ExtensionManager.dump();
             throw new JsonException(e);
         }
     }

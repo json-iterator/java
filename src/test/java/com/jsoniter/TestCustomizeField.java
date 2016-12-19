@@ -153,7 +153,7 @@ public class TestCustomizeField extends TestCase {
             @Override
             public void updateClassDescriptor(ClassDescriptor desc) {
                 if (desc.clazz == TestObject8.class) {
-                    desc.forbidUnknownFields = true;
+                    desc.failOnUnknownFields = true;
                 }
             }
         });

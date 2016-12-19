@@ -92,7 +92,7 @@ class Codegen {
                 return CodegenImplObject.genObjectUsingSlice(clazz, cacheKey, desc);
             }
         }
-        if (desc.forbidUnknownFields) {
+        if (desc.failOnUnknownFields) {
             // only slice support unknown field tracking
             return CodegenImplObject.genObjectUsingSlice(clazz, cacheKey, desc);
         }
