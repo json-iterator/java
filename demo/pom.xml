@@ -82,6 +82,11 @@
             <artifactId>dsl-json-processor</artifactId>
             <version>LATEST</version>
         </dependency>
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+            <version>LATEST</version>
+        </dependency>
 
     </dependencies>
 

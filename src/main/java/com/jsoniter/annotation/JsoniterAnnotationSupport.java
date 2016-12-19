@@ -7,6 +7,9 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class JsoniterAnnotationSupport extends EmptyExtension {
 
@@ -29,7 +32,7 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
                 }
             }
         }
-        for (Constructor ctor : desc.clazz.getConstructors()) {
+        for (Constructor ctor : desc.clazz.getDeclaredConstructors()) {
             Annotation jsonCreator = ctor.getAnnotation(JsonCreator.class);
             if (jsonCreator == null) {
                 continue;
@@ -51,7 +54,13 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
                 desc.ctor.parameters.add(binding);
             }
         }
-        for (Method method : desc.clazz.getMethods()) {
+        List<Method> allMethods = new ArrayList<Method>();
+        Class current = desc.clazz;
+        while (current != null) {
+            allMethods.addAll(Arrays.asList(current.getDeclaredMethods()));
+            current = current.getSuperclass();
+        }
+        for (Method method : allMethods) {
             if (!Modifier.isStatic(method.getModifiers())) {
                 continue;
             }

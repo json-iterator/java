@@ -41,6 +41,9 @@ public class ReflectionDecoder implements Decoder {
         }
         this.ctor = desc.ctor.ctor;
         this.staticFactory = desc.ctor.staticFactory;
+        if (this.ctor == null && this.staticFactory == null) {
+            throw new JsonException("no constructor for: " + desc.clazz);
+        }
         fields = desc.fields;
         for (Binding field : fields) {
             tempIdx = addBinding(clazz, tempIdx, field);

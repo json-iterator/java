@@ -1,5 +1,6 @@
 package com.jsoniter.demo;
 
+import com.alibaba.fastjson.parser.DefaultJSONParser;
 import com.dslplatform.json.CompiledJson;
 import com.dslplatform.json.DslJson;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -15,7 +16,7 @@ import org.openjdk.jmh.infra.Blackhole;
 import java.io.IOException;
 
 @State(Scope.Thread)
-public class ObjectBinding {
+public class SimpleObjectBinding {
 
     private TypeLiteral<TestObject> typeLiteral;
     private ObjectMapper jackson;
@@ -23,6 +24,7 @@ public class ObjectBinding {
     private TypeReference<TestObject> typeRef;
     private DslJson dslJson;
     private Class<TestObject> clazz;
+    private String inputStr;
 
     @CompiledJson
     public static class TestObject {
@@ -43,7 +45,8 @@ public class ObjectBinding {
 
     @Setup(Level.Trial)
     public void benchSetup() {
-        input = "{'field1':100,'field2':101}".replace('\'', '"').getBytes();
+        inputStr = "{'field1':100,'field2':101}";
+        input = inputStr.replace('\'', '"').getBytes();
         iter = JsonIterator.parse(input);
         typeLiteral = new TypeLiteral<TestObject>() {
         };
@@ -63,6 +66,7 @@ public class ObjectBinding {
         System.out.println(withBindApiStrictMode());
         System.out.println(withJackson());
         System.out.println(withDsljson());
+        System.out.println(withFastjson());
     }
 
     @Benchmark
@@ -90,8 +94,14 @@ public class ObjectBinding {
         bh.consume(withDsljson());
     }
 
+    @Benchmark
+    public void withFastjson(Blackhole bh) throws IOException {
+        bh.consume(withFastjson());
+    }
+
     public static void main(String[] args) throws Exception {
         Main.main(new String[]{
+                "SimpleObjectBinding.*",
                 "-i", "5",
                 "-wi", "5",
                 "-f", "1"
@@ -133,5 +143,9 @@ public class ObjectBinding {
 
     private TestObject withDsljson() throws IOException {
         return (TestObject) dslJson.deserialize(clazz, input, input.length);
+    }
+
+    private TestObject withFastjson() {
+        return new DefaultJSONParser(inputStr).parseObject(TestObject.class);
     }
 }
