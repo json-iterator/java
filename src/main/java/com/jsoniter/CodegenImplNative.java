@@ -1,8 +1,6 @@
 package com.jsoniter;
 
-import com.jsoniter.spi.Binding;
 import com.jsoniter.spi.Decoder;
-import com.jsoniter.spi.ExtensionManager;
 import com.jsoniter.spi.TypeLiteral;
 
 import java.lang.reflect.ParameterizedType;

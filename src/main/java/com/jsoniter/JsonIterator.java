@@ -19,6 +19,8 @@ public class JsonIterator implements Closeable {
     int head;
     int tail;
     boolean eof;
+
+    Map<String, Object> tempObjects = new HashMap<String, Object>();
     final Slice reusableSlice = new Slice(null, 0, 0);
     char[] reusableChars = new char[32];
     Object existingObject = null; // the object should be bind to next
@@ -333,7 +335,8 @@ public class JsonIterator implements Closeable {
     }
 
     public final <T> T read(TypeLiteral<T> typeLiteral) throws IOException {
-        return (T) Codegen.getDecoder(typeLiteral.getDecoderCacheKey(), typeLiteral.getType()).decode(this);
+        String cacheKey = typeLiteral.getDecoderCacheKey();
+        return (T) Codegen.getDecoder(cacheKey, typeLiteral.getType()).decode(this);
     }
 
     public ValueType whatIsNext() throws IOException {

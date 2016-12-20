@@ -17,12 +17,13 @@ public class ReflectionDecoder implements Decoder {
     };
     private Constructor ctor;
     private Method staticFactory;
-    private Map<String, Binding> allBindings = new HashMap<String, Binding>();
+    private Map<Slice, Binding> allBindings = new HashMap<Slice, Binding>();
     private List<Binding> ctorParams = new ArrayList<Binding>();
-    private ThreadLocal<Object[]> tempTls;
-    private ThreadLocal<Object[]> ctorArgsTls;
     private List<Binding> fields;
     private List<SetterDescriptor> setters;
+    private String tempCacheKey;
+    private String ctorArgsCacheKey;
+    private int tempCount;
 
     public ReflectionDecoder(Class clazz) {
         try {
@@ -55,29 +56,20 @@ public class ReflectionDecoder implements Decoder {
             }
         }
         if (!ctorParams.isEmpty() || !setters.isEmpty()) {
-            final int tempCount = tempIdx;
-            tempTls = new ThreadLocal<Object[]>() {
-                @Override
-                protected Object[] initialValue() {
-                    return new Object[tempCount];
-                }
-            };
-            ctorArgsTls = new ThreadLocal<Object[]>() {
-                @Override
-                protected Object[] initialValue() {
-                    return new Object[ctorParams.size()];
-                }
-            };
+            tempCount = tempIdx;
+            tempCacheKey = "temp@" + clazz.getCanonicalName();
+            ctorArgsCacheKey = "ctor@" + clazz.getCanonicalName();
         }
     }
 
     private int addBinding(Class clazz, int tempIdx, Binding param) {
         param.idx = tempIdx;
         for (String fromName : param.fromNames) {
-            if (allBindings.containsKey(fromName)) {
-                throw new JsonException("name conflict found in " + clazz +": " + fromName);
+            Slice slice = Slice.make(fromName);
+            if (allBindings.containsKey(slice)) {
+                throw new JsonException("name conflict found in " + clazz + ": " + fromName);
             }
-            allBindings.put(fromName, param);
+            allBindings.put(slice, param);
         }
         tempIdx++;
         return tempIdx;
@@ -100,30 +92,112 @@ public class ReflectionDecoder implements Decoder {
         }
     }
 
-    private final Object decodeWithCtorBinding(JsonIterator iter) throws Exception {
-        Object[] temp = tempTls.get();
-        Arrays.fill(temp, NOT_SET);
-        for (String fieldName = iter.readObject(); fieldName != null; fieldName = iter.readObject()) {
-            Binding binding = allBindings.get(fieldName);
+    private final Object decodeWithOnlyFieldBinding(JsonIterator iter) throws Exception {
+        if (iter.readNull()) {
+            CodegenAccess.resetExistingObject(iter);
+            return null;
+        }
+        Object obj = CodegenAccess.existingObject(iter) == null ? createNewObject() : CodegenAccess.resetExistingObject(iter);
+        if (!CodegenAccess.readObjectStart(iter)) {
+            return obj;
+        }
+        Slice fieldName = CodegenAccess.readObjectFieldAsSlice(iter);
+        Binding binding = allBindings.get(fieldName);
+        if (binding == null) {
+            iter.skip();
+        } else {
+            binding.field.set(obj, CodegenAccess.read(iter, binding.valueTypeLiteral));
+        }
+        while (CodegenAccess.nextToken(iter) == ',') {
+            fieldName = CodegenAccess.readObjectFieldAsSlice(iter);
+            binding = allBindings.get(fieldName);
             if (binding == null) {
                 iter.skip();
-                continue;
-            }
-            temp[binding.idx] = iter.read(binding.valueTypeLiteral);
-        }
-        Object[] ctorArgs = ctorArgsTls.get();
-        Arrays.fill(ctorArgs, null);
-        for (int i = 0; i < ctorParams.size(); i++) {
-            Object arg = temp[ctorParams.get(i).idx];
-            if (arg != NOT_SET) {
-                ctorArgs[i] = arg;
+            } else {
+                binding.field.set(obj, CodegenAccess.read(iter, binding.valueTypeLiteral));
             }
         }
-        Object obj = createNewObject(ctorArgs);
+        return obj;
+    }
+
+    private final Object decodeWithCtorBinding(JsonIterator iter) throws Exception {
+        if (iter.readNull()) {
+            CodegenAccess.resetExistingObject(iter);
+            return null;
+        }
+        Object[] temp = (Object[]) iter.tempObjects.get(tempCacheKey);
+        if (temp == null) {
+            temp = new Object[tempCount];
+            iter.tempObjects.put(tempCacheKey, temp);
+        }
+        Arrays.fill(temp, NOT_SET);
+        if (!CodegenAccess.readObjectStart(iter)) {
+            return createNewObject(iter, temp);
+        }
+        Slice fieldName = CodegenAccess.readObjectFieldAsSlice(iter);
+        Binding binding = allBindings.get(fieldName);
+        if (binding == null) {
+            iter.skip();
+        } else {
+            temp[binding.idx] = CodegenAccess.read(iter, binding.valueTypeLiteral);
+        }
+        while (CodegenAccess.nextToken(iter) == ',') {
+            fieldName = CodegenAccess.readObjectFieldAsSlice(iter);
+            binding = allBindings.get(fieldName);
+            if (binding == null) {
+                iter.skip();
+            } else {
+                temp[binding.idx] = CodegenAccess.read(iter, binding.valueTypeLiteral);
+            }
+        }
+        Object obj = createNewObject(iter, temp);
         for (Binding field : fields) {
             Object val = temp[field.idx];
             if (val != NOT_SET) {
                 field.field.set(obj, val);
+            }
+        }
+        applySetters(temp, obj);
+        return obj;
+    }
+
+    private final Object decodeWithSetterBinding(JsonIterator iter) throws Exception {
+        if (iter.readNull()) {
+            CodegenAccess.resetExistingObject(iter);
+            return null;
+        }
+        Object obj = createNewObject();
+        if (!CodegenAccess.readObjectStart(iter)) {
+            return obj;
+        }
+        Object[] temp = (Object[]) iter.tempObjects.get(tempCacheKey);
+        if (temp == null) {
+            temp = new Object[tempCount];
+            iter.tempObjects.put(tempCacheKey, temp);
+        }
+        Arrays.fill(temp, NOT_SET);
+        Slice fieldName = CodegenAccess.readObjectFieldAsSlice(iter);
+        Binding binding = allBindings.get(fieldName);
+        if (binding == null) {
+            iter.skip();
+        } else {
+            if (binding.field == null) {
+                temp[binding.idx] = CodegenAccess.read(iter, binding.valueTypeLiteral);
+            } else {
+                binding.field.set(obj, CodegenAccess.read(iter, binding.valueTypeLiteral));
+            }
+        }
+        while (CodegenAccess.nextToken(iter) == ',') {
+            fieldName = CodegenAccess.readObjectFieldAsSlice(iter);
+            binding = allBindings.get(fieldName);
+            if (binding == null) {
+                iter.skip();
+            } else {
+                if (binding.field == null) {
+                    temp[binding.idx] = CodegenAccess.read(iter, binding.valueTypeLiteral);
+                } else {
+                    binding.field.set(obj, CodegenAccess.read(iter, binding.valueTypeLiteral));
+                }
             }
         }
         applySetters(temp, obj);
@@ -140,38 +214,20 @@ public class ReflectionDecoder implements Decoder {
         }
     }
 
-    private final Object decodeWithOnlyFieldBinding(JsonIterator iter) throws Exception {
-        Object obj = createNewObject();
-        for (String fieldName = iter.readObject(); fieldName != null; fieldName = iter.readObject()) {
-            Binding binding = allBindings.get(fieldName);
-            if (binding == null) {
-                iter.skip();
-                continue;
-            }
-            // TODO: when setter is single argument, decode like field
-            binding.field.set(obj, iter.read(binding.valueTypeLiteral));
+    private Object createNewObject(JsonIterator iter, Object[] temp) throws Exception {
+        Object[] ctorArgs = (Object[]) iter.tempObjects.get(ctorArgsCacheKey);
+        if (ctorArgs == null) {
+            ctorArgs = new Object[ctorParams.size()];
+            iter.tempObjects.put(ctorArgsCacheKey, ctorArgs);
         }
-        return obj;
-    }
-
-    private final Object decodeWithSetterBinding(JsonIterator iter) throws Exception {
-        Object[] temp = tempTls.get();
-        Arrays.fill(temp, null);
-        Object obj = createNewObject();
-        for (String fieldName = iter.readObject(); fieldName != null; fieldName = iter.readObject()) {
-            Binding binding = allBindings.get(fieldName);
-            if (binding == null) {
-                iter.skip();
-                continue;
-            }
-            if (binding.field == null) {
-                temp[binding.idx] = iter.read(binding.valueTypeLiteral);
-            } else {
-                binding.field.set(obj, iter.read(binding.valueTypeLiteral));
+        Arrays.fill(ctorArgs, null);
+        for (int i = 0; i < ctorParams.size(); i++) {
+            Object arg = temp[ctorParams.get(i).idx];
+            if (arg != NOT_SET) {
+                ctorArgs[i] = arg;
             }
         }
-        applySetters(temp, obj);
-        return obj;
+        return createNewObject(ctorArgs);
     }
 
     private Object createNewObject(Object... args) throws Exception {

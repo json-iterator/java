@@ -76,6 +76,7 @@ public class SimpleObjectBinding {
     @Test
     public void test() throws IOException {
         benchSetup(null);
+        ExtensionManager.registerTypeDecoder(TestObject.class, new ReflectionDecoder(TestObject.class));
         System.out.println(withIterator());
         System.out.println(withIteratorIfElse());
         System.out.println(withIteratorIntern());
@@ -120,7 +121,7 @@ public class SimpleObjectBinding {
         bh.consume(withBindApi());
     }
 
-//    @Benchmark
+    @Benchmark
     public void withReflection(Blackhole bh) throws IOException {
         bh.consume(withBindApi());
     }
@@ -130,12 +131,12 @@ public class SimpleObjectBinding {
         bh.consume(withExistingObject());
     }
 
-    @Benchmark
+//    @Benchmark
     public void withJacksonAfterburner(Blackhole bh) throws IOException {
         bh.consume(withJackson());
     }
 
-    @Benchmark
+//    @Benchmark
     public void withJacksonNoAfterburner(Blackhole bh) throws IOException {
         bh.consume(withJackson());
     }

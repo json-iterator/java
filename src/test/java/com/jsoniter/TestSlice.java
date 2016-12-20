@@ -22,6 +22,11 @@ public class TestSlice extends TestCase {
         assertEquals(slice1.hashCode(), slice2.hashCode());
     }
 
+    public void test_equals() {
+        assertTrue(Slice.make("hello").equals(Slice.make("hello")));
+        assertTrue(Slice.make("hello").equals(new Slice("ahello".getBytes(), 1, 5)));
+    }
+
     public void test_to_string() {
         Slice slice = Slice.make(0, 2);
         slice.append((byte) 'a');

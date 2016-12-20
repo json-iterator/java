@@ -1,6 +1,6 @@
 package com.jsoniter.annotation;
 
-import com.jsoniter.*;
+import com.jsoniter.JsonException;
 import com.jsoniter.spi.*;
 
 import java.lang.annotation.Annotation;
@@ -20,11 +20,11 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
     @Override
     public void updateClassDescriptor(ClassDescriptor desc) {
         for (Binding field : desc.allDecoderBindings()) {
-            JsonIgnore jsonIgnore = field.getAnnotation(JsonIgnore.class);
-            if (jsonIgnore != null) {
+            JsonIgnore jsonIgnore = getJsonIgnore(field.annotations);
+            if (jsonIgnore != null && jsonIgnore.value()) {
                 field.fromNames = new String[0];
             }
-            JsonProperty jsonProperty = field.getAnnotation(JsonProperty.class);
+            JsonProperty jsonProperty = getJsonProperty(field.annotations);
             if (jsonProperty != null) {
                 String alternativeField = jsonProperty.value();
                 if (!alternativeField.isEmpty()) {
@@ -33,7 +33,7 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
             }
         }
         for (Constructor ctor : desc.clazz.getDeclaredConstructors()) {
-            Annotation jsonCreator = ctor.getAnnotation(JsonCreator.class);
+            JsonCreator jsonCreator = getJsonCreator(ctor.getAnnotations());
             if (jsonCreator == null) {
                 continue;
             }
@@ -43,7 +43,7 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
             Annotation[][] annotations = ctor.getParameterAnnotations();
             for (int i = 0; i < annotations.length; i++) {
                 Annotation[] paramAnnotations = annotations[i];
-                JsonProperty jsonProperty = getAnnotation(paramAnnotations, JsonProperty.class);
+                JsonProperty jsonProperty = getJsonProperty(paramAnnotations);
                 if (jsonProperty == null) {
                     throw new JsonException("must mark all parameters using @JsonProperty: " + ctor);
                 }
@@ -64,7 +64,7 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
             if (!Modifier.isStatic(method.getModifiers())) {
                 continue;
             }
-            JsonCreator jsonCreator = method.getAnnotation(JsonCreator.class);
+            JsonCreator jsonCreator = getJsonCreator(method.getAnnotations());
             if (jsonCreator == null) {
                 continue;
             }
@@ -74,7 +74,7 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
             Annotation[][] annotations = method.getParameterAnnotations();
             for (int i = 0; i < annotations.length; i++) {
                 Annotation[] paramAnnotations = annotations[i];
-                JsonProperty jsonProperty = getAnnotation(paramAnnotations, JsonProperty.class);
+                JsonProperty jsonProperty = getJsonProperty(paramAnnotations);
                 if (jsonProperty == null) {
                     throw new JsonException("must mark all parameters using @JsonProperty: " + method);
                 }
@@ -97,7 +97,7 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
             Annotation[][] annotations = method.getParameterAnnotations();
             for (int i = 0; i < annotations.length; i++) {
                 Annotation[] paramAnnotations = annotations[i];
-                JsonProperty jsonProperty = getAnnotation(paramAnnotations, JsonProperty.class);
+                JsonProperty jsonProperty = getJsonProperty(paramAnnotations);
                 if (jsonProperty == null) {
                     throw new JsonException("must mark all parameters using @JsonProperty: " + method);
                 }
@@ -111,7 +111,19 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
         }
     }
 
-    private static <T extends Annotation> T getAnnotation(Annotation[] annotations, Class<T> annotationClass) {
+    protected JsonCreator getJsonCreator(Annotation[] annotations) {
+        return getAnnotation(annotations, JsonCreator.class);
+    }
+
+    protected JsonProperty getJsonProperty(Annotation[] annotations) {
+        return getAnnotation(annotations, JsonProperty.class);
+    }
+
+    protected JsonIgnore getJsonIgnore(Annotation[] annotations) {
+        return getAnnotation(annotations, JsonIgnore.class);
+    }
+
+    protected static <T extends Annotation> T getAnnotation(Annotation[] annotations, Class<T> annotationClass) {
         if (annotations == null) {
             return null;
         }

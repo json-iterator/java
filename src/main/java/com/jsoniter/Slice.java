@@ -36,15 +36,10 @@ public class Slice {
 
     @Override
     public final boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
         Slice slice = (Slice) o;
-
         if (len != slice.len) return false;
-
-        for (int i = head; i < len; i++)
-            if (data[i] != slice.data[i])
+        for (int i = head, j = slice.head; i < head+len; i++, j++)
+            if (data[i] != slice.data[j])
                 return false;
         return true;
 
@@ -53,7 +48,7 @@ public class Slice {
     @Override
     public final int hashCode() {
         int result = 1;
-        for (int i = head; i < len; i++) {
+        for (int i = head; i < head+len; i++) {
             result = 31 * result + data[i];
         }
         return result;

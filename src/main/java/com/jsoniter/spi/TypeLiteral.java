@@ -1,15 +1,62 @@
 package com.jsoniter.spi;
 
+import com.jsoniter.Any;
 import com.jsoniter.JsonException;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.HashMap;
+import java.util.Map;
 
 public class TypeLiteral<T> {
+
+
+    public enum NativeType {
+        FLOAT,
+        DOUBLE,
+        BOOLEAN,
+        BYTE,
+        SHORT,
+        INT,
+        CHAR,
+        LONG,
+        BIG_DECIMAL,
+        BIG_INTEGER,
+        STRING,
+        OBJECT,
+        ANY,
+    }
+
+    public static Map<Type, NativeType> nativeTypes = new HashMap<Type, NativeType>() {{
+        put(float.class, NativeType.FLOAT);
+        put(Float.class, NativeType.FLOAT);
+        put(double.class, NativeType.DOUBLE);
+        put(Double.class, NativeType.DOUBLE);
+        put(boolean.class, NativeType.BOOLEAN);
+        put(Boolean.class, NativeType.BOOLEAN);
+        put(byte.class, NativeType.BYTE);
+        put(Byte.class, NativeType.BYTE);
+        put(short.class, NativeType.SHORT);
+        put(Short.class, NativeType.SHORT);
+        put(int.class, NativeType.INT);
+        put(Integer.class, NativeType.INT);
+        put(char.class, NativeType.CHAR);
+        put(Character.class, NativeType.CHAR);
+        put(long.class, NativeType.LONG);
+        put(Long.class, NativeType.LONG);
+        put(BigDecimal.class, NativeType.BIG_DECIMAL);
+        put(BigInteger.class, NativeType.BIG_INTEGER);
+        put(String.class, NativeType.STRING);
+        put(Object.class, NativeType.OBJECT);
+        put(Any.class, NativeType.ANY);
+    }};
 
     final Type type;
     final String decoderCacheKey;
     final String encoderCacheKey;
+    final NativeType nativeType;
 
     /**
      * Constructs a new type literal. Derives represented class from type parameter.
@@ -19,12 +66,14 @@ public class TypeLiteral<T> {
     @SuppressWarnings("unchecked")
     protected TypeLiteral() {
         this.type = getSuperclassTypeParameter(getClass());
+        nativeType = nativeTypes.get(this.type);
         decoderCacheKey = generateDecoderCacheKey(type);
         encoderCacheKey = generateEncoderCacheKey(type);
     }
 
     public TypeLiteral(Type type, String decoderCacheKey, String encoderCacheKey) {
         this.type = type;
+        nativeType = nativeTypes.get(this.type);
         this.decoderCacheKey = decoderCacheKey;
         this.encoderCacheKey = encoderCacheKey;
     }
@@ -100,6 +149,10 @@ public class TypeLiteral<T> {
 
     public String getEncoderCacheKey() {
         return encoderCacheKey;
+    }
+
+    public NativeType getNativeType() {
+        return nativeType;
     }
 
     @Override

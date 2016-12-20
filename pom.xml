@@ -48,6 +48,12 @@
             <artifactId>javassist</artifactId>
             <version>3.21.0-GA</version>
         </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>LATEST</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>
