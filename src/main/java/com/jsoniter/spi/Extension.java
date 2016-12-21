@@ -6,7 +6,7 @@ public interface Extension {
     /**
      * Customize type decoding
      *
-     * @param cacheKey
+     * @param cacheKey  cacheKey parameter
      * @param type change how to decode the type
      * @return null, if no special customization needed
      */
