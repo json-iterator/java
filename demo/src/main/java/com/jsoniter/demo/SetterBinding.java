@@ -3,6 +3,7 @@ package com.jsoniter.demo;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
@@ -20,35 +21,33 @@ import org.openjdk.jmh.infra.Blackhole;
 import java.io.IOException;
 
 @State(Scope.Thread)
-public class ConstructorBinding {
+public class SetterBinding {
 
-    private TypeLiteral<TestObject> typeLiteral;
+    private TypeLiteral<ConstructorBinding.TestObject> typeLiteral;
     private ObjectMapper jackson;
     private byte[] input;
-    private TypeReference<TestObject> typeRef;
+    private TypeReference<ConstructorBinding.TestObject> typeRef;
     private String inputStr;
 
     public static class TestObject {
-        @JsonIgnore
         private int field1;
-        @JsonIgnore
         private int field2;
 
-        @JsonCreator
-        public TestObject(
-                @JsonProperty("field1") int field1,
-                @JsonProperty("field2") int field2) {
+        public void setField1(int field1) {
             this.field1 = field1;
+        }
+
+        public void setField2(int field2) {
             this.field2 = field2;
         }
 
-        @Override
-        public String toString() {
-            return "TestObject1{" +
-                    "field1=" + field1 +
-                    ", field2=" + field2 +
-                    '}';
-        }
+//        @JsonSetter
+//        public void initialize(
+//                @JsonProperty("field1") int field1,
+//                @JsonProperty("field2") int field2) {
+//            this.field1 = field1;
+//            this.field2 = field2;
+//        }
     }
 
 
@@ -56,12 +55,12 @@ public class ConstructorBinding {
 
     @Setup(Level.Trial)
     public void benchSetup(BenchmarkParams params) {
-        inputStr = "{'field1':100,'field2':101}";
-        input = inputStr.replace('\'', '"').getBytes();
+        inputStr = "{'field1':100,'field2':101}".replace('\'', '"');
+        input = inputStr.getBytes();
         iter = JsonIterator.parse(input);
-        typeLiteral = new TypeLiteral<TestObject>() {
+        typeLiteral = new TypeLiteral<ConstructorBinding.TestObject>() {
         };
-        typeRef = new TypeReference<TestObject>() {
+        typeRef = new TypeReference<ConstructorBinding.TestObject>() {
         };
         JacksonAnnotationSupport.enable();
         jackson = new ObjectMapper();
@@ -71,7 +70,7 @@ public class ConstructorBinding {
                 JsonIterator.enableStrictMode();
             }
             if (params.getBenchmark().contains("withJsoniterReflection")) {
-                ExtensionManager.registerTypeDecoder(TestObject.class, new ReflectionDecoder(TestObject.class));
+                ExtensionManager.registerTypeDecoder(ConstructorBinding.TestObject.class, new ReflectionDecoder(ConstructorBinding.TestObject.class));
             }
         }
     }
@@ -79,7 +78,7 @@ public class ConstructorBinding {
     @Test
     public void test() throws IOException {
         benchSetup(null);
-        ExtensionManager.registerTypeDecoder(TestObject.class, new ReflectionDecoder(TestObject.class));
+        ExtensionManager.registerTypeDecoder(ConstructorBinding.TestObject.class, new ReflectionDecoder(ConstructorBinding.TestObject.class));
         System.out.println(withJsoniter());
         System.out.println(withJackson());
     }
@@ -113,12 +112,12 @@ public class ConstructorBinding {
         bh.consume(withJackson());
     }
 
-    private TestObject withJsoniter() throws IOException {
+    private ConstructorBinding.TestObject withJsoniter() throws IOException {
         iter.reset();
         return iter.read(typeLiteral);
     }
 
-    private TestObject withJackson() throws IOException {
+    private ConstructorBinding.TestObject withJackson() throws IOException {
         return jackson.readValue(input, typeRef);
     }
 }

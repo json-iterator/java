@@ -52,6 +52,11 @@ public class JacksonAnnotationSupport extends JsoniterAnnotationSupport {
             }
 
             @Override
+            public boolean required() {
+                return jacksonObj.required();
+            }
+
+            @Override
             public Class<? extends Annotation> annotationType() {
                 return JsonProperty.class;
             }

@@ -48,7 +48,7 @@ class CodegenImplObject {
             append(lines, "{{clazz}} obj = {{newInst}};");
             append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) {");
             if (hasMandatoryField) {
-                appendMissingMandatoryFields(lines);
+                appendMissingMandatoryFields(lines, allBindings);
             } else {
                 append(lines, "return obj;");
             }
@@ -59,7 +59,7 @@ class CodegenImplObject {
             }
             append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) {");
             if (hasMandatoryField) {
-                appendMissingMandatoryFields(lines);
+                appendMissingMandatoryFields(lines, allBindings);
             } else {
                 append(lines, "return {{newInst}};");
             }
@@ -108,7 +108,7 @@ class CodegenImplObject {
         append(lines, "}"); // end of while
         if (hasMandatoryField) {
             append(lines, "if (tracker != " + expectedTracker + "L) {");
-            appendMissingMandatoryFields(lines);
+            appendMissingMandatoryFields(lines, allBindings);
             append(lines, "}");
         }
         if (!desc.ctor.parameters.isEmpty()) {
@@ -125,13 +125,21 @@ class CodegenImplObject {
                 .replace("{{newInst}}", genNewInstCode(clazz, desc.ctor));
     }
 
-    private static void appendMissingMandatoryFields(StringBuilder lines) {
-        append(lines, "throw new com.jsoniter.JsonException('missing mandatory fields');".replace('\'', '"'));
+    private static void appendMissingMandatoryFields(StringBuilder lines, List<Binding> allBindings) {
+        append(lines, "java.util.List missingFields = new java.util.ArrayList();");
+        for (Binding binding : allBindings) {
+            if (binding.failOnMissing) {
+                long mask = 1L << binding.idx;
+                append(lines, String.format("com.jsoniter.CodegenAccess.addMissingField(missingFields, tracker, %sL, \"%s\");",
+                        mask, binding.name));
+            }
+        }
+        append(lines, "throw new com.jsoniter.JsonException(\"missing mandatory properties: \" + missingFields);");
     }
 
     private static void appendOnUnknownField(StringBuilder lines, ClassDescriptor desc) {
         if (desc.failOnUnknownFields) {
-            append(lines, "throw new com.jsoniter.JsonException('unknown field: ' + field.toString());".replace('\'', '"'));
+            append(lines, "throw new com.jsoniter.JsonException('unknown property: ' + field.toString());".replace('\'', '"'));
         } else {
             append(lines, "iter.skip();");
         }
@@ -191,6 +199,9 @@ class CodegenImplObject {
                     append(lines, String.format(
                             "throw new com.jsoniter.JsonException('found should not present field: %s');".replace('\'', '"'),
                             field.name));
+                } else if (field.skip) {
+                    append(lines, "iter.skip();");
+                    append(lines, "continue;");
                 } else {
                     append(lines, String.format("_%s_ = %s;", field.name, genField(field, cacheKey)));
                     if (field.failOnMissing) {

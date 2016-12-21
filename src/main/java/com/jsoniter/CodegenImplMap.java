@@ -27,9 +27,16 @@ class CodegenImplMap {
         }
         StringBuilder lines = new StringBuilder();
         append(lines, "public static Object decode_(com.jsoniter.JsonIterator iter) {");
+        append(lines, "if (iter.readNull()) { return null; }");
         append(lines, "{{clazz}} map = ({{clazz}})com.jsoniter.CodegenAccess.resetExistingObject(iter);");
         append(lines, "if (map == null) { map = new {{clazz}}(); }");
-        append(lines, "for (String field = iter.readObject(); field != null; field = iter.readObject()) {");
+        append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) {");
+        append(lines, "return map;");
+        append(lines, "}");
+        append(lines, "String field = com.jsoniter.CodegenAccess.readObjectFieldAsString(iter);");
+        append(lines, "map.put(field, {{op}});");
+        append(lines, "while (com.jsoniter.CodegenAccess.nextToken(iter) == ',') {");
+        append(lines, "field = com.jsoniter.CodegenAccess.readObjectFieldAsString(iter);");
         append(lines, "map.put(field, {{op}});");
         append(lines, "}");
         append(lines, "return map;");

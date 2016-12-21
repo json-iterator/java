@@ -18,6 +18,7 @@ public class Binding {
     public Encoder encoder;
     public boolean failOnMissing;
     public boolean failOnPresent;
+    public boolean skip;
     // optional
     public Field field;
     public int idx;

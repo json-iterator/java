@@ -1,17 +1,12 @@
 package com.jsoniter.demo;
 
-import com.alibaba.fastjson.annotation.JSONField;
-import com.alibaba.fastjson.parser.DefaultJSONParser;
-import com.alibaba.fastjson.parser.ParserConfig;
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.ReflectionDecoder;
-import com.jsoniter.annotation.JsonIgnore;
-import com.jsoniter.annotation.JsoniterAnnotationSupport;
+import com.jsoniter.annotation.JacksonAnnotationSupport;
 import com.jsoniter.spi.ExtensionManager;
 import com.jsoniter.spi.TypeLiteral;
 import org.junit.Test;
@@ -31,23 +26,14 @@ public class PrivateFieldBinding {
     private String inputStr;
 
     public static class TestObject {
-        @JsonIgnore
+        @JsonProperty
         private int field1;
-        @JsonIgnore
+        @JsonProperty
         private int field2;
-
-        @JsonCreator
-        @com.jsoniter.annotation.JsonCreator
-        private TestObject(
-                @JsonProperty("field1") @com.jsoniter.annotation.JsonProperty("field1") int field1,
-                @JsonProperty("field2") @com.jsoniter.annotation.JsonProperty("field2") int field2) {
-            this.field1 = field1;
-            this.field2 = field2;
-        }
 
         @Override
         public String toString() {
-            return "TestObject{" +
+            return "TestObject1{" +
                     "field1=" + field1 +
                     ", field2=" + field2 +
                     '}';
@@ -66,7 +52,7 @@ public class PrivateFieldBinding {
         };
         typeRef = new TypeReference<TestObject>() {
         };
-        JsoniterAnnotationSupport.enable();
+        JacksonAnnotationSupport.enable();
         ExtensionManager.registerTypeDecoder(TestObject.class, new ReflectionDecoder(TestObject.class));
         jackson = new ObjectMapper();
         jackson.registerModule(new AfterburnerModule());

@@ -19,40 +19,60 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
 
     @Override
     public void updateClassDescriptor(ClassDescriptor desc) {
-        for (Binding field : desc.allDecoderBindings()) {
-            JsonIgnore jsonIgnore = getJsonIgnore(field.annotations);
-            if (jsonIgnore != null && jsonIgnore.value()) {
-                field.fromNames = new String[0];
+        JsonUnknownProperties jsonUnknownProperties = (JsonUnknownProperties) desc.clazz.getAnnotation(JsonUnknownProperties.class);
+        if (jsonUnknownProperties != null) {
+            if (jsonUnknownProperties.failOnUnkown()) {
+                desc.failOnUnknownFields = true;
             }
-            JsonProperty jsonProperty = getJsonProperty(field.annotations);
-            if (jsonProperty != null) {
-                String alternativeField = jsonProperty.value();
-                if (!alternativeField.isEmpty()) {
-                    field.fromNames = new String[]{alternativeField};
-                }
+            for (String fieldName : jsonUnknownProperties.whitelist()) {
+                Binding binding = new Binding(desc.clazz, desc.lookup, Object.class);
+                binding.name = fieldName;
+                binding.skip = true;
+                desc.fields.add(binding);
+            }
+            for (String fieldName : jsonUnknownProperties.blacklist()) {
+                Binding binding = new Binding(desc.clazz, desc.lookup, Object.class);
+                binding.name = fieldName;
+                binding.failOnPresent = true;
+                desc.fields.add(binding);
             }
         }
-        for (Constructor ctor : desc.clazz.getDeclaredConstructors()) {
-            JsonCreator jsonCreator = getJsonCreator(ctor.getAnnotations());
-            if (jsonCreator == null) {
+        updateBindings(desc);
+        detectCtorBinding(desc);
+        detectStaticFactoryBinding(desc);
+        detectSetterBinding(desc);
+    }
+
+    private void detectSetterBinding(ClassDescriptor desc) {
+        for (Method method : desc.clazz.getMethods()) {
+            if (Modifier.isStatic(method.getModifiers())) {
                 continue;
             }
-            desc.ctor.staticMethodName = null;
-            desc.ctor.ctor = ctor;
-            desc.ctor.staticFactory = null;
-            Annotation[][] annotations = ctor.getParameterAnnotations();
+            if (method.getAnnotation(JsonSetter.class) == null) {
+                continue;
+            }
+            SetterDescriptor setter = new SetterDescriptor();
+            setter.methodName = method.getName();
+            Annotation[][] annotations = method.getParameterAnnotations();
             for (int i = 0; i < annotations.length; i++) {
                 Annotation[] paramAnnotations = annotations[i];
                 JsonProperty jsonProperty = getJsonProperty(paramAnnotations);
                 if (jsonProperty == null) {
-                    throw new JsonException("must mark all parameters using @JsonProperty: " + ctor);
+                    throw new JsonException("must mark all parameters using @JsonProperty: " + method);
                 }
-                Binding binding = new Binding(desc.clazz, desc.lookup, ctor.getGenericParameterTypes()[i]);
+                Binding binding = new Binding(desc.clazz, desc.lookup, method.getGenericParameterTypes()[i]);
                 binding.name = jsonProperty.value();
                 binding.annotations = paramAnnotations;
-                desc.ctor.parameters.add(binding);
+                if (jsonProperty.required()) {
+                    binding.failOnMissing = true;
+                }
+                setter.parameters.add(binding);
             }
+            desc.setters.add(setter);
         }
+    }
+
+    private void detectStaticFactoryBinding(ClassDescriptor desc) {
         List<Method> allMethods = new ArrayList<Method>();
         Class current = desc.clazz;
         while (current != null) {
@@ -80,31 +100,57 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
                 Binding binding = new Binding(desc.clazz, desc.lookup, method.getGenericParameterTypes()[i]);
                 binding.name = jsonProperty.value();
                 binding.annotations = paramAnnotations;
+                if (jsonProperty.required()) {
+                    binding.failOnMissing = true;
+                }
                 desc.ctor.parameters.add(binding);
             }
         }
-        for (Method method : desc.clazz.getMethods()) {
-            if (Modifier.isStatic(method.getModifiers())) {
+    }
+
+    private void detectCtorBinding(ClassDescriptor desc) {
+        for (Constructor ctor : desc.clazz.getDeclaredConstructors()) {
+            JsonCreator jsonCreator = getJsonCreator(ctor.getAnnotations());
+            if (jsonCreator == null) {
                 continue;
             }
-            if (method.getAnnotation(JsonSetter.class) == null) {
-                continue;
-            }
-            SetterDescriptor setter = new SetterDescriptor();
-            setter.methodName = method.getName();
-            Annotation[][] annotations = method.getParameterAnnotations();
+            desc.ctor.staticMethodName = null;
+            desc.ctor.ctor = ctor;
+            desc.ctor.staticFactory = null;
+            Annotation[][] annotations = ctor.getParameterAnnotations();
             for (int i = 0; i < annotations.length; i++) {
                 Annotation[] paramAnnotations = annotations[i];
                 JsonProperty jsonProperty = getJsonProperty(paramAnnotations);
                 if (jsonProperty == null) {
-                    throw new JsonException("must mark all parameters using @JsonProperty: " + method);
+                    throw new JsonException("must mark all parameters using @JsonProperty: " + ctor);
                 }
-                Binding binding = new Binding(desc.clazz, desc.lookup, method.getGenericParameterTypes()[i]);
+                Binding binding = new Binding(desc.clazz, desc.lookup, ctor.getGenericParameterTypes()[i]);
                 binding.name = jsonProperty.value();
                 binding.annotations = paramAnnotations;
-                setter.parameters.add(binding);
+                if (jsonProperty.required()) {
+                    binding.failOnMissing = true;
+                }
+                desc.ctor.parameters.add(binding);
             }
-            desc.setters.add(setter);
+        }
+    }
+
+    private void updateBindings(ClassDescriptor desc) {
+        for (Binding field : desc.allDecoderBindings()) {
+            JsonIgnore jsonIgnore = getJsonIgnore(field.annotations);
+            if (jsonIgnore != null && jsonIgnore.value()) {
+                field.fromNames = new String[0];
+            }
+            JsonProperty jsonProperty = getJsonProperty(field.annotations);
+            if (jsonProperty != null) {
+                String alternativeField = jsonProperty.value();
+                if (!alternativeField.isEmpty()) {
+                    field.fromNames = new String[]{alternativeField};
+                }
+                if (jsonProperty.required()) {
+                    field.failOnMissing = true;
+                }
+            }
         }
     }
 

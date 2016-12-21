@@ -6,9 +6,16 @@ import com.jsoniter.spi.TypeLiteral;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
 
 // only uesd by generated code to access decoder
 public class CodegenAccess {
+
+    public static void addMissingField(List missingFields, long tracker, long mask, String fieldName) {
+        if ((tracker & mask) == 0) {
+            missingFields.add(fieldName);
+        }
+    }
 
     public static <T extends Collection> T reuseCollection(T col) {
         col.clear();
@@ -132,6 +139,14 @@ public class CodegenAccess {
 
     public static void reportIncompleteArray(JsonIterator iter) {
         throw iter.reportError("genArray", "expect ]");
+    }
+
+    public static final String readObjectFieldAsString(JsonIterator iter) throws IOException {
+        String field = iter.readString();
+        if (iter.nextToken() != ':') {
+            throw iter.reportError("readObjectFieldAsString", "expect :");
+        }
+        return field;
     }
 
     public static final int readObjectFieldAsHash(JsonIterator iter) throws IOException {

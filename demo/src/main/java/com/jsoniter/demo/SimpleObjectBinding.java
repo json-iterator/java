@@ -37,7 +37,7 @@ public class SimpleObjectBinding {
 
         @Override
         public String toString() {
-            return "TestObject{" +
+            return "TestObject1{" +
                     "field1=" + field1 +
                     ", field2=" + field2 +
                     '}';
@@ -49,8 +49,8 @@ public class SimpleObjectBinding {
 
     @Setup(Level.Trial)
     public void benchSetup(BenchmarkParams params) {
-        inputStr = "{'field1':100,'field2':101}";
-        input = inputStr.replace('\'', '"').getBytes();
+        inputStr = "{'field1':100,'field2':101}".replace('\'', '"');
+        input = inputStr.getBytes();
         iter = JsonIterator.parse(input);
         typeLiteral = new TypeLiteral<TestObject>() {
         };
@@ -96,27 +96,27 @@ public class SimpleObjectBinding {
         });
     }
 
-//    @Benchmark
+    @Benchmark
     public void withIterator(Blackhole bh) throws IOException {
         bh.consume(withIterator());
     }
 
-//    @Benchmark
+    @Benchmark
     public void withIteratorIfElse(Blackhole bh) throws IOException {
         bh.consume(withIteratorIfElse());
     }
 
-//    @Benchmark
+    @Benchmark
     public void withIteratorIntern(Blackhole bh) throws IOException {
         bh.consume(withIteratorIntern());
     }
 
-//    @Benchmark
+    @Benchmark
     public void withoutExistingObject(Blackhole bh) throws IOException {
         bh.consume(withBindApi());
     }
 
-//    @Benchmark
+    @Benchmark
     public void withBindApiStrictMode(Blackhole bh) throws IOException {
         bh.consume(withBindApi());
     }
@@ -126,27 +126,27 @@ public class SimpleObjectBinding {
         bh.consume(withBindApi());
     }
 
-//    @Benchmark
+    @Benchmark
     public void withExistingObject(Blackhole bh) throws IOException {
         bh.consume(withExistingObject());
     }
 
-//    @Benchmark
+    @Benchmark
     public void withJacksonAfterburner(Blackhole bh) throws IOException {
         bh.consume(withJackson());
     }
 
-//    @Benchmark
+    @Benchmark
     public void withJacksonNoAfterburner(Blackhole bh) throws IOException {
         bh.consume(withJackson());
     }
 
-//    @Benchmark
+    @Benchmark
     public void withDsljson(Blackhole bh) throws IOException {
         bh.consume(withDsljson());
     }
 
-//    @Benchmark
+    @Benchmark
     public void withFastjson(Blackhole bh) throws IOException {
         bh.consume(withFastjson());
     }
