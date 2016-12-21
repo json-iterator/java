@@ -3,6 +3,7 @@ package com.jsoniter.spi;
 import com.jsoniter.Any;
 import com.jsoniter.JsonException;
 
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
@@ -11,7 +12,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class TypeLiteral<T> {
-
 
     public enum NativeType {
         FLOAT,
@@ -95,14 +95,23 @@ public class TypeLiteral<T> {
             }
             decoderClassName.append(clazz.getCanonicalName().replace("[]", "_array"));
         } else if (type instanceof ParameterizedType) {
-            ParameterizedType pType = (ParameterizedType) type;
-            Class clazz = (Class) pType.getRawType();
-            decoderClassName.append(clazz.getCanonicalName().replace("[]", "_array"));
-            for (int i = 0; i < pType.getActualTypeArguments().length; i++) {
-                String typeName = formatTypeWithoutSpecialCharacter(pType.getActualTypeArguments()[i]);
-                decoderClassName.append('_');
-                decoderClassName.append(typeName);
+            try {
+                ParameterizedType pType = (ParameterizedType) type;
+                Class clazz = (Class) pType.getRawType();
+                decoderClassName.append(clazz.getCanonicalName().replace("[]", "_array"));
+                for (int i = 0; i < pType.getActualTypeArguments().length; i++) {
+                    String typeName = formatTypeWithoutSpecialCharacter(pType.getActualTypeArguments()[i]);
+                    decoderClassName.append('_');
+                    decoderClassName.append(typeName);
+                }
+            } catch (Exception e) {
+                throw new JsonException("failed to generate cache key for: " + type, e);
             }
+        } else if (type instanceof GenericArrayType) {
+            GenericArrayType gaType = (GenericArrayType) type;
+            Type compType = gaType.getGenericComponentType();
+            decoderClassName.append(formatTypeWithoutSpecialCharacter(compType));
+            decoderClassName.append("_array");
         } else {
             throw new UnsupportedOperationException("do not know how to handle: " + type);
         }
@@ -123,7 +132,11 @@ public class TypeLiteral<T> {
             }
             return typeName;
         }
-        throw new JsonException("unsupported type: " + type);
+        if (type instanceof GenericArrayType) {
+            GenericArrayType gaType = (GenericArrayType) type;
+            return formatTypeWithoutSpecialCharacter(gaType.getGenericComponentType()) + "_array";
+        }
+        throw new JsonException("unsupported type: " + type + ", of class " + type.getClass());
     }
 
     static Type getSuperclassTypeParameter(Class<?> subclass) {
@@ -136,7 +149,9 @@ public class TypeLiteral<T> {
     }
 
     public static TypeLiteral create(Type valueType) {
-        return new TypeLiteral(valueType, generateDecoderCacheKey(valueType), generateEncoderCacheKey(valueType));
+        return new TypeLiteral(valueType,
+                generateDecoderCacheKey(valueType),
+                generateEncoderCacheKey(valueType));
     }
 
     public Type getType() {

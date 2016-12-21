@@ -55,16 +55,14 @@ public class TestCustomizeSetter extends TestCase {
     public void test_customized_setter() throws IOException {
         ExtensionManager.registerExtension(new EmptyExtension() {
             @Override
-            public void updateClassDescriptor(ClassDescriptor desc) {
+            public void updateClassDescriptor(final ClassDescriptor desc) {
                 if (desc.clazz == ObjectWithCustomizedSetter.class) {
                     desc.setters = (List) Arrays.asList(new SetterDescriptor(){{
                         methodName = "initialize";
-                        parameters = (List) Arrays.asList(new Binding() {{
+                        parameters = (List) Arrays.asList(new Binding(desc.clazz, desc.lookup, String.class) {{
                             name = "field1";
-                            valueType = String.class;
-                        }}, new Binding() {{
+                        }}, new Binding(desc.clazz, desc.lookup, String.class) {{
                             name = "field2";
-                            valueType = String.class;
                         }});
                     }});
                 }

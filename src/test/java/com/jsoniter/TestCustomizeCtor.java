@@ -24,13 +24,12 @@ public class TestCustomizeCtor extends TestCase {
     public void test_codegen() throws IOException {
         ExtensionManager.registerExtension(new EmptyExtension() {
             @Override
-            public void updateClassDescriptor(ClassDescriptor desc) {
+            public void updateClassDescriptor(final ClassDescriptor desc) {
                 if (desc.clazz == WithPublicCtor.class) {
                     desc.ctor = new ConstructorDescriptor() {{
-                        parameters = (List) Arrays.asList(new Binding() {{
+                        parameters = (List) Arrays.asList(new Binding(desc.clazz, desc.lookup, String.class) {{
                             fromNames = new String[]{"param1"};
                             name="field1";
-                            valueType = String.class;
                         }});
                     }};
                 }
@@ -52,13 +51,12 @@ public class TestCustomizeCtor extends TestCase {
     public void test_reflection() throws IOException {
         ExtensionManager.registerExtension(new EmptyExtension() {
             @Override
-            public void updateClassDescriptor(ClassDescriptor desc) {
+            public void updateClassDescriptor(final ClassDescriptor desc) {
                 if (desc.clazz == WithPrivateCtor.class) {
                     desc.ctor = new ConstructorDescriptor() {{
-                        parameters = (List) Arrays.asList(new Binding() {{
+                        parameters = (List) Arrays.asList(new Binding(desc.clazz, desc.lookup, String.class) {{
                             fromNames = new String[]{"param1"};
                             name="param1";
-                            valueType = String.class;
                         }});
                         ctor = WithPrivateCtor.class.getDeclaredConstructors()[0];
                     }};

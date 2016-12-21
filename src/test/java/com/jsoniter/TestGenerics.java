@@ -1,9 +1,14 @@
 package com.jsoniter;
 
+import com.jsoniter.annotation.JsonProperty;
+import com.jsoniter.spi.Binding;
+import com.jsoniter.spi.ClassDescriptor;
+import com.jsoniter.spi.ExtensionManager;
 import com.jsoniter.spi.TypeLiteral;
 import junit.framework.TestCase;
 
 import java.io.IOException;
+import java.lang.reflect.*;
 import java.util.*;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -57,6 +62,49 @@ public class TestGenerics extends TestCase {
         JsonIterator iter = JsonIterator.parse("{'field1': 100, 'field2': [[1,2],[3,4]]}".replace('\'', '"'));
         ComplexObject val = iter.read(ComplexObject.class);
         assertEquals(100, val.field1);
-        assertEquals(4.0d, val.field2.get(1).get(1));
+        assertEquals(Integer.valueOf(4), val.field2.get(1).get(1));
+    }
+
+    public static class Class1<A, B> {
+        public List<A> field1;
+        public B[] field2;
+        public List<B>[] field3;
+        public List<A[]> field4;
+        public List<Map<A, List<B>>> getField6() {
+            return null;
+        }
+        public <T> T getField7() {
+            return null;
+        }
+        public void setField8(List<A> a) {
+        }
+    }
+
+    public static class Class2<C, D, E> extends Class1<C, D> {
+        public E field5;
+    }
+
+    public static class Class3 extends Class2<String, Integer, Float> {
+    }
+
+    public void test_generic_super_class() throws IOException {
+        ClassDescriptor desc = ExtensionManager.getClassDescriptor(Class3.class, true);
+        Map<String, String> fieldDecoderCacheKeys = new HashMap<String, String>();
+        for (Binding field : desc.allDecoderBindings()) {
+            fieldDecoderCacheKeys.put(field.name, field.valueTypeLiteral.getDecoderCacheKey());
+        }
+        for (Binding field : desc.getters) {
+            fieldDecoderCacheKeys.put(field.name, field.valueTypeLiteral.getDecoderCacheKey());
+        }
+        assertEquals(new HashMap<String, String>() {{
+            put("field1", "decoder.java.util.List_java.lang.String");
+            put("field2", "decoder.java.lang.Integer_array");
+            put("field3", "decoder.java.util.List_java.lang.Integer_array");
+            put("field4", "decoder.java.util.List_java.lang.String_array");
+            put("field5", "decoder.java.lang.Float");
+            put("getField6()", "decoder.java.util.List_java.util.Map_java.lang.String_java.util.List_java.lang.Integer");
+            put("getField7()", "decoder.java.lang.Object");
+            put("field8", "decoder.java.util.List_java.lang.String");
+        }}, fieldDecoderCacheKeys);
     }
 }

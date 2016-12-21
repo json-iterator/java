@@ -83,12 +83,11 @@ public class TestCustomizeField extends TestCase {
     public void test_rename_ctor_param() throws IOException {
         ExtensionManager.registerExtension(new EmptyExtension() {
             @Override
-            public void updateClassDescriptor(ClassDescriptor desc) {
+            public void updateClassDescriptor(final ClassDescriptor desc) {
                 if (desc.clazz == TestObject5.class) {
                     desc.ctor = new ConstructorDescriptor() {{
-                        parameters = (List) Arrays.asList(new Binding() {{
+                        parameters = (List) Arrays.asList(new Binding(desc.clazz, desc.lookup, int.class) {{
                             name = "param2";
-                            valueType = int.class;
                         }});
                     }};
                 }

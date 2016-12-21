@@ -1,10 +1,13 @@
 package com.jsoniter.spi;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class ClassDescriptor {
     public Class clazz;
+    public Map<String, Type> lookup;
     public ConstructorDescriptor ctor;
     public List<Binding> fields;
     public List<SetterDescriptor> setters;

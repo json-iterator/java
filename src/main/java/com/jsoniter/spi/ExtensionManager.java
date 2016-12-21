@@ -1,9 +1,9 @@
 package com.jsoniter.spi;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.Type;
+import com.jsoniter.JsonException;
+import sun.net.www.content.text.Generic;
+
+import java.lang.reflect.*;
 import java.util.*;
 
 public class ExtensionManager {
@@ -76,12 +76,14 @@ public class ExtensionManager {
     }
 
     public static ClassDescriptor getClassDescriptor(Class clazz, boolean includingPrivate) {
+        Map<String, Type> lookup = collectTypeVariableLookup(clazz);
         ClassDescriptor desc = new ClassDescriptor();
         desc.clazz = clazz;
+        desc.lookup = lookup;
         desc.ctor = getCtor(clazz);
-        desc.fields = getFields(clazz, includingPrivate);
-        desc.setters = getSetters(clazz, includingPrivate);
-        desc.getters = getGetters(clazz, includingPrivate);
+        desc.fields = getFields(lookup, clazz, includingPrivate);
+        desc.setters = getSetters(lookup, clazz, includingPrivate);
+        desc.getters = getGetters(lookup, clazz, includingPrivate);
         for (Extension extension : extensions) {
             extension.updateClassDescriptor(desc);
         }
@@ -103,8 +105,6 @@ public class ExtensionManager {
             if (binding.field != null && includingPrivate) {
                 binding.field.setAccessible(true);
             }
-            binding.clazz = clazz;
-            binding.valueTypeLiteral = TypeLiteral.create(binding.valueType);
         }
         for (Binding binding : desc.allEncoderBindings()) {
             if (binding.toNames == null) {
@@ -113,8 +113,6 @@ public class ExtensionManager {
             if (binding.field != null && includingPrivate) {
                 binding.field.setAccessible(true);
             }
-            binding.clazz = clazz;
-            binding.valueTypeLiteral = TypeLiteral.create(binding.valueType);
         }
         return desc;
     }
@@ -129,7 +127,7 @@ public class ExtensionManager {
         return cctor;
     }
 
-    private static List<Binding> getFields(Class clazz, boolean includingPrivate) {
+    private static List<Binding> getFields(Map<String, Type> lookup, Class clazz, boolean includingPrivate) {
         ArrayList<Binding> bindings = new ArrayList<Binding>();
         for (Field field : getAllFields(clazz, includingPrivate)) {
             if (Modifier.isStatic(field.getModifiers())) {
@@ -138,23 +136,16 @@ public class ExtensionManager {
             if (includingPrivate) {
                 field.setAccessible(true);
             }
-            Binding binding = createBindingFromField(clazz, field);
+            Binding binding = createBindingFromField(lookup, clazz, field);
             bindings.add(binding);
         }
-        Binding binding = new Binding();
-        binding.fromNames = new String[0];
-        binding.name = "*";
-        binding.clazz = clazz;
         return bindings;
     }
 
-    private static Binding createBindingFromField(Class clazz, Field field) {
-        Binding binding = new Binding();
+    private static Binding createBindingFromField(Map<String, Type> lookup, Class clazz, Field field) {
+        Binding binding = new Binding(clazz, lookup, field.getGenericType());
         binding.fromNames = new String[]{field.getName()};
         binding.name = field.getName();
-        binding.valueType = field.getType();
-        binding.valueTypeLiteral = TypeLiteral.create(binding.valueType);
-        binding.clazz = clazz;
         binding.annotations = field.getAnnotations();
         binding.field = field;
         return binding;
@@ -173,7 +164,7 @@ public class ExtensionManager {
         return allFields;
     }
 
-    private static List<SetterDescriptor> getSetters(Class clazz, boolean includingPrivate) {
+    private static List<SetterDescriptor> getSetters(Map<String, Type> lookup, Class clazz, boolean includingPrivate) {
         ArrayList<SetterDescriptor> setters = new ArrayList<SetterDescriptor>();
         List<Method> allMethods = Arrays.asList(clazz.getMethods());
         if (includingPrivate) {
@@ -209,11 +200,9 @@ public class ExtensionManager {
             SetterDescriptor setter = new SetterDescriptor();
             setter.method = method;
             setter.methodName = methodName;
-            Binding param = new Binding();
+            Binding param = new Binding(clazz, lookup, paramTypes[0]);
             param.fromNames = new String[]{fromName};
             param.name = fromName;
-            param.valueType = paramTypes[0];
-            param.valueTypeLiteral = TypeLiteral.create(param.valueType);
             param.clazz = clazz;
             setter.parameters.add(param);
             setters.add(setter);
@@ -221,7 +210,7 @@ public class ExtensionManager {
         return setters;
     }
 
-    private static List<Binding> getGetters(Class clazz, boolean includingPrivate) {
+    private static List<Binding> getGetters(Map<String, Type> lookup, Class clazz, boolean includingPrivate) {
         ArrayList<Binding> getters = new ArrayList<Binding>();
         for (Method method : clazz.getMethods()) {
             if (Modifier.isStatic(method.getModifiers())) {
@@ -244,11 +233,9 @@ public class ExtensionManager {
             char[] fromNameChars = toName.toCharArray();
             fromNameChars[0] = Character.toLowerCase(fromNameChars[0]);
             toName = new String(fromNameChars);
-            Binding getter = new Binding();
+            Binding getter = new Binding(clazz, lookup, method.getGenericReturnType());
             getter.toNames = new String[]{toName};
             getter.name = methodName + "()";
-            getter.valueType = method.getGenericReturnType();
-            getter.clazz = clazz;
             getters.add(getter);
         }
         return getters;
@@ -261,5 +248,29 @@ public class ExtensionManager {
         for (String cacheKey : encoders.keySet()) {
             System.err.println(cacheKey);
         }
+    }
+
+    private static Map<String, Type> collectTypeVariableLookup(Type type) {
+        HashMap<String, Type> vars = new HashMap<String, Type>();
+        if (null == type) {
+            return vars;
+        }
+        if (type instanceof ParameterizedType) {
+            ParameterizedType pType = (ParameterizedType) type;
+            Type[] actualTypeArguments = pType.getActualTypeArguments();
+            Class clazz = (Class) pType.getRawType();
+            for (int i = 0; i < clazz.getTypeParameters().length; i++) {
+                TypeVariable variable = clazz.getTypeParameters()[i];
+                vars.put(variable.getName() + "@" + clazz.getCanonicalName(), actualTypeArguments[i]);
+            }
+            vars.putAll(collectTypeVariableLookup(clazz.getGenericSuperclass()));
+            return vars;
+        }
+        if (type instanceof Class) {
+            Class clazz = (Class) type;
+            vars.putAll(collectTypeVariableLookup(clazz.getGenericSuperclass()));
+            return vars;
+        }
+        throw new JsonException("unexpected type: " + type);
     }
 }

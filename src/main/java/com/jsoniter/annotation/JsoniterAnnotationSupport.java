@@ -47,9 +47,8 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
                 if (jsonProperty == null) {
                     throw new JsonException("must mark all parameters using @JsonProperty: " + ctor);
                 }
-                Binding binding = new Binding();
+                Binding binding = new Binding(desc.clazz, desc.lookup, ctor.getGenericParameterTypes()[i]);
                 binding.name = jsonProperty.value();
-                binding.valueType = ctor.getParameterTypes()[i];
                 binding.annotations = paramAnnotations;
                 desc.ctor.parameters.add(binding);
             }
@@ -78,9 +77,8 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
                 if (jsonProperty == null) {
                     throw new JsonException("must mark all parameters using @JsonProperty: " + method);
                 }
-                Binding binding = new Binding();
+                Binding binding = new Binding(desc.clazz, desc.lookup, method.getGenericParameterTypes()[i]);
                 binding.name = jsonProperty.value();
-                binding.valueType = method.getParameterTypes()[i];
                 binding.annotations = paramAnnotations;
                 desc.ctor.parameters.add(binding);
             }
@@ -101,9 +99,8 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
                 if (jsonProperty == null) {
                     throw new JsonException("must mark all parameters using @JsonProperty: " + method);
                 }
-                Binding binding = new Binding();
+                Binding binding = new Binding(desc.clazz, desc.lookup, method.getGenericParameterTypes()[i]);
                 binding.name = jsonProperty.value();
-                binding.valueType = method.getParameterTypes()[i];
                 binding.annotations = paramAnnotations;
                 setter.parameters.add(binding);
             }

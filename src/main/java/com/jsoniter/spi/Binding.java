@@ -1,8 +1,8 @@
 package com.jsoniter.spi;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
+import java.util.Map;
 
 public class Binding {
     // input
@@ -21,6 +21,50 @@ public class Binding {
     // optional
     public Field field;
     public int idx;
+
+    public Binding(Class clazz, Map<String, Type> lookup, Type valueType) {
+        this.clazz = clazz;
+        this.valueType = substituteTypeVariables(lookup, valueType);
+        this.valueTypeLiteral = TypeLiteral.create(this.valueType);
+    }
+
+    private static Type substituteTypeVariables(Map<String, Type> lookup, Type type) {
+        if (type instanceof TypeVariable) {
+            return translateTypeVariable(lookup, (TypeVariable) type);
+        }
+        if (type instanceof ParameterizedType) {
+            ParameterizedType pType = (ParameterizedType) type;
+            Type[] args = pType.getActualTypeArguments();
+            for (int i = 0; i < args.length; i++) {
+                args[i] = substituteTypeVariables(lookup, args[i]);
+            }
+            return new ParameterizedTypeImpl(args, pType.getOwnerType(), pType.getRawType());
+        }
+        if (type instanceof GenericArrayType) {
+            GenericArrayType gaType = (GenericArrayType) type;
+            return new GenericArrayTypeImpl(substituteTypeVariables(lookup, gaType.getGenericComponentType()));
+        }
+        return type;
+    }
+
+    private static Type translateTypeVariable(Map<String, Type> lookup, TypeVariable var) {
+        GenericDeclaration declaredBy = var.getGenericDeclaration();
+        if (!(declaredBy instanceof Class)) {
+            // if the <T> is not defined by class, there is no way to get the actual type
+            return Object.class;
+        }
+        Class clazz = (Class) declaredBy;
+        Type actualType = lookup.get(var.getName() + "@" + clazz.getCanonicalName());
+        if (actualType == null) {
+            // should not happen
+            return Object.class;
+        }
+        if (actualType instanceof TypeVariable) {
+            // translate to another variable, try again
+            return translateTypeVariable(lookup, (TypeVariable) actualType);
+        }
+        return actualType;
+    }
 
     public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
         if (annotations == null) {
