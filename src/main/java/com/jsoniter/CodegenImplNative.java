@@ -57,11 +57,7 @@ class CodegenImplNative {
         if (op == null) {
             throw new JsonException("do not know how to read: " + nativeReadKey);
         }
-        StringBuilder lines = new StringBuilder();
-        append(lines, "public static Object decode_(com.jsoniter.JsonIterator iter) {");
-        append(lines, "return " + op + ";");
-        append(lines, "}");
-        return lines.toString();
+        return "return " + op + ";";
     }
 
     public static String genReadOp(Type type) {

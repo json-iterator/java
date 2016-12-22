@@ -31,13 +31,12 @@ class CodegenImplObject {
             }
         }
         if (currentIdx > 63) {
-            throw new JsonException("too many mandatory fields to track");
+            throw new JsonException("too many required properties to track");
         }
         boolean hasMandatoryField = currentIdx > 0;
         long expectedTracker = Long.MAX_VALUE >> (63 - currentIdx);
         Map<Integer, Object> trieTree = buildTriTree(allBindings);
         StringBuilder lines = new StringBuilder();
-        append(lines, "public static Object decode_(com.jsoniter.JsonIterator iter) {");
         // === if null, return null
         append(lines, "if (iter.readNull()) { com.jsoniter.CodegenAccess.resetExistingObject(iter); return null; }");
         // === if input is empty object, return empty object
@@ -119,7 +118,6 @@ class CodegenImplObject {
         }
         appendSetter(desc.setters, lines);
         append(lines, "return obj;");
-        append(lines, "}");
         return lines.toString()
                 .replace("{{clazz}}", clazz.getCanonicalName())
                 .replace("{{newInst}}", genNewInstCode(clazz, desc.ctor));
@@ -134,7 +132,7 @@ class CodegenImplObject {
                         mask, binding.name));
             }
         }
-        append(lines, "throw new com.jsoniter.JsonException(\"missing mandatory properties: \" + missingFields);");
+        append(lines, "throw new com.jsoniter.JsonException(\"missing required properties: \" + missingFields);");
     }
 
     private static void appendOnUnknownField(StringBuilder lines, ClassDescriptor desc) {
@@ -237,7 +235,6 @@ class CodegenImplObject {
     public static String genObjectUsingHash(Class clazz, String cacheKey, ClassDescriptor desc) {
         // TODO: when setter is single argument, decode like field
         StringBuilder lines = new StringBuilder();
-        append(lines, "public static Object decode_(com.jsoniter.JsonIterator iter) {");
         // === if null, return null
         append(lines, "if (iter.readNull()) { com.jsoniter.CodegenAccess.resetExistingObject(iter); return null; }");
         // === if empty, return empty
@@ -315,7 +312,6 @@ class CodegenImplObject {
         }
         appendSetter(desc.setters, lines);
         append(lines, "return obj;");
-        append(lines, "}");
         return lines.toString()
                 .replace("{{clazz}}", clazz.getCanonicalName())
                 .replace("{{newInst}}", genNewInstCode(clazz, desc.ctor));
@@ -348,12 +344,10 @@ class CodegenImplObject {
 
     public static String genObjectUsingSkip(Class clazz, ConstructorDescriptor ctor) {
         StringBuilder lines = new StringBuilder();
-        append(lines, "public static Object decode_(com.jsoniter.JsonIterator iter) {");
         append(lines, "if (iter.readNull()) { return null; }");
         append(lines, "{{clazz}} obj = {{newInst}};");
         append(lines, "iter.skip();");
         append(lines, "return obj;");
-        append(lines, "}");
         return lines.toString()
                 .replace("{{clazz}}", clazz.getCanonicalName())
                 .replace("{{newInst}}", genNewInstCode(clazz, ctor));

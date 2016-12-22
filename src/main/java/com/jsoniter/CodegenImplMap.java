@@ -26,7 +26,6 @@ class CodegenImplMap {
             clazz = HashMap.class;
         }
         StringBuilder lines = new StringBuilder();
-        append(lines, "public static Object decode_(com.jsoniter.JsonIterator iter) {");
         append(lines, "if (iter.readNull()) { return null; }");
         append(lines, "{{clazz}} map = ({{clazz}})com.jsoniter.CodegenAccess.resetExistingObject(iter);");
         append(lines, "if (map == null) { map = new {{clazz}}(); }");
@@ -40,7 +39,6 @@ class CodegenImplMap {
         append(lines, "map.put(field, {{op}});");
         append(lines, "}");
         append(lines, "return map;");
-        append(lines, "}");
         return lines.toString().replace("{{clazz}}", clazz.getName()).replace("{{op}}", CodegenImplNative.genReadOp(valueType));
     }
 

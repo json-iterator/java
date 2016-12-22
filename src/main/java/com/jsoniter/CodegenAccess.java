@@ -230,4 +230,8 @@ public class CodegenAccess {
         }
         return true;
     }
+
+    public static void staticGenDecoders(TypeLiteral[] typeLiterals) {
+        Codegen.staticGenDecoders(typeLiterals);
+    }
 }

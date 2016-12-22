@@ -17,7 +17,6 @@ class CodegenImplArray {
             throw new IllegalArgumentException("nested array not supported: " + clazz.getCanonicalName());
         }
         StringBuilder lines = new StringBuilder();
-        append(lines, "public static Object decode_(com.jsoniter.JsonIterator iter) {");
         append(lines, "if (iter.readNull()) { return null; }");
         append(lines, "if (!com.jsoniter.CodegenAccess.readArrayStart(iter)) {");
         append(lines, "return new {{comp}}[0];");
@@ -53,7 +52,6 @@ class CodegenImplArray {
         append(lines, "{{comp}}[] result = new {{comp}}[i];");
         append(lines, "System.arraycopy(arr, 0, result, 0, i);");
         append(lines, "return result;");
-        append(lines, "}");
         return lines.toString().replace(
                 "{{comp}}", compType.getCanonicalName()).replace(
                 "{{op}}", CodegenImplNative.genReadOp(compType));
@@ -84,7 +82,6 @@ class CodegenImplArray {
 
     private static String genCollectionWithCapacity(Class clazz, Type compType) {
         StringBuilder lines = new StringBuilder();
-        append(lines, "public static Object decode_(com.jsoniter.JsonIterator iter) {");
         append(lines, "if (iter.readNull()) { return null; }");
         append(lines, "{{clazz}} col = ({{clazz}})com.jsoniter.CodegenAccess.resetExistingObject(iter);");
         append(lines, "if (!com.jsoniter.CodegenAccess.readArrayStart(iter)) {");
@@ -122,7 +119,6 @@ class CodegenImplArray {
         append(lines, "}");
 //        append(lines, "if (c != ']') { com.jsoniter.CodegenAccess.reportIncompleteArray(iter); }");
         append(lines, "return obj;");
-        append(lines, "}");
         return lines.toString().replace(
                 "{{clazz}}", clazz.getName()).replace(
                 "{{op}}", CodegenImplNative.genReadOp(compType));
@@ -130,7 +126,6 @@ class CodegenImplArray {
 
     private static String genCollectionWithoutCapacity(Class clazz, Type compType) {
         StringBuilder lines = new StringBuilder();
-        append(lines, "public static Object decode_(com.jsoniter.JsonIterator iter) {");
         append(lines, "if (iter.readNull()) { return null; }");
         append(lines, "{{clazz}} col = ({{clazz}})com.jsoniter.CodegenAccess.resetExistingObject(iter);");
         append(lines, "if (!com.jsoniter.CodegenAccess.readArrayStart(iter)) {");
@@ -168,7 +163,6 @@ class CodegenImplArray {
         append(lines, "}");
 //        append(lines, "if (c != ']') { com.jsoniter.CodegenAccess.reportIncompleteArray(iter); }");
         append(lines, "return obj;");
-        append(lines, "}");
         return lines.toString().replace(
                 "{{clazz}}", clazz.getName()).replace(
                 "{{op}}", CodegenImplNative.genReadOp(compType));
