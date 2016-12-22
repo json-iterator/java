@@ -6,6 +6,7 @@ import com.dslplatform.json.DslJson;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
+import com.jsoniter.DecodingMode;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.ReflectionDecoder;
 import com.jsoniter.spi.ExtensionManager;
@@ -65,7 +66,7 @@ public class SimpleObjectBinding {
                 ExtensionManager.registerTypeDecoder(TestObject.class, new ReflectionDecoder(TestObject.class));
             }
             if (params.getBenchmark().contains("withBindApiStrictMode")) {
-                JsonIterator.enableStrictMode();
+                JsonIterator.setMode(DecodingMode.STATIC_MODE);
             }
             if (params.getBenchmark().contains("withJacksonAfterburner")) {
                 jackson.registerModule(new AfterburnerModule());

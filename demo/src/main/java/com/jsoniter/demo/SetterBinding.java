@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
+import com.jsoniter.DecodingMode;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.ReflectionDecoder;
 import com.jsoniter.annotation.JacksonAnnotationSupport;
@@ -67,7 +68,7 @@ public class SetterBinding {
         jackson.registerModule(new AfterburnerModule());
         if (params != null) {
             if (params.getBenchmark().contains("withJsoniterStrictMode")) {
-                JsonIterator.enableStrictMode();
+                JsonIterator.setMode(DecodingMode.STRICT_MODE);
             }
             if (params.getBenchmark().contains("withJsoniterReflection")) {
                 ExtensionManager.registerTypeDecoder(ConstructorBinding.TestObject.class, new ReflectionDecoder(ConstructorBinding.TestObject.class));

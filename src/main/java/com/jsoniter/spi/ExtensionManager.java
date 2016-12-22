@@ -273,8 +273,4 @@ public class ExtensionManager {
         }
         throw new JsonException("unexpected type: " + type);
     }
-
-    public static void disableDynamicCodegen() {
-
-    }
 }

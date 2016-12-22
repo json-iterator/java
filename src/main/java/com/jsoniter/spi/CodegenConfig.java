@@ -5,11 +5,11 @@ public interface CodegenConfig {
      * register decoder/encoder before codegen
      * register extension before codegen
      */
-    void beforeCodegen();
+    void setup();
 
     /**
      * what to codegen
      * @return generate encoder/decoder for the types
      */
-    TypeLiteral[] getTypeLiterals();
+    TypeLiteral[] whatToCodegen();
 }

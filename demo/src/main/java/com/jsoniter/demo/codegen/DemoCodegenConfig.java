@@ -1,24 +1,42 @@
 package com.jsoniter.demo.codegen;
 
+import com.jsoniter.JsonIterator;
 import com.jsoniter.StaticCodeGenerator;
 import com.jsoniter.spi.CodegenConfig;
+import com.jsoniter.spi.Decoder;
 import com.jsoniter.spi.ExtensionManager;
 import com.jsoniter.spi.TypeLiteral;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 public class DemoCodegenConfig implements CodegenConfig {
 
     @Override
-    public void beforeCodegen() {
-        ExtensionManager.disableDynamicCodegen();
+    public void setup() {
+        // register custom decoder or extensions before codegen
+        // so that we doing codegen, we know in which case, we need to callback
+        ExtensionManager.registerFieldDecoder(User.class, "score", new Decoder.IntDecoder() {
+            @Override
+            public int decodeInt(JsonIterator iter) throws IOException {
+                return Integer.valueOf(iter.readString());
+            }
+        });
     }
 
     @Override
-    public TypeLiteral[] getTypeLiterals() {
+    public TypeLiteral[] whatToCodegen() {
         return new TypeLiteral[]{
-                new TypeLiteral<List<String>>() {
-                }
+                // generic types, need to use this syntax
+                new TypeLiteral<List<Integer>>() {
+                },
+                new TypeLiteral<Map<String, Object>>() {
+                },
+                // array
+                TypeLiteral.create(int[].class),
+                // object
+                TypeLiteral.create(User.class)
         };
     }
 

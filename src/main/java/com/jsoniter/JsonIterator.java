@@ -56,6 +56,10 @@ public class JsonIterator implements Closeable {
         }
     }
 
+    public JsonIterator() {
+        this(null, new byte[0]);
+    }
+
     public static JsonIterator parse(InputStream in, int bufSize) {
         return new JsonIterator(in, new byte[bufSize]);
     }
@@ -339,6 +343,42 @@ public class JsonIterator implements Closeable {
         return (T) Codegen.getDecoder(cacheKey, typeLiteral.getType()).decode(this);
     }
 
+    public final <T> T read(String input, Class<T> clazz) {
+        reset(input.getBytes());
+        try {
+            return read(clazz);
+        } catch (IOException e) {
+            throw new JsonException(e);
+        }
+    }
+
+    public final <T> T read(String input, TypeLiteral<T> typeLiteral) {
+        reset(input.getBytes());
+        try {
+            return read(typeLiteral);
+        } catch (IOException e) {
+            throw new JsonException(e);
+        }
+    }
+
+    public final <T> T read(byte[] input, Class<T> clazz) {
+        reset(input);
+        try {
+            return read(clazz);
+        } catch (IOException e) {
+            throw new JsonException(e);
+        }
+    }
+
+    public final <T> T read(byte[] input, TypeLiteral<T> typeLiteral) {
+        reset(input);
+        try {
+            return read(typeLiteral);
+        } catch (IOException e) {
+            throw new JsonException(e);
+        }
+    }
+
     public ValueType whatIsNext() throws IOException {
         ValueType valueType = valueTypes[nextToken()];
         unreadByte();
@@ -349,7 +389,7 @@ public class JsonIterator implements Closeable {
         IterImplSkip.skip(this);
     }
 
-    public static void enableStrictMode() {
-        Codegen.enableStrictMode();
+    public static void setMode(DecodingMode mode) {
+        Codegen.setMode(mode);
     }
 }

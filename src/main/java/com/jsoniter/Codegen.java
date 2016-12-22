@@ -11,12 +11,12 @@ import java.lang.reflect.*;
 import java.util.*;
 
 class Codegen {
-    static boolean staticGen = false;
-    static boolean strictMode = false;
+    static boolean isDoingStaticCodegen = false;
+    static DecodingMode mode = DecodingMode.HASH_MODE;
     static ClassPool pool = ClassPool.getDefault();
 
-    public static void enableStrictMode() {
-        strictMode = true;
+    public static void setMode(DecodingMode mode) {
+        Codegen.mode = mode;
     }
 
     static Decoder getDecoder(String cacheKey, Type type) {
@@ -39,6 +39,16 @@ class Codegen {
                 return decoder;
             }
         }
+        if (mode == DecodingMode.STATIC_MODE) {
+            try {
+                return (Decoder) Class.forName(cacheKey).newInstance();
+            } catch (Exception e){
+                throw new JsonException("static gen should provide the decoder we need, but failed to create the decoder", e);
+            }
+        }
+        if (mode == DecodingMode.REFLECTION_MODE) {
+            throw new JsonException("not implemented yet");
+        }
         Type[] typeArgs = new Type[0];
         Class clazz;
         if (type instanceof ParameterizedType) {
@@ -49,14 +59,14 @@ class Codegen {
             clazz = (Class) type;
         }
         String source = genSource(cacheKey, clazz, typeArgs);
-        source = "public static Object decode_(com.jsoniter.JsonIterator iter) throws java.io.IOException { "
+        source = "public static java.lang.Object decode_(com.jsoniter.JsonIterator iter) throws java.io.IOException { "
                 + source + "}";
         if ("true".equals(System.getenv("JSONITER_DEBUG"))) {
             System.out.println(">>> " + cacheKey);
             System.out.println(source);
         }
         try {
-            if (staticGen) {
+            if (isDoingStaticCodegen) {
                 staticGen(cacheKey, source);
             }
             decoder = dynamicGen(cacheKey, source);
@@ -91,7 +101,7 @@ class Codegen {
         writer.write("package " + packageName + ";\n");
         writer.write("public class " + className + " implements com.jsoniter.spi.Decoder {\n");
         writer.write(source);
-        writer.write("public Object decode(com.jsoniter.JsonIterator iter) throws java.io.IOException {\n");
+        writer.write("public java.lang.Object decode(com.jsoniter.JsonIterator iter) throws java.io.IOException {\n");
         writer.write("return decode_(iter);\n");
         writer.write("}\n");
         writer.write("}\n");
@@ -151,14 +161,14 @@ class Codegen {
         if (allBindings.isEmpty()) {
             return CodegenImplObject.genObjectUsingSkip(clazz, desc.ctor);
         }
-        if (strictMode) {
+        if (mode == DecodingMode.STATIC_MODE) {
             return CodegenImplObject.genObjectUsingSlice(clazz, cacheKey, desc);
         }
         return CodegenImplObject.genObjectUsingHash(clazz, cacheKey, desc);
     }
 
     public static void staticGenDecoders(TypeLiteral[] typeLiterals) {
-        staticGen = true;
+        isDoingStaticCodegen = true;
         for (TypeLiteral typeLiteral : typeLiterals) {
             gen(typeLiteral.getDecoderCacheKey(), typeLiteral.getType());
         }

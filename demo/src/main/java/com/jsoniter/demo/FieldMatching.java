@@ -1,5 +1,6 @@
 package com.jsoniter.demo;
 
+import com.jsoniter.DecodingMode;
 import com.jsoniter.JsonException;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.annotation.JsonProperty;
@@ -58,7 +59,7 @@ public class FieldMatching {
     @Setup(Level.Trial)
     public void benchSetup() {
         JsoniterAnnotationSupport.enable();
-        JsonIterator.enableStrictMode();
+        JsonIterator.setMode(DecodingMode.STRICT_MODE);
         iter0 = JsonIterator.parse("{'field1':101,'field2':101,'field3':101}".replace('\'', '"').getBytes());
         iter1Success = JsonIterator.parse("{'field1':101,'field2':101,'field3':101}".replace('\'', '"').getBytes());
         testObject0Type = new TypeLiteral<TestObject0>() {
