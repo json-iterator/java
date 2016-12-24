@@ -20,4 +20,14 @@ public class ConstructorDescriptor {
      * the parameters to call constructor or static method
      */
     public List<Binding> parameters = new ArrayList<Binding>();
+
+    @Override
+    public String toString() {
+        return "ConstructorDescriptor{" +
+                "staticMethodName='" + staticMethodName + '\'' +
+                ", ctor=" + ctor +
+                ", staticFactory=" + staticFactory +
+                ", parameters=" + parameters +
+                '}';
+    }
 }

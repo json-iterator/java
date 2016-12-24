@@ -10,7 +10,7 @@ import java.util.List;
 public class TestCustomizeSetter extends TestCase {
 
     static {
-//        JsonIterator.enableStrictMode();
+//        JsonIterator.setMode(DecodingMode.REFLECTION_MODE);
     }
 
     public static class ObjectWithDefaultSetter {
@@ -57,7 +57,13 @@ public class TestCustomizeSetter extends TestCase {
             @Override
             public void updateClassDescriptor(final ClassDescriptor desc) {
                 if (desc.clazz == ObjectWithCustomizedSetter.class) {
+                    desc.fields.clear();
                     desc.setters = (List) Arrays.asList(new SetterDescriptor(){{
+                        try {
+                            method = desc.clazz.getMethod("initialize", String.class, String.class);
+                        } catch (NoSuchMethodException e) {
+                            throw new RuntimeException(e);
+                        }
                         methodName = "initialize";
                         parameters = (List) Arrays.asList(new Binding(desc.clazz, desc.lookup, String.class) {{
                             name = "field1";

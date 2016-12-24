@@ -8,7 +8,7 @@ import java.util.Map;
 public class TestObject extends TestCase {
 
     static {
-//        JsonIterator.enableStrictMode();
+        JsonIterator.setMode(DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_STRICTLY);
     }
 
     public static class EmptyClass {}

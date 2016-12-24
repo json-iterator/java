@@ -12,7 +12,7 @@ import java.util.*;
 
 class Codegen {
     static boolean isDoingStaticCodegen = false;
-    static DecodingMode mode = DecodingMode.HASH_MODE;
+    static DecodingMode mode = DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_WITH_HASH;
     static ClassPool pool = ClassPool.getDefault();
 
     public static void setMode(DecodingMode mode) {
@@ -39,15 +39,15 @@ class Codegen {
                 return decoder;
             }
         }
-        if (mode == DecodingMode.STATIC_MODE) {
-            try {
-                return (Decoder) Class.forName(cacheKey).newInstance();
-            } catch (Exception e){
+        if (mode == DecodingMode.REFLECTION_MODE) {
+            return new ReflectionDecoder((Class) type);
+        }
+        try {
+            return (Decoder) Class.forName(cacheKey).newInstance();
+        } catch (Exception e){
+            if (mode == DecodingMode.STATIC_MODE) {
                 throw new JsonException("static gen should provide the decoder we need, but failed to create the decoder", e);
             }
-        }
-        if (mode == DecodingMode.REFLECTION_MODE) {
-            throw new JsonException("not implemented yet");
         }
         Type[] typeArgs = new Type[0];
         Class clazz;

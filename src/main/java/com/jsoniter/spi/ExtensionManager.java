@@ -87,6 +87,7 @@ public class ExtensionManager {
         for (Extension extension : extensions) {
             extension.updateClassDescriptor(desc);
         }
+        setterOrCtorOverrideField(desc);
         if (includingPrivate) {
             if (desc.ctor.ctor != null) {
                 desc.ctor.ctor.setAccessible(true);
@@ -115,6 +116,25 @@ public class ExtensionManager {
             }
         }
         return desc;
+    }
+
+    private static void setterOrCtorOverrideField(ClassDescriptor desc) {
+        HashMap<String, Binding> fields = new HashMap<String, Binding>();
+        for (Binding field : desc.fields) {
+                fields.put(field.name, field);
+        }
+        for (SetterDescriptor setter : desc.setters) {
+            for (Binding parameter : setter.parameters) {
+                if (fields.containsKey(parameter.name)) {
+                    desc.fields.remove(fields.get(parameter.name));
+                }
+            }
+        }
+        for (Binding parameter : desc.ctor.parameters) {
+            if (fields.containsKey(parameter.name)) {
+                desc.fields.remove(fields.get(parameter.name));
+            }
+        }
     }
 
     private static ConstructorDescriptor getCtor(Class clazz) {

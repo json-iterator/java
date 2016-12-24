@@ -10,7 +10,7 @@ import java.util.List;
 public class TestCustomizeCtor extends TestCase {
 
     static {
-//        JsonIterator.enableStrictMode();
+//        JsonIterator.setMode(DecodingMode.REFLECTION_MODE);
     }
 
     public static class WithPublicCtor {
@@ -32,6 +32,11 @@ public class TestCustomizeCtor extends TestCase {
                             name="field1";
                         }});
                     }};
+                    try {
+                        desc.ctor.ctor = desc.clazz.getConstructor(String.class);
+                    } catch (NoSuchMethodException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             }
         });

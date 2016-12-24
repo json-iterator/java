@@ -10,7 +10,7 @@ import java.util.List;
 public class TestCustomizeField extends TestCase {
 
     static {
-//        JsonIterator.enableStrictMode();
+//        JsonIterator.setMode(DecodingMode.REFLECTION_MODE);
     }
 
     public static class TestObject1 {
@@ -89,10 +89,16 @@ public class TestCustomizeField extends TestCase {
                         parameters = (List) Arrays.asList(new Binding(desc.clazz, desc.lookup, int.class) {{
                             name = "param2";
                         }});
+                        try {
+                            ctor = desc.clazz.getConstructor(int.class);
+                        } catch (NoSuchMethodException e) {
+                            throw new RuntimeException(e);
+                        }
                     }};
                 }
             }
         });
+        
         JsonIterator iter = JsonIterator.parse("{'param2': 1000}".replace('\'', '"'));
         TestObject5 obj = iter.read(TestObject5.class);
         assertEquals(1000, obj.field1);
@@ -110,8 +116,14 @@ public class TestCustomizeField extends TestCase {
         ExtensionManager.registerExtension(new EmptyExtension() {
             @Override
             public void updateClassDescriptor(ClassDescriptor desc) {
+                if (desc.clazz != TestObject6.class) {
+                    return;
+                }
                 for (Binding field : desc.allDecoderBindings()) {
-                    if (field.clazz == TestObject6.class && field.name.equals("field")) {
+                    if (field.field != null) {
+                        continue;
+                    }
+                    if (field.name.equals("field")) {
                         field.fromNames = new String[]{"field_1", "Field1"};
                     }
                 }
@@ -129,9 +141,11 @@ public class TestCustomizeField extends TestCase {
     public void test_customize_field_decoding_using_extension() throws IOException {
         ExtensionManager.registerExtension(new EmptyExtension() {
             public void updateClassDescriptor(ClassDescriptor desc) {
+                if (desc.clazz != TestObject7.class) {
+                    return;
+                }
                 for (Binding field : desc.allDecoderBindings()) {
-
-                    if (field.clazz == TestObject7.class && field.name.equals("field1")) {
+                    if (field.name.equals("field1")) {
                         field.decoder = new Decoder.IntDecoder() {
 
                             @Override
@@ -214,6 +228,7 @@ public class TestCustomizeField extends TestCase {
             iter.read(TestObject10.class);
             fail("should throw exception");
         } catch (Exception e) {
+            System.out.println(e);
         }
     }
 

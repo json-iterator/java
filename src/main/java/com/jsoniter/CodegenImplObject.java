@@ -22,31 +22,30 @@ class CodegenImplObject {
     public static String genObjectUsingSlice(Class clazz, String cacheKey, ClassDescriptor desc) {
         // TODO: when setter is single argument, decode like field
         List<Binding> allBindings = desc.allDecoderBindings();
-        int currentIdx = 0;
+        int requiredIdx = 0;
         for (Binding binding : allBindings) {
             if (binding.failOnMissing) {
-                binding.idx = currentIdx++;
-            } else {
-                binding.idx = -1;
+                binding.mask = 1L << requiredIdx;
+                requiredIdx++;
             }
         }
-        if (currentIdx > 63) {
+        if (requiredIdx > 63) {
             throw new JsonException("too many required properties to track");
         }
-        boolean hasMandatoryField = currentIdx > 0;
-        long expectedTracker = Long.MAX_VALUE >> (63 - currentIdx);
+        boolean hasRequiredBinding = requiredIdx > 0;
+        long expectedTracker = Long.MAX_VALUE >> (63 - requiredIdx);
         Map<Integer, Object> trieTree = buildTriTree(allBindings);
         StringBuilder lines = new StringBuilder();
         // === if null, return null
         append(lines, "if (iter.readNull()) { com.jsoniter.CodegenAccess.resetExistingObject(iter); return null; }");
         // === if input is empty object, return empty object
-        if (hasMandatoryField) {
+        if (hasRequiredBinding) {
             append(lines, "long tracker = 0;");
         }
         if (desc.ctor.parameters.isEmpty()) {
             append(lines, "{{clazz}} obj = {{newInst}};");
             append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) {");
-            if (hasMandatoryField) {
+            if (hasRequiredBinding) {
                 appendMissingMandatoryFields(lines, allBindings);
             } else {
                 append(lines, "return obj;");
@@ -57,7 +56,7 @@ class CodegenImplObject {
                 appendVarDef(lines, parameter);
             }
             append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) {");
-            if (hasMandatoryField) {
+            if (hasRequiredBinding) {
                 appendMissingMandatoryFields(lines, allBindings);
             } else {
                 append(lines, "return {{newInst}};");
@@ -105,7 +104,7 @@ class CodegenImplObject {
         }
         appendOnUnknownField(lines, desc);
         append(lines, "}"); // end of while
-        if (hasMandatoryField) {
+        if (hasRequiredBinding) {
             append(lines, "if (tracker != " + expectedTracker + "L) {");
             appendMissingMandatoryFields(lines, allBindings);
             append(lines, "}");
@@ -127,7 +126,7 @@ class CodegenImplObject {
         append(lines, "java.util.List missingFields = new java.util.ArrayList();");
         for (Binding binding : allBindings) {
             if (binding.failOnMissing) {
-                long mask = 1L << binding.idx;
+                long mask = binding.mask;
                 append(lines, String.format("com.jsoniter.CodegenAccess.addMissingField(missingFields, tracker, %sL, \"%s\");",
                         mask, binding.name));
             }
@@ -195,7 +194,7 @@ class CodegenImplObject {
                 Binding field = (Binding) entry.getValue();
                 if (field.failOnPresent) {
                     append(lines, String.format(
-                            "throw new com.jsoniter.JsonException('found should not present field: %s');".replace('\'', '"'),
+                            "throw new com.jsoniter.JsonException('found should not present property: %s');".replace('\'', '"'),
                             field.name));
                 } else if (field.skip) {
                     append(lines, "iter.skip();");
@@ -203,8 +202,7 @@ class CodegenImplObject {
                 } else {
                     append(lines, String.format("_%s_ = %s;", field.name, genField(field, cacheKey)));
                     if (field.failOnMissing) {
-                        long mask = 1L << field.idx;
-                        append(lines, "tracker = tracker | " + mask + "L;");
+                        append(lines, "tracker = tracker | " + field.mask + "L;");
                     }
                     append(lines, "continue;");
                 }

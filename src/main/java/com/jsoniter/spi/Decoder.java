@@ -14,39 +14,58 @@ public interface Decoder {
      */
     Object decode(JsonIterator iter) throws IOException;
 
-    class EmptyDecoder implements Decoder {
-
+    abstract class BooleanDecoder implements Decoder {
         @Override
         public Object decode(JsonIterator iter) throws IOException {
-            return null;
+            return Boolean.valueOf(decodeBoolean(iter));
         }
-    }
 
-    abstract class FieldDecoder extends EmptyDecoder {
-        public abstract void decode(JsonIterator iter, Object obj, String fieldName) throws IOException;
-    }
-
-    abstract class BooleanDecoder extends EmptyDecoder {
         public abstract boolean decodeBoolean(JsonIterator iter) throws IOException;
     }
 
-    abstract class ShortDecoder extends EmptyDecoder {
+    abstract class ShortDecoder implements Decoder {
+        @Override
+        public Object decode(JsonIterator iter) throws IOException {
+            return Short.valueOf(decodeShort(iter));
+        }
+
         public abstract short decodeShort(JsonIterator iter) throws IOException;
     }
 
-    abstract class IntDecoder extends EmptyDecoder {
+    abstract class IntDecoder implements Decoder {
+        @Override
+        public Object decode(JsonIterator iter) throws IOException {
+            return Integer.valueOf(decodeInt(iter));
+        }
+
         public abstract int decodeInt(JsonIterator iter) throws IOException;
     }
 
-    abstract class LongDecoder extends EmptyDecoder {
+    abstract class LongDecoder implements Decoder {
+        @Override
+        public Object decode(JsonIterator iter) throws IOException {
+            return Long.valueOf(decodeLong(iter));
+        }
+
         public abstract long decodeLong(JsonIterator iter) throws IOException;
     }
 
-    abstract class FloatDecoder extends EmptyDecoder {
+    abstract class FloatDecoder implements Decoder {
+        @Override
+        public Object decode(JsonIterator iter) throws IOException {
+            return Float.valueOf(decodeFloat(iter));
+        }
+
         public abstract float decodeFloat(JsonIterator iter) throws IOException;
     }
 
-    abstract class DoubleDecoder extends EmptyDecoder {
+    abstract class DoubleDecoder implements Decoder {
+
+        @Override
+        public Object decode(JsonIterator iter) throws IOException {
+            return Double.valueOf(decodeDouble(iter));
+        }
+
         public abstract double decodeDouble(JsonIterator iter) throws IOException;
     }
 }

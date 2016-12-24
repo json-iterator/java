@@ -29,7 +29,6 @@
         <connection>scm:git:git://github.com/json-iterator/java.git</connection>
         <developerConnection>scm:git:ssh://github.com:json-iterator/java.git</developerConnection>
         <url>http://github.com/json-iterator/java/tree/master</url>
-        <tag>jsoniter-0.9.1</tag>
     </scm>
 
     <properties>

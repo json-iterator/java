@@ -59,7 +59,7 @@ public class FieldMatching {
     @Setup(Level.Trial)
     public void benchSetup() {
         JsoniterAnnotationSupport.enable();
-        JsonIterator.setMode(DecodingMode.STRICT_MODE);
+        JsonIterator.setMode(DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_STRICTLY);
         iter0 = JsonIterator.parse("{'field1':101,'field2':101,'field3':101}".replace('\'', '"').getBytes());
         iter1Success = JsonIterator.parse("{'field1':101,'field2':101,'field3':101}".replace('\'', '"').getBytes());
         testObject0Type = new TypeLiteral<TestObject0>() {

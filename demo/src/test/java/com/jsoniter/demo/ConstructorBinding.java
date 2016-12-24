@@ -69,7 +69,7 @@ public class ConstructorBinding {
         jackson.registerModule(new AfterburnerModule());
         if (params != null) {
             if (params.getBenchmark().contains("withJsoniterStrictMode")) {
-                JsonIterator.setMode(DecodingMode.STRICT_MODE);
+                JsonIterator.setMode(DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_STRICTLY);
             }
             if (params.getBenchmark().contains("withJsoniterReflection")) {
                 ExtensionManager.registerTypeDecoder(TestObject.class, new ReflectionDecoder(TestObject.class));

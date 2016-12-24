@@ -4,11 +4,11 @@ public enum DecodingMode {
     /**
      * dynamically codegen, generate object decoder using hash
      */
-    HASH_MODE,
+    DYNAMIC_MODE_AND_MATCH_FIELD_WITH_HASH,
     /**
      * dynamically codegen, generate object decoder which compares fields strictly
      */
-    STRICT_MODE,
+    DYNAMIC_MODE_AND_MATCH_FIELD_STRICTLY,
     /**
      * statically codegen
      */

@@ -22,6 +22,7 @@ public class Binding {
     // optional
     public Field field;
     public int idx;
+    public long mask;
 
     public Binding(Class clazz, Map<String, Type> lookup, Type valueType) {
         this.clazz = clazz;
