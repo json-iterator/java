@@ -5,7 +5,7 @@ import com.jsoniter.spi.*;
 import java.io.IOException;
 import java.util.*;
 
-public class ReflectionObjectDecoder implements Decoder {
+class ReflectionObjectDecoder implements Decoder {
 
     private static Object NOT_SET = new Object() {
         @Override

@@ -50,7 +50,7 @@ class Codegen {
             clazz = (Class) type;
         }
         if (mode == DecodingMode.REFLECTION_MODE) {
-            return ReflectionDecoder.create(clazz, typeArgs);
+            return ReflectionDecoderFactory.create(clazz, typeArgs);
         }
         try {
             return (Decoder) Class.forName(cacheKey).newInstance();
@@ -107,6 +107,27 @@ class Codegen {
                 clazz = HashSet.class;
             }
             return new ParameterizedTypeImpl(new Type[]{compType}, null, clazz);
+        }
+        if (Map.class.isAssignableFrom(clazz)) {
+            Type keyType = String.class;
+            Type valueType = Object.class;
+            if (typeArgs.length == 0) {
+                // default to Map<String, Object>
+            } else if (typeArgs.length == 2) {
+                keyType = typeArgs[0];
+                valueType = typeArgs[1];
+            } else {
+                throw new IllegalArgumentException(
+                        "can not bind to generic collection without argument types, " +
+                                "try syntax like TypeLiteral<Map<String, String>>{}");
+            }
+            if (keyType != String.class) {
+                throw new IllegalArgumentException("map key must be String");
+            }
+            if (clazz == Map.class) {
+                clazz = HashMap.class;
+            }
+            return new ParameterizedTypeImpl(new Type[]{keyType, valueType}, null, clazz);
         }
         return type;
     }

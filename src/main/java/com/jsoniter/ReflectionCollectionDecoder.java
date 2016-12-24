@@ -4,15 +4,20 @@ import com.jsoniter.spi.Decoder;
 import com.jsoniter.spi.TypeLiteral;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
 import java.util.Collection;
 
-public class ReflectionCollectionDecoder implements Decoder {
-    private final Class clazz;
+class ReflectionCollectionDecoder implements Decoder {
     private final TypeLiteral compTypeLiteral;
+    private final Constructor ctor;
 
     public ReflectionCollectionDecoder(Class clazz, Type[] typeArgs) {
-        this.clazz = clazz;
+        try {
+            ctor = clazz.getConstructor();
+        } catch (NoSuchMethodException e) {
+            throw new JsonException(e);
+        }
         compTypeLiteral = TypeLiteral.create(typeArgs[0]);
     }
 
@@ -26,10 +31,15 @@ public class ReflectionCollectionDecoder implements Decoder {
     }
 
     private Object decode_(JsonIterator iter) throws Exception {
+        Collection col = (Collection) CodegenAccess.resetExistingObject(iter);
         if (iter.readNull()) {
             return null;
         }
-        Collection col = (Collection) this.clazz.newInstance();
+        if (col == null) {
+            col = (Collection) this.ctor.newInstance();
+        } else {
+            col.clear();
+        }
         while (iter.readArray()) {
             col.add(CodegenAccess.read(iter, compTypeLiteral));
         }

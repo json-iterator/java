@@ -12,7 +12,7 @@ import static org.junit.Assert.assertArrayEquals;
 public class TestArray extends TestCase {
 
     static {
-        JsonIterator.setMode(DecodingMode.REFLECTION_MODE);
+//        JsonIterator.setMode(DecodingMode.REFLECTION_MODE);
     }
 
     public void test_empty_array() throws IOException {

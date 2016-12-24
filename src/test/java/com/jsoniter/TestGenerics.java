@@ -1,6 +1,5 @@
 package com.jsoniter;
 
-import com.jsoniter.annotation.JsonProperty;
 import com.jsoniter.spi.Binding;
 import com.jsoniter.spi.ClassDescriptor;
 import com.jsoniter.spi.ExtensionManager;
@@ -8,12 +7,15 @@ import com.jsoniter.spi.TypeLiteral;
 import junit.framework.TestCase;
 
 import java.io.IOException;
-import java.lang.reflect.*;
 import java.util.*;
 
 import static org.junit.Assert.assertArrayEquals;
 
 public class TestGenerics extends TestCase {
+
+    static {
+//        JsonIterator.setMode(DecodingMode.REFLECTION_MODE);
+    }
 
     public void test_int_list() throws IOException {
         JsonIterator iter = JsonIterator.parse("[1,2,3]");

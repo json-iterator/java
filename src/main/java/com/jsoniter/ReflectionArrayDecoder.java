@@ -6,7 +6,7 @@ import com.jsoniter.spi.TypeLiteral;
 import java.io.IOException;
 import java.lang.reflect.Array;
 
-public class ReflectionArrayDecoder implements Decoder {
+class ReflectionArrayDecoder implements Decoder {
 
     private final Class componentType;
     private final TypeLiteral compTypeLiteral;
@@ -18,6 +18,7 @@ public class ReflectionArrayDecoder implements Decoder {
 
     @Override
     public Object decode(JsonIterator iter) throws IOException {
+        CodegenAccess.resetExistingObject(iter);
         if (iter.readNull()) {
             return null;
         }

@@ -6,8 +6,9 @@ import com.jsoniter.spi.TypeLiteral;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.Collection;
+import java.util.Map;
 
-public class ReflectionDecoder {
+public class ReflectionDecoderFactory {
     public static Decoder create(Class clazz, Type... typeArgs) {
         final TypeLiteral typeLiteral = TypeLiteral.create(clazz);
         TypeLiteral.NativeType nativeType = typeLiteral.getNativeType();
@@ -24,6 +25,9 @@ public class ReflectionDecoder {
         }
         if (Collection.class.isAssignableFrom(clazz)) {
             return new ReflectionCollectionDecoder(clazz, typeArgs);
+        }
+        if (Map.class.isAssignableFrom(clazz)) {
+            return new ReflectionMapDecoder(clazz, typeArgs);
         }
         return new ReflectionObjectDecoder(clazz);
     }

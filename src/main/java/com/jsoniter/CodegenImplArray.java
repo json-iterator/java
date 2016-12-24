@@ -17,6 +17,7 @@ class CodegenImplArray {
             throw new IllegalArgumentException("nested array not supported: " + clazz.getCanonicalName());
         }
         StringBuilder lines = new StringBuilder();
+        append(lines, "com.jsoniter.CodegenAccess.resetExistingObject(iter);");
         append(lines, "if (iter.readNull()) { return null; }");
         append(lines, "if (!com.jsoniter.CodegenAccess.readArrayStart(iter)) {");
         append(lines, "return new {{comp}}[0];");
@@ -67,8 +68,8 @@ class CodegenImplArray {
 
     private static String genCollectionWithCapacity(Class clazz, Type compType) {
         StringBuilder lines = new StringBuilder();
-        append(lines, "if (iter.readNull()) { return null; }");
         append(lines, "{{clazz}} col = ({{clazz}})com.jsoniter.CodegenAccess.resetExistingObject(iter);");
+        append(lines, "if (iter.readNull()) { return null; }");
         append(lines, "if (!com.jsoniter.CodegenAccess.readArrayStart(iter)) {");
         append(lines, "return col == null ? new {{clazz}}(0): ({{clazz}})com.jsoniter.CodegenAccess.reuseCollection(col);");
         append(lines, "}");
