@@ -4,12 +4,12 @@ import com.jsoniter.spi.Decoder;
 import com.jsoniter.spi.TypeLiteral;
 
 import java.io.IOException;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Collection;
 
 public class ReflectionDecoder {
-    public static Decoder create(Type type) {
-        final TypeLiteral typeLiteral = TypeLiteral.create(type);
+    public static Decoder create(Class clazz, Type... typeArgs) {
+        final TypeLiteral typeLiteral = TypeLiteral.create(clazz);
         TypeLiteral.NativeType nativeType = typeLiteral.getNativeType();
         if (nativeType != null) {
             return new Decoder() {
@@ -19,17 +19,11 @@ public class ReflectionDecoder {
                 }
             };
         }
-        Type[] typeArgs = new Type[0];
-        Class clazz;
-        if (type instanceof ParameterizedType) {
-            ParameterizedType pType = (ParameterizedType) type;
-            clazz = (Class) pType.getRawType();
-            typeArgs = pType.getActualTypeArguments();
-        } else {
-            clazz = (Class) type;
-        }
         if (clazz.isArray()) {
             return new ReflectionArrayDecoder(clazz);
+        }
+        if (Collection.class.isAssignableFrom(clazz)) {
+            return new ReflectionCollectionDecoder(clazz, typeArgs);
         }
         return new ReflectionObjectDecoder(clazz);
     }

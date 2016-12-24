@@ -58,25 +58,10 @@ class CodegenImplArray {
     }
 
     public static String genCollection(Class clazz, Type[] typeArgs) {
-        Type compType = Object.class;
-        if (typeArgs.length == 0) {
-            // default to List<Object>
-        } else if (typeArgs.length == 1) {
-            compType = typeArgs[0];
-        } else {
-            throw new IllegalArgumentException(
-                    "can not bind to generic collection without argument types, " +
-                            "try syntax like TypeLiteral<List<Integer>>{}");
-        }
-        if (clazz == List.class) {
-            clazz = ArrayList.class;
-        } else if (clazz == Set.class) {
-            clazz = HashSet.class;
-        }
         if (WITH_CAPACITY_COLLECTION_CLASSES.contains(clazz)) {
-            return CodegenImplArray.genCollectionWithCapacity(clazz, compType);
+            return CodegenImplArray.genCollectionWithCapacity(clazz, typeArgs[0]);
         } else {
-            return CodegenImplArray.genCollectionWithoutCapacity(clazz, compType);
+            return CodegenImplArray.genCollectionWithoutCapacity(clazz, typeArgs[0]);
         }
     }
 

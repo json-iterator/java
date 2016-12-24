@@ -32,21 +32,12 @@ class Codegen {
         if (decoder != null) {
             return decoder;
         }
+        type = chooseImpl(type);
         for (Extension extension : ExtensionManager.getExtensions()) {
             decoder = extension.createDecoder(cacheKey, type);
             if (decoder != null) {
                 ExtensionManager.addNewDecoder(cacheKey, decoder);
                 return decoder;
-            }
-        }
-        if (mode == DecodingMode.REFLECTION_MODE) {
-            return ReflectionDecoder.create(type);
-        }
-        try {
-            return (Decoder) Class.forName(cacheKey).newInstance();
-        } catch (Exception e){
-            if (mode == DecodingMode.STATIC_MODE) {
-                throw new JsonException("static gen should provide the decoder we need, but failed to create the decoder", e);
             }
         }
         Type[] typeArgs = new Type[0];
@@ -57,6 +48,16 @@ class Codegen {
             typeArgs = pType.getActualTypeArguments();
         } else {
             clazz = (Class) type;
+        }
+        if (mode == DecodingMode.REFLECTION_MODE) {
+            return ReflectionDecoder.create(clazz, typeArgs);
+        }
+        try {
+            return (Decoder) Class.forName(cacheKey).newInstance();
+        } catch (Exception e) {
+            if (mode == DecodingMode.STATIC_MODE) {
+                throw new JsonException("static gen should provide the decoder we need, but failed to create the decoder", e);
+            }
         }
         String source = genSource(cacheKey, clazz, typeArgs);
         source = "public static java.lang.Object decode_(com.jsoniter.JsonIterator iter) throws java.io.IOException { "
@@ -77,6 +78,37 @@ class Codegen {
             System.err.println(source);
             throw new JsonException(e);
         }
+    }
+
+    private static Type chooseImpl(Type type) {
+        Type[] typeArgs = new Type[0];
+        Class clazz;
+        if (type instanceof ParameterizedType) {
+            ParameterizedType pType = (ParameterizedType) type;
+            clazz = (Class) pType.getRawType();
+            typeArgs = pType.getActualTypeArguments();
+        } else {
+            clazz = (Class) type;
+        }
+        if (Collection.class.isAssignableFrom(clazz)) {
+            Type compType = Object.class;
+            if (typeArgs.length == 0) {
+                // default to List<Object>
+            } else if (typeArgs.length == 1) {
+                compType = typeArgs[0];
+            } else {
+                throw new IllegalArgumentException(
+                        "can not bind to generic collection without argument types, " +
+                                "try syntax like TypeLiteral<List<Integer>>{}");
+            }
+            if (clazz == List.class) {
+                clazz = ArrayList.class;
+            } else if (clazz == Set.class) {
+                clazz = HashSet.class;
+            }
+            return new ParameterizedTypeImpl(new Type[]{compType}, null, clazz);
+        }
+        return type;
     }
 
     private static void staticGen(String cacheKey, String source) throws IOException {

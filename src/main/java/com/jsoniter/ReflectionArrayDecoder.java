@@ -9,11 +9,11 @@ import java.lang.reflect.Array;
 public class ReflectionArrayDecoder implements Decoder {
 
     private final Class componentType;
-    private final TypeLiteral componentTypeLiteral;
+    private final TypeLiteral compTypeLiteral;
 
     public ReflectionArrayDecoder(Class clazz) {
         componentType = clazz.getComponentType();
-        componentTypeLiteral = TypeLiteral.create(componentType);
+        compTypeLiteral = TypeLiteral.create(componentType);
     }
 
     @Override
@@ -24,20 +24,20 @@ public class ReflectionArrayDecoder implements Decoder {
         if (!CodegenAccess.readArrayStart(iter)) {
             return Array.newInstance(componentType, 0);
         }
-        Object a1 = CodegenAccess.read(iter, componentTypeLiteral);
+        Object a1 = CodegenAccess.read(iter, compTypeLiteral);
         if (CodegenAccess.nextToken(iter) != ',') {
             Object arr = Array.newInstance(componentType, 1);
             Array.set(arr, 0, a1);
             return arr;
         }
-        Object a2 = CodegenAccess.read(iter, componentTypeLiteral);
+        Object a2 = CodegenAccess.read(iter, compTypeLiteral);
         if (CodegenAccess.nextToken(iter) != ',') {
             Object arr = Array.newInstance(componentType, 2);
             Array.set(arr, 0, a1);
             Array.set(arr, 1, a2);
             return arr;
         }
-        Object a3 = CodegenAccess.read(iter, componentTypeLiteral);
+        Object a3 = CodegenAccess.read(iter, compTypeLiteral);
         if (CodegenAccess.nextToken(iter) != ',') {
             Object arr = Array.newInstance(componentType, 3);
             Array.set(arr, 0, a1);
@@ -45,7 +45,7 @@ public class ReflectionArrayDecoder implements Decoder {
             Array.set(arr, 2, a3);
             return arr;
         }
-        Object a4 = CodegenAccess.read(iter, componentTypeLiteral);
+        Object a4 = CodegenAccess.read(iter, compTypeLiteral);
         Object arr = Array.newInstance(componentType, 8);
         Array.set(arr, 0, a1);
         Array.set(arr, 1, a2);
@@ -60,7 +60,7 @@ public class ReflectionArrayDecoder implements Decoder {
                 arr = newArr;
                 arrLen = 2 * arrLen;
             }
-            Array.set(arr, i++, CodegenAccess.read(iter, componentTypeLiteral));
+            Array.set(arr, i++, CodegenAccess.read(iter, compTypeLiteral));
         }
         if (i == arrLen) {
             return arr;
