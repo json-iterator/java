@@ -2,6 +2,7 @@ package com.jsoniter.output;
 
 import com.jsoniter.spi.TypeLiteral;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
@@ -13,12 +14,15 @@ public class JsonStream extends OutputStream {
     private static final byte[] NULL = "null".getBytes();
     private byte buf[];
     private int count;
-    private char stack[] = new char[64];
-    private int level = 0;
 
     public JsonStream(OutputStream out, int bufSize) {
         this.out = out;
         this.buf = new byte[bufSize];
+    }
+
+    public void reset(OutputStream out, byte[] buf) {
+        this.out = out;
+        this.buf = buf;
     }
 
     public final void write(int b) throws IOException {
@@ -57,7 +61,6 @@ public class JsonStream extends OutputStream {
         out.close();
         this.out = null;
         count = 0;
-        level = 0;
     }
 
     private final void flushBuffer() throws IOException {

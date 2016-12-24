@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
 import com.jsoniter.DecodingMode;
 import com.jsoniter.JsonIterator;
-import com.jsoniter.ReflectionObjectDecoder;
+import com.jsoniter.ReflectionDecoderFactory;
 import com.jsoniter.spi.ExtensionManager;
 import com.jsoniter.spi.TypeLiteral;
 import org.junit.Test;
@@ -63,7 +63,7 @@ public class SimpleObjectBinding {
         testObject = new TestObject();
         if (params != null) {
             if (params.getBenchmark().contains("withReflection")) {
-                ExtensionManager.registerTypeDecoder(TestObject.class, new ReflectionObjectDecoder(TestObject.class));
+                ExtensionManager.registerTypeDecoder(TestObject.class, ReflectionDecoderFactory.create(TestObject.class));
             }
             if (params.getBenchmark().contains("withBindApiStrictMode")) {
                 JsonIterator.setMode(DecodingMode.STATIC_MODE);
@@ -77,7 +77,7 @@ public class SimpleObjectBinding {
     @Test
     public void test() throws IOException {
         benchSetup(null);
-        ExtensionManager.registerTypeDecoder(TestObject.class, new ReflectionObjectDecoder(TestObject.class));
+        ExtensionManager.registerTypeDecoder(TestObject.class, ReflectionDecoderFactory.create(TestObject.class));
         System.out.println(withIterator());
         System.out.println(withIteratorIfElse());
         System.out.println(withIteratorIntern());

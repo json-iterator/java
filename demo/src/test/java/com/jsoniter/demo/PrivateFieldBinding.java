@@ -5,7 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
 import com.jsoniter.JsonIterator;
-import com.jsoniter.ReflectionObjectDecoder;
+import com.jsoniter.ReflectionDecoderFactory;
 import com.jsoniter.annotation.JacksonAnnotationSupport;
 import com.jsoniter.spi.ExtensionManager;
 import com.jsoniter.spi.TypeLiteral;
@@ -53,7 +53,7 @@ public class PrivateFieldBinding {
         typeRef = new TypeReference<TestObject>() {
         };
         JacksonAnnotationSupport.enable();
-        ExtensionManager.registerTypeDecoder(TestObject.class, new ReflectionObjectDecoder(TestObject.class));
+        ExtensionManager.registerTypeDecoder(TestObject.class, ReflectionDecoderFactory.create(TestObject.class));
         jackson = new ObjectMapper();
         jackson.registerModule(new AfterburnerModule());
     }

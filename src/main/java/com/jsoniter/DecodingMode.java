@@ -14,7 +14,7 @@ public enum DecodingMode {
      */
     STATIC_MODE,
     /**
-     * decoding only using reflection, do not codegen dyanmically or statically
+     * decoding only using reflection, do not need code generation
      */
     REFLECTION_MODE
 }
