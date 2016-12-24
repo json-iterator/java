@@ -1,4 +1,4 @@
-package com.jsoniter.demo.codegen;
+package com.jsoniter.demo;
 
 import com.jsoniter.DecodingMode;
 import com.jsoniter.JsonIterator;

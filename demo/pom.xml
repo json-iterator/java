@@ -120,7 +120,7 @@
                                 <argument>-classpath</argument>
                                 <classpath/>
                                 <argument>com.jsoniter.StaticCodeGenerator</argument>
-                                <argument>com.jsoniter.demo.codegen.DemoCodegenConfig</argument>
+                                <argument>com.jsoniter.demo.DemoCodegenConfig</argument>
                             </arguments>
                         </configuration>
                     </execution>

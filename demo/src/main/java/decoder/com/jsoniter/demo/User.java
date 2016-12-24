@@ -1,4 +1,4 @@
-package decoder.com.jsoniter.demo.codegen;
+package decoder.com.jsoniter.demo;
 public class User implements com.jsoniter.spi.Decoder {
 public static java.lang.Object decode_(com.jsoniter.JsonIterator iter) throws java.io.IOException { if (iter.readNull()) { com.jsoniter.CodegenAccess.resetExistingObject(iter); return null; }
 com.jsoniter.demo.User obj = (com.jsoniter.CodegenAccess.existingObject(iter) == null ? new com.jsoniter.demo.User() : (com.jsoniter.demo.User)com.jsoniter.CodegenAccess.resetExistingObject(iter));

@@ -1,4 +1,4 @@
-package com.jsoniter.demo.codegen;
+package com.jsoniter.demo;
 
 public class User {
     public String firstName;
