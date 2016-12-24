@@ -36,7 +36,7 @@ public class TestCustomizeSetter extends TestCase {
     }
 
     public void test_default_setter_with_reflection() throws IOException {
-        ExtensionManager.registerTypeDecoder(ObjectWithDefaultSetter2.class, new ReflectionDecoder(ObjectWithDefaultSetter2.class));
+        ExtensionManager.registerTypeDecoder(ObjectWithDefaultSetter2.class, new ReflectionObjectDecoder(ObjectWithDefaultSetter2.class));
         JsonIterator iter = JsonIterator.parse("{'field': 'hello'}".replace('\'', '"'));
         ObjectWithDefaultSetter2 obj = iter.read(ObjectWithDefaultSetter2.class);
         assertEquals("hello", obj._field);

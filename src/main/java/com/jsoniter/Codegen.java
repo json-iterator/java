@@ -40,7 +40,7 @@ class Codegen {
             }
         }
         if (mode == DecodingMode.REFLECTION_MODE) {
-            return new ReflectionDecoder((Class) type);
+            return ReflectionDecoder.create(type);
         }
         try {
             return (Decoder) Class.forName(cacheKey).newInstance();
@@ -147,24 +147,32 @@ class Codegen {
             return CodegenImplArray.genCollection(clazz, typeArgs);
         }
         ClassDescriptor desc = ExtensionManager.getClassDescriptor(clazz, false);
+        if (shouldUseStrictMode(desc)) {
+            return CodegenImplObject.genObjectUsingStrict(clazz, cacheKey, desc);
+        } else {
+            return CodegenImplObject.genObjectUsingHash(clazz, cacheKey, desc);
+        }
+    }
+
+    private static boolean shouldUseStrictMode(ClassDescriptor desc) {
+        if (mode == DecodingMode.STATIC_MODE) {
+            return true;
+        }
         List<Binding> allBindings = desc.allDecoderBindings();
         for (Binding binding : allBindings) {
             if (binding.failOnMissing || binding.failOnPresent || binding.skip) {
                 // only slice support mandatory tracking
-                return CodegenImplObject.genObjectUsingSlice(clazz, cacheKey, desc);
+                return true;
             }
         }
         if (desc.failOnUnknownFields) {
             // only slice support unknown field tracking
-            return CodegenImplObject.genObjectUsingSlice(clazz, cacheKey, desc);
+            return true;
         }
         if (allBindings.isEmpty()) {
-            return CodegenImplObject.genObjectUsingSkip(clazz, desc.ctor);
+            return true;
         }
-        if (mode == DecodingMode.STATIC_MODE) {
-            return CodegenImplObject.genObjectUsingSlice(clazz, cacheKey, desc);
-        }
-        return CodegenImplObject.genObjectUsingHash(clazz, cacheKey, desc);
+        return false;
     }
 
     public static void staticGenDecoders(TypeLiteral[] typeLiterals) {

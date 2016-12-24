@@ -84,7 +84,7 @@ public class TestAnnotation extends TestCase {
     }
 
     public void test_static_factory_with_reflection() throws IOException {
-        ExtensionManager.registerTypeDecoder(StaticFactory2.class, new ReflectionDecoder(StaticFactory2.class));
+        ExtensionManager.registerTypeDecoder(StaticFactory2.class, new ReflectionObjectDecoder(StaticFactory2.class));
         JsonIterator iter = JsonIterator.parse("{'field1': 100}".replace('\'', '"'));
         StaticFactory2 obj = iter.read(StaticFactory2.class);
         assertEquals(100, obj._field1);

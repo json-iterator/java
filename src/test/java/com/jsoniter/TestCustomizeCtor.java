@@ -73,7 +73,7 @@ public class TestCustomizeCtor extends TestCase {
                 }
             }
         });
-        ExtensionManager.registerTypeDecoder(WithPrivateCtor.class, new ReflectionDecoder(WithPrivateCtor.class));
+        ExtensionManager.registerTypeDecoder(WithPrivateCtor.class, new ReflectionObjectDecoder(WithPrivateCtor.class));
         JsonIterator iter = JsonIterator.parse("{'param1': 'hello'}".replace('\'', '"'));
         WithPrivateCtor obj = iter.read(WithPrivateCtor.class);
         assertEquals("hello", obj.field1);

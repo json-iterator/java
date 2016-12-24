@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
 import com.jsoniter.DecodingMode;
 import com.jsoniter.JsonIterator;
-import com.jsoniter.ReflectionDecoder;
+import com.jsoniter.ReflectionObjectDecoder;
 import com.jsoniter.annotation.JacksonAnnotationSupport;
 import com.jsoniter.spi.ExtensionManager;
 import com.jsoniter.spi.TypeLiteral;
@@ -67,7 +67,7 @@ public class SetterBinding {
                 JsonIterator.setMode(DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_STRICTLY);
             }
             if (params.getBenchmark().contains("withJsoniterReflection")) {
-                ExtensionManager.registerTypeDecoder(ConstructorBinding.TestObject.class, new ReflectionDecoder(ConstructorBinding.TestObject.class));
+                ExtensionManager.registerTypeDecoder(ConstructorBinding.TestObject.class, new ReflectionObjectDecoder(ConstructorBinding.TestObject.class));
             }
         }
     }
@@ -75,7 +75,7 @@ public class SetterBinding {
     @Test
     public void test() throws IOException {
         benchSetup(null);
-        ExtensionManager.registerTypeDecoder(ConstructorBinding.TestObject.class, new ReflectionDecoder(ConstructorBinding.TestObject.class));
+        ExtensionManager.registerTypeDecoder(ConstructorBinding.TestObject.class, new ReflectionObjectDecoder(ConstructorBinding.TestObject.class));
         System.out.println(withJsoniter());
         System.out.println(withJackson());
     }

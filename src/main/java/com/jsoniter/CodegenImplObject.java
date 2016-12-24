@@ -19,7 +19,7 @@ class CodegenImplObject {
     }};
 
 
-    public static String genObjectUsingSlice(Class clazz, String cacheKey, ClassDescriptor desc) {
+    public static String genObjectUsingStrict(Class clazz, String cacheKey, ClassDescriptor desc) {
         // TODO: when setter is single argument, decode like field
         List<Binding> allBindings = desc.allDecoderBindings();
         int requiredIdx = 0;
@@ -268,11 +268,11 @@ class CodegenImplObject {
                 int intHash = (int) hash;
                 if (intHash == 0) {
                     // hash collision, 0 can not be used as sentinel
-                    return genObjectUsingSlice(clazz, cacheKey, desc);
+                    return genObjectUsingStrict(clazz, cacheKey, desc);
                 }
                 if (knownHashes.contains(intHash)) {
                     // hash collision with other field can not be used as sentinel
-                    return genObjectUsingSlice(clazz, cacheKey, desc);
+                    return genObjectUsingStrict(clazz, cacheKey, desc);
                 }
                 knownHashes.add(intHash);
                 append(lines, "case " + intHash + ": ");

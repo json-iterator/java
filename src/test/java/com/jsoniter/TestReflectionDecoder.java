@@ -12,7 +12,7 @@ public class TestReflectionDecoder extends TestCase {
     }
 
     public void test_package_local() throws IOException {
-        ExtensionManager.registerTypeDecoder(PackageLocal.class, new ReflectionDecoder(PackageLocal.class));
+        ExtensionManager.registerTypeDecoder(PackageLocal.class, new ReflectionObjectDecoder(PackageLocal.class));
         JsonIterator iter = JsonIterator.parse("{'field': 'hello'}".replace('\'', '"'));
         PackageLocal obj = iter.read(PackageLocal.class);
         assertEquals("hello", obj.field);
@@ -22,7 +22,7 @@ public class TestReflectionDecoder extends TestCase {
     }
 
     public void test_inherited() throws IOException {
-        ExtensionManager.registerTypeDecoder(Inherited.class, new ReflectionDecoder(Inherited.class));
+        ExtensionManager.registerTypeDecoder(Inherited.class, new ReflectionObjectDecoder(Inherited.class));
         JsonIterator iter = JsonIterator.parse("{'field': 'hello'}".replace('\'', '"'));
         Inherited obj = iter.read(Inherited.class);
         assertEquals("hello", obj.field);
@@ -33,7 +33,7 @@ public class TestReflectionDecoder extends TestCase {
     }
 
     public void test_int_field() throws IOException {
-        ExtensionManager.registerTypeDecoder(ObjectWithInt.class, new ReflectionDecoder(ObjectWithInt.class));
+        ExtensionManager.registerTypeDecoder(ObjectWithInt.class, new ReflectionObjectDecoder(ObjectWithInt.class));
         JsonIterator iter = JsonIterator.parse("{'field': 100}".replace('\'', '"'));
         ObjectWithInt obj = iter.read(ObjectWithInt.class);
         assertEquals(100, obj.field);
