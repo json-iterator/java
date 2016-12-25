@@ -14,7 +14,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 @State(Scope.Thread)
-public class StringOutput {
+public class IntegerOutput {
 
     private ByteArrayOutputStream baos;
     private ObjectMapper objectMapper;
@@ -24,7 +24,7 @@ public class StringOutput {
 
     public static void main(String[] args) throws Exception {
         Main.main(new String[]{
-                "StringOutput",
+                "IntegerOutput",
                 "-i", "5",
                 "-wi", "5",
                 "-f", "1",
@@ -56,19 +56,19 @@ public class StringOutput {
     public void jsoniter() throws IOException {
         baos.reset();
         stream.reset(baos, buffer);
-        stream.writeVal("hello world ~~ hello 中文 ~~~");
+        stream.writeVal(1024);
         stream.flush();
     }
 
     @Benchmark
     public void jackson() throws IOException {
         baos.reset();
-        objectMapper.writeValue(baos, "hello world ~~ hello 中文 ~~~");
+        objectMapper.writeValue(baos, 1024);
     }
 
     @Benchmark
     public void dsljson() throws IOException {
         baos.reset();
-        dslJson.serialize("hello world ~~ hello 中文 ~~~", baos);
+        dslJson.serialize(1024, baos);
     }
 }
