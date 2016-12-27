@@ -1,5 +1,6 @@
 package com.jsoniter.annotation;
 
+import com.jsoniter.JsonException;
 import com.jsoniter.spi.*;
 
 import java.lang.annotation.Annotation;
@@ -166,12 +167,23 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
             }
             JsonProperty jsonProperty = getJsonProperty(field.annotations);
             if (jsonProperty != null) {
-                String alternativeField = jsonProperty.value();
-                if (!alternativeField.isEmpty()) {
-                    field.fromNames = new String[]{alternativeField};
+                String altName = jsonProperty.value();
+                if (!altName.isEmpty()) {
+                    field.name = altName;
+                    field.fromNames = new String[]{altName};
+                }
+                if (jsonProperty.from().length > 0) {
+                    field.fromNames = jsonProperty.from();
                 }
                 if (jsonProperty.required()) {
                     field.asMissingWhenNotPresent = true;
+                }
+                if (jsonProperty.decoder() != Decoder.class) {
+                    try {
+                        ExtensionManager.registerPropertyDecoder(desc.clazz, field.name, jsonProperty.decoder().newInstance());
+                    } catch (Exception e) {
+                        throw new JsonException(e);
+                    }
                 }
             }
             if (getAnnotation(field.annotations, JsonMissingProperties.class) != null) {

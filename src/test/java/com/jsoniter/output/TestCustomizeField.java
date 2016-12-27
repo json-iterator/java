@@ -22,7 +22,7 @@ public class TestCustomizeField extends TestCase {
     }
 
     public void test_customize_field_decoder() throws IOException {
-        ExtensionManager.registerFieldEncoder(TestObject1.class, "field1", new Encoder() {
+        ExtensionManager.registerPropertyEncoder(TestObject1.class, "field1", new Encoder() {
             @Override
             public void encode(Object obj, JsonStream stream) throws IOException {
                 String str = (String) obj;

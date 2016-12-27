@@ -1,6 +1,7 @@
 package com.jsoniter;
 
 import com.jsoniter.annotation.*;
+import com.jsoniter.spi.Decoder;
 import com.jsoniter.spi.ExtensionManager;
 import junit.framework.TestCase;
 
@@ -15,7 +16,7 @@ public class TestAnnotation extends TestCase {
 //        JsonIterator.setMode(DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_STRICTLY);
     }
 
-    public static class AnnotatedObject {
+    public static class TestObject1 {
         @JsonProperty("field-1")
         public int field1;
 
@@ -25,41 +26,56 @@ public class TestAnnotation extends TestCase {
 
     public void test_rename() throws IOException {
         JsonIterator iter = JsonIterator.parse("{'field-1': 100}".replace('\'', '"'));
-        AnnotatedObject obj = iter.read(AnnotatedObject.class);
+        TestObject1 obj = iter.read(TestObject1.class);
         assertEquals(100, obj.field1);
     }
 
     public void test_ignore() throws IOException {
         JsonIterator iter = JsonIterator.parse("{'field2': 100}".replace('\'', '"'));
-        AnnotatedObject obj = iter.read(AnnotatedObject.class);
+        TestObject1 obj = iter.read(TestObject1.class);
         assertEquals(0, obj.field2);
     }
 
-    public static class NoDefaultCtor {
+    public static class TestObject2 {
         private int field1;
 
         @JsonCreator
-        public NoDefaultCtor(@JsonProperty("field1") int field1) {
+        public TestObject2(@JsonProperty("field1") int field1) {
             this.field1 = field1;
         }
     }
 
     public void test_ctor() throws IOException {
         JsonIterator iter = JsonIterator.parse("{'field1': 100}".replace('\'', '"'));
-        NoDefaultCtor obj = iter.read(NoDefaultCtor.class);
+        TestObject2 obj = iter.read(TestObject2.class);
         assertEquals(100, obj.field1);
     }
 
-    public static class StaticFactory {
+    public static class TestObject3 {
+        public int field1;
+
+        @JsonCreator
+        private TestObject3() {
+        }
+    }
+
+    public void test_private_ctor() throws IOException {
+        ExtensionManager.registerTypeDecoder(TestObject3.class, ReflectionDecoderFactory.create(TestObject3.class));
+        JsonIterator iter = JsonIterator.parse("{'field1': 100}".replace('\'', '"'));
+        TestObject3 obj = iter.read(TestObject3.class);
+        assertEquals(100, obj.field1);
+    }
+
+    public static class TestObject4 {
 
         private int field1;
 
-        private StaticFactory() {
+        private TestObject4() {
         }
 
         @JsonCreator
-        public static StaticFactory createObject(@JsonProperty(value = "field1") int field1) {
-            StaticFactory obj = new StaticFactory();
+        public static TestObject4 createObject(@JsonProperty(value = "field1") int field1) {
+            TestObject4 obj = new TestObject4();
             obj.field1 = field1;
             return obj;
         }
@@ -67,33 +83,11 @@ public class TestAnnotation extends TestCase {
 
     public void test_static_factory() throws IOException {
         JsonIterator iter = JsonIterator.parse("{'field1': 100}".replace('\'', '"'));
-        StaticFactory obj = iter.read(StaticFactory.class);
+        TestObject4 obj = iter.read(TestObject4.class);
         assertEquals(100, obj.field1);
     }
 
-    public static class StaticFactory2 {
-
-        private int _field1;
-
-        private StaticFactory2() {
-        }
-
-        @JsonCreator
-        public static StaticFactory2 createObject(@JsonProperty(value = "field1") int field1) {
-            StaticFactory2 obj = new StaticFactory2();
-            obj._field1 = field1;
-            return obj;
-        }
-    }
-
-    public void test_static_factory_with_reflection() throws IOException {
-        ExtensionManager.registerTypeDecoder(StaticFactory2.class, new ReflectionObjectDecoder(StaticFactory2.class));
-        JsonIterator iter = JsonIterator.parse("{'field1': 100}".replace('\'', '"'));
-        StaticFactory2 obj = iter.read(StaticFactory2.class);
-        assertEquals(100, obj._field1);
-    }
-
-    public static class WithSingleParamSetter {
+    public static class TestObject5 {
         private int field1;
 
         public void setField1(int field1) {
@@ -103,11 +97,11 @@ public class TestAnnotation extends TestCase {
 
     public void test_single_param_setter() throws IOException {
         JsonIterator iter = JsonIterator.parse("{'field1': 100}".replace('\'', '"'));
-        WithSingleParamSetter obj = iter.read(WithSingleParamSetter.class);
+        TestObject5 obj = iter.read(TestObject5.class);
         assertEquals(100, obj.field1);
     }
 
-    public static class WithMultiParamSetter {
+    public static class TestObject6 {
 
         private int field1;
 
@@ -119,11 +113,11 @@ public class TestAnnotation extends TestCase {
 
     public void test_multi_param_setter() throws IOException {
         JsonIterator iter = JsonIterator.parse("{'field1': 100}".replace('\'', '"'));
-        WithMultiParamSetter obj = iter.read(WithMultiParamSetter.class);
+        TestObject6 obj = iter.read(TestObject6.class);
         assertEquals(100, obj.field1);
     }
 
-    public static class WithRequiredProperties {
+    public static class TestObject7 {
         @JsonProperty(required = true)
         public int field1;
 
@@ -133,13 +127,13 @@ public class TestAnnotation extends TestCase {
 
     public void test_required_properties() throws IOException {
         JsonIterator iter = JsonIterator.parse("{}");
-        WithRequiredProperties obj = iter.read(WithRequiredProperties.class);
+        TestObject7 obj = iter.read(TestObject7.class);
         assertEquals(Arrays.asList("field1"), obj.missingProperties);
     }
 
-    public static class MissingCtorArg {
+    public static class TestObject8 {
         @JsonCreator
-        public MissingCtorArg(@JsonProperty(required = true)int param1) {
+        public TestObject8(@JsonProperty(required = true)int param1) {
 
         }
     }
@@ -147,7 +141,7 @@ public class TestAnnotation extends TestCase {
     public void test_missing_ctor_arg() throws IOException {
         JsonIterator iter = JsonIterator.parse("{}");
         try {
-            iter.read(MissingCtorArg.class);
+            iter.read(TestObject8.class);
             fail();
         } catch (JsonException e) {
             System.out.println(e);
@@ -155,14 +149,76 @@ public class TestAnnotation extends TestCase {
     }
 
     @JsonObject(asExtraForUnknownProperties = true)
-    public static class WithExtraProperties {
+    public static class TestObject9 {
         @JsonExtraProperties
         public Any extraProperties;
     }
 
     public void test_extra_properties() throws IOException {
         JsonIterator iter = JsonIterator.parse("{\"field1\": 100}");
-        WithExtraProperties obj = iter.read(WithExtraProperties.class);
+        TestObject9 obj = iter.read(TestObject9.class);
         assertEquals(100, obj.extraProperties.toInt("field1"));
+    }
+
+    public static class TestObject10 {
+        @JsonProperty(decoder=Decoder.StringIntDecoder.class)
+        public int field1;
+    }
+
+    public void test_property_decoder() throws IOException {
+        JsonIterator iter = JsonIterator.parse("{\"field1\": \"100\"}");
+        TestObject10 obj = iter.read(TestObject10.class);
+        assertEquals(100, obj.field1);
+    }
+
+    public static class TestObject11 {
+        @JsonProperty(decoder=Decoder.StringIntDecoder.class)
+        public Integer field1;
+    }
+
+    public void test_integer_property_decoder() throws IOException {
+        JsonIterator iter = JsonIterator.parse("{\"field1\": \"100\"}");
+        TestObject11 obj = iter.read(TestObject11.class);
+        assertEquals(Integer.valueOf(100), obj.field1);
+    }
+
+    public static class TestObject12 {
+        @JsonProperty(from={"field_1", "field-1"})
+        public int field1;
+    }
+
+    public void test_bind_from_multiple_names() throws IOException {
+        JsonIterator iter = JsonIterator.parse("{\"field-1\": 100, \"field-1\": 101}");
+        TestObject12 obj = iter.read(TestObject12.class);
+        assertEquals(101, obj.field1);
+    }
+
+    @JsonObject(asExtraForUnknownProperties = true)
+    public static class TestObject13 {
+    }
+
+    public void test_unknown_properties() throws IOException {
+        JsonIterator iter = JsonIterator.parse("{\"field-1\": 100, \"field-1\": 101}");
+        try {
+            iter.read(TestObject13.class);
+            fail();
+        } catch (JsonException e) {
+            System.out.println(e);
+        }
+    }
+
+    public static class TestObject14 {
+        @JsonProperty(required = true)
+        public int field1;
+
+        @JsonMissingProperties
+        public List<String> missingProperties;
+    }
+
+    public void test_required_properties_not_missing() throws IOException {
+        JsonIterator iter = JsonIterator.parse("{\"field1\": 100}");
+        TestObject14 obj = iter.read(TestObject14.class);
+        assertNull(obj.missingProperties);
+        assertEquals(100, obj.field1);
     }
 }

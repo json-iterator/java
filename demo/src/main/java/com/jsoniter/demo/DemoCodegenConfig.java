@@ -17,7 +17,7 @@ public class DemoCodegenConfig implements CodegenConfig {
     public void setup() {
         // register custom decoder or extensions before codegen
         // so that we doing codegen, we know in which case, we need to callback
-        ExtensionManager.registerFieldDecoder(User.class, "score", new Decoder.IntDecoder() {
+        ExtensionManager.registerPropertyDecoder(User.class, "score", new Decoder.IntDecoder() {
             @Override
             public int decodeInt(JsonIterator iter) throws IOException {
                 return Integer.valueOf(iter.readString());

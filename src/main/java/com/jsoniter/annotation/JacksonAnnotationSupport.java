@@ -1,5 +1,6 @@
 package com.jsoniter.annotation;
 
+import com.jsoniter.spi.Decoder;
 import com.jsoniter.spi.ExtensionManager;
 
 import java.lang.annotation.Annotation;
@@ -52,8 +53,18 @@ public class JacksonAnnotationSupport extends JsoniterAnnotationSupport {
             }
 
             @Override
+            public String[] from() {
+                return new String[0];
+            }
+
+            @Override
             public boolean required() {
                 return jacksonObj.required();
+            }
+
+            @Override
+            public Class<? extends Decoder> decoder() {
+                return null;
             }
 
             @Override

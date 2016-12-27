@@ -36,11 +36,11 @@ public class ExtensionManager {
         addNewDecoder(typeLiteral.getDecoderCacheKey(), decoder);
     }
 
-    public static void registerFieldDecoder(Class clazz, String field, Decoder decoder) {
+    public static void registerPropertyDecoder(Class clazz, String field, Decoder decoder) {
         addNewDecoder(field + "@" + TypeLiteral.generateDecoderCacheKey(clazz), decoder);
     }
 
-    public static void registerFieldDecoder(TypeLiteral typeLiteral, String field, Decoder decoder) {
+    public static void registerPropertyDecoder(TypeLiteral typeLiteral, String field, Decoder decoder) {
         addNewDecoder(field + "@" + typeLiteral.getDecoderCacheKey(), decoder);
     }
 
@@ -52,11 +52,11 @@ public class ExtensionManager {
         addNewEncoder(typeLiteral.getDecoderCacheKey(), encoder);
     }
 
-    public static void registerFieldEncoder(Class clazz, String field, Encoder encoder) {
+    public static void registerPropertyEncoder(Class clazz, String field, Encoder encoder) {
         addNewEncoder(field + "@" + TypeLiteral.generateEncoderCacheKey(clazz), encoder);
     }
 
-    public static void registerFieldEncoder(TypeLiteral typeLiteral, String field, Encoder encoder) {
+    public static void registerPropertyEncoder(TypeLiteral typeLiteral, String field, Encoder encoder) {
         addNewEncoder(field + "@" + typeLiteral.getDecoderCacheKey(), encoder);
     }
 

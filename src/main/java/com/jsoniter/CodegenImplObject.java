@@ -112,8 +112,12 @@ class CodegenImplObject {
         }
         if (!desc.ctor.parameters.isEmpty()) {
             append(lines, String.format("%s obj = {{newInst}};", CodegenImplNative.getTypeName(clazz)));
-            for (Binding field : desc.fields) {
-                append(lines, String.format("obj.%s = _%s_;", field.name, field.name));
+            for (Binding binding : desc.fields) {
+                if (binding.field != null) {
+                    append(lines, String.format("obj.%s = _%s_;", binding.field.getName(), binding.name));
+                } else {
+                    append(lines, String.format("obj.%s(_%s_);", binding.setter.getName(), binding.name));
+                }
             }
         }
         appendSetter(desc.setters, lines);
@@ -169,35 +173,37 @@ class CodegenImplObject {
     }
 
     private static String updateFieldSetOp(String rendered, Binding field) {
-        String marker = "_" + field.name + "_";
-        int start = rendered.indexOf(marker);
-        if (start == -1) {
-            return rendered;
-        }
-        int middle = rendered.indexOf('=', start);
-        if (middle == -1) {
-            throw new JsonException("can not find = in: " + rendered + " ,at " + start);
-        }
-        middle += 1;
-        int end = rendered.indexOf(';', start);
-        if (end == -1) {
-            throw new JsonException("can not find ; in: " + rendered + " ,at " + start);
-        }
-        String op = rendered.substring(middle, end);
-        if (field.field != null) {
-            if (shouldReuseObject(field.valueType)) {
-                // reuse; then field set
-                return String.format("%scom.jsoniter.CodegenAccess.setExistingObject(iter, obj.%s);obj.%s=%s%s",
-                        rendered.substring(0, start), field.name, field.name, op, rendered.substring(end));
-            } else {
-                // just field set
-                return String.format("%sobj.%s=%s%s",
-                        rendered.substring(0, start), field.name, op, rendered.substring(end));
+        while (true) {
+            String marker = "_" + field.name + "_";
+            int start = rendered.indexOf(marker);
+            if (start == -1) {
+                return rendered;
             }
-        } else {
-            // method set
-            return String.format("%sobj.%s(%s)%s",
-                    rendered.substring(0, start), field.setter.getName(), op, rendered.substring(end));
+            int middle = rendered.indexOf('=', start);
+            if (middle == -1) {
+                throw new JsonException("can not find = in: " + rendered + " ,at " + start);
+            }
+            middle += 1;
+            int end = rendered.indexOf(';', start);
+            if (end == -1) {
+                throw new JsonException("can not find ; in: " + rendered + " ,at " + start);
+            }
+            String op = rendered.substring(middle, end);
+            if (field.field != null) {
+                if (shouldReuseObject(field.valueType)) {
+                    // reuse; then field set
+                    rendered = String.format("%scom.jsoniter.CodegenAccess.setExistingObject(iter, obj.%s);obj.%s=%s%s",
+                            rendered.substring(0, start), field.field.getName(), field.field.getName(), op, rendered.substring(end));
+                } else {
+                    // just field set
+                    rendered = String.format("%sobj.%s=%s%s",
+                            rendered.substring(0, start), field.field.getName(), op, rendered.substring(end));
+                }
+            } else {
+                // method set
+                rendered = String.format("%sobj.%s(%s)%s",
+                        rendered.substring(0, start), field.setter.getName(), op, rendered.substring(end));
+            }
         }
     }
 
@@ -397,7 +403,7 @@ class CodegenImplObject {
             append(lines, CodegenImplNative.getTypeName(clazz) + " obj = {{newInst}};");
             for (Binding field : desc.fields) {
                 if (field.field != null) {
-                    append(lines, String.format("obj.%s = _%s_;", field.name, field.name));
+                    append(lines, String.format("obj.%s = _%s_;", field.field.getName(), field.name));
                 } else {
                     append(lines, String.format("obj.%s(_%s_);", field.setter.getName(), field.name));
                 }
@@ -416,7 +422,7 @@ class CodegenImplObject {
                 append(lines, String.format("com.jsoniter.CodegenAccess.setExistingObject(iter, obj.%s);", field.name));
             }
             if (field.field != null) {
-                append(lines, String.format("obj.%s = %s;", field.name, genField(field, cacheKey)));
+                append(lines, String.format("obj.%s = %s;", field.field.getName(), genField(field, cacheKey)));
             } else {
                 append(lines, String.format("obj.%s(%s);", field.setter.getName(), genField(field, cacheKey)));
             }
