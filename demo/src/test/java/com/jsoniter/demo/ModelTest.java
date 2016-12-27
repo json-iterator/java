@@ -1,6 +1,9 @@
 package com.jsoniter.demo;
 
 import com.alibaba.fastjson.JSON;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.spi.TypeLiteral;
 import org.junit.Test;
@@ -12,8 +15,9 @@ import org.openjdk.jmh.infra.Blackhole;
 import java.io.IOException;
 
 // Benchmark            Mode  Cnt         Score        Error  Units
-// ModelTest.fastjson  thrpt    5   9293521.379 ± 402448.417  ops/s
-// ModelTest.jsoniter  thrpt    5  17813770.824 ± 303816.547  ops/s
+// ModelTest.fastjson  thrpt    5   7790201.506 ± 260185.529  ops/s
+// ModelTest.jackson   thrpt    5   4063696.579 ± 169609.697  ops/s
+// ModelTest.jsoniter  thrpt    5  16392968.819 ± 197563.536  ops/s
 @State(Scope.Thread)
 public class ModelTest {
 
@@ -21,13 +25,19 @@ public class ModelTest {
     private JsonIterator iter;
     private byte[] inputBytes;
     private TypeLiteral<Model> modelTypeLiteral; // this is thread-safe can reused
+    private ObjectMapper jackson;
+    private TypeReference<Model> modelTypeReference;
 
     @Setup(Level.Trial)
     public void benchSetup(BenchmarkParams params) {
-        input = "{\"id\":1001,\"name\":\"wenshao\"}";
+        input = "{\"name\":\"wenshao\",\"id\":1001}";
         inputBytes = input.getBytes();
         iter = new JsonIterator();
         modelTypeLiteral = new TypeLiteral<Model>() {
+        };
+        jackson = new ObjectMapper();
+        jackson.registerModule(new AfterburnerModule());
+        modelTypeReference = new TypeReference<Model>() {
         };
     }
 
@@ -60,6 +70,11 @@ public class ModelTest {
         // as string => object is not
         // bytes => object
         bh.consume(JSON.parseObject(input, Model.class));
+    }
+
+    @Benchmark
+    public void jackson(Blackhole bh) throws IOException {
+        bh.consume(jackson.readValue(input, modelTypeReference));
     }
 
     public static class Model {

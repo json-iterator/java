@@ -7,6 +7,7 @@ import junit.framework.TestCase;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 public class TestAnnotation extends TestCase {
@@ -133,7 +134,7 @@ public class TestAnnotation extends TestCase {
 
     public static class TestObject8 {
         @JsonCreator
-        public TestObject8(@JsonProperty(required = true)int param1) {
+        public TestObject8(@JsonProperty(required = true) int param1) {
 
         }
     }
@@ -161,7 +162,7 @@ public class TestAnnotation extends TestCase {
     }
 
     public static class TestObject10 {
-        @JsonProperty(decoder=Decoder.StringIntDecoder.class)
+        @JsonProperty(decoder = Decoder.StringIntDecoder.class)
         public int field1;
     }
 
@@ -172,7 +173,7 @@ public class TestAnnotation extends TestCase {
     }
 
     public static class TestObject11 {
-        @JsonProperty(decoder=Decoder.StringIntDecoder.class)
+        @JsonProperty(decoder = Decoder.StringIntDecoder.class)
         public Integer field1;
     }
 
@@ -183,7 +184,7 @@ public class TestAnnotation extends TestCase {
     }
 
     public static class TestObject12 {
-        @JsonProperty(from={"field_1", "field-1"})
+        @JsonProperty(from = {"field_1", "field-1"})
         public int field1;
     }
 
@@ -220,5 +221,31 @@ public class TestAnnotation extends TestCase {
         TestObject14 obj = iter.read(TestObject14.class);
         assertNull(obj.missingProperties);
         assertEquals(100, obj.field1);
+    }
+
+    @JsonObject(unknownPropertiesBlacklist = {"field1"})
+    public static class TestObject15 {
+    }
+
+    public void test_unknown_properties_blacklist() throws IOException {
+        JsonIterator iter = JsonIterator.parse("{\"field1\": 100}");
+        try {
+            iter.read(TestObject15.class);
+            fail();
+        } catch (JsonException e) {
+            System.out.println(e);
+        }
+    }
+
+    public static class TestObject16 {
+        @JsonProperty(implementation = LinkedList.class)
+        public List<Integer> values;
+    }
+
+    public void test_specify_property() throws IOException {
+        JsonIterator iter = JsonIterator.parse("{\"values\": [100]}");
+        TestObject16 obj = iter.read(TestObject16.class);
+        assertEquals(Arrays.asList(100), obj.values);
+        assertEquals(LinkedList.class, obj.values.getClass());
     }
 }

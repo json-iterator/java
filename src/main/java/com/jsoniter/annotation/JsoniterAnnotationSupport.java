@@ -160,43 +160,47 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
     }
 
     private void updateBindings(ClassDescriptor desc) {
-        for (Binding field : desc.allDecoderBindings()) {
-            JsonIgnore jsonIgnore = getJsonIgnore(field.annotations);
+        for (Binding binding : desc.allDecoderBindings()) {
+            JsonIgnore jsonIgnore = getJsonIgnore(binding.annotations);
             if (jsonIgnore != null && jsonIgnore.value()) {
-                field.fromNames = new String[0];
+                binding.fromNames = new String[0];
             }
-            JsonProperty jsonProperty = getJsonProperty(field.annotations);
+            JsonProperty jsonProperty = getJsonProperty(binding.annotations);
             if (jsonProperty != null) {
                 String altName = jsonProperty.value();
                 if (!altName.isEmpty()) {
-                    field.name = altName;
-                    field.fromNames = new String[]{altName};
+                    binding.name = altName;
+                    binding.fromNames = new String[]{altName};
                 }
                 if (jsonProperty.from().length > 0) {
-                    field.fromNames = jsonProperty.from();
+                    binding.fromNames = jsonProperty.from();
                 }
                 if (jsonProperty.required()) {
-                    field.asMissingWhenNotPresent = true;
+                    binding.asMissingWhenNotPresent = true;
                 }
                 if (jsonProperty.decoder() != Decoder.class) {
                     try {
-                        ExtensionManager.registerPropertyDecoder(desc.clazz, field.name, jsonProperty.decoder().newInstance());
+                        ExtensionManager.registerPropertyDecoder(desc.clazz, binding.name, jsonProperty.decoder().newInstance());
                     } catch (Exception e) {
                         throw new JsonException(e);
                     }
                 }
+                if (jsonProperty.implementation() != Object.class) {
+                    binding.valueType = ParameterizedTypeImpl.useImpl(binding.valueType, jsonProperty.implementation());
+                    binding.valueTypeLiteral = TypeLiteral.create(binding.valueType);
+                }
             }
-            if (getAnnotation(field.annotations, JsonMissingProperties.class) != null) {
-                // this field will not bind from json
+            if (getAnnotation(binding.annotations, JsonMissingProperties.class) != null) {
+                // this binding will not bind from json
                 // instead it will be set by jsoniter with missing property names
-                field.fromNames = new String[0];
-                desc.onMissingProperties = field;
+                binding.fromNames = new String[0];
+                desc.onMissingProperties = binding;
             }
-            if (getAnnotation(field.annotations, JsonExtraProperties.class) != null) {
-                // this field will not bind from json
+            if (getAnnotation(binding.annotations, JsonExtraProperties.class) != null) {
+                // this binding will not bind from json
                 // instead it will be set by jsoniter with extra properties
-                field.fromNames = new String[0];
-                desc.onExtraProperties = field;
+                binding.fromNames = new String[0];
+                desc.onExtraProperties = binding;
             }
         }
     }
