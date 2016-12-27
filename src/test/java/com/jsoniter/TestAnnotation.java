@@ -15,6 +15,7 @@ public class TestAnnotation extends TestCase {
     static {
         JsoniterAnnotationSupport.enable();
 //        JsonIterator.setMode(DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_STRICTLY);
+//        JsonIterator.setMode(DecodingMode.REFLECTION_MODE);
     }
 
     public static class TestObject1 {

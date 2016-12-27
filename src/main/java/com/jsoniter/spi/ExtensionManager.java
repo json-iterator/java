@@ -129,8 +129,21 @@ public class ExtensionManager {
 
     private static void setterOrCtorOverrideField(ClassDescriptor desc) {
         HashMap<String, Binding> fields = new HashMap<String, Binding>();
-        for (Binding field : desc.fields) {
-            fields.put(field.name, field);
+
+        for (Binding field : new ArrayList<Binding>(desc.fields)) {
+            if (fields.containsKey(field.name)) {
+                // conflict
+                if (field.setter != null) {
+                    // this is setter, prefer using it
+                    desc.fields.remove(fields.get(field.name));
+                    fields.put(field.name, field);
+                } else {
+                    // this is not setter, discard it
+                    desc.fields.remove(field);
+                }
+            } else {
+                fields.put(field.name, field);
+            }
         }
         for (SetterDescriptor setter : desc.setters) {
             for (Binding parameter : setter.parameters) {

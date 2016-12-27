@@ -53,6 +53,7 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
             String[] paramNames = getParamNames(method, annotations.length);
             SetterDescriptor setter = new SetterDescriptor();
             setter.methodName = method.getName();
+            setter.method = method;
             for (int i = 0; i < annotations.length; i++) {
                 Annotation[] paramAnnotations = annotations[i];
                 Binding binding = new Binding(desc.clazz, desc.lookup, method.getGenericParameterTypes()[i]);

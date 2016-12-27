@@ -113,37 +113,55 @@ class ReflectionObjectDecoder implements Decoder {
         Object obj = CodegenAccess.existingObject(iter) == null ? createNewObject() : CodegenAccess.resetExistingObject(iter);
         if (!CodegenAccess.readObjectStart(iter)) {
             if (requiredIdx > 0) {
-                throw new JsonException("missing required properties: " + collectMissingFields(0));
+                if (desc.onMissingProperties == null) {
+                    throw new JsonException("missing required properties: " + collectMissingFields(0));
+                } else {
+                    setToBinding(obj, desc.onMissingProperties, collectMissingFields(0));
+                }
             }
             return obj;
         }
+        Map<String, Object> extra = null;
         long tracker = 0L;
         Slice fieldName = CodegenAccess.readObjectFieldAsSlice(iter);
         Binding binding = allBindings.get(fieldName);
         if (binding == null) {
-            onUnknownProperty(iter, fieldName);
+            extra = onUnknownProperty(iter, fieldName, extra);
         } else {
             if (binding.asMissingWhenNotPresent) {
                 tracker |= binding.mask;
             }
-            binding.field.set(obj, decode(iter, binding));
+            setToBinding(obj, binding, decode(iter, binding));
         }
         while (CodegenAccess.nextToken(iter) == ',') {
             fieldName = CodegenAccess.readObjectFieldAsSlice(iter);
             binding = allBindings.get(fieldName);
             if (binding == null) {
-                onUnknownProperty(iter, fieldName);
+                extra = onUnknownProperty(iter, fieldName, extra);
             } else {
                 if (binding.asMissingWhenNotPresent) {
                     tracker |= binding.mask;
                 }
-                binding.field.set(obj, decode(iter, binding));
+                setToBinding(obj, binding, decode(iter, binding));
             }
         }
         if (tracker != expectedTracker) {
-            throw new JsonException("missing required properties: " + collectMissingFields(tracker));
+            if (desc.onMissingProperties == null) {
+                throw new JsonException("missing required properties: " + collectMissingFields(tracker));
+            } else {
+                setToBinding(obj, desc.onMissingProperties, collectMissingFields(tracker));
+            }
         }
+        setExtra(obj, extra);
         return obj;
+    }
+
+    private void setToBinding(Object obj, Binding binding, Object value) throws Exception {
+        if (binding.field != null) {
+            binding.field.set(obj, value);
+        } else {
+            binding.setter.invoke(obj, value);
+        }
     }
 
     private final Object decodeWithCtorBinding(JsonIterator iter) throws Exception {
@@ -163,11 +181,12 @@ class ReflectionObjectDecoder implements Decoder {
             }
             return createNewObject(iter, temp);
         }
+        Map<String, Object> extra = null;
         long tracker = 0L;
         Slice fieldName = CodegenAccess.readObjectFieldAsSlice(iter);
         Binding binding = allBindings.get(fieldName);
         if (binding == null) {
-            onUnknownProperty(iter, fieldName);
+            extra = onUnknownProperty(iter, fieldName, extra);
         } else {
             if (binding.asMissingWhenNotPresent) {
                 tracker |= binding.mask;
@@ -178,7 +197,7 @@ class ReflectionObjectDecoder implements Decoder {
             fieldName = CodegenAccess.readObjectFieldAsSlice(iter);
             binding = allBindings.get(fieldName);
             if (binding == null) {
-                onUnknownProperty(iter, fieldName);
+                extra = onUnknownProperty(iter, fieldName, extra);
             } else {
                 if (binding.asMissingWhenNotPresent) {
                     tracker |= binding.mask;
@@ -190,6 +209,7 @@ class ReflectionObjectDecoder implements Decoder {
             throw new JsonException("missing required properties: " + collectMissingFields(tracker));
         }
         Object obj = createNewObject(iter, temp);
+        setExtra(obj, extra);
         for (Binding field : desc.fields) {
             Object val = temp[field.idx];
             if (val != NOT_SET) {
@@ -208,10 +228,15 @@ class ReflectionObjectDecoder implements Decoder {
         Object obj = createNewObject();
         if (!CodegenAccess.readObjectStart(iter)) {
             if (requiredIdx > 0) {
-                throw new JsonException("missing required properties: " + collectMissingFields(0));
+                if (desc.onMissingProperties == null) {
+                    throw new JsonException("missing required properties: " + collectMissingFields(0));
+                } else {
+                    setToBinding(obj, desc.onMissingProperties, collectMissingFields(0));
+                }
             }
             return obj;
         }
+        Map<String, Object> extra = null;
         long tracker = 0L;
         Object[] temp = (Object[]) iter.tempObjects.get(tempCacheKey);
         if (temp == null) {
@@ -222,38 +247,57 @@ class ReflectionObjectDecoder implements Decoder {
         Slice fieldName = CodegenAccess.readObjectFieldAsSlice(iter);
         Binding binding = allBindings.get(fieldName);
         if (binding == null) {
-            onUnknownProperty(iter, fieldName);
+            extra = onUnknownProperty(iter, fieldName, extra);
         } else {
             if (binding.asMissingWhenNotPresent) {
                 tracker |= binding.mask;
             }
-            if (binding.field == null) {
+            if (canSetDirectly(binding)) {
                 temp[binding.idx] = decode(iter, binding);
             } else {
-                binding.field.set(obj, decode(iter, binding));
+                setToBinding(obj, binding, decode(iter, binding));
             }
         }
         while (CodegenAccess.nextToken(iter) == ',') {
             fieldName = CodegenAccess.readObjectFieldAsSlice(iter);
             binding = allBindings.get(fieldName);
             if (binding == null) {
-                onUnknownProperty(iter, fieldName);
+                extra = onUnknownProperty(iter, fieldName, extra);
             } else {
                 if (binding.asMissingWhenNotPresent) {
                     tracker |= binding.mask;
                 }
-                if (binding.field == null) {
+                if (canSetDirectly(binding)) {
                     temp[binding.idx] = decode(iter, binding);
                 } else {
-                    binding.field.set(obj, decode(iter, binding));
+                    setToBinding(obj, binding, decode(iter, binding));
                 }
             }
         }
         if (tracker != expectedTracker) {
-            throw new JsonException("missing required properties: " + collectMissingFields(tracker));
+            if (desc.onMissingProperties == null) {
+                throw new JsonException("missing required properties: " + collectMissingFields(tracker));
+            } else {
+                setToBinding(obj, desc.onMissingProperties, collectMissingFields(tracker));
+            }
         }
+        setExtra(obj, extra);
         applySetters(temp, obj);
         return obj;
+    }
+
+    private void setExtra(Object obj, Map<String, Object> extra) throws Exception {
+        if (desc.onExtraProperties != null) {
+            if (desc.onExtraProperties.valueType == Any.class) {
+                setToBinding(obj, desc.onExtraProperties, new Any(extra));
+            } else {
+                setToBinding(obj, desc.onExtraProperties, extra);
+            }
+        }
+    }
+
+    private boolean canSetDirectly(Binding binding) {
+        return binding.field == null && binding.setter == null;
     }
 
     private Object decode(JsonIterator iter, Binding binding) throws IOException {
@@ -266,12 +310,20 @@ class ReflectionObjectDecoder implements Decoder {
         return value;
     }
 
-    private void onUnknownProperty(JsonIterator iter, Slice fieldName) throws IOException {
+    private Map<String, Object> onUnknownProperty(JsonIterator iter, Slice fieldName, Map<String, Object> extra) throws IOException {
         if (desc.asExtraForUnknownProperties) {
-            throw new JsonException("unknown property: " + fieldName.toString());
+            if (desc.onExtraProperties == null) {
+                throw new JsonException("unknown property: " + fieldName.toString());
+            } else {
+                if (extra == null) {
+                    extra = new HashMap<String, Object>();
+                }
+                extra.put(fieldName.toString(), iter.readAnyObject());
+            }
         } else {
             iter.skip();
         }
+        return extra;
     }
 
     private List<String> collectMissingFields(long tracker) {
