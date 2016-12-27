@@ -66,7 +66,7 @@ public class SimpleObjectBinding {
                 ExtensionManager.registerTypeDecoder(TestObject.class, ReflectionDecoderFactory.create(TestObject.class));
             }
             if (params.getBenchmark().contains("withBindApiStrictMode")) {
-                JsonIterator.setMode(DecodingMode.STATIC_MODE);
+                JsonIterator.setMode(DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_STRICTLY);
             }
             if (params.getBenchmark().contains("withJacksonAfterburner")) {
                 jackson.registerModule(new AfterburnerModule());
@@ -97,17 +97,17 @@ public class SimpleObjectBinding {
         });
     }
 
-    @Benchmark
+//    @Benchmark
     public void withIterator(Blackhole bh) throws IOException {
         bh.consume(withIterator());
     }
 
-    @Benchmark
+//    @Benchmark
     public void withIteratorIfElse(Blackhole bh) throws IOException {
         bh.consume(withIteratorIfElse());
     }
 
-    @Benchmark
+//    @Benchmark
     public void withIteratorIntern(Blackhole bh) throws IOException {
         bh.consume(withIteratorIntern());
     }

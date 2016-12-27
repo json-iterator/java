@@ -4,7 +4,7 @@ import com.jsoniter.DecodingMode;
 import com.jsoniter.JsonException;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.annotation.JsonProperty;
-import com.jsoniter.annotation.JsonUnknownProperties;
+import com.jsoniter.annotation.JsonObject;
 import com.jsoniter.annotation.JsoniterAnnotationSupport;
 import com.jsoniter.spi.TypeLiteral;
 import org.junit.Assert;
@@ -40,18 +40,18 @@ public class FieldMatching {
         public int field3;
     }
 
-    @JsonUnknownProperties(failOnUnkown = true)
+    @JsonObject(asExtraForUnknownProperties = true)
     public static class TestObject2 {
         public int field1;
         public int field2;
     }
 
-    @JsonUnknownProperties(failOnUnkown = true, whitelist = {"field2"})
+    @JsonObject(asExtraForUnknownProperties = true, unknownPropertiesWhitelist = {"field2"})
     public static class TestObject3 {
         public int field1;
     }
 
-    @JsonUnknownProperties(blacklist = {"field3"})
+    @JsonObject(unknownPropertiesBlacklist = {"field3"})
     public static class TestObject4 {
         public int field1;
     }

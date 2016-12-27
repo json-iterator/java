@@ -5,6 +5,11 @@ import java.lang.reflect.Type;
 public class EmptyExtension implements Extension {
 
     @Override
+    public Type chooseImplementation(Type type) {
+        return type;
+    }
+
+    @Override
     public Decoder createDecoder(String cacheKey, Type type) {
         return null;
     }

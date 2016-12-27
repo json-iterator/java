@@ -18,24 +18,24 @@ class CodegenImplObject {
         put("long", "0");
     }};
 
-
     public static String genObjectUsingStrict(Class clazz, String cacheKey, ClassDescriptor desc) {
-        // TODO: when setter is single argument, decode like field
         List<Binding> allBindings = desc.allDecoderBindings();
-        int requiredIdx = 0;
-        for (Binding binding : allBindings) {
-            if (binding.failOnMissing) {
-                binding.mask = 1L << requiredIdx;
-                requiredIdx++;
-            }
-        }
-        if (requiredIdx > 63) {
-            throw new JsonException("too many required properties to track");
-        }
-        boolean hasRequiredBinding = requiredIdx > 0;
-        long expectedTracker = Long.MAX_VALUE >> (63 - requiredIdx);
+        int lastRequiredIdx = assignMaskForRequiredProperties(allBindings);
+        boolean hasRequiredBinding = lastRequiredIdx > 0;
+        long expectedTracker = Long.MAX_VALUE >> (63 - lastRequiredIdx);
         Map<Integer, Object> trieTree = buildTriTree(allBindings);
         StringBuilder lines = new StringBuilder();
+        /*
+         * only strict mode binding support missing/extra properties tracking
+         * 1. if null, return null
+         * 2. if empty, return empty
+         * 3. bind first field
+         * 4. while (nextToken() == ',') { bind more fields }
+         * 5. handle missing/extra properties
+         * 6. create object with args (if ctor binding)
+         * 7. assign fields to object (if ctor binding)
+         * 8. apply multi param setters
+         */
         // === if null, return null
         append(lines, "if (iter.readNull()) { com.jsoniter.CodegenAccess.resetExistingObject(iter); return null; }");
         // === if input is empty object, return empty object
@@ -46,10 +46,9 @@ class CodegenImplObject {
             append(lines, "{{clazz}} obj = {{newInst}};");
             append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) {");
             if (hasRequiredBinding) {
-                appendMissingMandatoryFields(lines, allBindings);
-            } else {
-                append(lines, "return obj;");
+                appendMissingRequiredProperties(lines, desc);
             }
+            append(lines, "return obj;");
             append(lines, "}");
         } else {
             for (Binding parameter : desc.ctor.parameters) {
@@ -57,7 +56,7 @@ class CodegenImplObject {
             }
             append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) {");
             if (hasRequiredBinding) {
-                appendMissingMandatoryFields(lines, allBindings);
+                appendMissingRequiredProperties(lines, desc);
             } else {
                 append(lines, "return {{newInst}};");
             }
@@ -72,22 +71,21 @@ class CodegenImplObject {
             }
         }
         // === bind first field
+        if (desc.onExtraProperties != null) {
+            append(lines, "java.util.Map extra = null;");
+        }
         append(lines, "com.jsoniter.Slice field = com.jsoniter.CodegenAccess.readObjectFieldAsSlice(iter);");
         append(lines, "boolean once = true;");
         append(lines, "while (once) {");
         append(lines, "once = false;");
         String rendered = renderTriTree(cacheKey, trieTree);
         for (Binding field : desc.fields) {
+            // if not field, the value will set to temp variable
             if (desc.ctor.parameters.isEmpty() && desc.fields.contains(field)) {
-                if (shouldReuseObject(field.valueType)) {
-                    rendered = rendered.replace("_" + field.name + "_", String.format("obj.%s", field.name));
-                } else {
-                    rendered = rendered.replace("_" + field.name + "_", String.format(
-                            "com.jsoniter.CodegenAccess.setExistingObject(iter, obj.%s);\nobj.%s", field.name, field.name));
-                }
+                rendered = updateFieldSetOp(rendered, field);
             }
         }
-        if (!allBindings.isEmpty()) {
+        if (hasAnythingToBindFrom(allBindings)) {
             append(lines, "switch (field.len) {");
             append(lines, rendered);
             append(lines, "}"); // end of switch
@@ -97,7 +95,7 @@ class CodegenImplObject {
         // === bind all fields
         append(lines, "while (com.jsoniter.CodegenAccess.nextToken(iter) == ',') {");
         append(lines, "field = com.jsoniter.CodegenAccess.readObjectFieldAsSlice(iter);");
-        if (!allBindings.isEmpty()) {
+        if (hasAnythingToBindFrom(allBindings)) {
             append(lines, "switch (field.len) {");
             append(lines, rendered);
             append(lines, "}"); // end of switch
@@ -106,8 +104,11 @@ class CodegenImplObject {
         append(lines, "}"); // end of while
         if (hasRequiredBinding) {
             append(lines, "if (tracker != " + expectedTracker + "L) {");
-            appendMissingMandatoryFields(lines, allBindings);
+            appendMissingRequiredProperties(lines, desc);
             append(lines, "}");
+        }
+        if (desc.onExtraProperties != null) {
+            appendSetExtraProperteis(lines, desc);
         }
         if (!desc.ctor.parameters.isEmpty()) {
             append(lines, String.format("%s obj = {{newInst}};", CodegenImplNative.getTypeName(clazz)));
@@ -122,36 +123,115 @@ class CodegenImplObject {
                 .replace("{{newInst}}", genNewInstCode(clazz, desc.ctor));
     }
 
-    private static void appendMissingMandatoryFields(StringBuilder lines, List<Binding> allBindings) {
-        append(lines, "java.util.List missingFields = new java.util.ArrayList();");
+    private static void appendSetExtraProperteis(StringBuilder lines, ClassDescriptor desc) {
+        Binding onExtraProperties = desc.onExtraProperties;
+        if (ParameterizedTypeImpl.isSameClass(onExtraProperties.valueType, Map.class)) {
+            if (onExtraProperties.field != null) {
+                append(lines, String.format("obj.%s = extra;", onExtraProperties.field.getName()));
+            } else {
+                append(lines, String.format("obj.%s(extra);", onExtraProperties.setter.getName()));
+            }
+            return;
+        }
+        if (onExtraProperties.valueType == Any.class) {
+            if (onExtraProperties.field != null) {
+                append(lines, String.format("obj.%s = new com.jsoniter.Any(extra);", onExtraProperties.field.getName()));
+            } else {
+                append(lines, String.format("obj.%s(new com.jsoniter.Any(extra));", onExtraProperties.setter.getName()));
+            }
+            return;
+        }
+        throw new JsonException("extra properties can only be Map or Any");
+    }
+
+    private static boolean hasAnythingToBindFrom(List<Binding> allBindings) {
         for (Binding binding : allBindings) {
-            if (binding.failOnMissing) {
+            if (binding.fromNames.length > 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static int assignMaskForRequiredProperties(List<Binding> allBindings) {
+        int requiredIdx = 0;
+        for (Binding binding : allBindings) {
+            if (binding.asMissingWhenNotPresent) {
+                // one bit represent one field
+                binding.mask = 1L << requiredIdx;
+                requiredIdx++;
+            }
+        }
+        if (requiredIdx > 63) {
+            throw new JsonException("too many required properties to track");
+        }
+        return requiredIdx;
+    }
+
+    private static String updateFieldSetOp(String rendered, Binding field) {
+        String marker = "_" + field.name + "_";
+        int start = rendered.indexOf(marker);
+        if (start == -1) {
+            return rendered;
+        }
+        int middle = rendered.indexOf('=', start);
+        if (middle == -1) {
+            throw new JsonException("can not find = in: " + rendered + " ,at " + start);
+        }
+        middle += 1;
+        int end = rendered.indexOf(';', start);
+        if (end == -1) {
+            throw new JsonException("can not find ; in: " + rendered + " ,at " + start);
+        }
+        String op = rendered.substring(middle, end);
+        if (field.field != null) {
+            if (shouldReuseObject(field.valueType)) {
+                // reuse; then field set
+                return String.format("%scom.jsoniter.CodegenAccess.setExistingObject(iter, obj.%s);obj.%s=%s%s",
+                        rendered.substring(0, start), field.name, field.name, op, rendered.substring(end));
+            } else {
+                // just field set
+                return String.format("%sobj.%s=%s%s",
+                        rendered.substring(0, start), field.name, op, rendered.substring(end));
+            }
+        } else {
+            // method set
+            return String.format("%sobj.%s(%s)%s",
+                    rendered.substring(0, start), field.setter.getName(), op, rendered.substring(end));
+        }
+    }
+
+    private static void appendMissingRequiredProperties(StringBuilder lines, ClassDescriptor desc) {
+        append(lines, "java.util.List missingFields = new java.util.ArrayList();");
+        for (Binding binding : desc.allDecoderBindings()) {
+            if (binding.asMissingWhenNotPresent) {
                 long mask = binding.mask;
                 append(lines, String.format("com.jsoniter.CodegenAccess.addMissingField(missingFields, tracker, %sL, \"%s\");",
                         mask, binding.name));
             }
         }
-        append(lines, "throw new com.jsoniter.JsonException(\"missing required properties: \" + missingFields);");
+        if (desc.onMissingProperties == null || !desc.ctor.parameters.isEmpty()) {
+            append(lines, "throw new com.jsoniter.JsonException(\"missing required properties: \" + missingFields);");
+        } else {
+            if (desc.onMissingProperties.field != null) {
+                append(lines, String.format("obj.%s = missingFields;", desc.onMissingProperties.field.getName()));
+            } else {
+                append(lines, String.format("obj.%s(missingFields);", desc.onMissingProperties.setter.getName()));
+            }
+        }
     }
 
     private static void appendOnUnknownField(StringBuilder lines, ClassDescriptor desc) {
-        if (desc.failOnUnknownFields) {
-            append(lines, "throw new com.jsoniter.JsonException('unknown property: ' + field.toString());".replace('\'', '"'));
+        if (desc.asExtraForUnknownProperties) {
+            if (desc.onExtraProperties == null) {
+                append(lines, "throw new com.jsoniter.JsonException('extra property: ' + field.toString());".replace('\'', '"'));
+            } else {
+                append(lines, "if (extra == null) { extra = new java.util.HashMap(); }");
+                append(lines, "extra.put(field.toString(), iter.readAnyObject());");
+            }
         } else {
             append(lines, "iter.skip();");
         }
-    }
-
-    private static String renderTriTree(String cacheKey, Map<Integer, Object> trieTree) {
-        StringBuilder switchBody = new StringBuilder();
-        for (Map.Entry<Integer, Object> entry : trieTree.entrySet()) {
-            Integer len = entry.getKey();
-            append(switchBody, "case " + len + ": ");
-            Map<Byte, Object> current = (Map<Byte, Object>) entry.getValue();
-            addFieldDispatch(switchBody, len, 0, current, cacheKey, new ArrayList<Byte>());
-            append(switchBody, "break;");
-        }
-        return switchBody.toString();
     }
 
     private static Map<Integer, Object> buildTriTree(List<Binding> allBindings) {
@@ -179,6 +259,18 @@ class CodegenImplObject {
         return trieTree;
     }
 
+    private static String renderTriTree(String cacheKey, Map<Integer, Object> trieTree) {
+        StringBuilder switchBody = new StringBuilder();
+        for (Map.Entry<Integer, Object> entry : trieTree.entrySet()) {
+            Integer len = entry.getKey();
+            append(switchBody, "case " + len + ": ");
+            Map<Byte, Object> current = (Map<Byte, Object>) entry.getValue();
+            addFieldDispatch(switchBody, len, 0, current, cacheKey, new ArrayList<Byte>());
+            append(switchBody, "break;");
+        }
+        return switchBody.toString();
+    }
+
     private static void addFieldDispatch(
             StringBuilder lines, int len, int i, Map<Byte, Object> current, String cacheKey, List<Byte> bytesToCompare) {
         for (Map.Entry<Byte, Object> entry : current.entrySet()) {
@@ -192,16 +284,16 @@ class CodegenImplObject {
                 append(lines, String.format("field.at(%d)==%s", i, b));
                 append(lines, ") {");
                 Binding field = (Binding) entry.getValue();
-                if (field.failOnPresent) {
+                if (field.asExtraWhenPresent) {
                     append(lines, String.format(
-                            "throw new com.jsoniter.JsonException('found should not present property: %s');".replace('\'', '"'),
+                            "throw new com.jsoniter.JsonException('extra property: %s');".replace('\'', '"'),
                             field.name));
-                } else if (field.skip) {
+                } else if (field.shouldSkip) {
                     append(lines, "iter.skip();");
                     append(lines, "continue;");
                 } else {
                     append(lines, String.format("_%s_ = %s;", field.name, genField(field, cacheKey)));
-                    if (field.failOnMissing) {
+                    if (field.asMissingWhenNotPresent) {
                         append(lines, "tracker = tracker | " + field.mask + "L;");
                     }
                     append(lines, "continue;");
@@ -228,10 +320,8 @@ class CodegenImplObject {
         }
     }
 
-    // the implementation from dsljson is not exactly correct
-    // hash will collide, even the chance is small
+    // the implementation is from dsljson, it is the fastest although has the risk not matching field strictly
     public static String genObjectUsingHash(Class clazz, String cacheKey, ClassDescriptor desc) {
-        // TODO: when setter is single argument, decode like field
         StringBuilder lines = new StringBuilder();
         // === if null, return null
         append(lines, "if (iter.readNull()) { com.jsoniter.CodegenAccess.resetExistingObject(iter); return null; }");
@@ -258,7 +348,8 @@ class CodegenImplObject {
         // === bind fields
         append(lines, "switch (com.jsoniter.CodegenAccess.readObjectFieldAsHash(iter)) {");
         HashSet<Integer> knownHashes = new HashSet<Integer>();
-        for (Binding field : desc.allDecoderBindings()) {
+        List<Binding> bindings = desc.allDecoderBindings();
+        for (Binding field : bindings) {
             for (String fromName : field.fromNames) {
                 long hash = 0x811c9dc5;
                 for (byte b : fromName.getBytes()) {
@@ -286,7 +377,7 @@ class CodegenImplObject {
         // === bind more fields
         append(lines, "while (com.jsoniter.CodegenAccess.nextToken(iter) == ',') {");
         append(lines, "switch (com.jsoniter.CodegenAccess.readObjectFieldAsHash(iter)) {");
-        for (Binding field : desc.allDecoderBindings()) {
+        for (Binding field : bindings) {
             for (String fromName : field.fromNames) {
                 long hash = 0x811c9dc5;
                 for (byte b : fromName.getBytes()) {
@@ -305,7 +396,11 @@ class CodegenImplObject {
         if (!desc.ctor.parameters.isEmpty()) {
             append(lines, CodegenImplNative.getTypeName(clazz) + " obj = {{newInst}};");
             for (Binding field : desc.fields) {
-                append(lines, String.format("obj.%s = _%s_;", field.name, field.name));
+                if (field.field != null) {
+                    append(lines, String.format("obj.%s = _%s_;", field.name, field.name));
+                } else {
+                    append(lines, String.format("obj.%s(_%s_);", field.setter.getName(), field.name));
+                }
             }
         }
         appendSetter(desc.setters, lines);
@@ -317,10 +412,14 @@ class CodegenImplObject {
 
     private static void appendFieldSet(StringBuilder lines, String cacheKey, ConstructorDescriptor ctor, List<Binding> fields, Binding field) {
         if (ctor.parameters.isEmpty() && fields.contains(field)) {
-            if (!shouldReuseObject(field.valueType)) {
+            if (shouldReuseObject(field.valueType) && field.field != null) {
                 append(lines, String.format("com.jsoniter.CodegenAccess.setExistingObject(iter, obj.%s);", field.name));
             }
-            append(lines, String.format("obj.%s = %s;", field.name, genField(field, cacheKey)));
+            if (field.field != null) {
+                append(lines, String.format("obj.%s = %s;", field.name, genField(field, cacheKey)));
+            } else {
+                append(lines, String.format("obj.%s(%s);", field.setter.getName(), genField(field, cacheKey)));
+            }
         } else {
             append(lines, String.format("_%s_ = %s;", field.name, genField(field, cacheKey)));
         }
@@ -390,17 +489,17 @@ class CodegenImplObject {
         lines.append("\n");
     }
 
-    public static boolean shouldReuseObject(Type valueType) {
-        if (valueType instanceof  Class) {
+    private static boolean shouldReuseObject(Type valueType) {
+        if (valueType instanceof Class) {
             Class clazz = (Class) valueType;
             if (clazz.isArray()) {
                 return false;
             }
         }
-        return CodegenImplNative.isNative(valueType);
+        return !CodegenImplNative.isNative(valueType);
     }
 
-    public static String genField(Binding field, String cacheKey) {
+    private static String genField(Binding field, String cacheKey) {
         String fieldCacheKey = field.name + "@" + cacheKey;
         if (field.decoder != null) {
             ExtensionManager.addNewDecoder(fieldCacheKey, field.decoder);

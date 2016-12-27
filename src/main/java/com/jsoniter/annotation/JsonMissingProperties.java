@@ -5,13 +5,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target(ElementType.TYPE)
+@Target({ElementType.ANNOTATION_TYPE, ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface JsonUnknownProperties {
-
-    String[] blacklist() default {};
-
-    String[] whitelist() default {};
-
-    boolean failOnUnkown() default false;
+public @interface JsonMissingProperties {
 }

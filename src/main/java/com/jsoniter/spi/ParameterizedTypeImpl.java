@@ -1,8 +1,12 @@
 package com.jsoniter.spi;
 
+import com.jsoniter.JsonException;
+
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 public class ParameterizedTypeImpl implements ParameterizedType {
     private final Type[] actualTypeArguments;
@@ -56,5 +60,27 @@ public class ParameterizedTypeImpl implements ParameterizedType {
                 ", ownerType=" + ownerType +
                 ", rawType=" + rawType +
                 '}';
+    }
+
+    public static boolean isSameClass(Type type, Class clazz) {
+        if (type == clazz) {
+            return true;
+        }
+        if (type instanceof ParameterizedType) {
+            ParameterizedType pType = (ParameterizedType) type;
+            return pType.getRawType() == clazz;
+        }
+        return false;
+    }
+
+    public static Type useImpl(Type type, Class clazz) {
+        if (type instanceof Class) {
+            return clazz;
+        }
+        if (type instanceof ParameterizedType) {
+            ParameterizedType pType = (ParameterizedType) type;
+            return new ParameterizedTypeImpl(pType.getActualTypeArguments(), pType.getOwnerType(), clazz);
+        }
+        throw new JsonException("can not change impl for: " + type);
     }
 }

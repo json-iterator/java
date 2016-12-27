@@ -10,7 +10,7 @@ import java.util.List;
 public class TestCustomizeSetter extends TestCase {
 
     static {
-//        JsonIterator.setMode(DecodingMode.REFLECTION_MODE);
+//        JsonIterator.setMode(DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_STRICTLY);
     }
 
     public static class ObjectWithDefaultSetter {
@@ -25,21 +25,6 @@ public class TestCustomizeSetter extends TestCase {
         JsonIterator iter = JsonIterator.parse("{'field': 'hello'}".replace('\'', '"'));
         ObjectWithDefaultSetter obj = iter.read(ObjectWithDefaultSetter.class);
         assertEquals("hello", obj.field);
-    }
-
-    public static class ObjectWithDefaultSetter2 {
-        String _field;
-
-        private void setField(String field) {
-            this._field = field;
-        }
-    }
-
-    public void test_default_setter_with_reflection() throws IOException {
-        ExtensionManager.registerTypeDecoder(ObjectWithDefaultSetter2.class, new ReflectionObjectDecoder(ObjectWithDefaultSetter2.class));
-        JsonIterator iter = JsonIterator.parse("{'field': 'hello'}".replace('\'', '"'));
-        ObjectWithDefaultSetter2 obj = iter.read(ObjectWithDefaultSetter2.class);
-        assertEquals("hello", obj._field);
     }
 
     public static class ObjectWithCustomizedSetter {

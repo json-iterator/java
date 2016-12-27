@@ -69,6 +69,30 @@ public class TestNative extends TestCase {
         assertEquals("-100", baos.toString());
     }
 
+    public void test_no_decimal_float() throws IOException {
+        stream.writeVal(100f);
+        stream.close();
+        assertEquals("100", baos.toString());
+    }
+
+    public void test_float2() throws IOException {
+        stream.writeVal(0.000001f);
+        stream.close();
+        assertEquals("0.000001", baos.toString());
+    }
+
+    public void test_float3() throws IOException {
+        stream.writeVal(0.00001f);
+        stream.close();
+        assertEquals("0.00001", baos.toString());
+    }
+
+    public void test_double() throws IOException {
+        stream.writeVal(0.00001d);
+        stream.close();
+        assertEquals("0.00001", baos.toString());
+    }
+
     public void test_boolean() throws IOException {
         stream.writeVal(true);
         stream.writeVal(false);

@@ -16,11 +16,14 @@ public class Binding {
     public String[] toNames; // for encoder
     public Decoder decoder;
     public Encoder encoder;
-    public boolean failOnMissing;
-    public boolean failOnPresent;
-    public boolean skip;
+    public boolean asMissingWhenNotPresent;
+    public boolean asExtraWhenPresent;
+    // then this property will not be unknown
+    // but we do not want to bind it anywhere
+    public boolean shouldSkip;
     // optional
-    public Field field;
+    public Field field; // obj.XXX
+    public Method setter; // obj.setXXX()
     public int idx;
     public long mask;
 

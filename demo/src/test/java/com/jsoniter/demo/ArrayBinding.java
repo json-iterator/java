@@ -14,14 +14,13 @@ import org.openjdk.jmh.infra.BenchmarkParams;
 import org.openjdk.jmh.infra.Blackhole;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 @State(Scope.Thread)
 public class ArrayBinding {
-    private TypeLiteral<String[]> typeLiteral;
+    private TypeLiteral<int[]> typeLiteral;
     private ObjectMapper jackson;
     private byte[] input;
-    private TypeReference<String[]> typeRef;
+    private TypeReference<int[]> typeRef;
     private String inputStr;
 
     private JsonIterator iter;
@@ -29,12 +28,12 @@ public class ArrayBinding {
 
     @Setup(Level.Trial)
     public void benchSetup(BenchmarkParams params) {
-        inputStr = "['jackson','jsoniter','fastjson']".replace('\'', '"');
+        inputStr = "[1,2,3,4,5,6,7,8,9]".replace('\'', '"');
         input = inputStr.getBytes();
         iter = JsonIterator.parse(input);
-        typeLiteral = new TypeLiteral<String[]>() {
+        typeLiteral = new TypeLiteral<int[]>() {
         };
-        typeRef = new TypeReference<String[]>() {
+        typeRef = new TypeReference<int[]>() {
         };
         JacksonAnnotationSupport.enable();
         jackson = new ObjectMapper();
@@ -45,9 +44,10 @@ public class ArrayBinding {
     @Test
     public void test() throws IOException {
         benchSetup(null);
-        System.out.println(Arrays.toString(withJsoniter()));
-        System.out.println(Arrays.toString(withJackson()));
-        System.out.println(Arrays.toString(withDsljson()));
+        System.out.println(withJsoniter());
+        System.out.println(withIterator());
+        System.out.println(withJackson());
+        System.out.println(withDsljson());
     }
 
     public static void main(String[] args) throws Exception {
@@ -65,6 +65,11 @@ public class ArrayBinding {
     }
 
     @Benchmark
+    public void withJsoniterIterator(Blackhole bh) throws IOException {
+        bh.consume(withIterator());
+    }
+
+    @Benchmark
     public void withJackson(Blackhole bh) throws IOException {
         bh.consume(withJackson());
     }
@@ -74,16 +79,40 @@ public class ArrayBinding {
         bh.consume(withDsljson());
     }
 
-    private String[] withJsoniter() throws IOException {
+    private int withJsoniter() throws IOException {
         iter.reset();
-        return iter.read(typeLiteral);
+        int[] arr = iter.read(typeLiteral);
+        int total = 0;
+        for (int i = 0; i < arr.length; i++) {
+            total += arr[i];
+        }
+        return total;
     }
 
-    private String[] withJackson() throws IOException {
-        return jackson.readValue(input, typeRef);
+    private int withJackson() throws IOException {
+        int[] arr = jackson.readValue(input, typeRef);
+        int total = 0;
+        for (int i = 0; i < arr.length; i++) {
+            total += arr[i];
+        }
+        return total;
     }
 
-    private String[] withDsljson() throws IOException {
-        return (String[]) dslJson.deserialize(String[].class, input, input.length);
+    private int withDsljson() throws IOException {
+        int[] arr = (int[]) dslJson.deserialize(int[].class, input, input.length);
+        int total = 0;
+        for (int i = 0; i < arr.length; i++) {
+            total += arr[i];
+        }
+        return total;
+    }
+
+    private int withIterator() throws IOException {
+        iter.reset();
+        int total = 0;
+        while (iter.readArray()) {
+            total += iter.readInt();
+        }
+        return total;
     }
 }

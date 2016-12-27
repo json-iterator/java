@@ -60,11 +60,11 @@ class ReflectionObjectDecoder implements Decoder {
     }
 
     private void addBinding(String cacheKey, Class clazz, final Binding binding) {
-        if (binding.failOnMissing) {
+        if (binding.asMissingWhenNotPresent) {
             binding.mask = 1L << requiredIdx;
             requiredIdx++;
         }
-        if (binding.failOnPresent) {
+        if (binding.asExtraWhenPresent) {
             binding.decoder = new Decoder() {
                 @Override
                 public Object decode(JsonIterator iter) throws IOException {
@@ -123,7 +123,7 @@ class ReflectionObjectDecoder implements Decoder {
         if (binding == null) {
             onUnknownProperty(iter, fieldName);
         } else {
-            if (binding.failOnMissing) {
+            if (binding.asMissingWhenNotPresent) {
                 tracker |= binding.mask;
             }
             binding.field.set(obj, decode(iter, binding));
@@ -134,7 +134,7 @@ class ReflectionObjectDecoder implements Decoder {
             if (binding == null) {
                 onUnknownProperty(iter, fieldName);
             } else {
-                if (binding.failOnMissing) {
+                if (binding.asMissingWhenNotPresent) {
                     tracker |= binding.mask;
                 }
                 binding.field.set(obj, decode(iter, binding));
@@ -169,7 +169,7 @@ class ReflectionObjectDecoder implements Decoder {
         if (binding == null) {
             onUnknownProperty(iter, fieldName);
         } else {
-            if (binding.failOnMissing) {
+            if (binding.asMissingWhenNotPresent) {
                 tracker |= binding.mask;
             }
             temp[binding.idx] = decode(iter, binding);
@@ -180,7 +180,7 @@ class ReflectionObjectDecoder implements Decoder {
             if (binding == null) {
                 onUnknownProperty(iter, fieldName);
             } else {
-                if (binding.failOnMissing) {
+                if (binding.asMissingWhenNotPresent) {
                     tracker |= binding.mask;
                 }
                 temp[binding.idx] = decode(iter, binding);
@@ -224,7 +224,7 @@ class ReflectionObjectDecoder implements Decoder {
         if (binding == null) {
             onUnknownProperty(iter, fieldName);
         } else {
-            if (binding.failOnMissing) {
+            if (binding.asMissingWhenNotPresent) {
                 tracker |= binding.mask;
             }
             if (binding.field == null) {
@@ -239,7 +239,7 @@ class ReflectionObjectDecoder implements Decoder {
             if (binding == null) {
                 onUnknownProperty(iter, fieldName);
             } else {
-                if (binding.failOnMissing) {
+                if (binding.asMissingWhenNotPresent) {
                     tracker |= binding.mask;
                 }
                 if (binding.field == null) {
@@ -267,7 +267,7 @@ class ReflectionObjectDecoder implements Decoder {
     }
 
     private void onUnknownProperty(JsonIterator iter, Slice fieldName) throws IOException {
-        if (desc.failOnUnknownFields) {
+        if (desc.asExtraForUnknownProperties) {
             throw new JsonException("unknown property: " + fieldName.toString());
         } else {
             iter.skip();
@@ -277,7 +277,7 @@ class ReflectionObjectDecoder implements Decoder {
     private List<String> collectMissingFields(long tracker) {
         List<String> missingFields = new ArrayList<String>();
         for (Binding binding : allBindings.values()) {
-            if (binding.failOnMissing) {
+            if (binding.asMissingWhenNotPresent) {
                 long mask = binding.mask;
                 CodegenAccess.addMissingField(missingFields, tracker, mask, binding.name);
             }

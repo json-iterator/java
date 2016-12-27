@@ -12,7 +12,9 @@ public class ClassDescriptor {
     public List<Binding> fields;
     public List<SetterDescriptor> setters;
     public List<Binding> getters;
-    public boolean failOnUnknownFields;
+    public boolean asExtraForUnknownProperties;
+    public Binding onMissingProperties;
+    public Binding onExtraProperties;
 
     public List<Binding> allDecoderBindings() {
         ArrayList<Binding> bindings = new ArrayList<Binding>(8);

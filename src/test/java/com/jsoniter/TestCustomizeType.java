@@ -78,4 +78,19 @@ public class TestCustomizeType extends TestCase {
         FieldWithMyDate2 obj = iter.read(FieldWithMyDate2.class);
         assertEquals(1481365190000L, obj.field.date.getTime());
     }
+
+    public static interface MyInterface {
+
+    }
+
+    public static class MyObject implements MyInterface {
+        public long field1;
+    }
+
+    public void test_customize_impl() throws IOException {
+        ExtensionManager.registerTypeImplementation(MyInterface.class, MyObject.class);
+        JsonIterator iter = JsonIterator.parse("{'field1': 1481365190000}".replace('\'', '"'));
+        MyObject obj = (MyObject) iter.read(MyInterface.class);
+        assertEquals(1481365190000L, obj.field1);
+    }
 }

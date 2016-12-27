@@ -1,7 +1,6 @@
 package com.jsoniter.spi;
 
 import com.jsoniter.JsonException;
-import sun.net.www.content.text.Generic;
 
 import java.lang.reflect.*;
 import java.util.*;
@@ -9,6 +8,7 @@ import java.util.*;
 public class ExtensionManager {
 
     static List<Extension> extensions = new ArrayList<Extension>();
+    static Map<Class, Class> typeImpls = new HashMap<Class, Class>();
     static volatile Map<String, Encoder> encoders = new HashMap<String, Encoder>();
     static volatile Map<String, Decoder> decoders = new HashMap<String, Decoder>();
 
@@ -18,6 +18,14 @@ public class ExtensionManager {
 
     public static List<Extension> getExtensions() {
         return Collections.unmodifiableList(extensions);
+    }
+
+    public static void registerTypeImplementation(Class superClazz, Class implClazz) {
+        typeImpls.put(superClazz, implClazz);
+    }
+
+    public static Class getTypeImplementation(Class superClazz) {
+        return typeImpls.get(superClazz);
     }
 
     public static void registerTypeDecoder(Class clazz, Decoder decoder) {
@@ -82,7 +90,8 @@ public class ExtensionManager {
         desc.lookup = lookup;
         desc.ctor = getCtor(clazz);
         desc.fields = getFields(lookup, clazz, includingPrivate);
-        desc.setters = getSetters(lookup, clazz, includingPrivate);
+        desc.fields.addAll(getSetters(lookup, clazz, includingPrivate));
+        desc.setters = new ArrayList<SetterDescriptor>();
         desc.getters = getGetters(lookup, clazz, includingPrivate);
         for (Extension extension : extensions) {
             extension.updateClassDescriptor(desc);
@@ -121,7 +130,7 @@ public class ExtensionManager {
     private static void setterOrCtorOverrideField(ClassDescriptor desc) {
         HashMap<String, Binding> fields = new HashMap<String, Binding>();
         for (Binding field : desc.fields) {
-                fields.put(field.name, field);
+            fields.put(field.name, field);
         }
         for (SetterDescriptor setter : desc.setters) {
             for (Binding parameter : setter.parameters) {
@@ -184,8 +193,8 @@ public class ExtensionManager {
         return allFields;
     }
 
-    private static List<SetterDescriptor> getSetters(Map<String, Type> lookup, Class clazz, boolean includingPrivate) {
-        ArrayList<SetterDescriptor> setters = new ArrayList<SetterDescriptor>();
+    private static List<Binding> getSetters(Map<String, Type> lookup, Class clazz, boolean includingPrivate) {
+        ArrayList<Binding> setters = new ArrayList<Binding>();
         List<Method> allMethods = Arrays.asList(clazz.getMethods());
         if (includingPrivate) {
             allMethods = new ArrayList<Method>();
@@ -213,21 +222,26 @@ public class ExtensionManager {
             if (includingPrivate) {
                 method.setAccessible(true);
             }
-            String fromName = methodName.substring("set".length());
-            char[] fromNameChars = fromName.toCharArray();
-            fromNameChars[0] = Character.toLowerCase(fromNameChars[0]);
-            fromName = new String(fromNameChars);
-            SetterDescriptor setter = new SetterDescriptor();
-            setter.method = method;
-            setter.methodName = methodName;
-            Binding param = new Binding(clazz, lookup, paramTypes[0]);
-            param.fromNames = new String[]{fromName};
-            param.name = fromName;
-            param.clazz = clazz;
-            setter.parameters.add(param);
-            setters.add(setter);
+            String fromName = translateSetterName(methodName);
+            Binding binding = new Binding(clazz, lookup, paramTypes[0]);
+            binding.fromNames = new String[]{fromName};
+            binding.name = fromName;
+            binding.clazz = clazz;
+            binding.setter = method;
+            setters.add(binding);
         }
         return setters;
+    }
+
+    private static String translateSetterName(String methodName) {
+        if (!methodName.startsWith("set")) {
+            return null;
+        }
+        String fromName = methodName.substring("set".length());
+        char[] fromNameChars = fromName.toCharArray();
+        fromNameChars[0] = Character.toLowerCase(fromNameChars[0]);
+        fromName = new String(fromNameChars);
+        return fromName;
     }
 
     private static List<Binding> getGetters(Map<String, Type> lookup, Class clazz, boolean includingPrivate) {

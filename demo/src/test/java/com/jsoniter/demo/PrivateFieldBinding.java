@@ -7,7 +7,9 @@ import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.ReflectionDecoderFactory;
 import com.jsoniter.annotation.JacksonAnnotationSupport;
+import com.jsoniter.spi.EmptyExtension;
 import com.jsoniter.spi.ExtensionManager;
+import com.jsoniter.spi.ParameterizedTypeImpl;
 import com.jsoniter.spi.TypeLiteral;
 import org.junit.Test;
 import org.openjdk.jmh.Main;
@@ -15,6 +17,9 @@ import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
+import java.util.LinkedList;
+import java.util.List;
 
 @State(Scope.Thread)
 public class PrivateFieldBinding {
@@ -60,6 +65,16 @@ public class PrivateFieldBinding {
 
     @Test
     public void test() throws IOException {
+        ExtensionManager.registerExtension(new EmptyExtension() {
+            @Override
+            public Type chooseImplementation(Type type) {
+                if (ParameterizedTypeImpl.isSameClass(type, List.class)) {
+                    return ParameterizedTypeImpl.useImpl(type, LinkedList.class);
+                } else {
+                    return type;
+                }
+            }
+        });
         benchSetup();
         System.out.println(withJsoniter());
         System.out.println(withJackson());

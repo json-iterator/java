@@ -1,12 +1,9 @@
 package com.jsoniter.annotation;
 
-import com.jsoniter.JsonException;
 import com.jsoniter.spi.*;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
+import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -19,21 +16,21 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
 
     @Override
     public void updateClassDescriptor(ClassDescriptor desc) {
-        JsonUnknownProperties jsonUnknownProperties = (JsonUnknownProperties) desc.clazz.getAnnotation(JsonUnknownProperties.class);
-        if (jsonUnknownProperties != null) {
-            if (jsonUnknownProperties.failOnUnkown()) {
-                desc.failOnUnknownFields = true;
+        JsonObject jsonObject = (JsonObject) desc.clazz.getAnnotation(JsonObject.class);
+        if (jsonObject != null) {
+            if (jsonObject.asExtraForUnknownProperties()) {
+                desc.asExtraForUnknownProperties = true;
             }
-            for (String fieldName : jsonUnknownProperties.whitelist()) {
+            for (String fieldName : jsonObject.unknownPropertiesWhitelist()) {
                 Binding binding = new Binding(desc.clazz, desc.lookup, Object.class);
                 binding.name = fieldName;
-                binding.skip = true;
+                binding.shouldSkip = true;
                 desc.fields.add(binding);
             }
-            for (String fieldName : jsonUnknownProperties.blacklist()) {
+            for (String fieldName : jsonObject.unknownPropertiesBlacklist()) {
                 Binding binding = new Binding(desc.clazz, desc.lookup, Object.class);
                 binding.name = fieldName;
-                binding.failOnPresent = true;
+                binding.asExtraWhenPresent = true;
                 desc.fields.add(binding);
             }
         }
@@ -51,25 +48,45 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
             if (method.getAnnotation(JsonSetter.class) == null) {
                 continue;
             }
+            Annotation[][] annotations = method.getParameterAnnotations();
+            String[] paramNames = getParamNames(method, annotations.length);
             SetterDescriptor setter = new SetterDescriptor();
             setter.methodName = method.getName();
-            Annotation[][] annotations = method.getParameterAnnotations();
             for (int i = 0; i < annotations.length; i++) {
                 Annotation[] paramAnnotations = annotations[i];
-                JsonProperty jsonProperty = getJsonProperty(paramAnnotations);
-                if (jsonProperty == null) {
-                    throw new JsonException("must mark all parameters using @JsonProperty: " + method);
-                }
                 Binding binding = new Binding(desc.clazz, desc.lookup, method.getGenericParameterTypes()[i]);
-                binding.name = jsonProperty.value();
-                binding.annotations = paramAnnotations;
-                if (jsonProperty.required()) {
-                    binding.failOnMissing = true;
+                JsonProperty jsonProperty = getJsonProperty(paramAnnotations);
+                if (jsonProperty != null) {
+                    binding.name = jsonProperty.value();
+                    if (jsonProperty.required()) {
+                        binding.asMissingWhenNotPresent = true;
+                    }
                 }
+                if (binding.name == null || binding.name.length() == 0) {
+                    binding.name = paramNames[i];
+                }
+                binding.annotations = paramAnnotations;
                 setter.parameters.add(binding);
             }
             desc.setters.add(setter);
         }
+    }
+
+    private String[] getParamNames(Object obj, int paramCount) {
+        String[] paramNames = new String[paramCount];
+        try {
+            Object params = reflectCall(obj, "getParameters");
+            for (int i = 0; i < paramNames.length; i++) {
+                paramNames[i] = (String) reflectCall(Array.get(params, i), "getName");
+            }
+        } catch (Exception e) {
+        }
+        return paramNames;
+    }
+
+    private Object reflectCall(Object obj, String methodName, Object... args) throws Exception {
+        Method method = obj.getClass().getMethod(methodName);
+        return method.invoke(obj, args);
     }
 
     private void detectStaticFactoryBinding(ClassDescriptor desc) {
@@ -91,18 +108,21 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
             desc.ctor.staticFactory = method;
             desc.ctor.ctor = null;
             Annotation[][] annotations = method.getParameterAnnotations();
+            String[] paramNames = getParamNames(method, annotations.length);
             for (int i = 0; i < annotations.length; i++) {
                 Annotation[] paramAnnotations = annotations[i];
                 JsonProperty jsonProperty = getJsonProperty(paramAnnotations);
-                if (jsonProperty == null) {
-                    throw new JsonException("must mark all parameters using @JsonProperty: " + method);
-                }
                 Binding binding = new Binding(desc.clazz, desc.lookup, method.getGenericParameterTypes()[i]);
-                binding.name = jsonProperty.value();
-                binding.annotations = paramAnnotations;
-                if (jsonProperty.required()) {
-                    binding.failOnMissing = true;
+                if (jsonProperty != null) {
+                    binding.name = jsonProperty.value();
+                    if (jsonProperty.required()) {
+                        binding.asMissingWhenNotPresent = true;
+                    }
                 }
+                if (binding.name == null || binding.name.length() == 0) {
+                    binding.name = paramNames[i];
+                }
+                binding.annotations = paramAnnotations;
                 desc.ctor.parameters.add(binding);
             }
         }
@@ -118,18 +138,21 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
             desc.ctor.ctor = ctor;
             desc.ctor.staticFactory = null;
             Annotation[][] annotations = ctor.getParameterAnnotations();
+            String[] paramNames = getParamNames(ctor, annotations.length);
             for (int i = 0; i < annotations.length; i++) {
                 Annotation[] paramAnnotations = annotations[i];
                 JsonProperty jsonProperty = getJsonProperty(paramAnnotations);
-                if (jsonProperty == null) {
-                    throw new JsonException("must mark all parameters using @JsonProperty: " + ctor);
-                }
                 Binding binding = new Binding(desc.clazz, desc.lookup, ctor.getGenericParameterTypes()[i]);
-                binding.name = jsonProperty.value();
-                binding.annotations = paramAnnotations;
-                if (jsonProperty.required()) {
-                    binding.failOnMissing = true;
+                if (jsonProperty != null) {
+                    binding.name = jsonProperty.value();
+                    if (jsonProperty.required()) {
+                        binding.asMissingWhenNotPresent = true;
+                    }
                 }
+                if (binding.name == null || binding.name.length() == 0) {
+                    binding.name = paramNames[i];
+                }
+                binding.annotations = paramAnnotations;
                 desc.ctor.parameters.add(binding);
             }
         }
@@ -148,8 +171,20 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
                     field.fromNames = new String[]{alternativeField};
                 }
                 if (jsonProperty.required()) {
-                    field.failOnMissing = true;
+                    field.asMissingWhenNotPresent = true;
                 }
+            }
+            if (getAnnotation(field.annotations, JsonMissingProperties.class) != null) {
+                // this field will not bind from json
+                // instead it will be set by jsoniter with missing property names
+                field.fromNames = new String[0];
+                desc.onMissingProperties = field;
+            }
+            if (getAnnotation(field.annotations, JsonExtraProperties.class) != null) {
+                // this field will not bind from json
+                // instead it will be set by jsoniter with extra properties
+                field.fromNames = new String[0];
+                desc.onExtraProperties = field;
             }
         }
     }

@@ -209,7 +209,7 @@ public class JsonIterator implements Closeable {
             case 'n':
                 return false;
             default:
-                throw reportError("readArray", "expect [ or , or n or ]");
+                throw reportError("readArray", "expect [ or , or n or ], but found: " + (char)c);
         }
     }
 

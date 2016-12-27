@@ -170,7 +170,7 @@ public class TestCustomizeField extends TestCase {
             @Override
             public void updateClassDescriptor(ClassDescriptor desc) {
                 if (desc.clazz == TestObject8.class) {
-                    desc.failOnUnknownFields = true;
+                    desc.asExtraForUnknownProperties = true;
                 }
             }
         });
@@ -197,7 +197,7 @@ public class TestCustomizeField extends TestCase {
                     return;
                 }
                 for (Binding field : desc.allDecoderBindings()) {
-                    field.failOnMissing = true;
+                    field.asMissingWhenNotPresent = true;
                 }
             }
         });
@@ -219,7 +219,7 @@ public class TestCustomizeField extends TestCase {
                     return;
                 }
                 for (Binding field : desc.allDecoderBindings()) {
-                    field.failOnMissing = true;
+                    field.asMissingWhenNotPresent = true;
                 }
             }
         });
@@ -244,7 +244,7 @@ public class TestCustomizeField extends TestCase {
                     return;
                 }
                 for (Binding field : desc.allDecoderBindings()) {
-                    field.failOnPresent = true;
+                    field.asExtraWhenPresent = true;
                 }
             }
         });

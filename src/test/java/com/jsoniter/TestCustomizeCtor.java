@@ -10,7 +10,7 @@ import java.util.List;
 public class TestCustomizeCtor extends TestCase {
 
     static {
-//        JsonIterator.setMode(DecodingMode.REFLECTION_MODE);
+//        JsonIterator.setMode(DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_STRICTLY);
     }
 
     public static class WithPublicCtor {
