@@ -64,7 +64,12 @@ public class JacksonAnnotationSupport extends JsoniterAnnotationSupport {
 
             @Override
             public Class<? extends Decoder> decoder() {
-                return null;
+                return Decoder.class;
+            }
+
+            @Override
+            public Class<?> implementation() {
+                return Object.class;
             }
 
             @Override

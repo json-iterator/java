@@ -16,7 +16,11 @@ public class TestCustomizeType extends TestCase {
     }
 
     static {
-//        JsonIterator.enableStrictMode();
+//        JsonIterator.setMode(DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_STRICTLY);
+//        JsonIterator.setMode(DecodingMode.REFLECTION_MODE);
+    }
+
+    public void test_direct() throws IOException {
         ExtensionManager.registerTypeDecoder(MyDate.class, new Decoder() {
             @Override
             public Object decode(final JsonIterator iter) throws IOException {
@@ -25,9 +29,6 @@ public class TestCustomizeType extends TestCase {
                 }};
             }
         });
-    }
-
-    public void test_direct() throws IOException {
         JsonIterator iter = JsonIterator.parse("1481365190000");
         MyDate date = iter.read(MyDate.class);
         assertEquals(1481365190000L, date.date.getTime());
