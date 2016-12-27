@@ -131,7 +131,7 @@ class ReflectionObjectDecoder implements Decoder {
             if (binding.asMissingWhenNotPresent) {
                 tracker |= binding.mask;
             }
-            setToBinding(obj, binding, decode(iter, binding));
+            setToBinding(obj, binding, decode(iter, obj, binding));
         }
         while (CodegenAccess.nextToken(iter) == ',') {
             fieldName = CodegenAccess.readObjectFieldAsSlice(iter);
@@ -142,7 +142,7 @@ class ReflectionObjectDecoder implements Decoder {
                 if (binding.asMissingWhenNotPresent) {
                     tracker |= binding.mask;
                 }
-                setToBinding(obj, binding, decode(iter, binding));
+                setToBinding(obj, binding, decode(iter, obj, binding));
             }
         }
         if (tracker != expectedTracker) {
@@ -253,9 +253,9 @@ class ReflectionObjectDecoder implements Decoder {
                 tracker |= binding.mask;
             }
             if (canSetDirectly(binding)) {
-                temp[binding.idx] = decode(iter, binding);
+                temp[binding.idx] = decode(iter, obj, binding);
             } else {
-                setToBinding(obj, binding, decode(iter, binding));
+                setToBinding(obj, binding, decode(iter, obj, binding));
             }
         }
         while (CodegenAccess.nextToken(iter) == ',') {
@@ -268,9 +268,9 @@ class ReflectionObjectDecoder implements Decoder {
                     tracker |= binding.mask;
                 }
                 if (canSetDirectly(binding)) {
-                    temp[binding.idx] = decode(iter, binding);
+                    temp[binding.idx] = decode(iter, obj, binding);
                 } else {
-                    setToBinding(obj, binding, decode(iter, binding));
+                    setToBinding(obj, binding, decode(iter, obj, binding));
                 }
             }
         }
@@ -300,7 +300,7 @@ class ReflectionObjectDecoder implements Decoder {
         return binding.field == null && binding.setter == null;
     }
 
-    private Object decode(JsonIterator iter, Binding binding) throws IOException {
+    private Object decode(JsonIterator iter, Binding binding) throws Exception {
         Object value;
         if (binding.decoder == null) {
             value = CodegenAccess.read(iter, binding.valueTypeLiteral);
@@ -308,6 +308,13 @@ class ReflectionObjectDecoder implements Decoder {
             value = binding.decoder.decode(iter);
         }
         return value;
+    }
+
+    private Object decode(JsonIterator iter, Object obj, Binding binding) throws Exception {
+        if (binding.field != null) {
+            CodegenAccess.setExistingObject(iter, binding.field.get(obj));
+        }
+        return decode(iter, binding);
     }
 
     private Map<String, Object> onUnknownProperty(JsonIterator iter, Slice fieldName, Map<String, Object> extra) throws IOException {

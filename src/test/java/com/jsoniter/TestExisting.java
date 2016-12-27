@@ -12,7 +12,7 @@ import java.util.List;
 public class TestExisting extends TestCase {
 
     static {
-//        JsonIterator.enableStrictMode();
+//        JsonIterator.setMode(DecodingMode.REFLECTION_MODE);
     }
 
     public static class TestObj1 {

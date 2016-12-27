@@ -18,6 +18,12 @@ class Codegen {
     static boolean isDoingStaticCodegen = false;
     static DecodingMode mode = DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_WITH_HASH;
     static ClassPool pool = ClassPool.getDefault();
+    static {
+        String envMode = System.getenv("JSONITER_DECODING_MODE");
+        if (envMode != null) {
+            mode = DecodingMode.valueOf(envMode);
+        }
+    }
 
     public static void setMode(DecodingMode mode) {
         Codegen.mode = mode;
