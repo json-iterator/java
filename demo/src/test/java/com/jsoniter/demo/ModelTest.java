@@ -51,8 +51,7 @@ public class ModelTest {
 
     @Benchmark
     public void jsoniter(Blackhole bh) throws IOException {
-        iter.reset(inputBytes);
-        bh.consume(iter.read(modelTypeLiteral));
+        bh.consume(iter.read(inputBytes, modelTypeLiteral));
     }
 
     @Benchmark
