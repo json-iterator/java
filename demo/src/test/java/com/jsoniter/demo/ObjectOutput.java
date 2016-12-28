@@ -11,6 +11,7 @@ import org.junit.Test;
 import org.openjdk.jmh.Main;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.BenchmarkParams;
+import org.openjdk.jmh.infra.Blackhole;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -50,6 +51,7 @@ public class ObjectOutput {
         System.out.println(baos.toString());
         dsljson();
         System.out.println(baos.toString());
+        System.out.println(JsonStream.serialize(testObject));
     }
 
     @Setup(Level.Trial)
@@ -69,9 +71,14 @@ public class ObjectOutput {
     @Benchmark
     public void jsoniter() throws IOException {
         baos.reset();
-        stream.reset(baos, buffer);
+        stream.reset(baos);
         stream.writeVal(typeLiteral, testObject);
         stream.flush();
+    }
+
+    @Benchmark
+    public void jsoniter_easy_mode(Blackhole bh) throws IOException {
+        bh.consume(JsonStream.serialize(testObject));
     }
 
     @Benchmark

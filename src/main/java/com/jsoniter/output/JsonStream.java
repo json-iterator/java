@@ -25,9 +25,8 @@ public class JsonStream extends OutputStream {
         this.buf = new byte[bufSize];
     }
 
-    public void reset(OutputStream out, byte[] buf) {
+    public void reset(OutputStream out) {
         this.out = out;
-        this.buf = buf;
         this.count = 0;
     }
 
@@ -243,11 +242,48 @@ public class JsonStream extends OutputStream {
 
     public final void writeVal(Object obj) throws IOException {
         Class<?> clazz = obj.getClass();
-        String cacheKey = TypeLiteral.generateEncoderCacheKey(clazz);
+        String cacheKey = TypeLiteral.create(clazz).getEncoderCacheKey();
         Codegen.getEncoder(cacheKey, clazz).encode(obj, this);
     }
 
     public final <T> void writeVal(TypeLiteral<T> typeLiteral, T obj) throws IOException {
         Codegen.getEncoder(typeLiteral.getEncoderCacheKey(), typeLiteral.getType()).encode(obj, this);
+    }
+
+    private final static ThreadLocal<JsonStream> tlsStream = new ThreadLocal<JsonStream>() {
+        @Override
+        protected JsonStream initialValue() {
+            return new JsonStream(null, 4096);
+        }
+    };
+
+    public static void serialize(Object obj, OutputStream out) throws IOException {
+        JsonStream stream = tlsStream.get();
+        try {
+            stream.reset(out);
+            stream.writeVal(obj);
+        } finally {
+            stream.close();
+        }
+    }
+
+    private final static ThreadLocal<AsciiOutputStream> tlsAsciiOutputStream = new ThreadLocal<AsciiOutputStream>() {
+        @Override
+        protected AsciiOutputStream initialValue() {
+            return new AsciiOutputStream();
+        }
+    };
+
+    public static String serialize(Object obj) throws IOException {
+        AsciiOutputStream asciiOutputStream = tlsAsciiOutputStream.get();
+        asciiOutputStream.reset();
+        JsonStream stream = tlsStream.get();
+        try {
+            stream.reset(asciiOutputStream);
+            stream.writeVal(obj);
+        } finally {
+            stream.close();
+        }
+        return asciiOutputStream.toString();
     }
 }

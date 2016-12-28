@@ -53,6 +53,7 @@ public class TypeLiteral<T> {
         put(Any.class, NativeType.ANY);
     }};
 
+    private volatile static Map<Type, TypeLiteral> typeLiteralCache = new HashMap<Type, TypeLiteral>();
     final Type type;
     final String decoderCacheKey;
     final String encoderCacheKey;
@@ -78,11 +79,11 @@ public class TypeLiteral<T> {
         this.encoderCacheKey = encoderCacheKey;
     }
 
-    public static String generateDecoderCacheKey(Type type) {
+    private static String generateDecoderCacheKey(Type type) {
         return generateCacheKey(type, "decoder.");
     }
 
-    public static String generateEncoderCacheKey(Type type) {
+    private static String generateEncoderCacheKey(Type type) {
         return generateCacheKey(type, "encoder.");
     }
 
@@ -149,9 +150,25 @@ public class TypeLiteral<T> {
     }
 
     public static TypeLiteral create(Type valueType) {
-        return new TypeLiteral(valueType,
+        TypeLiteral typeLiteral = typeLiteralCache.get(valueType);
+        if (typeLiteral != null) {
+            return typeLiteral;
+        }
+        return createNew(valueType);
+    }
+
+    private synchronized static TypeLiteral createNew(Type valueType) {
+        TypeLiteral typeLiteral = typeLiteralCache.get(valueType);
+        if (typeLiteral != null) {
+            return typeLiteral;
+        }
+        HashMap<Type, TypeLiteral> copy = new HashMap<Type, TypeLiteral>(typeLiteralCache);
+        typeLiteral = new TypeLiteral(valueType,
                 generateDecoderCacheKey(valueType),
                 generateEncoderCacheKey(valueType));
+        copy.put(valueType, typeLiteral);
+        typeLiteralCache = copy;
+        return typeLiteral;
     }
 
     public Type getType() {

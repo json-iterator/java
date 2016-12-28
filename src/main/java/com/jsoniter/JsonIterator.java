@@ -326,7 +326,7 @@ public class JsonIterator implements Closeable {
     public final <T> T read(T existingObject) throws IOException {
         this.existingObject = existingObject;
         Class<?> clazz = existingObject.getClass();
-        return (T) Codegen.getDecoder(TypeLiteral.generateDecoderCacheKey(clazz), clazz).decode(this);
+        return (T) Codegen.getDecoder(TypeLiteral.create(clazz).getDecoderCacheKey(), clazz).decode(this);
     }
 
     public final <T> T read(TypeLiteral<T> typeLiteral, T existingObject) throws IOException {
@@ -335,48 +335,12 @@ public class JsonIterator implements Closeable {
     }
 
     public final <T> T read(Class<T> clazz) throws IOException {
-        return (T) Codegen.getDecoder(TypeLiteral.generateDecoderCacheKey(clazz), clazz).decode(this);
+        return (T) Codegen.getDecoder(TypeLiteral.create(clazz).getDecoderCacheKey(), clazz).decode(this);
     }
 
     public final <T> T read(TypeLiteral<T> typeLiteral) throws IOException {
         String cacheKey = typeLiteral.getDecoderCacheKey();
         return (T) Codegen.getDecoder(cacheKey, typeLiteral.getType()).decode(this);
-    }
-
-    public final <T> T read(String input, Class<T> clazz) {
-        reset(input.getBytes());
-        try {
-            return read(clazz);
-        } catch (IOException e) {
-            throw new JsonException(e);
-        }
-    }
-
-    public final <T> T read(String input, TypeLiteral<T> typeLiteral) {
-        reset(input.getBytes());
-        try {
-            return read(typeLiteral);
-        } catch (IOException e) {
-            throw new JsonException(e);
-        }
-    }
-
-    public final <T> T read(byte[] input, Class<T> clazz) {
-        reset(input);
-        try {
-            return read(clazz);
-        } catch (IOException e) {
-            throw new JsonException(e);
-        }
-    }
-
-    public final <T> T read(byte[] input, TypeLiteral<T> typeLiteral) {
-        reset(input);
-        try {
-            return read(typeLiteral);
-        } catch (IOException e) {
-            throw new JsonException(e);
-        }
     }
 
     public ValueType whatIsNext() throws IOException {
@@ -387,6 +351,53 @@ public class JsonIterator implements Closeable {
 
     public void skip() throws IOException {
         IterImplSkip.skip(this);
+    }
+
+    private static ThreadLocal<JsonIterator> tlsIter = new ThreadLocal<JsonIterator>() {
+        @Override
+        protected JsonIterator initialValue() {
+            return new JsonIterator();
+        }
+    };
+
+    public static final <T> T deserialize(String input, Class<T> clazz) {
+        JsonIterator iter = tlsIter.get();
+        iter.reset(input.getBytes());
+        try {
+            return iter.read(clazz);
+        } catch (IOException e) {
+            throw new JsonException(e);
+        }
+    }
+
+    public static final <T> T deserialize(String input, TypeLiteral<T> typeLiteral) {
+        JsonIterator iter = tlsIter.get();
+        iter.reset(input.getBytes());
+        try {
+            return iter.read(typeLiteral);
+        } catch (IOException e) {
+            throw new JsonException(e);
+        }
+    }
+
+    public static final <T> T deserialize(byte[] input, Class<T> clazz) {
+        JsonIterator iter = tlsIter.get();
+        iter.reset(input);
+        try {
+            return iter.read(clazz);
+        } catch (IOException e) {
+            throw new JsonException(e);
+        }
+    }
+
+    public static final <T> T deserialize(byte[] input, TypeLiteral<T> typeLiteral) {
+        JsonIterator iter = tlsIter.get();
+        iter.reset(input);
+        try {
+            return iter.read(typeLiteral);
+        } catch (IOException e) {
+            throw new JsonException(e);
+        }
     }
 
     public static void setMode(DecodingMode mode) {

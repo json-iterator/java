@@ -29,7 +29,7 @@ public class JsoniterSpi {
     }
 
     public static void registerTypeDecoder(Class clazz, Decoder decoder) {
-        addNewDecoder(TypeLiteral.generateDecoderCacheKey(clazz), decoder);
+        addNewDecoder(TypeLiteral.create(clazz).getDecoderCacheKey(), decoder);
     }
 
     public static void registerTypeDecoder(TypeLiteral typeLiteral, Decoder decoder) {
@@ -37,7 +37,7 @@ public class JsoniterSpi {
     }
 
     public static void registerPropertyDecoder(Class clazz, String field, Decoder decoder) {
-        addNewDecoder(field + "@" + TypeLiteral.generateDecoderCacheKey(clazz), decoder);
+        addNewDecoder(field + "@" + TypeLiteral.create(clazz).getDecoderCacheKey(), decoder);
     }
 
     public static void registerPropertyDecoder(TypeLiteral typeLiteral, String field, Decoder decoder) {
@@ -45,7 +45,7 @@ public class JsoniterSpi {
     }
 
     public static void registerTypeEncoder(Class clazz, Encoder encoder) {
-        addNewEncoder(TypeLiteral.generateEncoderCacheKey(clazz), encoder);
+        addNewEncoder(TypeLiteral.create(clazz).getEncoderCacheKey(), encoder);
     }
 
     public static void registerTypeEncoder(TypeLiteral typeLiteral, Encoder encoder) {
@@ -53,7 +53,7 @@ public class JsoniterSpi {
     }
 
     public static void registerPropertyEncoder(Class clazz, String field, Encoder encoder) {
-        addNewEncoder(field + "@" + TypeLiteral.generateEncoderCacheKey(clazz), encoder);
+        addNewEncoder(field + "@" + TypeLiteral.create(clazz).getEncoderCacheKey(), encoder);
     }
 
     public static void registerPropertyEncoder(TypeLiteral typeLiteral, String field, Encoder encoder) {

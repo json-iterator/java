@@ -10,7 +10,7 @@ public class Demo {
         JsonIterator.setMode(DecodingMode.STATIC_MODE);
     }
     public static void main(String[] args) {
-        User user = new JsonIterator().read("{\"firstName\": \"tao\", \"lastName\": \"wen\", \"score\": \"1024\"}", User.class);
+        User user = JsonIterator.deserialize("{\"firstName\": \"tao\", \"lastName\": \"wen\", \"score\": \"1024\"}", User.class);
         System.out.println(user.firstName);
         System.out.println(user.lastName);
         System.out.println(user.score);

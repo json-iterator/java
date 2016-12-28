@@ -55,7 +55,7 @@ public class StringOutput {
     @Benchmark
     public void jsoniter() throws IOException {
         baos.reset();
-        stream.reset(baos, buffer);
+        stream.reset(baos);
         stream.writeVal("hello world ~~ hello 中文 ~~~");
         stream.flush();
     }

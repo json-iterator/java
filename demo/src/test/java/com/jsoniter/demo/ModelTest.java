@@ -46,7 +46,8 @@ public class ModelTest {
     @Test
     public void test() throws IOException {
         benchSetup(null);
-        System.out.println(iter.read(inputBytes, modelTypeLiteral).name);
+        iter.reset(inputBytes);
+        System.out.println(iter.read(modelTypeLiteral).name);
         System.out.println(JSON.parseObject(input, Model.class).name);
 
     }
@@ -62,7 +63,13 @@ public class ModelTest {
 
     @Benchmark
     public void jsoniter(Blackhole bh) throws IOException {
-        bh.consume(iter.read(inputBytes, modelTypeLiteral));
+        iter.reset(inputBytes);
+        bh.consume(iter.read(modelTypeLiteral));
+    }
+
+    @Benchmark
+    public void jsoniter_easy_mode(Blackhole bh) throws IOException {
+        bh.consume(JsonIterator.deserialize(inputBytes, Model.class));
     }
 
     @Benchmark

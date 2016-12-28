@@ -55,7 +55,7 @@ public class FloatOutput {
     @Benchmark
     public void jsoniter() throws IOException {
         baos.reset();
-        stream.reset(baos, buffer);
+        stream.reset(baos);
         stream.writeVal(10.24f);
         stream.flush();
     }

@@ -68,7 +68,7 @@ class CodegenImplNative {
                 return nativeRead;
             }
         }
-        String cacheKey = TypeLiteral.generateDecoderCacheKey(type);
+        String cacheKey = TypeLiteral.create(type).getDecoderCacheKey();
         Decoder decoder = Codegen.getDecoder(cacheKey, type);// set the decoder to cache
         if (cacheKey.equals(decoder.getClass().getCanonicalName())) {
             return String.format("%s.decode_(iter)", cacheKey);
