@@ -298,7 +298,7 @@ class CodegenImplObject {
                     append(lines, "iter.skip();");
                     append(lines, "continue;");
                 } else {
-                    append(lines, String.format("_%s_ = %s;", field.name, genField(field, cacheKey)));
+                    append(lines, String.format("_%s_ = %s;", field.name, genField(field)));
                     if (field.asMissingWhenNotPresent) {
                         append(lines, "tracker = tracker | " + field.mask + "L;");
                     }
@@ -422,12 +422,12 @@ class CodegenImplObject {
                 append(lines, String.format("com.jsoniter.CodegenAccess.setExistingObject(iter, obj.%s);", field.name));
             }
             if (field.field != null) {
-                append(lines, String.format("obj.%s = %s;", field.field.getName(), genField(field, cacheKey)));
+                append(lines, String.format("obj.%s = %s;", field.field.getName(), genField(field)));
             } else {
-                append(lines, String.format("obj.%s(%s);", field.setter.getName(), genField(field, cacheKey)));
+                append(lines, String.format("obj.%s(%s);", field.setter.getName(), genField(field)));
             }
         } else {
-            append(lines, String.format("_%s_ = %s;", field.name, genField(field, cacheKey)));
+            append(lines, String.format("_%s_ = %s;", field.name, genField(field)));
         }
     }
 
@@ -505,11 +505,8 @@ class CodegenImplObject {
         return !CodegenImplNative.isNative(valueType);
     }
 
-    private static String genField(Binding field, String cacheKey) {
-        String fieldCacheKey = field.name + "@" + cacheKey;
-        if (field.decoder != null) {
-            ExtensionManager.addNewDecoder(fieldCacheKey, field.decoder);
-        }
+    private static String genField(Binding field) {
+        String fieldCacheKey = field.decoderCacheKey();
         // the field decoder might be registered directly
         Decoder decoder = ExtensionManager.getDecoder(fieldCacheKey);
         Type fieldType = field.valueType;

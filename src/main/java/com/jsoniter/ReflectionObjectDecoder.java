@@ -32,20 +32,19 @@ class ReflectionObjectDecoder implements Decoder {
 
     private final void init(Class clazz) throws Exception {
         ClassDescriptor desc = ExtensionManager.getClassDescriptor(clazz, true);
-        String cacheKey = TypeLiteral.create(clazz).getDecoderCacheKey();
         for (Binding param : desc.ctor.parameters) {
-            addBinding(cacheKey, clazz, param);
+            addBinding(clazz, param);
         }
         this.desc = desc;
         if (desc.ctor.ctor == null && desc.ctor.staticFactory == null) {
             throw new JsonException("no constructor for: " + desc.clazz);
         }
         for (Binding field : desc.fields) {
-            addBinding(cacheKey, clazz, field);
+            addBinding(clazz, field);
         }
         for (SetterDescriptor setter : desc.setters) {
             for (Binding param : setter.parameters) {
-                addBinding(cacheKey, clazz, param);
+                addBinding(clazz, param);
             }
         }
         if (requiredIdx > 63) {
@@ -59,7 +58,7 @@ class ReflectionObjectDecoder implements Decoder {
         }
     }
 
-    private void addBinding(String cacheKey, Class clazz, final Binding binding) {
+    private void addBinding(Class clazz, final Binding binding) {
         if (binding.asMissingWhenNotPresent) {
             binding.mask = 1L << requiredIdx;
             requiredIdx++;
@@ -72,10 +71,9 @@ class ReflectionObjectDecoder implements Decoder {
                 }
             };
         }
-        String fieldCacheKey = binding.name + "@" + cacheKey;
         if (binding.decoder == null) {
             // the field decoder might be registered directly
-            binding.decoder = ExtensionManager.getDecoder(fieldCacheKey);
+            binding.decoder = ExtensionManager.getDecoder(binding.decoderCacheKey());
         }
         binding.idx = tempIdx;
         for (String fromName : binding.fromNames) {

@@ -3,7 +3,7 @@ package com.jsoniter.spi;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Type;
 
-class GenericArrayTypeImpl implements GenericArrayType {
+public class GenericArrayTypeImpl implements GenericArrayType {
 
     private final Type componentType;
 

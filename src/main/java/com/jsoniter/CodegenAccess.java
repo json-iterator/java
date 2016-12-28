@@ -74,8 +74,7 @@ public class CodegenAccess {
                     throw new JsonException("unsupported native type: " + nativeType);
             }
         } else {
-            String cacheKey = typeLiteral.getDecoderCacheKey();
-            return (T) Codegen.getDecoder(cacheKey, typeLiteral.getType()).decode(iter);
+            return (T) Codegen.getDecoder(typeLiteral.getDecoderCacheKey(), typeLiteral.getType()).decode(iter);
         }
     }
 

@@ -5,8 +5,6 @@ import com.jsoniter.JsonException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
 
 public class ParameterizedTypeImpl implements ParameterizedType {
     private final Type[] actualTypeArguments;

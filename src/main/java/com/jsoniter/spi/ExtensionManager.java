@@ -115,6 +115,9 @@ public class ExtensionManager {
             if (binding.field != null && includingPrivate) {
                 binding.field.setAccessible(true);
             }
+            if (binding.decoder != null) {
+                ExtensionManager.addNewDecoder(binding.decoderCacheKey(), binding.decoder);
+            }
         }
         for (Binding binding : desc.allEncoderBindings()) {
             if (binding.toNames == null) {
@@ -122,6 +125,9 @@ public class ExtensionManager {
             }
             if (binding.field != null && includingPrivate) {
                 binding.field.setAccessible(true);
+            }
+            if (binding.encoder != null) {
+                ExtensionManager.addNewEncoder(binding.encoderCacheKey(), binding.encoder);
             }
         }
         return desc;
@@ -239,7 +245,6 @@ public class ExtensionManager {
             Binding binding = new Binding(clazz, lookup, paramTypes[0]);
             binding.fromNames = new String[]{fromName};
             binding.name = fromName;
-            binding.clazz = clazz;
             binding.setter = method;
             setters.add(binding);
         }

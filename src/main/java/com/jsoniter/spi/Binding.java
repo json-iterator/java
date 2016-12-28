@@ -6,11 +6,13 @@ import java.util.Map;
 
 public class Binding {
     // input
-    public Class clazz;
+    public final Class clazz;
+    public final TypeLiteral clazzTypeLiteral;
+    public Annotation[] annotations;
+    // input/output
     public String name;
     public Type valueType;
     public TypeLiteral valueTypeLiteral;
-    public Annotation[] annotations;
     // output
     public String[] fromNames; // for decoder
     public String[] toNames; // for encoder
@@ -29,8 +31,17 @@ public class Binding {
 
     public Binding(Class clazz, Map<String, Type> lookup, Type valueType) {
         this.clazz = clazz;
+        this.clazzTypeLiteral = TypeLiteral.create(clazz);
         this.valueType = substituteTypeVariables(lookup, valueType);
         this.valueTypeLiteral = TypeLiteral.create(this.valueType);
+    }
+
+    public String decoderCacheKey() {
+        return this.name + "@" + this.clazzTypeLiteral.getDecoderCacheKey();
+    }
+
+    public String encoderCacheKey() {
+        return this.name + "@" + this.clazzTypeLiteral.getEncoderCacheKey();
     }
 
     private static Type substituteTypeVariables(Map<String, Type> lookup, Type type) {

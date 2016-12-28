@@ -181,7 +181,7 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
                 }
                 if (jsonProperty.decoder() != Decoder.class) {
                     try {
-                        ExtensionManager.registerPropertyDecoder(desc.clazz, binding.name, jsonProperty.decoder().newInstance());
+                        binding.decoder = jsonProperty.decoder().newInstance();
                     } catch (Exception e) {
                         throw new JsonException(e);
                     }
