@@ -64,7 +64,9 @@ class Codegen {
             clazz = (Class) type;
         }
         if (mode == DecodingMode.REFLECTION_MODE) {
-            return ReflectionDecoderFactory.create(clazz, typeArgs);
+            decoder = ReflectionDecoderFactory.create(clazz, typeArgs);
+            JsoniterSpi.addNewDecoder(cacheKey, decoder);
+            return decoder;
         }
         try {
             decoder = (Decoder) Class.forName(cacheKey).newInstance();

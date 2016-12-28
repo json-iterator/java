@@ -12,7 +12,7 @@ public class TestReflectionDecoder extends TestCase {
     }
 
     public void test_package_local() throws IOException {
-        JsoniterSpi.registerTypeDecoder(PackageLocal.class, new ReflectionObjectDecoder(PackageLocal.class));
+        JsoniterSpi.registerTypeDecoder(PackageLocal.class, ReflectionDecoderFactory.create(PackageLocal.class));
         JsonIterator iter = JsonIterator.parse("{'field': 'hello'}".replace('\'', '"'));
         PackageLocal obj = iter.read(PackageLocal.class);
         assertEquals("hello", obj.field);
@@ -22,7 +22,7 @@ public class TestReflectionDecoder extends TestCase {
     }
 
     public void test_inherited() throws IOException {
-        JsoniterSpi.registerTypeDecoder(Inherited.class, new ReflectionObjectDecoder(Inherited.class));
+        JsoniterSpi.registerTypeDecoder(Inherited.class, ReflectionDecoderFactory.create(Inherited.class));
         JsonIterator iter = JsonIterator.parse("{'field': 'hello'}".replace('\'', '"'));
         Inherited obj = iter.read(Inherited.class);
         assertEquals("hello", obj.field);
@@ -33,7 +33,7 @@ public class TestReflectionDecoder extends TestCase {
     }
 
     public void test_int_field() throws IOException {
-        JsoniterSpi.registerTypeDecoder(ObjectWithInt.class, new ReflectionObjectDecoder(ObjectWithInt.class));
+        JsoniterSpi.registerTypeDecoder(ObjectWithInt.class, ReflectionDecoderFactory.create(ObjectWithInt.class));
         JsonIterator iter = JsonIterator.parse("{'field': 100}".replace('\'', '"'));
         ObjectWithInt obj = iter.read(ObjectWithInt.class);
         assertEquals(100, obj.field);

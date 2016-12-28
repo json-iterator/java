@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
+import com.jsoniter.DecodingMode;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.spi.TypeLiteral;
 import org.junit.Test;
@@ -35,6 +36,7 @@ public class ModelTest {
         iter = new JsonIterator();
         modelTypeLiteral = new TypeLiteral<Model>() {
         };
+        JsonIterator.setMode(DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_WITH_HASH);
         jackson = new ObjectMapper();
         jackson.registerModule(new AfterburnerModule());
         modelTypeReference = new TypeReference<Model>() {
@@ -44,8 +46,7 @@ public class ModelTest {
     @Test
     public void test() throws IOException {
         benchSetup(null);
-        iter.reset(inputBytes);
-        System.out.println(iter.read(modelTypeLiteral).name);
+        System.out.println(iter.read(inputBytes, modelTypeLiteral).name);
         System.out.println(JSON.parseObject(input, Model.class).name);
 
     }
@@ -74,7 +75,7 @@ public class ModelTest {
 
     @Benchmark
     public void jackson(Blackhole bh) throws IOException {
-        bh.consume(jackson.readValue(input, modelTypeReference));
+        bh.consume(jackson.readValue(inputBytes, modelTypeReference));
     }
 
     public static class Model {

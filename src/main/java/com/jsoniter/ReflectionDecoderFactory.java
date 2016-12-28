@@ -29,6 +29,6 @@ public class ReflectionDecoderFactory {
         if (Map.class.isAssignableFrom(clazz)) {
             return new ReflectionMapDecoder(clazz, typeArgs);
         }
-        return new ReflectionObjectDecoder(clazz);
+        return new ReflectionObjectDecoder(clazz).create();
     }
 }
