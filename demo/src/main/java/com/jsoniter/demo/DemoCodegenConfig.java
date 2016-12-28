@@ -31,6 +31,8 @@ public class DemoCodegenConfig implements CodegenConfig {
                 // generic types, need to use this syntax
                 new TypeLiteral<List<Integer>>() {
                 },
+                new TypeLiteral<List<User>>() {
+                },
                 new TypeLiteral<Map<String, Object>>() {
                 },
                 // array

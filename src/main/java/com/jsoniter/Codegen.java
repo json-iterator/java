@@ -1,10 +1,6 @@
 package com.jsoniter;
 
 import com.jsoniter.spi.*;
-import javassist.ClassPool;
-import javassist.CtClass;
-import javassist.CtMethod;
-import javassist.CtNewMethod;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -15,9 +11,11 @@ import java.lang.reflect.Type;
 import java.util.*;
 
 class Codegen {
+
+    // only read/write when generating code with synchronized protection
+    private final static Set<String> generatedClassNames = new HashSet<String>();
     static boolean isDoingStaticCodegen = false;
     static DecodingMode mode = DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_WITH_HASH;
-    static ClassPool pool = ClassPool.getDefault();
     static {
         String envMode = System.getenv("JSONITER_DECODING_MODE");
         if (envMode != null) {
@@ -77,7 +75,7 @@ class Codegen {
                 throw new JsonException("static gen should provide the decoder we need, but failed to create the decoder", e);
             }
         }
-        String source = genSource(cacheKey, clazz, typeArgs);
+        String source = genSource(clazz, typeArgs);
         source = "public static java.lang.Object decode_(com.jsoniter.JsonIterator iter) throws java.io.IOException { "
                 + source + "}";
         if ("true".equals(System.getenv("JSONITER_DEBUG"))) {
@@ -85,10 +83,12 @@ class Codegen {
             System.out.println(source);
         }
         try {
+            generatedClassNames.add(cacheKey);
             if (isDoingStaticCodegen) {
                 staticGen(cacheKey, source);
+            } else {
+                decoder = DynamicCodegen.gen(cacheKey, source);
             }
-            decoder = dynamicGen(cacheKey, source);
             JsoniterSpi.addNewDecoder(cacheKey, decoder);
             return decoder;
         } catch (Exception e) {
@@ -96,6 +96,10 @@ class Codegen {
             System.err.println(source);
             throw new JsonException(e);
         }
+    }
+
+    public static boolean canStaticAccess(String cacheKey) {
+        return generatedClassNames.contains(cacheKey);
     }
 
     private static Type chooseImpl(Type type) {
@@ -197,22 +201,7 @@ class Codegen {
         }
     }
 
-    private static Decoder dynamicGen(String cacheKey, String source) throws Exception {
-        Decoder decoder;
-        CtClass ctClass = pool.makeClass(cacheKey);
-        ctClass.setInterfaces(new CtClass[]{pool.get(Decoder.class.getName())});
-        CtMethod staticMethod = CtNewMethod.make(source, ctClass);
-        ctClass.addMethod(staticMethod);
-        CtMethod interfaceMethod = CtNewMethod.make("" +
-                "public Object decode(com.jsoniter.JsonIterator iter) {" +
-                "return decode_(iter);" +
-                "}", ctClass);
-        ctClass.addMethod(interfaceMethod);
-        decoder = (Decoder) ctClass.toClass().newInstance();
-        return decoder;
-    }
-
-    private static String genSource(String cacheKey, Class clazz, Type[] typeArgs) {
+    private static String genSource(Class clazz, Type[] typeArgs) {
         if (CodegenImplNative.NATIVE_READS.containsKey(clazz.getName())) {
             return CodegenImplNative.genNative(clazz.getName());
         }
@@ -227,9 +216,9 @@ class Codegen {
         }
         ClassDescriptor desc = JsoniterSpi.getClassDescriptor(clazz, false);
         if (shouldUseStrictMode(desc)) {
-            return CodegenImplObject.genObjectUsingStrict(clazz, cacheKey, desc);
+            return CodegenImplObject.genObjectUsingStrict(clazz, desc);
         } else {
-            return CodegenImplObject.genObjectUsingHash(clazz, cacheKey, desc);
+            return CodegenImplObject.genObjectUsingHash(clazz, desc);
         }
     }
 

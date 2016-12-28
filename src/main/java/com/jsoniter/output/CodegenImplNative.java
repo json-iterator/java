@@ -129,7 +129,11 @@ class CodegenImplNative {
 
         String cacheKey = TypeLiteral.create(valueType).getEncoderCacheKey();
         Codegen.getEncoder(cacheKey, valueType);
-        return String.format("%s.encode_((%s)%s, stream);", cacheKey, getTypeName(valueType), code);
+        if (Codegen.canStaticAccess(cacheKey)) {
+            return String.format("%s.encode_((%s)%s, stream);", cacheKey, getTypeName(valueType), code);
+        } else {
+            return String.format("com.jsoniter.output.CodegenAccess.writeVal(\"%s\", (%s)%s, stream);", cacheKey, getTypeName(valueType), code);
+        }
     }
 
     public static String getTypeName(Type fieldType) {

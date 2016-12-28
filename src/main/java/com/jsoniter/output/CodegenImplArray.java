@@ -11,7 +11,7 @@ class CodegenImplArray {
             throw new IllegalArgumentException("nested array not supported: " + clazz.getCanonicalName());
         }
         StringBuilder lines = new StringBuilder();
-        append(lines, "public static void encode_(Object obj, com.jsoniter.output.JsonStream stream) {");
+        append(lines, "public static void encode_(java.lang.Object obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {");
         append(lines, "if (obj == null) { stream.writeNull(); return; }");
         append(lines, "{{comp}}[] arr = ({{comp}}[])obj;");
         append(lines, "if (arr.length == 0) { stream.writeEmptyArray(); return; }");
@@ -55,7 +55,7 @@ class CodegenImplArray {
 
     private static String genCollection(Class clazz, Type compType) {
         StringBuilder lines = new StringBuilder();
-        append(lines, "public static void encode_(Object obj, com.jsoniter.output.JsonStream stream) {");
+        append(lines, "public static void encode_(java.lang.Object obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {");
         append(lines, "if (obj == null) { stream.writeNull(); return; }");
         append(lines, "java.util.Iterator iter = ((java.util.Collection)obj).iterator();");
         append(lines, "if (!iter.hasNext()) { stream.writeEmptyArray(); return; }");

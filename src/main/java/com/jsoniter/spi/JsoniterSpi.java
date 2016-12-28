@@ -71,9 +71,6 @@ public class JsoniterSpi {
     }
 
     public static Encoder getEncoder(String cacheKey) {
-        if (cacheKey.startsWith("decoder")) {
-            throw new RuntimeException();
-        }
         return encoders.get(cacheKey);
     }
 

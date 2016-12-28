@@ -1,6 +1,5 @@
 package com.jsoniter;
 
-import com.jsoniter.spi.Decoder;
 import com.jsoniter.spi.TypeLiteral;
 
 import java.lang.reflect.ParameterizedType;
@@ -69,12 +68,12 @@ class CodegenImplNative {
             }
         }
         String cacheKey = TypeLiteral.create(type).getDecoderCacheKey();
-        Decoder decoder = Codegen.getDecoder(cacheKey, type);// set the decoder to cache
-        if (cacheKey.equals(decoder.getClass().getCanonicalName())) {
+        Codegen.getDecoder(cacheKey, type);// set the decoder to cache
+        if (Codegen.canStaticAccess(cacheKey)) {
             return String.format("%s.decode_(iter)", cacheKey);
         } else {
             // can not use static "decode_" method to access, go through codegen cache
-            return String.format("com.jsoniter.CodegenAccess.read(\"%s\", iter);", cacheKey);
+            return String.format("com.jsoniter.CodegenAccess.read(\"%s\", iter)", cacheKey);
         }
     }
 

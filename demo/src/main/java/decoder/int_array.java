@@ -1,6 +1,7 @@
 package decoder;
 public class int_array implements com.jsoniter.spi.Decoder {
-public static java.lang.Object decode_(com.jsoniter.JsonIterator iter) throws java.io.IOException { if (iter.readNull()) { return null; }
+public static java.lang.Object decode_(com.jsoniter.JsonIterator iter) throws java.io.IOException { com.jsoniter.CodegenAccess.resetExistingObject(iter);
+if (iter.readNull()) { return null; }
 if (!com.jsoniter.CodegenAccess.readArrayStart(iter)) {
 return new int[0];
 }

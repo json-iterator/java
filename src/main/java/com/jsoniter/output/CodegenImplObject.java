@@ -9,7 +9,7 @@ class CodegenImplObject {
     public static String genObject(Class clazz) {
         ClassDescriptor desc = JsoniterSpi.getClassDescriptor(clazz, false);
         StringBuilder lines = new StringBuilder();
-        append(lines, String.format("public static void encode_(%s obj, com.jsoniter.output.JsonStream stream) {", clazz.getCanonicalName()));
+        append(lines, String.format("public static void encode_(%s obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {", clazz.getCanonicalName()));
         append(lines, "if (obj == null) { stream.writeNull(); return; }");
         if (hasFieldOutput(desc)) {
             boolean notFirst = false;

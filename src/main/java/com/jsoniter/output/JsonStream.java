@@ -8,7 +8,8 @@ import java.io.OutputStream;
 
 public class JsonStream extends OutputStream {
 
-    public int indentionStep = 0;
+    public static int defaultIndentionStep = 0;
+    public int indentionStep = defaultIndentionStep;
     public int indention = 0;
     private OutputStream out;
     private static final byte[] NULL = "null".getBytes();
@@ -257,13 +258,17 @@ public class JsonStream extends OutputStream {
         }
     };
 
-    public static void serialize(Object obj, OutputStream out) throws IOException {
+    public static void serialize(Object obj, OutputStream out) {
         JsonStream stream = tlsStream.get();
         try {
-            stream.reset(out);
-            stream.writeVal(obj);
-        } finally {
-            stream.close();
+            try {
+                stream.reset(out);
+                stream.writeVal(obj);
+            } finally {
+                stream.close();
+            }
+        } catch (IOException e) {
+            throw new JsonException(e);
         }
     }
 
@@ -274,16 +279,14 @@ public class JsonStream extends OutputStream {
         }
     };
 
-    public static String serialize(Object obj) throws IOException {
+    public static String serialize(Object obj) {
         AsciiOutputStream asciiOutputStream = tlsAsciiOutputStream.get();
         asciiOutputStream.reset();
-        JsonStream stream = tlsStream.get();
-        try {
-            stream.reset(asciiOutputStream);
-            stream.writeVal(obj);
-        } finally {
-            stream.close();
-        }
+        serialize(obj, asciiOutputStream);
         return asciiOutputStream.toString();
+    }
+
+    public static void setMode(EncodingMode mode) {
+        Codegen.setMode(mode);
     }
 }

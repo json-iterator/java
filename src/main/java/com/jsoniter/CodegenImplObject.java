@@ -18,7 +18,7 @@ class CodegenImplObject {
         put("long", "0");
     }};
 
-    public static String genObjectUsingStrict(Class clazz, String cacheKey, ClassDescriptor desc) {
+    public static String genObjectUsingStrict(Class clazz, ClassDescriptor desc) {
         List<Binding> allBindings = desc.allDecoderBindings();
         int lastRequiredIdx = assignMaskForRequiredProperties(allBindings);
         boolean hasRequiredBinding = lastRequiredIdx > 0;
@@ -78,7 +78,7 @@ class CodegenImplObject {
         append(lines, "boolean once = true;");
         append(lines, "while (once) {");
         append(lines, "once = false;");
-        String rendered = renderTriTree(cacheKey, trieTree);
+        String rendered = renderTriTree(trieTree);
         for (Binding field : desc.fields) {
             // if not field, the value will set to temp variable
             if (desc.ctor.parameters.isEmpty() && desc.fields.contains(field)) {
@@ -265,20 +265,20 @@ class CodegenImplObject {
         return trieTree;
     }
 
-    private static String renderTriTree(String cacheKey, Map<Integer, Object> trieTree) {
+    private static String renderTriTree(Map<Integer, Object> trieTree) {
         StringBuilder switchBody = new StringBuilder();
         for (Map.Entry<Integer, Object> entry : trieTree.entrySet()) {
             Integer len = entry.getKey();
             append(switchBody, "case " + len + ": ");
             Map<Byte, Object> current = (Map<Byte, Object>) entry.getValue();
-            addFieldDispatch(switchBody, len, 0, current, cacheKey, new ArrayList<Byte>());
+            addFieldDispatch(switchBody, len, 0, current, new ArrayList<Byte>());
             append(switchBody, "break;");
         }
         return switchBody.toString();
     }
 
     private static void addFieldDispatch(
-            StringBuilder lines, int len, int i, Map<Byte, Object> current, String cacheKey, List<Byte> bytesToCompare) {
+            StringBuilder lines, int len, int i, Map<Byte, Object> current, List<Byte> bytesToCompare) {
         for (Map.Entry<Byte, Object> entry : current.entrySet()) {
             Byte b = entry.getKey();
             if (i == len - 1) {
@@ -311,7 +311,7 @@ class CodegenImplObject {
             if (next.size() == 1) {
                 ArrayList<Byte> nextBytesToCompare = new ArrayList<Byte>(bytesToCompare);
                 nextBytesToCompare.add(b);
-                addFieldDispatch(lines, len, i + 1, next, cacheKey, nextBytesToCompare);
+                addFieldDispatch(lines, len, i + 1, next, nextBytesToCompare);
                 continue;
             }
             append(lines, "if (");
@@ -321,13 +321,13 @@ class CodegenImplObject {
             }
             append(lines, String.format("field.at(%d)==%s", i, b));
             append(lines, ") {");
-            addFieldDispatch(lines, len, i + 1, next, cacheKey, new ArrayList<Byte>());
+            addFieldDispatch(lines, len, i + 1, next, new ArrayList<Byte>());
             append(lines, "}");
         }
     }
 
     // the implementation is from dsljson, it is the fastest although has the risk not matching field strictly
-    public static String genObjectUsingHash(Class clazz, String cacheKey, ClassDescriptor desc) {
+    public static String genObjectUsingHash(Class clazz, ClassDescriptor desc) {
         StringBuilder lines = new StringBuilder();
         // === if null, return null
         append(lines, "if (iter.readNull()) { com.jsoniter.CodegenAccess.resetExistingObject(iter); return null; }");
@@ -365,15 +365,15 @@ class CodegenImplObject {
                 int intHash = (int) hash;
                 if (intHash == 0) {
                     // hash collision, 0 can not be used as sentinel
-                    return genObjectUsingStrict(clazz, cacheKey, desc);
+                    return genObjectUsingStrict(clazz, desc);
                 }
                 if (knownHashes.contains(intHash)) {
                     // hash collision with other field can not be used as sentinel
-                    return genObjectUsingStrict(clazz, cacheKey, desc);
+                    return genObjectUsingStrict(clazz, desc);
                 }
                 knownHashes.add(intHash);
                 append(lines, "case " + intHash + ": ");
-                appendFieldSet(lines, cacheKey, desc.ctor, desc.fields, field);
+                appendFieldSet(lines, desc.ctor, desc.fields, field);
                 append(lines, "break;");
             }
         }
@@ -392,7 +392,7 @@ class CodegenImplObject {
                 }
                 int intHash = (int) hash;
                 append(lines, "case " + intHash + ": ");
-                appendFieldSet(lines, cacheKey, desc.ctor, desc.fields, field);
+                appendFieldSet(lines, desc.ctor, desc.fields, field);
                 append(lines, "continue;");
             }
         }
@@ -416,7 +416,7 @@ class CodegenImplObject {
                 .replace("{{newInst}}", genNewInstCode(clazz, desc.ctor));
     }
 
-    private static void appendFieldSet(StringBuilder lines, String cacheKey, ConstructorDescriptor ctor, List<Binding> fields, Binding field) {
+    private static void appendFieldSet(StringBuilder lines, ConstructorDescriptor ctor, List<Binding> fields, Binding field) {
         if (ctor.parameters.isEmpty() && fields.contains(field)) {
             if (shouldReuseObject(field.valueType) && field.field != null) {
                 append(lines, String.format("com.jsoniter.CodegenAccess.setExistingObject(iter, obj.%s);", field.name));

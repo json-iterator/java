@@ -1,7 +1,9 @@
 package com.jsoniter.output;
 
+import com.jsoniter.*;
 import com.jsoniter.spi.Encoder;
 import com.jsoniter.spi.JsoniterSpi;
+import com.jsoniter.spi.TypeLiteral;
 
 import java.io.IOException;
 
@@ -48,5 +50,9 @@ public class CodegenAccess {
     public static void writeVal(String cacheKey, double obj, JsonStream stream) throws IOException {
         Encoder.DoubleEncoder encoder = (Encoder.DoubleEncoder) JsoniterSpi.getEncoder(cacheKey);
         encoder.encodeDouble(obj, stream);
+    }
+
+    public static void staticGenEncoders(TypeLiteral[] typeLiterals) {
+        Codegen.staticGenEncoders(typeLiterals);
     }
 }
