@@ -16,15 +16,17 @@ class CodegenImplArray {
         append(lines, "{{comp}}[] arr = ({{comp}}[])obj;");
         append(lines, "if (arr.length == 0) { stream.writeEmptyArray(); return; }");
         append(lines, "stream.startArray();");
-        append(lines, "for (int i = 0; i < arr.length; i++) {");
+        append(lines, "int i = 0;");
         append(lines, "{{op}}");
+        append(lines, "while (i < arr.length) {");
         append(lines, "stream.writeMore();");
+        append(lines, "{{op}}");
         append(lines, "}");
         append(lines, "stream.endArray();");
         append(lines, "}");
         return lines.toString()
                 .replace("{{comp}}", compType.getCanonicalName())
-                .replace("{{op}}", CodegenImplNative.genWriteOp("arr[i]", compType));
+                .replace("{{op}}", CodegenImplNative.genWriteOp("arr[i++]", compType));
     }
 
     private static void append(StringBuilder lines, String str) {
@@ -59,10 +61,9 @@ class CodegenImplArray {
         append(lines, "if (!iter.hasNext()) { stream.writeEmptyArray(); return; }");
         append(lines, "stream.startArray();");
         append(lines, "{{op}}");
-        append(lines, "stream.writeMore();");
         append(lines, "while (iter.hasNext()) {");
-        append(lines, "{{op}}");
         append(lines, "stream.writeMore();");
+        append(lines, "{{op}}");
         append(lines, "}");
         append(lines, "stream.endArray();");
         append(lines, "}");

@@ -129,8 +129,7 @@ class CodegenImplNative {
 
         String cacheKey = TypeLiteral.generateEncoderCacheKey(valueType);
         Codegen.getEncoder(cacheKey, valueType);
-//        Encoder encoder = Codegen.cache.get(cacheKey);
-        return String.format("%s.encode_(%s, stream);", cacheKey, code);
+        return String.format("%s.encode_((%s)%s, stream);", cacheKey, getTypeName(valueType), code);
     }
 
     public static String getTypeName(Type fieldType) {

@@ -6,18 +6,23 @@ import com.jsoniter.spi.Encoder;
 import com.jsoniter.spi.JsoniterSpi;
 
 class CodegenImplObject {
-    public static String genObject(String cacheKey, Class clazz) {
+    public static String genObject(Class clazz) {
         ClassDescriptor desc = JsoniterSpi.getClassDescriptor(clazz, false);
         StringBuilder lines = new StringBuilder();
         append(lines, String.format("public static void encode_(%s obj, com.jsoniter.output.JsonStream stream) {", clazz.getCanonicalName()));
         append(lines, "if (obj == null) { stream.writeNull(); return; }");
         if (hasFieldOutput(desc)) {
+            boolean notFirst = false;
             append(lines, "stream.startObject();");
             for (Binding field : desc.allEncoderBindings()) {
                 for (String toName : field.toNames) {
+                    if (notFirst) {
+                        append(lines, "stream.writeMore();");
+                    } else {
+                        notFirst = true;
+                    }
                     append(lines, String.format("stream.writeField(\"%s\");", toName));
                     append(lines, genField(field));
-                    append(lines, "stream.writeMore();");
                 }
             }
             append(lines, "stream.endObject();");

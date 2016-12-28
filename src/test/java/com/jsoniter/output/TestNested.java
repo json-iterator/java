@@ -51,6 +51,7 @@ public class TestNested extends TestCase {
     }
 
     public void test_object_of_array() throws IOException {
+        stream.indentionStep = 2;
         TestObject2 obj = new TestObject2();
         obj.objs = new TestObject1[1];
         obj.objs[0] = new TestObject1();
@@ -58,10 +59,18 @@ public class TestNested extends TestCase {
         obj.objs[0].field2 = "2";
         stream.writeVal(obj);
         stream.close();
-        assertEquals("{'objs':[{'field1':'1','field2':'2'}]}".replace('\'', '"'), baos.toString());
+        assertEquals("{\n" +
+                "  \"objs\":[\n" +
+                "    {\n" +
+                "      \"field1\":\"1\",\n" +
+                "      \"field2\":\"2\"\n" +
+                "    }\n" +
+                "  ]\n" +
+                "}".replace('\'', '"'), baos.toString());
     }
 
     public void test_map_of_objects() throws IOException {
+        stream.indentionStep = 2;
         final TestObject1 obj1 = new TestObject1();
         obj1.field1 = "1";
         obj1.field2 = "2";
@@ -70,6 +79,11 @@ public class TestNested extends TestCase {
             put("hello", obj1);
         }});
         stream.close();
-        assertEquals("{'hello':{'field1':'1','field2':'2'}}".replace('\'', '"'), baos.toString());
+        assertEquals("{\n" +
+                "  \"hello\":{\n" +
+                "    \"field1\":\"1\",\n" +
+                "    \"field2\":\"2\"\n" +
+                "  }\n" +
+                "}".replace('\'', '"'), baos.toString());
     }
 }

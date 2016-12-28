@@ -8,6 +8,8 @@ import java.io.OutputStream;
 
 public class JsonStream extends OutputStream {
 
+    public int indentionStep = 0;
+    public int indention = 0;
     private OutputStream out;
     private static final byte[] NULL = "null".getBytes();
     private static final byte[] TRUE = "true".getBytes();
@@ -183,20 +185,49 @@ public class JsonStream extends OutputStream {
     }
 
     public final void startArray() throws IOException {
+        indention += indentionStep;
         write('[');
+        writeIndention();
     }
 
     public final void writeMore() throws IOException {
         write(',');
+        writeIndention();
+    }
+
+    private void writeIndention() throws IOException {
+        writeIndention(0);
+    }
+
+    private void writeIndention(int delta) throws IOException {
+        if (indention == 0) {
+            return;
+        }
+        write('\n');
+        int toWrite = indention - delta;
+        int i = 0;
+        for (; ; ) {
+            for (; i < toWrite && count < buf.length; i++) {
+                buf[count++] = ' ';
+            }
+            if (i == toWrite) {
+                break;
+            } else {
+                flushBuffer();
+            }
+        }
     }
 
     public final void endArray() throws IOException {
-        count--; // remove the last ,
+        writeIndention(indentionStep);
+        indention -= indentionStep;
         write(']');
     }
 
     public final void startObject() throws IOException {
+        indention += indentionStep;
         write('{');
+        writeIndention();
     }
 
     public final void writeField(String field) throws IOException {
@@ -205,7 +236,8 @@ public class JsonStream extends OutputStream {
     }
 
     public final void endObject() throws IOException {
-        count--; // remove the last ,
+        writeIndention(indentionStep);
+        indention -= indentionStep;
         write('}');
     }
 

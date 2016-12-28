@@ -34,12 +34,11 @@ class CodegenImplMap {
         append(lines, "stream.startObject();");
         append(lines, "stream.writeField((String)entry.getKey());");
         append(lines, "{{op}}");
-        append(lines, "stream.writeMore();");
         append(lines, "while(iter.hasNext()) {");
         append(lines, "entry = iter.next();");
+        append(lines, "stream.writeMore();");
         append(lines, "stream.writeField((String)entry.getKey());");
         append(lines, "{{op}}");
-        append(lines, "stream.writeMore();");
         append(lines, "}");
         append(lines, "stream.endObject();");
         append(lines, "}");
