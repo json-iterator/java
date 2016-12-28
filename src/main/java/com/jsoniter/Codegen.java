@@ -30,7 +30,7 @@ class Codegen {
     }
 
     static Decoder getDecoder(String cacheKey, Type type) {
-        Decoder decoder = ExtensionManager.getDecoder(cacheKey);
+        Decoder decoder = JsoniterSpi.getDecoder(cacheKey);
         if (decoder != null) {
             return decoder;
         }
@@ -38,11 +38,11 @@ class Codegen {
     }
 
     private synchronized static Decoder gen(String cacheKey, Type type) {
-        Decoder decoder = ExtensionManager.getDecoder(cacheKey);
+        Decoder decoder = JsoniterSpi.getDecoder(cacheKey);
         if (decoder != null) {
             return decoder;
         }
-        List<Extension> extensions = ExtensionManager.getExtensions();
+        List<Extension> extensions = JsoniterSpi.getExtensions();
         for (Extension extension : extensions) {
             type = extension.chooseImplementation(type);
         }
@@ -50,7 +50,7 @@ class Codegen {
         for (Extension extension : extensions) {
             decoder = extension.createDecoder(cacheKey, type);
             if (decoder != null) {
-                ExtensionManager.addNewDecoder(cacheKey, decoder);
+                JsoniterSpi.addNewDecoder(cacheKey, decoder);
                 return decoder;
             }
         }
@@ -68,7 +68,7 @@ class Codegen {
         }
         try {
             decoder = (Decoder) Class.forName(cacheKey).newInstance();
-            ExtensionManager.addNewDecoder(cacheKey, decoder);
+            JsoniterSpi.addNewDecoder(cacheKey, decoder);
             return decoder;
         } catch (Exception e) {
             if (mode == DecodingMode.STATIC_MODE) {
@@ -87,7 +87,7 @@ class Codegen {
                 staticGen(cacheKey, source);
             }
             decoder = dynamicGen(cacheKey, source);
-            ExtensionManager.addNewDecoder(cacheKey, decoder);
+            JsoniterSpi.addNewDecoder(cacheKey, decoder);
             return decoder;
         } catch (Exception e) {
             System.err.println("failed to generate decoder for: " + type + " with " + Arrays.toString(typeArgs));
@@ -106,7 +106,7 @@ class Codegen {
         } else {
             clazz = (Class) type;
         }
-        Class implClazz = ExtensionManager.getTypeImplementation(clazz);
+        Class implClazz = JsoniterSpi.getTypeImplementation(clazz);
         if (Collection.class.isAssignableFrom(clazz)) {
             Type compType = Object.class;
             if (typeArgs.length == 0) {
@@ -223,7 +223,7 @@ class Codegen {
         if (Collection.class.isAssignableFrom(clazz)) {
             return CodegenImplArray.genCollection(clazz, typeArgs);
         }
-        ClassDescriptor desc = ExtensionManager.getClassDescriptor(clazz, false);
+        ClassDescriptor desc = JsoniterSpi.getClassDescriptor(clazz, false);
         if (shouldUseStrictMode(desc)) {
             return CodegenImplObject.genObjectUsingStrict(clazz, cacheKey, desc);
         } else {

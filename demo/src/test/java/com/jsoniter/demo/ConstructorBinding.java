@@ -10,7 +10,7 @@ import com.jsoniter.DecodingMode;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.ReflectionDecoderFactory;
 import com.jsoniter.annotation.JacksonAnnotationSupport;
-import com.jsoniter.spi.ExtensionManager;
+import com.jsoniter.spi.JsoniterSpi;
 import com.jsoniter.spi.TypeLiteral;
 import org.junit.Test;
 import org.openjdk.jmh.Main;
@@ -72,7 +72,7 @@ public class ConstructorBinding {
                 JsonIterator.setMode(DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_STRICTLY);
             }
             if (params.getBenchmark().contains("withJsoniterReflection")) {
-                ExtensionManager.registerTypeDecoder(TestObject.class, ReflectionDecoderFactory.create(TestObject.class));
+                JsoniterSpi.registerTypeDecoder(TestObject.class, ReflectionDecoderFactory.create(TestObject.class));
             }
         }
     }
@@ -80,7 +80,7 @@ public class ConstructorBinding {
     @Test
     public void test() throws IOException {
         benchSetup(null);
-        ExtensionManager.registerTypeDecoder(TestObject.class, ReflectionDecoderFactory.create(TestObject.class));
+        JsoniterSpi.registerTypeDecoder(TestObject.class, ReflectionDecoderFactory.create(TestObject.class));
         System.out.println(withJsoniter());
         System.out.println(withJackson());
     }

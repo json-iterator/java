@@ -508,7 +508,7 @@ class CodegenImplObject {
     private static String genField(Binding field) {
         String fieldCacheKey = field.decoderCacheKey();
         // the field decoder might be registered directly
-        Decoder decoder = ExtensionManager.getDecoder(fieldCacheKey);
+        Decoder decoder = JsoniterSpi.getDecoder(fieldCacheKey);
         Type fieldType = field.valueType;
         if (decoder == null) {
             return String.format("(%s)%s", CodegenImplNative.getTypeName(fieldType), CodegenImplNative.genReadOp(fieldType));

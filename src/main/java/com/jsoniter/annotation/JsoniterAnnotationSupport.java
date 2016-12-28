@@ -12,7 +12,7 @@ import java.util.List;
 public class JsoniterAnnotationSupport extends EmptyExtension {
 
     public static void enable() {
-        ExtensionManager.registerExtension(new JsoniterAnnotationSupport());
+        JsoniterSpi.registerExtension(new JsoniterAnnotationSupport());
     }
 
     @Override
@@ -165,6 +165,7 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
             JsonIgnore jsonIgnore = getJsonIgnore(binding.annotations);
             if (jsonIgnore != null && jsonIgnore.value()) {
                 binding.fromNames = new String[0];
+                binding.toNames = new String[0];
             }
             JsonProperty jsonProperty = getJsonProperty(binding.annotations);
             if (jsonProperty != null) {
@@ -176,12 +177,22 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
                 if (jsonProperty.from().length > 0) {
                     binding.fromNames = jsonProperty.from();
                 }
+                if (jsonProperty.to().length > 0) {
+                    binding.toNames = jsonProperty.to();
+                }
                 if (jsonProperty.required()) {
                     binding.asMissingWhenNotPresent = true;
                 }
                 if (jsonProperty.decoder() != Decoder.class) {
                     try {
                         binding.decoder = jsonProperty.decoder().newInstance();
+                    } catch (Exception e) {
+                        throw new JsonException(e);
+                    }
+                }
+                if (jsonProperty.encoder() != Encoder.class) {
+                    try {
+                        binding.encoder = jsonProperty.encoder().newInstance();
                     } catch (Exception e) {
                         throw new JsonException(e);
                     }

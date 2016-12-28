@@ -12,6 +12,102 @@ import java.util.Map;
 
 class CodegenImplNative {
     public static final Map<Type, Encoder> NATIVE_ENCODERS = new IdentityHashMap<Type, Encoder>() {{
+        put(boolean.class, new Encoder() {
+            @Override
+            public void encode(Object obj, JsonStream stream) throws IOException {
+                stream.writeVal((Boolean) obj);
+            }
+        });
+        put(Boolean.class, new Encoder() {
+            @Override
+            public void encode(Object obj, JsonStream stream) throws IOException {
+                stream.writeVal((Boolean) obj);
+            }
+        });
+        put(byte.class, new Encoder() {
+            @Override
+            public void encode(Object obj, JsonStream stream) throws IOException {
+                stream.writeVal((Short) obj);
+            }
+        });
+        put(Byte.class, new Encoder() {
+            @Override
+            public void encode(Object obj, JsonStream stream) throws IOException {
+                stream.writeVal((Short) obj);
+            }
+        });
+        put(short.class, new Encoder() {
+            @Override
+            public void encode(Object obj, JsonStream stream) throws IOException {
+                stream.writeVal((Short) obj);
+            }
+        });
+        put(Short.class, new Encoder() {
+            @Override
+            public void encode(Object obj, JsonStream stream) throws IOException {
+                stream.writeVal((Short) obj);
+            }
+        });
+        put(int.class, new Encoder() {
+            @Override
+            public void encode(Object obj, JsonStream stream) throws IOException {
+                stream.writeVal((Integer) obj);
+            }
+        });
+        put(Integer.class, new Encoder() {
+            @Override
+            public void encode(Object obj, JsonStream stream) throws IOException {
+                stream.writeVal((Integer) obj);
+            }
+        });
+        put(char.class, new Encoder() {
+            @Override
+            public void encode(Object obj, JsonStream stream) throws IOException {
+                stream.writeVal((Integer) obj);
+            }
+        });
+        put(Character.class, new Encoder() {
+            @Override
+            public void encode(Object obj, JsonStream stream) throws IOException {
+                stream.writeVal((Integer) obj);
+            }
+        });
+        put(long.class, new Encoder() {
+            @Override
+            public void encode(Object obj, JsonStream stream) throws IOException {
+                stream.writeVal((Long) obj);
+            }
+        });
+        put(Long.class, new Encoder() {
+            @Override
+            public void encode(Object obj, JsonStream stream) throws IOException {
+                stream.writeVal((Long) obj);
+            }
+        });
+        put(float.class, new Encoder() {
+            @Override
+            public void encode(Object obj, JsonStream stream) throws IOException {
+                stream.writeVal((Float) obj);
+            }
+        });
+        put(Float.class, new Encoder() {
+            @Override
+            public void encode(Object obj, JsonStream stream) throws IOException {
+                stream.writeVal((Float) obj);
+            }
+        });
+        put(double.class, new Encoder() {
+            @Override
+            public void encode(Object obj, JsonStream stream) throws IOException {
+                stream.writeVal((Double) obj);
+            }
+        });
+        put(Double.class, new Encoder() {
+            @Override
+            public void encode(Object obj, JsonStream stream) throws IOException {
+                stream.writeVal((Double) obj);
+            }
+        });
         put(String.class, new Encoder() {
             @Override
             public void encode(Object obj, JsonStream stream) throws IOException {

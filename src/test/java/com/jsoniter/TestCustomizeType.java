@@ -2,7 +2,7 @@ package com.jsoniter;
 
 import com.jsoniter.spi.Decoder;
 import com.jsoniter.spi.EmptyExtension;
-import com.jsoniter.spi.ExtensionManager;
+import com.jsoniter.spi.JsoniterSpi;
 import junit.framework.TestCase;
 
 import java.io.IOException;
@@ -21,7 +21,7 @@ public class TestCustomizeType extends TestCase {
     }
 
     public void test_direct() throws IOException {
-        ExtensionManager.registerTypeDecoder(MyDate.class, new Decoder() {
+        JsoniterSpi.registerTypeDecoder(MyDate.class, new Decoder() {
             @Override
             public Object decode(final JsonIterator iter) throws IOException {
                 return new MyDate() {{
@@ -59,7 +59,7 @@ public class TestCustomizeType extends TestCase {
     }
 
     public void test_customize_through_extension() throws IOException {
-        ExtensionManager.registerExtension(new EmptyExtension() {
+        JsoniterSpi.registerExtension(new EmptyExtension() {
             @Override
             public Decoder createDecoder(String cacheKey, Type type) {
                 if (type == MyDate2.class) {
@@ -89,7 +89,7 @@ public class TestCustomizeType extends TestCase {
     }
 
     public void test_customize_impl() throws IOException {
-        ExtensionManager.registerTypeImplementation(MyInterface.class, MyObject.class);
+        JsoniterSpi.registerTypeImplementation(MyInterface.class, MyObject.class);
         JsonIterator iter = JsonIterator.parse("{'field1': 1481365190000}".replace('\'', '"'));
         MyObject obj = (MyObject) iter.read(MyInterface.class);
         assertEquals(1481365190000L, obj.field1);

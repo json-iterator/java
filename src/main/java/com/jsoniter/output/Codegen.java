@@ -1,9 +1,8 @@
 package com.jsoniter.output;
 
-import com.jsoniter.spi.Extension;
-import com.jsoniter.spi.ExtensionManager;
 import com.jsoniter.JsonException;
 import com.jsoniter.spi.Encoder;
+import com.jsoniter.spi.JsoniterSpi;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
@@ -20,7 +19,7 @@ class Codegen {
     static ClassPool pool = ClassPool.getDefault();
 
     public static Encoder getEncoder(String cacheKey, Type type) {
-        Encoder encoder = ExtensionManager.getEncoder(cacheKey);
+        Encoder encoder = JsoniterSpi.getEncoder(cacheKey);
         if (encoder != null) {
             return encoder;
         }
@@ -28,13 +27,13 @@ class Codegen {
     }
 
     private static synchronized Encoder gen(String cacheKey, Type type) {
-        Encoder encoder = ExtensionManager.getEncoder(cacheKey);
+        Encoder encoder = JsoniterSpi.getEncoder(cacheKey);
         if (encoder != null) {
             return encoder;
         }
         encoder = CodegenImplNative.NATIVE_ENCODERS.get(type);
         if (encoder != null) {
-            ExtensionManager.addNewEncoder(cacheKey, encoder);
+            JsoniterSpi.addNewEncoder(cacheKey, encoder);
             return encoder;
         }
         Type[] typeArgs = new Type[0];
@@ -58,16 +57,16 @@ class Codegen {
             ctClass.addMethod(staticMethod);
             CtMethod interfaceMethod = CtNewMethod.make("" +
                     "public void encode(Object obj, com.jsoniter.output.JsonStream stream) {" +
-                    "return encode_(obj, stream);" +
+                    String.format("return encode_((%s)obj, stream);", clazz.getCanonicalName()) +
                     "}", ctClass);
             ctClass.addMethod(interfaceMethod);
             encoder = (Encoder) ctClass.toClass().newInstance();
-            ExtensionManager.addNewEncoder(cacheKey, encoder);
+            JsoniterSpi.addNewEncoder(cacheKey, encoder);
             return encoder;
         } catch (Exception e) {
             System.err.println("failed to generate encoder for: " + type + " with " + Arrays.toString(typeArgs));
             System.err.println(source);
-            ExtensionManager.dump();
+            JsoniterSpi.dump();
             throw new JsonException(e);
         }
     }

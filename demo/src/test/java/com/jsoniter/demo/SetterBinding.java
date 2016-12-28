@@ -7,7 +7,7 @@ import com.jsoniter.DecodingMode;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.ReflectionDecoderFactory;
 import com.jsoniter.annotation.JacksonAnnotationSupport;
-import com.jsoniter.spi.ExtensionManager;
+import com.jsoniter.spi.JsoniterSpi;
 import com.jsoniter.spi.TypeLiteral;
 import org.junit.Test;
 import org.openjdk.jmh.Main;
@@ -67,7 +67,7 @@ public class SetterBinding {
                 JsonIterator.setMode(DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_STRICTLY);
             }
             if (params.getBenchmark().contains("withJsoniterReflection")) {
-                ExtensionManager.registerTypeDecoder(ConstructorBinding.TestObject.class, ReflectionDecoderFactory.create(TestObject.class));
+                JsoniterSpi.registerTypeDecoder(ConstructorBinding.TestObject.class, ReflectionDecoderFactory.create(TestObject.class));
             }
         }
     }
@@ -75,7 +75,7 @@ public class SetterBinding {
     @Test
     public void test() throws IOException {
         benchSetup(null);
-        ExtensionManager.registerTypeDecoder(ConstructorBinding.TestObject.class, ReflectionDecoderFactory.create(TestObject.class));
+        JsoniterSpi.registerTypeDecoder(ConstructorBinding.TestObject.class, ReflectionDecoderFactory.create(TestObject.class));
         System.out.println(withJsoniter());
         System.out.println(withJackson());
     }

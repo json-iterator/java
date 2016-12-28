@@ -2,7 +2,7 @@ package com.jsoniter;
 
 import com.jsoniter.spi.Decoder;
 import com.jsoniter.spi.EmptyExtension;
-import com.jsoniter.spi.ExtensionManager;
+import com.jsoniter.spi.JsoniterSpi;
 import com.jsoniter.spi.TypeLiteral;
 import junit.framework.TestCase;
 
@@ -53,7 +53,7 @@ public class TestDemo extends TestCase {
     }
 
     public void test_empty_array_as_null() throws IOException {
-        ExtensionManager.registerExtension(new EmptyExtension() {
+        JsoniterSpi.registerExtension(new EmptyExtension() {
             @Override
             public Decoder createDecoder(final String cacheKey, final Type type) {
                 if (cacheKey.endsWith(".original")) {

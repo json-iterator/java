@@ -5,7 +5,7 @@ import com.jsoniter.JsonException;
 import java.lang.reflect.*;
 import java.util.*;
 
-public class ExtensionManager {
+public class JsoniterSpi {
 
     static List<Extension> extensions = new ArrayList<Extension>();
     static Map<Class, Class> typeImpls = new HashMap<Class, Class>();
@@ -116,7 +116,7 @@ public class ExtensionManager {
                 binding.field.setAccessible(true);
             }
             if (binding.decoder != null) {
-                ExtensionManager.addNewDecoder(binding.decoderCacheKey(), binding.decoder);
+                JsoniterSpi.addNewDecoder(binding.decoderCacheKey(), binding.decoder);
             }
         }
         for (Binding binding : desc.allEncoderBindings()) {
@@ -127,7 +127,7 @@ public class ExtensionManager {
                 binding.field.setAccessible(true);
             }
             if (binding.encoder != null) {
-                ExtensionManager.addNewEncoder(binding.encoderCacheKey(), binding.encoder);
+                JsoniterSpi.addNewEncoder(binding.encoderCacheKey(), binding.encoder);
             }
         }
         return desc;

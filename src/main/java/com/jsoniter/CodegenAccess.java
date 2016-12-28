@@ -1,7 +1,7 @@
 package com.jsoniter;
 
 import com.jsoniter.spi.Decoder;
-import com.jsoniter.spi.ExtensionManager;
+import com.jsoniter.spi.JsoniterSpi;
 import com.jsoniter.spi.TypeLiteral;
 
 import java.io.IOException;
@@ -79,27 +79,27 @@ public class CodegenAccess {
     }
 
     public static final boolean readBoolean(String cacheKey, JsonIterator iter) throws IOException {
-        return ((Decoder.BooleanDecoder) ExtensionManager.getDecoder(cacheKey)).decodeBoolean(iter);
+        return ((Decoder.BooleanDecoder) JsoniterSpi.getDecoder(cacheKey)).decodeBoolean(iter);
     }
 
     public static final short readShort(String cacheKey, JsonIterator iter) throws IOException {
-        return ((Decoder.ShortDecoder) ExtensionManager.getDecoder(cacheKey)).decodeShort(iter);
+        return ((Decoder.ShortDecoder) JsoniterSpi.getDecoder(cacheKey)).decodeShort(iter);
     }
 
     public static final int readInt(String cacheKey, JsonIterator iter) throws IOException {
-        return ((Decoder.IntDecoder) ExtensionManager.getDecoder(cacheKey)).decodeInt(iter);
+        return ((Decoder.IntDecoder) JsoniterSpi.getDecoder(cacheKey)).decodeInt(iter);
     }
 
     public static final long readLong(String cacheKey, JsonIterator iter) throws IOException {
-        return ((Decoder.LongDecoder) ExtensionManager.getDecoder(cacheKey)).decodeLong(iter);
+        return ((Decoder.LongDecoder) JsoniterSpi.getDecoder(cacheKey)).decodeLong(iter);
     }
 
     public static final float readFloat(String cacheKey, JsonIterator iter) throws IOException {
-        return ((Decoder.FloatDecoder) ExtensionManager.getDecoder(cacheKey)).decodeFloat(iter);
+        return ((Decoder.FloatDecoder) JsoniterSpi.getDecoder(cacheKey)).decodeFloat(iter);
     }
 
     public static final double readDouble(String cacheKey, JsonIterator iter) throws IOException {
-        return ((Decoder.DoubleDecoder) ExtensionManager.getDecoder(cacheKey)).decodeDouble(iter);
+        return ((Decoder.DoubleDecoder) JsoniterSpi.getDecoder(cacheKey)).decodeDouble(iter);
     }
 
     public static final <T> T read(String cacheKey, JsonIterator iter) throws IOException {

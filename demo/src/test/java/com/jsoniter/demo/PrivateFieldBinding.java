@@ -8,7 +8,7 @@ import com.jsoniter.JsonIterator;
 import com.jsoniter.ReflectionDecoderFactory;
 import com.jsoniter.annotation.JacksonAnnotationSupport;
 import com.jsoniter.spi.EmptyExtension;
-import com.jsoniter.spi.ExtensionManager;
+import com.jsoniter.spi.JsoniterSpi;
 import com.jsoniter.spi.ParameterizedTypeImpl;
 import com.jsoniter.spi.TypeLiteral;
 import org.junit.Test;
@@ -58,14 +58,14 @@ public class PrivateFieldBinding {
         typeRef = new TypeReference<TestObject>() {
         };
         JacksonAnnotationSupport.enable();
-        ExtensionManager.registerTypeDecoder(TestObject.class, ReflectionDecoderFactory.create(TestObject.class));
+        JsoniterSpi.registerTypeDecoder(TestObject.class, ReflectionDecoderFactory.create(TestObject.class));
         jackson = new ObjectMapper();
         jackson.registerModule(new AfterburnerModule());
     }
 
     @Test
     public void test() throws IOException {
-        ExtensionManager.registerExtension(new EmptyExtension() {
+        JsoniterSpi.registerExtension(new EmptyExtension() {
             @Override
             public Type chooseImplementation(Type type) {
                 if (ParameterizedTypeImpl.isSameClass(type, List.class)) {

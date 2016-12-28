@@ -1,39 +1,45 @@
 package com.jsoniter.output;
 
-import com.jsoniter.*;
-import com.jsoniter.spi.*;
+import com.jsoniter.spi.Binding;
+import com.jsoniter.spi.ClassDescriptor;
+import com.jsoniter.spi.Encoder;
+import com.jsoniter.spi.JsoniterSpi;
 
 class CodegenImplObject {
     public static String genObject(String cacheKey, Class clazz) {
-        ClassDescriptor desc = ExtensionManager.getClassDescriptor(clazz, false);
+        ClassDescriptor desc = JsoniterSpi.getClassDescriptor(clazz, false);
         StringBuilder lines = new StringBuilder();
-        append(lines, "public static void encode_(Object rawObj, com.jsoniter.output.JsonStream stream) {");
-        append(lines, "if (rawObj == null) { stream.writeNull(); return; }");
-        if (desc.allEncoderBindings().isEmpty()) {
-            append(lines, "stream.writeEmptyObject();");
-        } else {
-            append(lines, "{{clazz}} obj = ({{clazz}})rawObj;");
+        append(lines, String.format("public static void encode_(%s obj, com.jsoniter.output.JsonStream stream) {", clazz.getCanonicalName()));
+        append(lines, "if (obj == null) { stream.writeNull(); return; }");
+        if (hasFieldOutput(desc)) {
             append(lines, "stream.startObject();");
             for (Binding field : desc.allEncoderBindings()) {
                 for (String toName : field.toNames) {
                     append(lines, String.format("stream.writeField(\"%s\");", toName));
-                    append(lines, genField(cacheKey, field));
+                    append(lines, genField(field));
                     append(lines, "stream.writeMore();");
                 }
             }
             append(lines, "stream.endObject();");
+        } else {
+            append(lines, "stream.writeEmptyObject();");
         }
         append(lines, "}");
         return lines.toString().replace("{{clazz}}", clazz.getCanonicalName());
     }
 
-    private static String genField(String cacheKey, Binding field) {
-        String fieldCacheKey = field.name + "@" + cacheKey;
-        if (field.encoder != null) {
-            ExtensionManager.addNewEncoder(fieldCacheKey, field.encoder);
+    private static boolean hasFieldOutput(ClassDescriptor desc) {
+        for (Binding binding : desc.allEncoderBindings()) {
+            if (binding.toNames.length > 0) {
+                return true;
+            }
         }
-        // the field decoder might be registered directly
-        Encoder encoder = ExtensionManager.getEncoder(fieldCacheKey);
+        return false;
+    }
+
+    private static String genField(Binding field) {
+        String fieldCacheKey = field.encoderCacheKey();
+        Encoder encoder = JsoniterSpi.getEncoder(fieldCacheKey);
         if (encoder == null) {
             return CodegenImplNative.genWriteOp("obj." + field.name, field.valueType);
         }

@@ -31,7 +31,7 @@ class ReflectionObjectDecoder implements Decoder {
     }
 
     private final void init(Class clazz) throws Exception {
-        ClassDescriptor desc = ExtensionManager.getClassDescriptor(clazz, true);
+        ClassDescriptor desc = JsoniterSpi.getClassDescriptor(clazz, true);
         for (Binding param : desc.ctor.parameters) {
             addBinding(clazz, param);
         }
@@ -73,7 +73,7 @@ class ReflectionObjectDecoder implements Decoder {
         }
         if (binding.decoder == null) {
             // the field decoder might be registered directly
-            binding.decoder = ExtensionManager.getDecoder(binding.decoderCacheKey());
+            binding.decoder = JsoniterSpi.getDecoder(binding.decoderCacheKey());
         }
         binding.idx = tempIdx;
         for (String fromName : binding.fromNames) {

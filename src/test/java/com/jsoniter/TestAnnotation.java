@@ -2,7 +2,7 @@ package com.jsoniter;
 
 import com.jsoniter.annotation.*;
 import com.jsoniter.spi.Decoder;
-import com.jsoniter.spi.ExtensionManager;
+import com.jsoniter.spi.JsoniterSpi;
 import junit.framework.TestCase;
 
 import java.io.IOException;
@@ -62,7 +62,7 @@ public class TestAnnotation extends TestCase {
     }
 
     public void test_private_ctor() throws IOException {
-        ExtensionManager.registerTypeDecoder(TestObject3.class, ReflectionDecoderFactory.create(TestObject3.class));
+        JsoniterSpi.registerTypeDecoder(TestObject3.class, ReflectionDecoderFactory.create(TestObject3.class));
         JsonIterator iter = JsonIterator.parse("{'field1': 100}".replace('\'', '"'));
         TestObject3 obj = iter.read(TestObject3.class);
         assertEquals(100, obj.field1);

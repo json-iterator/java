@@ -1,7 +1,7 @@
 package com.jsoniter.output;
 
 import com.jsoniter.spi.Encoder;
-import com.jsoniter.spi.ExtensionManager;
+import com.jsoniter.spi.JsoniterSpi;
 import junit.framework.TestCase;
 
 import java.io.ByteArrayOutputStream;
@@ -22,7 +22,7 @@ public class TestCustomizeField extends TestCase {
     }
 
     public void test_customize_field_decoder() throws IOException {
-        ExtensionManager.registerPropertyEncoder(TestObject1.class, "field1", new Encoder() {
+        JsoniterSpi.registerPropertyEncoder(TestObject1.class, "field1", new Encoder() {
             @Override
             public void encode(Object obj, JsonStream stream) throws IOException {
                 String str = (String) obj;
