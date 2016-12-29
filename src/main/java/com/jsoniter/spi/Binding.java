@@ -9,6 +9,9 @@ public class Binding {
     public final Class clazz;
     public final TypeLiteral clazzTypeLiteral;
     public Annotation[] annotations;
+    public Field field; // obj.XXX
+    public Method method; // obj.setXXX() or obj.getXXX()
+    public boolean valueCanReuse;
     // input/output
     public String name;
     public Type valueType;
@@ -23,12 +26,9 @@ public class Binding {
     // then this property will not be unknown
     // but we do not want to bind it anywhere
     public boolean shouldSkip;
-    // optional
-    public Field field; // obj.XXX
-    public Method method; // obj.setXXX() or obj.getXXX()
+    // attachment, used when generating code or reflection
     public int idx;
     public long mask;
-    public boolean valueCanReuse;
 
     public Binding(Class clazz, Map<String, Type> lookup, Type valueType) {
         this.clazz = clazz;

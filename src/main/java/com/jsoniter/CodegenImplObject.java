@@ -127,7 +127,7 @@ class CodegenImplObject {
                 append(lines, String.format("obj.%s(_%s_);", setter.method.getName(), setter.name));
             }
         }
-        appendSetter(desc.wrappers, lines);
+        appendWrappers(desc.wrappers, lines);
         append(lines, "return obj;");
         return lines.toString()
                 .replace("{{clazz}}", clazz.getCanonicalName())
@@ -418,7 +418,7 @@ class CodegenImplObject {
                 append(lines, String.format("obj.%s(_%s_);", setter.method.getName(), setter.name));
             }
         }
-        appendSetter(desc.wrappers, lines);
+        appendWrappers(desc.wrappers, lines);
         append(lines, "return obj;");
         return lines.toString()
                 .replace("{{clazz}}", clazz.getCanonicalName())
@@ -440,11 +440,11 @@ class CodegenImplObject {
         }
     }
 
-    private static void appendSetter(List<WrapperDescriptor> setters, StringBuilder lines) {
-        for (WrapperDescriptor setter : setters) {
+    private static void appendWrappers(List<WrapperDescriptor> wrappers, StringBuilder lines) {
+        for (WrapperDescriptor wrapper : wrappers) {
             lines.append("obj.");
-            lines.append(setter.methodName);
-            appendInvocation(lines, setter.parameters);
+            lines.append(wrapper.method.getName());
+            appendInvocation(lines, wrapper.parameters);
             lines.append(";\n");
         }
     }

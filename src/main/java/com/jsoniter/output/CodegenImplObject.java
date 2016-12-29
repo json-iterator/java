@@ -5,6 +5,8 @@ import com.jsoniter.spi.ClassDescriptor;
 import com.jsoniter.spi.Encoder;
 import com.jsoniter.spi.JsoniterSpi;
 
+import java.lang.reflect.Method;
+
 class CodegenImplObject {
     public static String genObject(Class clazz) {
         ClassDescriptor desc = JsoniterSpi.getEncodingClassDescriptor(clazz, false);
@@ -25,6 +27,9 @@ class CodegenImplObject {
                     append(lines, genField(field));
                 }
             }
+            for (Method unwrapper : desc.unwrappers) {
+                append(lines, String.format("obj.%s(stream);", unwrapper.getName()));
+            }
             append(lines, "stream.writeObjectEnd();");
         } else {
             append(lines, "stream.writeEmptyObject();");
@@ -34,6 +39,9 @@ class CodegenImplObject {
     }
 
     private static boolean hasFieldOutput(ClassDescriptor desc) {
+        if (!desc.unwrappers.isEmpty()) {
+            return true;
+        }
         for (Binding binding : desc.allEncoderBindings()) {
             if (binding.toNames.length > 0) {
                 return true;

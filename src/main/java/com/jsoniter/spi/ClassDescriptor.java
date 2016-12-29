@@ -1,5 +1,6 @@
 package com.jsoniter.spi;
 
+import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +15,7 @@ public class ClassDescriptor {
     public List<Binding> setters;
     public List<Binding> getters;
     public List<WrapperDescriptor> wrappers;
+    public List<Method> unwrappers;
     public boolean asExtraForUnknownProperties;
     public Binding onMissingProperties;
     public Binding onExtraProperties;

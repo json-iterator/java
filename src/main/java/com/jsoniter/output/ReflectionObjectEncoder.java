@@ -7,6 +7,7 @@ import com.jsoniter.spi.Encoder;
 import com.jsoniter.spi.JsoniterSpi;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 
 class ReflectionObjectEncoder implements Encoder {
 
@@ -14,6 +15,12 @@ class ReflectionObjectEncoder implements Encoder {
 
     public ReflectionObjectEncoder(Class clazz) {
         desc = JsoniterSpi.getEncodingClassDescriptor(clazz, true);
+        for (Binding binding : desc.allEncoderBindings()) {
+            if (binding.encoder == null) {
+                // the field encoder might be registered directly
+                binding.encoder = JsoniterSpi.getEncoder(binding.encoderCacheKey());
+            }
+        }
     }
 
     @Override
@@ -41,7 +48,11 @@ class ReflectionObjectEncoder implements Encoder {
                     notFirst = true;
                 }
                 stream.writeObjectField(toName);
-                stream.writeVal(val);
+                if (field.encoder != null) {
+                    field.encoder.encode(val, stream);
+                } else {
+                    stream.writeVal(val);
+                }
             }
         }
         for (Binding getter : desc.getters) {
@@ -53,8 +64,15 @@ class ReflectionObjectEncoder implements Encoder {
                     notFirst = true;
                 }
                 stream.writeObjectField(toName);
-                stream.writeVal(val);
+                if (getter.encoder != null) {
+                    getter.encoder.encode(val, stream);
+                } else {
+                    stream.writeVal(val);
+                }
             }
+        }
+        for (Method unwrapper : desc.unwrappers) {
+            unwrapper.invoke(obj, stream);
         }
         stream.writeObjectEnd();
     }

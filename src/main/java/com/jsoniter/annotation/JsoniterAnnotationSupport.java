@@ -41,14 +41,33 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
                 desc.fields.add(binding);
             }
         }
+        List<Method> allMethods = new ArrayList<Method>();
+        Class current = desc.clazz;
+        while (current != null) {
+            allMethods.addAll(Arrays.asList(current.getDeclaredMethods()));
+            current = current.getSuperclass();
+        }
         updateBindings(desc);
-        detectCtorBinding(desc);
-        detectStaticFactoryBinding(desc);
-        detectWrapperBinding(desc);
+        detectCtor(desc);
+        detectStaticFactory(desc, allMethods);
+        detectWrappers(desc, allMethods);
+        detectUnwrappers(desc, allMethods);
     }
 
-    private void detectWrapperBinding(ClassDescriptor desc) {
-        for (Method method : desc.clazz.getMethods()) {
+    private void detectUnwrappers(ClassDescriptor desc, List<Method> allMethods) {
+        for (Method method : allMethods) {
+            if (Modifier.isStatic(method.getModifiers())) {
+                continue;
+            }
+            if (method.getAnnotation(JsonUnwrapper.class) == null) {
+                continue;
+            }
+            desc.unwrappers.add(method);
+        }
+    }
+
+    private void detectWrappers(ClassDescriptor desc, List<Method> allMethods) {
+        for (Method method : allMethods) {
             if (Modifier.isStatic(method.getModifiers())) {
                 continue;
             }
@@ -58,7 +77,6 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
             Annotation[][] annotations = method.getParameterAnnotations();
             String[] paramNames = getParamNames(method, annotations.length);
             WrapperDescriptor setter = new WrapperDescriptor();
-            setter.methodName = method.getName();
             setter.method = method;
             for (int i = 0; i < annotations.length; i++) {
                 Annotation[] paramAnnotations = annotations[i];
@@ -97,13 +115,7 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
         return method.invoke(obj, args);
     }
 
-    private void detectStaticFactoryBinding(ClassDescriptor desc) {
-        List<Method> allMethods = new ArrayList<Method>();
-        Class current = desc.clazz;
-        while (current != null) {
-            allMethods.addAll(Arrays.asList(current.getDeclaredMethods()));
-            current = current.getSuperclass();
-        }
+    private void detectStaticFactory(ClassDescriptor desc, List<Method> allMethods) {
         for (Method method : allMethods) {
             if (!Modifier.isStatic(method.getModifiers())) {
                 continue;
@@ -136,7 +148,7 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
         }
     }
 
-    private void detectCtorBinding(ClassDescriptor desc) {
+    private void detectCtor(ClassDescriptor desc) {
         for (Constructor ctor : desc.clazz.getDeclaredConstructors()) {
             JsonCreator jsonCreator = getJsonCreator(ctor.getAnnotations());
             if (jsonCreator == null) {

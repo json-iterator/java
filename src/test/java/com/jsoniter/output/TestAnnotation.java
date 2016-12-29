@@ -2,6 +2,7 @@ package com.jsoniter.output;
 
 import com.jsoniter.annotation.JsonIgnore;
 import com.jsoniter.annotation.JsonProperty;
+import com.jsoniter.annotation.JsonUnwrapper;
 import com.jsoniter.annotation.JsoniterAnnotationSupport;
 import com.jsoniter.spi.Encoder;
 import junit.framework.TestCase;
@@ -12,6 +13,7 @@ import java.io.IOException;
 public class TestAnnotation extends TestCase {
     static {
         JsoniterAnnotationSupport.enable();
+//        JsonStream.setMode(EncodingMode.REFLECTION_MODE);
     }
 
     private ByteArrayOutputStream baos;
@@ -74,5 +76,20 @@ public class TestAnnotation extends TestCase {
         stream.writeVal(obj);
         stream.close();
         assertEquals("{\"field1\":0}", baos.toString());
+    }
+
+    public static class TestObject5 {
+        @JsonUnwrapper
+        public void unwrap(JsonStream stream) throws IOException {
+            stream.writeObjectField("hello");
+            stream.writeVal("world");
+        }
+    }
+
+    public void test_unwrapper() throws IOException {
+        TestObject5 obj = new TestObject5();
+        stream.writeVal(obj);
+        stream.close();
+        assertEquals("{\"hello\":\"world\"}", baos.toString());
     }
 }

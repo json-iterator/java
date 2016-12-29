@@ -89,6 +89,7 @@ public class JsoniterSpi {
         desc.fields = getFields(lookup, clazz, includingPrivate);
         desc.setters = getSetters(lookup, clazz, includingPrivate);
         desc.wrappers = new ArrayList<WrapperDescriptor>();
+        desc.unwrappers = new ArrayList<Method>();
         for (Extension extension : extensions) {
             extension.updateClassDescriptor(desc);
         }
@@ -138,6 +139,8 @@ public class JsoniterSpi {
         desc.lookup = lookup;
         desc.fields = getFields(lookup, clazz, includingPrivate);
         desc.getters = getGetters(lookup, clazz, includingPrivate);
+        desc.wrappers = new ArrayList<WrapperDescriptor>();
+        desc.unwrappers = new ArrayList<Method>();
         for (Extension extension : extensions) {
             extension.updateClassDescriptor(desc);
         }
