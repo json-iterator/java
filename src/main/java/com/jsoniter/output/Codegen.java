@@ -62,7 +62,9 @@ class Codegen {
             clazz = (Class) type;
         }
         if (mode == EncodingMode.REFLECTION_MODE) {
-            throw new RuntimeException("not implemented yet");
+            encoder = ReflectionEncoderFactory.create(clazz, typeArgs);
+            JsoniterSpi.addNewEncoder(cacheKey, encoder);
+            return encoder;
         }
         try {
             encoder = (Encoder) Class.forName(cacheKey).newInstance();

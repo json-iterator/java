@@ -25,7 +25,7 @@ public class Binding {
     public boolean shouldSkip;
     // optional
     public Field field; // obj.XXX
-    public Method setter; // obj.setXXX()
+    public Method method; // obj.setXXX() or obj.getXXX()
     public int idx;
     public long mask;
     public boolean valueCanReuse; // only used in reflection mode

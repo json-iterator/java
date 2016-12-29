@@ -42,7 +42,7 @@ class ReflectionObjectDecoder {
         for (Binding field : desc.fields) {
             addBinding(clazz, field);
         }
-        for (SetterDescriptor setter : desc.setters) {
+        for (SetterDescriptor setter : desc.multiParamSetters) {
             for (Binding param : setter.parameters) {
                 addBinding(clazz, param);
             }
@@ -51,7 +51,7 @@ class ReflectionObjectDecoder {
             throw new JsonException("too many required properties to track");
         }
         expectedTracker = Long.MAX_VALUE >> (63 - requiredIdx);
-        if (!desc.ctor.parameters.isEmpty() || !desc.setters.isEmpty()) {
+        if (!desc.ctor.parameters.isEmpty() || !desc.multiParamSetters.isEmpty()) {
             tempCount = tempIdx;
             tempCacheKey = "temp@" + clazz.getCanonicalName();
             ctorArgsCacheKey = "ctor@" + clazz.getCanonicalName();
@@ -93,7 +93,7 @@ class ReflectionObjectDecoder {
 
     public Decoder create() {
         if (desc.ctor.parameters.isEmpty()) {
-            if (desc.setters.isEmpty()) {
+            if (desc.multiParamSetters.isEmpty()) {
                 return new OnlyField();
             } else {
                 return new WithSetter();
@@ -315,7 +315,7 @@ class ReflectionObjectDecoder {
         if (binding.field != null) {
             binding.field.set(obj, value);
         } else {
-            binding.setter.invoke(obj, value);
+            binding.method.invoke(obj, value);
         }
     }
 
@@ -330,7 +330,7 @@ class ReflectionObjectDecoder {
     }
 
     private boolean canSetDirectly(Binding binding) {
-        return binding.field == null && binding.setter == null;
+        return binding.field == null && binding.method == null;
     }
 
     private Object decodeBinding(JsonIterator iter, Binding binding) throws Exception {
@@ -378,7 +378,7 @@ class ReflectionObjectDecoder {
     }
 
     private void applySetters(Object[] temp, Object obj) throws Exception {
-        for (SetterDescriptor setter : desc.setters) {
+        for (SetterDescriptor setter : desc.multiParamSetters) {
             Object[] args = new Object[setter.parameters.size()];
             for (int i = 0; i < setter.parameters.size(); i++) {
                 args[i] = temp[setter.parameters.get(i).idx];

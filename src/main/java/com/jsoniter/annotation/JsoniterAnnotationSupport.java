@@ -70,7 +70,7 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
                 binding.annotations = paramAnnotations;
                 setter.parameters.add(binding);
             }
-            desc.setters.add(setter);
+            desc.multiParamSetters.add(setter);
         }
     }
 

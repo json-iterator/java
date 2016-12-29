@@ -88,7 +88,7 @@ public class JsoniterSpi {
         desc.ctor = getCtor(clazz);
         desc.fields = getFields(lookup, clazz, includingPrivate);
         desc.fields.addAll(getSetters(lookup, clazz, includingPrivate));
-        desc.setters = new ArrayList<SetterDescriptor>();
+        desc.multiParamSetters = new ArrayList<SetterDescriptor>();
         desc.getters = getGetters(lookup, clazz, includingPrivate);
         for (Extension extension : extensions) {
             extension.updateClassDescriptor(desc);
@@ -101,7 +101,7 @@ public class JsoniterSpi {
             if (desc.ctor.staticFactory != null) {
                 desc.ctor.staticFactory.setAccessible(true);
             }
-            for (SetterDescriptor setter : desc.setters) {
+            for (SetterDescriptor setter : desc.multiParamSetters) {
                 setter.method.setAccessible(true);
             }
         }
@@ -111,6 +111,9 @@ public class JsoniterSpi {
             }
             if (binding.field != null && includingPrivate) {
                 binding.field.setAccessible(true);
+            }
+            if (binding.method != null && includingPrivate) {
+                binding.method.setAccessible(true);
             }
             if (binding.decoder != null) {
                 JsoniterSpi.addNewDecoder(binding.decoderCacheKey(), binding.decoder);
@@ -122,6 +125,9 @@ public class JsoniterSpi {
             }
             if (binding.field != null && includingPrivate) {
                 binding.field.setAccessible(true);
+            }
+            if (binding.method != null && includingPrivate) {
+                binding.method.setAccessible(true);
             }
             if (binding.encoder != null) {
                 JsoniterSpi.addNewEncoder(binding.encoderCacheKey(), binding.encoder);
@@ -136,19 +142,19 @@ public class JsoniterSpi {
         for (Binding field : new ArrayList<Binding>(desc.fields)) {
             if (fields.containsKey(field.name)) {
                 // conflict
-                if (field.setter != null) {
-                    // this is setter, prefer using it
+                if (field.method != null) {
+                    // this is method, prefer using it
                     desc.fields.remove(fields.get(field.name));
                     fields.put(field.name, field);
                 } else {
-                    // this is not setter, discard it
+                    // this is not method, discard it
                     desc.fields.remove(field);
                 }
             } else {
                 fields.put(field.name, field);
             }
         }
-        for (SetterDescriptor setter : desc.setters) {
+        for (SetterDescriptor setter : desc.multiParamSetters) {
             for (Binding parameter : setter.parameters) {
                 if (fields.containsKey(parameter.name)) {
                     desc.fields.remove(fields.get(parameter.name));
@@ -242,7 +248,7 @@ public class JsoniterSpi {
             Binding binding = new Binding(clazz, lookup, paramTypes[0]);
             binding.fromNames = new String[]{fromName};
             binding.name = fromName;
-            binding.setter = method;
+            binding.method = method;
             setters.add(binding);
         }
         return setters;
@@ -285,6 +291,7 @@ public class JsoniterSpi {
             Binding getter = new Binding(clazz, lookup, method.getGenericReturnType());
             getter.toNames = new String[]{toName};
             getter.name = methodName + "()";
+            getter.method = method;
             getters.add(getter);
         }
         return getters;

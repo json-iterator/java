@@ -9,8 +9,8 @@ public class Demo {
     static {
         // ensure the jsoniter is properly setup
         new DemoCodegenConfig().setup();
-        JsonIterator.setMode(DecodingMode.STATIC_MODE);
-        JsonStream.setMode(EncodingMode.STATIC_MODE);
+        JsonIterator.setMode(DecodingMode.REFLECTION_MODE);
+        JsonStream.setMode(EncodingMode.REFLECTION_MODE);
         JsonStream.defaultIndentionStep = 2;
     }
 

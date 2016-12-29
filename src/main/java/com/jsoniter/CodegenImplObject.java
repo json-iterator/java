@@ -34,7 +34,7 @@ class CodegenImplObject {
          * 5. handle missing/extra properties
          * 6. create object with args (if ctor binding)
          * 7. assign fields to object (if ctor binding)
-         * 8. apply multi param setters
+         * 8. apply multi param multiParamSetters
          */
         // === if null, return null
         append(lines, "if (iter.readNull()) { com.jsoniter.CodegenAccess.resetExistingObject(iter); return null; }");
@@ -65,7 +65,7 @@ class CodegenImplObject {
                 appendVarDef(lines, field);
             }
         }
-        for (SetterDescriptor setter : desc.setters) {
+        for (SetterDescriptor setter : desc.multiParamSetters) {
             for (Binding param : setter.parameters) {
                 appendVarDef(lines, param);
             }
@@ -116,11 +116,11 @@ class CodegenImplObject {
                 if (binding.field != null) {
                     append(lines, String.format("obj.%s = _%s_;", binding.field.getName(), binding.name));
                 } else {
-                    append(lines, String.format("obj.%s(_%s_);", binding.setter.getName(), binding.name));
+                    append(lines, String.format("obj.%s(_%s_);", binding.method.getName(), binding.name));
                 }
             }
         }
-        appendSetter(desc.setters, lines);
+        appendSetter(desc.multiParamSetters, lines);
         append(lines, "return obj;");
         return lines.toString()
                 .replace("{{clazz}}", clazz.getCanonicalName())
@@ -133,7 +133,7 @@ class CodegenImplObject {
             if (onExtraProperties.field != null) {
                 append(lines, String.format("obj.%s = extra;", onExtraProperties.field.getName()));
             } else {
-                append(lines, String.format("obj.%s(extra);", onExtraProperties.setter.getName()));
+                append(lines, String.format("obj.%s(extra);", onExtraProperties.method.getName()));
             }
             return;
         }
@@ -141,7 +141,7 @@ class CodegenImplObject {
             if (onExtraProperties.field != null) {
                 append(lines, String.format("obj.%s = new com.jsoniter.Any(extra);", onExtraProperties.field.getName()));
             } else {
-                append(lines, String.format("obj.%s(new com.jsoniter.Any(extra));", onExtraProperties.setter.getName()));
+                append(lines, String.format("obj.%s(new com.jsoniter.Any(extra));", onExtraProperties.method.getName()));
             }
             return;
         }
@@ -202,7 +202,7 @@ class CodegenImplObject {
             } else {
                 // method set
                 rendered = String.format("%sobj.%s(%s)%s",
-                        rendered.substring(0, start), field.setter.getName(), op, rendered.substring(end));
+                        rendered.substring(0, start), field.method.getName(), op, rendered.substring(end));
             }
         }
     }
@@ -222,7 +222,7 @@ class CodegenImplObject {
             if (desc.onMissingProperties.field != null) {
                 append(lines, String.format("obj.%s = missingFields;", desc.onMissingProperties.field.getName()));
             } else {
-                append(lines, String.format("obj.%s(missingFields);", desc.onMissingProperties.setter.getName()));
+                append(lines, String.format("obj.%s(missingFields);", desc.onMissingProperties.method.getName()));
             }
         }
     }
@@ -346,7 +346,7 @@ class CodegenImplObject {
                 appendVarDef(lines, field);
             }
         }
-        for (SetterDescriptor setter : desc.setters) {
+        for (SetterDescriptor setter : desc.multiParamSetters) {
             for (Binding param : setter.parameters) {
                 appendVarDef(lines, param);
             }
@@ -405,11 +405,11 @@ class CodegenImplObject {
                 if (field.field != null) {
                     append(lines, String.format("obj.%s = _%s_;", field.field.getName(), field.name));
                 } else {
-                    append(lines, String.format("obj.%s(_%s_);", field.setter.getName(), field.name));
+                    append(lines, String.format("obj.%s(_%s_);", field.method.getName(), field.name));
                 }
             }
         }
-        appendSetter(desc.setters, lines);
+        appendSetter(desc.multiParamSetters, lines);
         append(lines, "return obj;");
         return lines.toString()
                 .replace("{{clazz}}", clazz.getCanonicalName())
@@ -424,7 +424,7 @@ class CodegenImplObject {
             if (field.field != null) {
                 append(lines, String.format("obj.%s = %s;", field.field.getName(), genField(field)));
             } else {
-                append(lines, String.format("obj.%s(%s);", field.setter.getName(), genField(field)));
+                append(lines, String.format("obj.%s(%s);", field.method.getName(), genField(field)));
             }
         } else {
             append(lines, String.format("_%s_ = %s;", field.name, genField(field)));

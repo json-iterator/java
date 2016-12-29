@@ -10,8 +10,8 @@ public class ClassDescriptor {
     public Map<String, Type> lookup;
     public ConstructorDescriptor ctor;
     public List<Binding> fields;
-    public List<SetterDescriptor> setters;
     public List<Binding> getters;
+    public List<SetterDescriptor> multiParamSetters;
     public boolean asExtraForUnknownProperties;
     public Binding onMissingProperties;
     public Binding onExtraProperties;
@@ -22,7 +22,7 @@ public class ClassDescriptor {
         if (ctor != null) {
             bindings.addAll(ctor.parameters);
         }
-        for (SetterDescriptor setter : setters) {
+        for (SetterDescriptor setter : multiParamSetters) {
             bindings.addAll(setter.parameters);
         }
         return bindings;

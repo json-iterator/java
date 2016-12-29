@@ -1,5 +1,7 @@
 package com.jsoniter.output;
 
+import com.jsoniter.annotation.JsonIgnore;
+import com.jsoniter.annotation.JsoniterAnnotationSupport;
 import com.jsoniter.spi.TypeLiteral;
 import junit.framework.TestCase;
 
@@ -7,6 +9,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 public class TestObject extends TestCase {
+
+    static {
+        JsoniterAnnotationSupport.enable();
+        JsonStream.setMode(EncodingMode.REFLECTION_MODE);
+    }
 
     private ByteArrayOutputStream baos;
     private JsonStream stream;
@@ -29,6 +36,7 @@ public class TestObject extends TestCase {
     }
 
     public static class TestObject2 {
+        @JsonIgnore
         private String field1;
 
         public String getField1() {
