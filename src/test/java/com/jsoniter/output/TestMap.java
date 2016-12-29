@@ -9,6 +9,10 @@ import java.util.HashMap;
 
 public class TestMap extends TestCase {
 
+    static {
+//        JsonStream.setMode(EncodingMode.REFLECTION_MODE);
+    }
+
     private ByteArrayOutputStream baos;
     private JsonStream stream;
 

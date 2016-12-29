@@ -34,7 +34,7 @@ class CodegenImplObject {
          * 5. handle missing/extra properties
          * 6. create object with args (if ctor binding)
          * 7. assign fields to object (if ctor binding)
-         * 8. apply multi param multiParamSetters
+         * 8. apply multi param wrappers
          */
         // === if null, return null
         append(lines, "if (iter.readNull()) { com.jsoniter.CodegenAccess.resetExistingObject(iter); return null; }");
@@ -65,7 +65,7 @@ class CodegenImplObject {
                 appendVarDef(lines, field);
             }
         }
-        for (SetterDescriptor setter : desc.multiParamSetters) {
+        for (WrapperDescriptor setter : desc.wrappers) {
             for (Binding param : setter.parameters) {
                 appendVarDef(lines, param);
             }
@@ -120,7 +120,7 @@ class CodegenImplObject {
                 }
             }
         }
-        appendSetter(desc.multiParamSetters, lines);
+        appendSetter(desc.wrappers, lines);
         append(lines, "return obj;");
         return lines.toString()
                 .replace("{{clazz}}", clazz.getCanonicalName())
@@ -346,7 +346,7 @@ class CodegenImplObject {
                 appendVarDef(lines, field);
             }
         }
-        for (SetterDescriptor setter : desc.multiParamSetters) {
+        for (WrapperDescriptor setter : desc.wrappers) {
             for (Binding param : setter.parameters) {
                 appendVarDef(lines, param);
             }
@@ -409,7 +409,7 @@ class CodegenImplObject {
                 }
             }
         }
-        appendSetter(desc.multiParamSetters, lines);
+        appendSetter(desc.wrappers, lines);
         append(lines, "return obj;");
         return lines.toString()
                 .replace("{{clazz}}", clazz.getCanonicalName())
@@ -431,8 +431,8 @@ class CodegenImplObject {
         }
     }
 
-    private static void appendSetter(List<SetterDescriptor> setters, StringBuilder lines) {
-        for (SetterDescriptor setter : setters) {
+    private static void appendSetter(List<WrapperDescriptor> setters, StringBuilder lines) {
+        for (WrapperDescriptor setter : setters) {
             lines.append("obj.");
             lines.append(setter.methodName);
             appendInvocation(lines, setter.parameters);

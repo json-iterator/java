@@ -11,7 +11,7 @@ public class ClassDescriptor {
     public ConstructorDescriptor ctor;
     public List<Binding> fields;
     public List<Binding> getters;
-    public List<SetterDescriptor> multiParamSetters;
+    public List<WrapperDescriptor> wrappers;
     public boolean asExtraForUnknownProperties;
     public Binding onMissingProperties;
     public Binding onExtraProperties;
@@ -22,7 +22,7 @@ public class ClassDescriptor {
         if (ctor != null) {
             bindings.addAll(ctor.parameters);
         }
-        for (SetterDescriptor setter : multiParamSetters) {
+        for (WrapperDescriptor setter : wrappers) {
             bindings.addAll(setter.parameters);
         }
         return bindings;

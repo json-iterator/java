@@ -88,7 +88,7 @@ public class JsoniterSpi {
         desc.ctor = getCtor(clazz);
         desc.fields = getFields(lookup, clazz, includingPrivate);
         desc.fields.addAll(getSetters(lookup, clazz, includingPrivate));
-        desc.multiParamSetters = new ArrayList<SetterDescriptor>();
+        desc.wrappers = new ArrayList<WrapperDescriptor>();
         desc.getters = getGetters(lookup, clazz, includingPrivate);
         for (Extension extension : extensions) {
             extension.updateClassDescriptor(desc);
@@ -101,7 +101,7 @@ public class JsoniterSpi {
             if (desc.ctor.staticFactory != null) {
                 desc.ctor.staticFactory.setAccessible(true);
             }
-            for (SetterDescriptor setter : desc.multiParamSetters) {
+            for (WrapperDescriptor setter : desc.wrappers) {
                 setter.method.setAccessible(true);
             }
         }
@@ -154,7 +154,7 @@ public class JsoniterSpi {
                 fields.put(field.name, field);
             }
         }
-        for (SetterDescriptor setter : desc.multiParamSetters) {
+        for (WrapperDescriptor setter : desc.wrappers) {
             for (Binding parameter : setter.parameters) {
                 if (fields.containsKey(parameter.name)) {
                     desc.fields.remove(fields.get(parameter.name));

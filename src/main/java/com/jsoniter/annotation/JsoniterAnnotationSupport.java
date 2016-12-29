@@ -38,20 +38,20 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
         updateBindings(desc);
         detectCtorBinding(desc);
         detectStaticFactoryBinding(desc);
-        detectSetterBinding(desc);
+        detectWrapperBinding(desc);
     }
 
-    private void detectSetterBinding(ClassDescriptor desc) {
+    private void detectWrapperBinding(ClassDescriptor desc) {
         for (Method method : desc.clazz.getMethods()) {
             if (Modifier.isStatic(method.getModifiers())) {
                 continue;
             }
-            if (method.getAnnotation(JsonSetter.class) == null) {
+            if (method.getAnnotation(JsonWrapper.class) == null) {
                 continue;
             }
             Annotation[][] annotations = method.getParameterAnnotations();
             String[] paramNames = getParamNames(method, annotations.length);
-            SetterDescriptor setter = new SetterDescriptor();
+            WrapperDescriptor setter = new WrapperDescriptor();
             setter.methodName = method.getName();
             setter.method = method;
             for (int i = 0; i < annotations.length; i++) {
@@ -70,7 +70,7 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
                 binding.annotations = paramAnnotations;
                 setter.parameters.add(binding);
             }
-            desc.multiParamSetters.add(setter);
+            desc.wrappers.add(setter);
         }
     }
 

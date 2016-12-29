@@ -42,7 +42,7 @@ class ReflectionObjectDecoder {
         for (Binding field : desc.fields) {
             addBinding(clazz, field);
         }
-        for (SetterDescriptor setter : desc.multiParamSetters) {
+        for (WrapperDescriptor setter : desc.wrappers) {
             for (Binding param : setter.parameters) {
                 addBinding(clazz, param);
             }
@@ -51,7 +51,7 @@ class ReflectionObjectDecoder {
             throw new JsonException("too many required properties to track");
         }
         expectedTracker = Long.MAX_VALUE >> (63 - requiredIdx);
-        if (!desc.ctor.parameters.isEmpty() || !desc.multiParamSetters.isEmpty()) {
+        if (!desc.ctor.parameters.isEmpty() || !desc.wrappers.isEmpty()) {
             tempCount = tempIdx;
             tempCacheKey = "temp@" + clazz.getCanonicalName();
             ctorArgsCacheKey = "ctor@" + clazz.getCanonicalName();
@@ -93,7 +93,7 @@ class ReflectionObjectDecoder {
 
     public Decoder create() {
         if (desc.ctor.parameters.isEmpty()) {
-            if (desc.multiParamSetters.isEmpty()) {
+            if (desc.wrappers.isEmpty()) {
                 return new OnlyField();
             } else {
                 return new WithSetter();
@@ -378,7 +378,7 @@ class ReflectionObjectDecoder {
     }
 
     private void applySetters(Object[] temp, Object obj) throws Exception {
-        for (SetterDescriptor setter : desc.multiParamSetters) {
+        for (WrapperDescriptor setter : desc.wrappers) {
             Object[] args = new Object[setter.parameters.size()];
             for (int i = 0; i < setter.parameters.size(); i++) {
                 args[i] = temp[setter.parameters.get(i).idx];

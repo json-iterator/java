@@ -38,7 +38,7 @@ public class SetterBinding {
             this.field2 = field2;
         }
 
-//        @JsonSetter
+//        @JsonWrapper
 //        public void initialize(
 //                @JsonProperty("field1") int field1,
 //                @JsonProperty("field2") int field2) {

@@ -107,7 +107,7 @@ public class TestAnnotation extends TestCase {
 
         private int field1;
 
-        @JsonSetter
+        @JsonWrapper
         public void initialize(@JsonProperty("field1") int field1) {
             this.field1 = field1;
         }

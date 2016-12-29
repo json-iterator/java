@@ -7,6 +7,10 @@ import java.io.IOException;
 
 public class TestNative extends TestCase {
 
+    static {
+//        JsonStream.setMode(EncodingMode.REFLECTION_MODE);
+    }
+
     private ByteArrayOutputStream baos;
     private JsonStream stream;
 
@@ -35,6 +39,13 @@ public class TestNative extends TestCase {
 
     public void test_int() throws IOException {
         stream.writeVal(100);
+        stream.close();
+        assertEquals("100", baos.toString());
+    }
+
+    public void test_boxed_int() throws IOException {
+        Object val = Integer.valueOf(100);
+        stream.writeVal(val);
         stream.close();
         assertEquals("100", baos.toString());
     }
