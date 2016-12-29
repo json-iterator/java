@@ -16,12 +16,12 @@ class IterImplSkip {
         breaks[']'] = true;
     }
 
-    public static final void skip(JsonIterator iter) throws IOException {
+    public static final ValueType skip(JsonIterator iter) throws IOException {
         byte c = iter.nextToken();
         switch (c) {
             case '"':
                 skipString(iter);
-                return;
+                return ValueType.STRING;
             case '-':
             case '0':
             case '1':
@@ -33,17 +33,21 @@ class IterImplSkip {
             case '7':
             case '8':
             case '9':
+                skipUntilBreak(iter);
+                return ValueType.NUMBER;
             case 't':
             case 'f':
+                skipUntilBreak(iter);
+                return ValueType.BOOLEAN;
             case 'n':
                 skipUntilBreak(iter);
-                return;
+                return ValueType.NULL;
             case '[':
                 skipArray(iter);
-                return;
+                return ValueType.ARRAY;
             case '{':
                 skipObject(iter);
-                return;
+                return ValueType.OBJECT;
             default:
                 throw iter.reportError("IterImplSkip", "do not know how to skip: " + c);
         }
@@ -120,6 +124,7 @@ class IterImplSkip {
                 }
             }
             if (!iter.loadMore()) {
+                iter.head = iter.tail;
                 return;
             }
         }

@@ -325,11 +325,7 @@ class ReflectionObjectDecoder {
 
     private void setExtra(Object obj, Map<String, Object> extra) throws Exception {
         if (desc.onExtraProperties != null) {
-            if (desc.onExtraProperties.valueType == Any.class) {
-                setToBinding(obj, desc.onExtraProperties, new Any(extra));
-            } else {
-                setToBinding(obj, desc.onExtraProperties, extra);
-            }
+            setToBinding(obj, desc.onExtraProperties, extra);
         }
     }
 
@@ -362,7 +358,7 @@ class ReflectionObjectDecoder {
                 if (extra == null) {
                     extra = new HashMap<String, Object>();
                 }
-                extra.put(fieldName.toString(), iter.readAnyObject());
+                extra.put(fieldName.toString(), iter.readAny());
             }
         } else {
             iter.skip();

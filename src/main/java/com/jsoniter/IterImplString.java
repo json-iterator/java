@@ -164,7 +164,7 @@ class IterImplString {
             return null;
         }
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        int end = slice.head + slice.len;
+        int end = slice.tail;
         for (int i = slice.head; i < end; i++) {
             int b = 0;
             if (base64Tbl[slice.data[i]] != -1) {
@@ -208,7 +208,7 @@ class IterImplString {
             // reuse current buffer
             iter.reusableSlice.data = iter.buf;
             iter.reusableSlice.head = iter.head;
-            iter.reusableSlice.len = end - iter.head - 1;
+            iter.reusableSlice.tail = end - 1;
             iter.head = end;
             return iter.reusableSlice;
         }
@@ -231,7 +231,7 @@ class IterImplString {
                 iter.head = end;
                 iter.reusableSlice.data = part2;
                 iter.reusableSlice.head = 0;
-                iter.reusableSlice.len = part2.length;
+                iter.reusableSlice.tail = part2.length;
                 return iter.reusableSlice;
             }
         }

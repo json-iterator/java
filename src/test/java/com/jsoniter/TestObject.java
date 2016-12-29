@@ -29,7 +29,7 @@ public class TestObject extends TestCase {
         assertEquals(0, obj.size());
         iter.reset();
         Any any = iter.readAny();
-        assertEquals(0, any.getMap().size());
+        assertEquals(0, any.size());
     }
 
     public void test_one_field() throws IOException {
@@ -44,7 +44,7 @@ public class TestObject extends TestCase {
         iter.reset();
         Any any = iter.readAny();
         assertEquals("hello", any.toString("field1"));
-        assertFalse(any.exists("field2"));
+        assertNull(any.get("field2"));
     }
 
     public void test_two_fields() throws IOException {
@@ -60,6 +60,7 @@ public class TestObject extends TestCase {
         assertEquals("world", simpleObj.field2);
         iter.reset();
         Any any = iter.readAny();
+        any.require("field1");
         assertEquals("hello", any.toString("field1"));
         assertEquals("world", any.toString("field2"));
     }
@@ -72,7 +73,7 @@ public class TestObject extends TestCase {
         assertNull(simpleObj);
         iter.reset();
         Any any = iter.readAny();
-        assertNull(any.get());
+        assertEquals(ValueType.NULL, any.get().valueType());
     }
 
     public void test_native_field() throws IOException {

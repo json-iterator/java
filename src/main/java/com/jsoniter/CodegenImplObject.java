@@ -94,7 +94,7 @@ class CodegenImplObject {
             }
         }
         if (hasAnythingToBindFrom(allBindings)) {
-            append(lines, "switch (field.len) {");
+            append(lines, "switch (field.tail - field.head) {");
             append(lines, rendered);
             append(lines, "}"); // end of switch
         }
@@ -104,7 +104,7 @@ class CodegenImplObject {
         append(lines, "while (com.jsoniter.CodegenAccess.nextToken(iter) == ',') {");
         append(lines, "field = com.jsoniter.CodegenAccess.readObjectFieldAsSlice(iter);");
         if (hasAnythingToBindFrom(allBindings)) {
-            append(lines, "switch (field.len) {");
+            append(lines, "switch (field.tail - field.head) {");
             append(lines, rendered);
             append(lines, "}"); // end of switch
         }
@@ -144,15 +144,7 @@ class CodegenImplObject {
             }
             return;
         }
-        if (onExtraProperties.valueType == Any.class) {
-            if (onExtraProperties.field != null) {
-                append(lines, String.format("obj.%s = new com.jsoniter.Any(extra);", onExtraProperties.field.getName()));
-            } else {
-                append(lines, String.format("obj.%s(new com.jsoniter.Any(extra));", onExtraProperties.method.getName()));
-            }
-            return;
-        }
-        throw new JsonException("extra properties can only be Map or Any");
+        throw new JsonException("extra properties can only be Map");
     }
 
     private static boolean hasAnythingToBindFrom(List<Binding> allBindings) {
@@ -240,7 +232,7 @@ class CodegenImplObject {
                 append(lines, "throw new com.jsoniter.JsonException('extra property: ' + field.toString());".replace('\'', '"'));
             } else {
                 append(lines, "if (extra == null) { extra = new java.util.HashMap(); }");
-                append(lines, "extra.put(field.toString(), iter.readAnyObject());");
+                append(lines, "extra.put(field.toString(), iter.readAny());");
             }
         } else {
             append(lines, "iter.skip();");

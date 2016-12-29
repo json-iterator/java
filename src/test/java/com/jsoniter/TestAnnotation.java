@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 public class TestAnnotation extends TestCase {
 
@@ -153,13 +154,13 @@ public class TestAnnotation extends TestCase {
     @JsonObject(asExtraForUnknownProperties = true)
     public static class TestObject9 {
         @JsonExtraProperties
-        public Any extraProperties;
+        public Map<String, Any> extraProperties;
     }
 
     public void test_extra_properties() throws IOException {
         JsonIterator iter = JsonIterator.parse("{\"field1\": 100}");
         TestObject9 obj = iter.read(TestObject9.class);
-        assertEquals(100, obj.extraProperties.toInt("field1"));
+        assertEquals(100, obj.extraProperties.get("field1").toInt());
     }
 
     public static class TestObject10 {

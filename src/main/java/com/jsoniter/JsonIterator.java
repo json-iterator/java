@@ -79,6 +79,15 @@ public class JsonIterator implements Closeable {
         this.eof = false;
     }
 
+
+    public final void reset(Slice value) {
+        this.buf = value.data;
+        this.head = value.head;
+        this.tail = value.tail;
+        this.eof = false;
+    }
+
+
     public final void reset(InputStream in) {
         this.in = in;
         this.head = 0;
@@ -292,7 +301,13 @@ public class JsonIterator implements Closeable {
     }
 
     public final Any readAny() throws IOException {
-        return new Any(readAnyObject());
+        if (in != null) {
+            throw new JsonException("input can not be InputStream when readAny");
+        }
+        int start = this.head;
+        ValueType valueType = skip();
+        int end = this.head;
+        return new Any(valueType, buf, start, end);
     }
 
     public final Object readAnyObject() throws IOException {
@@ -349,8 +364,8 @@ public class JsonIterator implements Closeable {
         return valueType;
     }
 
-    public void skip() throws IOException {
-        IterImplSkip.skip(this);
+    public ValueType skip() throws IOException {
+        return IterImplSkip.skip(this);
     }
 
     private static ThreadLocal<JsonIterator> tlsIter = new ThreadLocal<JsonIterator>() {
@@ -395,6 +410,20 @@ public class JsonIterator implements Closeable {
         iter.reset(input);
         try {
             return iter.read(typeLiteral);
+        } catch (IOException e) {
+            throw new JsonException(e);
+        }
+    }
+
+    public static final Any deserialize(String input) {
+        return deserialize(input.getBytes());
+    }
+
+    public static final Any deserialize(byte[] input) {
+        JsonIterator iter = tlsIter.get();
+        iter.reset(input);
+        try {
+            return iter.readAny();
         } catch (IOException e) {
             throw new JsonException(e);
         }

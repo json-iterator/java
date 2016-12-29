@@ -27,7 +27,7 @@ public class TestArray extends TestCase {
         assertEquals(0, list.size());
         iter.reset();
         Any any = iter.readAny();
-        assertEquals(0, any.getList().size());
+        assertEquals(0, any.size());
     }
 
     public void test_one_element() throws IOException {

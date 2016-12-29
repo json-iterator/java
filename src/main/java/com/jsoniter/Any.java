@@ -1,243 +1,388 @@
 package com.jsoniter;
 
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import com.jsoniter.gnu.trove.map.hash.TCustomHashMap;
+import com.jsoniter.gnu.trove.strategy.HashingStrategy;
 
-public class Any {
+import java.io.IOException;
+import java.util.*;
 
-    private final Object val;
-    public Object lastAccessed;
+public class Any extends Slice {
 
-    public Any(Object val) {
-        this.val = val;
-    }
-
-    public ValueType getValueType(Object... keys) {
-        try {
-            lastAccessed = getPath(val, keys);
-            if (lastAccessed == null) {
-                return ValueType.NULL;
-            }
-            Class<?> clazz = lastAccessed.getClass();
-            if (clazz == String.class) {
-                return ValueType.STRING;
-            }
-            if (clazz.isArray()) {
-                return ValueType.ARRAY;
-            }
-            if (lastAccessed instanceof Number) {
-                return ValueType.NUMBER;
-            }
-            if (lastAccessed instanceof List) {
-                return ValueType.ARRAY;
-            }
-            return ValueType.OBJECT;
-        } catch (ClassCastException e) {
-            return ValueType.INVALID;
-        } catch (IndexOutOfBoundsException e) {
-            return ValueType.INVALID;
+    private final static ThreadLocal<JsonIterator> tlsIter = new ThreadLocal<JsonIterator>() {
+        @Override
+        protected JsonIterator initialValue() {
+            return new JsonIterator();
         }
-    }
-
-
-    public Map<String, Object> getMap(Object... keys) {
-        return get(keys);
-    }
-
-    public List<Object> getList(Object... keys) {
-        return get(keys);
-    }
-
-    public <T> T get(Object... keys) {
-        try {
-            return (T) (lastAccessed = getPath(val, keys));
-        } catch (ClassCastException e) {
-            return null;
-        } catch (IndexOutOfBoundsException e) {
-            return null;
-        }
-    }
-
-    public boolean exists(Object... keys) {
-        try {
-            lastAccessed = getPath(val, keys);
-            return true;
-        } catch (ClassCastException e) {
-            return false;
-        } catch (IndexOutOfBoundsException e) {
-            return false;
-        }
-    }
-
-    public String toString() {
-        return toString(new Object[0]);
-    }
-
-    public String toString(Object... keys) {
-        get(keys);
-        if (lastAccessed == null) {
-            return "null";
-        }
-        return lastAccessed.toString();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Any any = (Any) o;
-
-        return val != null ? val.equals(any.val) : any.val == null;
-
-    }
-
-    @Override
-    public int hashCode() {
-        return val != null ? val.hashCode() : 0;
-    }
-
-    public int toInt(Object... keys) {
-        get(keys);
-        if (lastAccessed == null) {
-            return 0;
-        }
-        if (lastAccessed.getClass() == String.class) {
-            return Integer.valueOf((String) lastAccessed);
-        }
-        Number number = (Number) lastAccessed;
-        return number.intValue();
-    }
-
-    public short toShort(Object... keys) {
-        get(keys);
-        if (lastAccessed == null) {
-            return 0;
-        }
-        if (lastAccessed.getClass() == String.class) {
-            return Short.valueOf((String) lastAccessed);
-        }
-        Number number = (Number) lastAccessed;
-        return number.shortValue();
-    }
-
-    public long toLong(Object... keys) {
-        get(keys);
-        if (lastAccessed == null) {
-            return 0;
-        }
-        if (lastAccessed.getClass() == String.class) {
-            return Long.valueOf((String) lastAccessed);
-        }
-        Number number = (Number) lastAccessed;
-        return number.longValue();
-    }
-
-    public float toFloat(Object... keys) {
-        get(keys);
-        if (lastAccessed == null) {
-            return 0;
-        }
-        if (lastAccessed.getClass() == String.class) {
-            return Float.valueOf((String) lastAccessed);
-        }
-        Number number = (Number) lastAccessed;
-        return number.floatValue();
-    }
-
-    public double toDouble(Object... keys) {
-        get(keys);
-        if (lastAccessed == null) {
-            return 0;
-        }
-        if (lastAccessed.getClass() == String.class) {
-            return Double.valueOf((String) lastAccessed);
-        }
-        Number number = (Number) lastAccessed;
-        return number.doubleValue();
-    }
-
-    public boolean toBoolean(Object... keys) {
-        get(keys);
-        if (lastAccessed == null) {
-            return false;
-        }
-        if (lastAccessed instanceof Number) {
-            Number number = (Number) lastAccessed;
-            return number.intValue() != 0;
-        }
-        if (lastAccessed.getClass().isArray()) {
-            return Array.getLength(lastAccessed) != 0;
-        }
-        if (lastAccessed instanceof Collection) {
-            Collection col = (Collection) lastAccessed;
-            return col.size() != 0;
-        }
-        if (lastAccessed instanceof Map) {
-            Map map = (Map) lastAccessed;
-            return map.size() != 0;
-        }
-        return true;
-    }
-
-    private static Object getPath(Object val, Object... keys) {
-        if (keys.length == 0) {
-            return val;
-        }
-        Object key = keys[0];
-        if ("*".equals(key)) {
-            if (val.getClass().isArray()) {
-                ArrayList result = new ArrayList(Array.getLength(val));
-                for (int i = 0; i < Array.getLength(val); i++) {
-                    Object nextVal = Array.get(val, i);
-                    Object[] nextKeys = new Object[keys.length - 1];
-                    System.arraycopy(keys, 1, nextKeys, 0, nextKeys.length);
-                    result.add(getPath(nextVal, nextKeys));
+    };
+    private final static HashingStrategy<Object> SLICE_HASHING_STRATEGY = new HashingStrategy<Object>() {
+        @Override
+        public int computeHashCode(Object object) {
+            int hash = 0;
+            if (object instanceof String) {
+                String str = (String) object;
+                for (int i = 0; i < str.length(); i++) {
+                    byte b = (byte) str.charAt(i);
+                    hash = hash * 31 + b;
                 }
-                return result;
             } else {
-                List list = (List) val;
-                ArrayList result = new ArrayList(list.size());
-                for (Object e : list) {
-                    Object nextVal = e;
-                    Object[] nextKeys = new Object[keys.length - 1];
-                    System.arraycopy(keys, 1, nextKeys, 0, nextKeys.length);
-                    result.add(getPath(nextVal, nextKeys));
+                Slice slice = (Slice) object;
+                for (int i = slice.head; i < slice.tail; i++) {
+                    byte b = slice.data[i];
+                    hash = hash * 31 + b;
                 }
-                return result;
+            }
+            return hash;
+        }
+
+        @Override
+        public boolean equals(Object o1, Object o2) {
+            if (o1 instanceof String) {
+                return o2.equals(o1);
+            } else {
+                return o1.equals(o2);
             }
         }
-        if (key instanceof Integer) {
-            Object nextVal = getFromArrayOrList(val, (Integer) key);
-            Object[] nextKeys = new Object[keys.length - 1];
-            System.arraycopy(keys, 1, nextKeys, 0, nextKeys.length);
-            return getPath(nextVal, nextKeys);
-        }
-        if (key instanceof String) {
-            Object nextVal = getFromMap(val, (String) key);
-            Object[] nextKeys = new Object[keys.length - 1];
-            System.arraycopy(keys, 1, nextKeys, 0, nextKeys.length);
-            return getPath(nextVal, nextKeys);
-        }
-        throw new JsonException("invalid key type: " + key);
+    };
+    private ValueType valueType;
+    private List<Any> array;
+    // key can be slice or string
+    // string only support ascii
+    private TCustomHashMap<Object, Any> object;
+
+    public Any(ValueType valueType, byte[] data, int head, int tail) {
+        super(data, head, tail);
+        this.valueType = valueType;
     }
 
-    private static Object getFromMap(Object val, String key) {
-        Map map = (Map) val;
-        if (!map.containsKey(key)) {
-            throw new IndexOutOfBoundsException(key + " not in " + map);
-        }
-        return map.get(key);
+    public final ValueType valueType() {
+        return valueType;
     }
 
-    private static Object getFromArrayOrList(Object val, Integer key) {
-        if (val.getClass().isArray()) {
-            return Array.get(val, key);
+    public final int toInt(Object... keys) {
+        Any found = get(keys);
+        if (found == null) {
+            return 0;
         }
-        List list = (List) val;
-        return list.get(key);
+        return found.toInt();
+    }
+
+    public final int toInt() {
+        try {
+            return toInt_();
+        } catch (IOException e) {
+            throw new JsonException(e);
+        }
+    }
+
+    private int toInt_() throws IOException {
+        if (ValueType.NUMBER == valueType) {
+            return createIterator().readInt();
+        }
+        if (ValueType.STRING == valueType) {
+            JsonIterator iter = createIterator();
+            iter.nextToken();
+            return iter.readInt();
+        }
+        if (ValueType.NULL == valueType) {
+            return 0;
+        }
+        throw unexpectedValueType(ValueType.NUMBER);
+    }
+
+    public final long toLong(Object... keys) {
+        Any found = get(keys);
+        if (found == null) {
+            return 0;
+        }
+        return found.toLong();
+    }
+
+    public final long toLong() {
+        try {
+            return toLong_();
+        } catch (IOException e) {
+            throw new JsonException(e);
+        }
+    }
+
+    private long toLong_() throws IOException {
+        if (ValueType.NUMBER == valueType) {
+            return createIterator().readLong();
+        }
+        if (ValueType.STRING == valueType) {
+            JsonIterator iter = createIterator();
+            iter.nextToken();
+            return iter.readLong();
+        }
+        if (ValueType.NULL == valueType) {
+            return 0;
+        }
+        throw unexpectedValueType(ValueType.NUMBER);
+    }
+
+    public final float toFloat(Object... keys) {
+        Any found = get(keys);
+        if (found == null) {
+            return 0;
+        }
+        return found.toFloat();
+    }
+
+    public final float toFloat() {
+        try {
+            return toFloat_();
+        } catch (IOException e) {
+            throw new JsonException(e);
+        }
+    }
+
+    private float toFloat_() throws IOException {
+        if (ValueType.NUMBER == valueType) {
+            return createIterator().readFloat();
+        }
+        if (ValueType.STRING == valueType) {
+            JsonIterator iter = createIterator();
+            iter.nextToken();
+            return iter.readFloat();
+        }
+        if (ValueType.NULL == valueType) {
+            return 0;
+        }
+        throw unexpectedValueType(ValueType.NUMBER);
+    }
+
+    public final double toDouble(Object... keys) {
+        Any found = get(keys);
+        if (found == null) {
+            return 0;
+        }
+        return found.toDouble();
+    }
+
+    public final double toDouble() {
+        try {
+            return toDouble_();
+        } catch (IOException e) {
+            throw new JsonException(e);
+        }
+    }
+
+    private double toDouble_() throws IOException {
+        if (ValueType.NUMBER == valueType) {
+            return createIterator().readDouble();
+        }
+        if (ValueType.STRING == valueType) {
+            JsonIterator iter = createIterator();
+            iter.nextToken();
+            return iter.readDouble();
+        }
+        if (ValueType.NULL == valueType) {
+            return 0;
+        }
+        throw unexpectedValueType(ValueType.NUMBER);
+    }
+
+    public final String toString(Object... keys) {
+        Any found = get(keys);
+        if (found == null) {
+            return null;
+        }
+        return found.toString();
+    }
+
+    @Override
+    public final String toString() {
+        try {
+            return toString_();
+        } catch (IOException e) {
+            throw new JsonException(e);
+        }
+    }
+
+    private String toString_() throws IOException {
+        if (ValueType.STRING == valueType) {
+            return createIterator().readString();
+        }
+        if (ValueType.NULL == valueType) {
+            return null;
+        }
+        if (ValueType.NUMBER == valueType) {
+            char[] chars = new char[tail - head];
+            for (int i = head, j = 0; i < tail; i++, j++) {
+                chars[j] = (char) data[i];
+            }
+            return new String(chars);
+        }
+        return super.toString();
+    }
+
+    public int size() {
+        try {
+            if (ValueType.ARRAY == valueType) {
+                fillArray();
+                return array.size();
+            }
+            if (ValueType.OBJECT == valueType) {
+                fillObject();
+                return object.size();
+            }
+        } catch (IOException e) {
+            throw new JsonException(e);
+        }
+        throw unexpectedValueType(ValueType.OBJECT);
+    }
+
+    public Set<Object> keys() {
+        try {
+            if (ValueType.ARRAY == valueType) {
+                fillArray();
+                Set<Object> keys = new HashSet<Object>(array.size());
+                for (int i = 0; i < array.size(); i++) {
+                    keys.add(i);
+                }
+                return keys;
+            }
+            if (ValueType.OBJECT == valueType) {
+                fillObject();
+                return object.keySet();
+            }
+        } catch (IOException e) {
+            throw new JsonException(e);
+        }
+        throw unexpectedValueType(ValueType.OBJECT);
+    }
+
+    public final Any getValue(int index) {
+        try {
+            fillArray();
+            return array.get(index);
+        } catch (IndexOutOfBoundsException e) {
+            return null;
+        } catch (ClassCastException e) {
+            return null;
+        } catch (IOException e) {
+            throw new JsonException(e);
+        }
+    }
+
+    public final Any getValue(Object key) {
+        try {
+            fillObject();
+            return object.get(key);
+        } catch (IndexOutOfBoundsException e) {
+            return null;
+        } catch (ClassCastException e) {
+            return null;
+        } catch (IOException e) {
+            throw new JsonException(e);
+        }
+    }
+
+    public final Any get(Object... keys) {
+        try {
+            return get_(keys, 0);
+        } catch (IndexOutOfBoundsException e) {
+            return null;
+        } catch (ClassCastException e) {
+            return null;
+        } catch (IOException e) {
+            throw new JsonException(e);
+        }
+    }
+
+    private Any get_(Object[] keys, int idx) throws IOException {
+        if (idx == keys.length) {
+            return this;
+        }
+        Any result;
+        if (ValueType.OBJECT == valueType) {
+            fillObject();
+            result = object.get(keys[idx]);
+        } else if (ValueType.ARRAY == valueType) {
+            fillArray();
+            result = array.get((Integer) keys[idx]);
+        } else {
+            result = null;
+        }
+        Any found = result;
+        if (found == null) {
+            return null;
+        }
+        return found.get_(keys, idx + 1);
+
+    }
+
+    public final Any require(Object... keys) {
+        try {
+            return require_(keys, 0);
+        } catch (IOException e) {
+            throw new JsonException(e);
+        }
+    }
+
+    private Any require_(Object[] keys, int idx) throws IOException {
+        if (idx == keys.length) {
+            return this;
+        }
+        Any result = null;
+        if (ValueType.OBJECT == valueType) {
+            fillObject();
+            result = object.get(keys[idx]);
+        } else if (ValueType.ARRAY == valueType) {
+            fillArray();
+            result = array.get((Integer) keys[idx]);
+        }
+        if (result == null) {
+            throw new JsonException(String.format("failed to get path %s, because %s not found in %s",
+                    Arrays.toString(keys), keys[idx], object));
+        }
+        return result.get_(keys, idx + 1);
+    }
+
+    private JsonException unexpectedValueType(ValueType expectedType) {
+        throw new JsonException("unexpected value type: " + valueType);
+    }
+
+    private JsonIterator createIterator() {
+        JsonIterator iter = tlsIter.get();
+        iter.reset(this);
+        return iter;
+    }
+
+    private void fillObject() throws IOException {
+        if (object != null) {
+            return;
+        }
+        JsonIterator iter = createIterator();
+        object = new TCustomHashMap<Object, Any>(SLICE_HASHING_STRATEGY, 8);
+        if (!CodegenAccess.readObjectStart(iter)) {
+            return;
+        }
+        Slice field = CodegenAccess.readObjectFieldAsSlice(iter).clone();
+        int start = iter.head;
+        ValueType elementType = iter.skip();
+        int end = iter.head;
+        object.put(field, new Any(elementType, data, start, end));
+        while (iter.nextToken() == ',') {
+            field = CodegenAccess.readObjectFieldAsSlice(iter).clone();
+            start = iter.head;
+            elementType = iter.skip();
+            end = iter.head;
+            object.put(field, new Any(elementType, data, start, end));
+        }
+    }
+
+    private void fillArray() throws IOException {
+        if (array != null) {
+            return;
+        }
+        JsonIterator iter = createIterator();
+        array = new ArrayList<Any>(8);
+        while (iter.readArray()) {
+            int start = iter.head;
+            ValueType elementType = iter.skip();
+            int end = iter.head;
+            array.add(new Any(elementType, data, start, end));
+        }
     }
 }

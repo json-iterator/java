@@ -185,11 +185,12 @@ public class CodegenAccess {
         boolean notCopied = field != null;
         if (skipWhitespacesWithoutLoadMore(iter)) {
             if (notCopied) {
-                byte[] newBuf = new byte[field.len];
-                System.arraycopy(field.data, field.head, newBuf, 0, field.len);
+                int len = field.tail - field.head;
+                byte[] newBuf = new byte[len];
+                System.arraycopy(field.data, field.head, newBuf, 0, len);
                 field.data = newBuf;
                 field.head = 0;
-                field.len = newBuf.length;
+                field.tail = newBuf.length;
             }
             if (!iter.loadMore()) {
                 throw iter.reportError("readObjectFieldAsSlice", "expect : after object field");
@@ -201,11 +202,12 @@ public class CodegenAccess {
         iter.head++;
         if (skipWhitespacesWithoutLoadMore(iter)) {
             if (notCopied) {
-                byte[] newBuf = new byte[field.len];
-                System.arraycopy(field.data, field.head, newBuf, 0, field.len);
+                int len = field.tail - field.head;
+                byte[] newBuf = new byte[len];
+                System.arraycopy(field.data, field.head, newBuf, 0, len);
                 field.data = newBuf;
                 field.head = 0;
-                field.len = newBuf.length;
+                field.tail = newBuf.length;
             }
             if (!iter.loadMore()) {
                 throw iter.reportError("readObjectFieldAsSlice", "expect : after object field");
