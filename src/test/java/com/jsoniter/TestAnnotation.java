@@ -249,4 +249,22 @@ public class TestAnnotation extends TestCase {
         assertEquals(Arrays.asList(100), obj.values);
         assertEquals(LinkedList.class, obj.values.getClass());
     }
+
+    public static class TestObject17 {
+        public int field1;
+
+        public void setField1(int field1) {
+            this.field1 = field1;
+        }
+
+        @JsonCreator
+        public void initialize(@JsonProperty("field1") int field1) {
+
+        }
+    }
+
+    public void test_name_conflict() throws IOException {
+        JsonIterator iter = JsonIterator.parse("{}");
+        assertNotNull(iter.read(TestObject17.class));
+    }
 }

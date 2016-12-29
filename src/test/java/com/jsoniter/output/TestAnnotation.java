@@ -60,4 +60,19 @@ public class TestAnnotation extends TestCase {
         stream.close();
         assertEquals("{}", baos.toString());
     }
+
+    public static class TestObject4 {
+        public int field1;
+
+        public int getField1() {
+            return field1;
+        }
+    }
+
+    public void test_name_conflict() throws IOException {
+        TestObject4 obj = new TestObject4();
+        stream.writeVal(obj);
+        stream.close();
+        assertEquals("{\"field1\":0}", baos.toString());
+    }
 }

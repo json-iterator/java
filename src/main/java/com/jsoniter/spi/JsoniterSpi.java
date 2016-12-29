@@ -141,7 +141,7 @@ public class JsoniterSpi {
         for (Extension extension : extensions) {
             extension.updateClassDescriptor(desc);
         }
-//        encodingDeduplicate(desc);
+        encodingDeduplicate(desc);
         for (Binding binding : desc.allEncoderBindings()) {
             if (binding.toNames == null) {
                 binding.toNames = new String[]{binding.name};
@@ -160,34 +160,74 @@ public class JsoniterSpi {
     }
 
     private static void decodingDeduplicate(ClassDescriptor desc) {
-        HashMap<String, Binding> fields = new HashMap<String, Binding>();
+        HashMap<String, Binding> byName = new HashMap<String, Binding>();
+        for (Binding field : desc.fields) {
+            if (byName.containsKey(field.name)) {
+                throw new JsonException("field name conflict: " + field.name);
+            }
+            byName.put(field.name, field);
+        }
+        for (Binding setter : desc.setters) {
+            Binding existing = byName.get(setter.name);
+            if (existing == null) {
+                byName.put(setter.name, setter);
+                continue;
+            }
+            if (desc.fields.remove(existing)) {
+                continue;
+            }
+            throw new JsonException("setter name conflict: " + setter.name);
+        }
+        for (WrapperDescriptor wrapper : desc.wrappers) {
+            for (Binding param : wrapper.parameters) {
+                Binding existing = byName.get(param.name);
+                if (existing == null) {
+                    byName.put(param.name, param);
+                    continue;
+                }
+                if (desc.fields.remove(existing)) {
+                    continue;
+                }
+                if (desc.setters.remove(existing)) {
+                    continue;
+                }
+                throw new JsonException("wrapper parameter name conflict: " + param.name);
+            }
+        }
+        for (Binding param : desc.ctor.parameters) {
+            Binding existing = byName.get(param.name);
+            if (existing == null) {
+                byName.put(param.name, param);
+                continue;
+            }
+            if (desc.fields.remove(existing)) {
+                continue;
+            }
+            if (desc.setters.remove(existing)) {
+                continue;
+            }
+            throw new JsonException("ctor parameter name conflict: " + param.name);
+        }
+    }
 
-        for (Binding field : new ArrayList<Binding>(desc.fields)) {
-            if (fields.containsKey(field.name)) {
-                // conflict
-                if (field.method != null) {
-                    // this is method, prefer using it
-                    desc.fields.remove(fields.get(field.name));
-                    fields.put(field.name, field);
-                } else {
-                    // this is not method, discard it
-                    desc.fields.remove(field);
-                }
-            } else {
-                fields.put(field.name, field);
+    private static void encodingDeduplicate(ClassDescriptor desc) {
+        HashMap<String, Binding> byName = new HashMap<String, Binding>();
+        for (Binding field : desc.fields) {
+            if (byName.containsKey(field.name)) {
+                throw new JsonException("field name conflict: " + field.name);
             }
+            byName.put(field.name, field);
         }
-        for (WrapperDescriptor setter : desc.wrappers) {
-            for (Binding parameter : setter.parameters) {
-                if (fields.containsKey(parameter.name)) {
-                    desc.fields.remove(fields.get(parameter.name));
-                }
+        for (Binding getter : desc.getters) {
+            Binding existing = byName.get(getter.name);
+            if (existing == null) {
+                byName.put(getter.name, getter);
+                continue;
             }
-        }
-        for (Binding parameter : desc.ctor.parameters) {
-            if (fields.containsKey(parameter.name)) {
-                desc.fields.remove(fields.get(parameter.name));
+            if (desc.fields.remove(existing)) {
+                continue;
             }
+            throw new JsonException("getter name conflict: " + getter.name);
         }
     }
 
@@ -313,7 +353,7 @@ public class JsoniterSpi {
             toName = new String(fromNameChars);
             Binding getter = new Binding(clazz, lookup, method.getGenericReturnType());
             getter.toNames = new String[]{toName};
-            getter.name = methodName + "()";
+            getter.name = toName;
             getter.method = method;
             getters.add(getter);
         }

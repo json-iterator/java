@@ -104,8 +104,8 @@ public class TestGenerics extends TestCase {
             put("field3", "decoder.java.util.List_java.lang.Integer_array");
             put("field4", "decoder.java.util.List_java.lang.String_array");
             put("field5", "decoder.java.lang.Float");
-            put("getField6()", "decoder.java.util.List_java.util.Map_java.lang.String_java.util.List_java.lang.Integer");
-            put("getField7()", "decoder.java.lang.Object");
+            put("field6", "decoder.java.util.List_java.util.Map_java.lang.String_java.util.List_java.lang.Integer");
+            put("field7", "decoder.java.lang.Object");
             put("field8", "decoder.java.util.List_java.lang.String");
         }}, fieldDecoderCacheKeys);
     }

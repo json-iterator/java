@@ -42,14 +42,24 @@ class CodegenImplObject {
         return false;
     }
 
-    private static String genField(Binding field) {
-        String fieldCacheKey = field.encoderCacheKey();
+    private static String genField(Binding binding) {
+        String fieldCacheKey = binding.encoderCacheKey();
         Encoder encoder = JsoniterSpi.getEncoder(fieldCacheKey);
-        if (encoder == null) {
-            return CodegenImplNative.genWriteOp("obj." + field.name, field.valueType);
+        if (binding.field != null) {
+            if (encoder == null) {
+                return CodegenImplNative.genWriteOp("obj." + binding.field.getName(), binding.valueType);
+            } else {
+                return String.format("com.jsoniter.output.CodegenAccess.writeVal(\"%s\", obj.%s, stream);",
+                        fieldCacheKey, binding.field.getName());
+            }
+        } else {
+            if (encoder == null) {
+                return CodegenImplNative.genWriteOp("obj." + binding.method.getName() + "()", binding.valueType);
+            } else {
+                return String.format("com.jsoniter.output.CodegenAccess.writeVal(\"%s\", obj.%s(), stream);",
+                        fieldCacheKey, binding.method.getName());
+            }
         }
-        return String.format("com.jsoniter.output.CodegenAccess.writeVal(\"%s\", obj.%s, stream);",
-                fieldCacheKey, field.name);
     }
 
     private static void append(StringBuilder lines, String str) {
