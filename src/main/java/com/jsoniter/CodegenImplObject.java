@@ -50,6 +50,8 @@ class CodegenImplObject {
             }
             append(lines, "return obj;");
             append(lines, "}");
+            // because object can be created without binding
+            // so that fields and setters can be bind to object directly without temp var
         } else {
             for (Binding parameter : desc.ctor.parameters) {
                 appendVarDef(lines, parameter);
@@ -64,9 +66,12 @@ class CodegenImplObject {
             for (Binding field : desc.fields) {
                 appendVarDef(lines, field);
             }
+            for (Binding setter : desc.setters) {
+                appendVarDef(lines, setter);
+            }
         }
-        for (WrapperDescriptor setter : desc.wrappers) {
-            for (Binding param : setter.parameters) {
+        for (WrapperDescriptor wrapper : desc.wrappers) {
+            for (Binding param : wrapper.parameters) {
                 appendVarDef(lines, param);
             }
         }
@@ -79,10 +84,13 @@ class CodegenImplObject {
         append(lines, "while (once) {");
         append(lines, "once = false;");
         String rendered = renderTriTree(trieTree);
-        for (Binding field : desc.fields) {
-            // if not field, the value will set to temp variable
-            if (desc.ctor.parameters.isEmpty() && desc.fields.contains(field)) {
-                rendered = updateFieldSetOp(rendered, field);
+        if (desc.ctor.parameters.isEmpty()) {
+            // if not field or setter, the value will set to temp variable
+            for (Binding field : desc.fields) {
+                rendered = updateBindingSetOp(rendered, field);
+            }
+            for (Binding setter : desc.setters) {
+                rendered = updateBindingSetOp(rendered, setter);
             }
         }
         if (hasAnythingToBindFrom(allBindings)) {
@@ -112,12 +120,11 @@ class CodegenImplObject {
         }
         if (!desc.ctor.parameters.isEmpty()) {
             append(lines, String.format("%s obj = {{newInst}};", CodegenImplNative.getTypeName(clazz)));
-            for (Binding binding : desc.fields) {
-                if (binding.field != null) {
-                    append(lines, String.format("obj.%s = _%s_;", binding.field.getName(), binding.name));
-                } else {
-                    append(lines, String.format("obj.%s(_%s_);", binding.method.getName(), binding.name));
-                }
+            for (Binding field : desc.fields) {
+                append(lines, String.format("obj.%s = _%s_;", field.field.getName(), field.name));
+            }
+            for (Binding setter : desc.setters) {
+                append(lines, String.format("obj.%s(_%s_);", setter.method.getName(), setter.name));
             }
         }
         appendSetter(desc.wrappers, lines);
@@ -172,9 +179,9 @@ class CodegenImplObject {
         return requiredIdx;
     }
 
-    private static String updateFieldSetOp(String rendered, Binding field) {
+    private static String updateBindingSetOp(String rendered, Binding binding) {
         while (true) {
-            String marker = "_" + field.name + "_";
+            String marker = "_" + binding.name + "_";
             int start = rendered.indexOf(marker);
             if (start == -1) {
                 return rendered;
@@ -189,20 +196,20 @@ class CodegenImplObject {
                 throw new JsonException("can not find ; in: " + rendered + " ,at " + start);
             }
             String op = rendered.substring(middle, end);
-            if (field.field != null) {
-                if (shouldReuseObject(field.valueType)) {
+            if (binding.field != null) {
+                if (binding.valueCanReuse) {
                     // reuse; then field set
                     rendered = String.format("%scom.jsoniter.CodegenAccess.setExistingObject(iter, obj.%s);obj.%s=%s%s",
-                            rendered.substring(0, start), field.field.getName(), field.field.getName(), op, rendered.substring(end));
+                            rendered.substring(0, start), binding.field.getName(), binding.field.getName(), op, rendered.substring(end));
                 } else {
                     // just field set
                     rendered = String.format("%sobj.%s=%s%s",
-                            rendered.substring(0, start), field.field.getName(), op, rendered.substring(end));
+                            rendered.substring(0, start), binding.field.getName(), op, rendered.substring(end));
                 }
             } else {
                 // method set
                 rendered = String.format("%sobj.%s(%s)%s",
-                        rendered.substring(0, start), field.method.getName(), op, rendered.substring(end));
+                        rendered.substring(0, start), binding.method.getName(), op, rendered.substring(end));
             }
         }
     }
@@ -345,6 +352,9 @@ class CodegenImplObject {
             for (Binding field : desc.fields) {
                 appendVarDef(lines, field);
             }
+            for (Binding setter : desc.setters) {
+                appendVarDef(lines, setter);
+            }
         }
         for (WrapperDescriptor setter : desc.wrappers) {
             for (Binding param : setter.parameters) {
@@ -373,7 +383,7 @@ class CodegenImplObject {
                 }
                 knownHashes.add(intHash);
                 append(lines, "case " + intHash + ": ");
-                appendFieldSet(lines, desc.ctor, desc.fields, field);
+                appendBindingSet(lines, desc, field);
                 append(lines, "break;");
             }
         }
@@ -392,7 +402,7 @@ class CodegenImplObject {
                 }
                 int intHash = (int) hash;
                 append(lines, "case " + intHash + ": ");
-                appendFieldSet(lines, desc.ctor, desc.fields, field);
+                appendBindingSet(lines, desc, field);
                 append(lines, "continue;");
             }
         }
@@ -402,11 +412,10 @@ class CodegenImplObject {
         if (!desc.ctor.parameters.isEmpty()) {
             append(lines, CodegenImplNative.getTypeName(clazz) + " obj = {{newInst}};");
             for (Binding field : desc.fields) {
-                if (field.field != null) {
-                    append(lines, String.format("obj.%s = _%s_;", field.field.getName(), field.name));
-                } else {
-                    append(lines, String.format("obj.%s(_%s_);", field.method.getName(), field.name));
-                }
+                append(lines, String.format("obj.%s = _%s_;", field.field.getName(), field.name));
+            }
+            for (Binding setter : desc.setters) {
+                append(lines, String.format("obj.%s(_%s_);", setter.method.getName(), setter.name));
             }
         }
         appendSetter(desc.wrappers, lines);
@@ -416,18 +425,18 @@ class CodegenImplObject {
                 .replace("{{newInst}}", genNewInstCode(clazz, desc.ctor));
     }
 
-    private static void appendFieldSet(StringBuilder lines, ConstructorDescriptor ctor, List<Binding> fields, Binding field) {
-        if (ctor.parameters.isEmpty() && fields.contains(field)) {
-            if (shouldReuseObject(field.valueType) && field.field != null) {
-                append(lines, String.format("com.jsoniter.CodegenAccess.setExistingObject(iter, obj.%s);", field.name));
+    private static void appendBindingSet(StringBuilder lines, ClassDescriptor desc, Binding binding) {
+        if (desc.ctor.parameters.isEmpty() && (desc.fields.contains(binding) || desc.setters.contains(binding))) {
+            if (binding.valueCanReuse) {
+                append(lines, String.format("com.jsoniter.CodegenAccess.setExistingObject(iter, obj.%s);", binding.field.getName()));
             }
-            if (field.field != null) {
-                append(lines, String.format("obj.%s = %s;", field.field.getName(), genField(field)));
+            if (binding.field != null) {
+                append(lines, String.format("obj.%s = %s;", binding.field.getName(), genField(binding)));
             } else {
-                append(lines, String.format("obj.%s(%s);", field.method.getName(), genField(field)));
+                append(lines, String.format("obj.%s(%s);", binding.method.getName(), genField(binding)));
             }
         } else {
-            append(lines, String.format("_%s_ = %s;", field.name, genField(field)));
+            append(lines, String.format("_%s_ = %s;", binding.name, genField(binding)));
         }
     }
 
@@ -493,16 +502,6 @@ class CodegenImplObject {
     private static void append(StringBuilder lines, String str) {
         lines.append(str);
         lines.append("\n");
-    }
-
-    private static boolean shouldReuseObject(Type valueType) {
-        if (valueType instanceof Class) {
-            Class clazz = (Class) valueType;
-            if (clazz.isArray()) {
-                return false;
-            }
-        }
-        return !CodegenImplNative.isNative(valueType);
     }
 
     private static String genField(Binding field) {

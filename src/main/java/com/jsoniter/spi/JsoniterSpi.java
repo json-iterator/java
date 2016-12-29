@@ -80,20 +80,29 @@ public class JsoniterSpi {
         encoders = newCache;
     }
 
-    public static ClassDescriptor getClassDescriptor(Class clazz, boolean includingPrivate) {
+    public static ClassDescriptor getDecodingClassDescriptor(Class clazz, boolean includingPrivate) {
         Map<String, Type> lookup = collectTypeVariableLookup(clazz);
         ClassDescriptor desc = new ClassDescriptor();
         desc.clazz = clazz;
         desc.lookup = lookup;
         desc.ctor = getCtor(clazz);
         desc.fields = getFields(lookup, clazz, includingPrivate);
-        desc.fields.addAll(getSetters(lookup, clazz, includingPrivate));
+        desc.setters = getSetters(lookup, clazz, includingPrivate);
         desc.wrappers = new ArrayList<WrapperDescriptor>();
-        desc.getters = getGetters(lookup, clazz, includingPrivate);
         for (Extension extension : extensions) {
             extension.updateClassDescriptor(desc);
         }
-        setterOrCtorOverrideField(desc);
+        for (Binding field : desc.fields) {
+            if (field.valueType instanceof Class) {
+                Class valueClazz = (Class) field.valueType;
+                if (valueClazz.isArray()) {
+                    field.valueCanReuse = false;
+                    continue;
+                }
+            }
+            field.valueCanReuse = field.valueTypeLiteral.nativeType == null;
+        }
+        decodingDeduplicate(desc);
         if (includingPrivate) {
             if (desc.ctor.ctor != null) {
                 desc.ctor.ctor.setAccessible(true);
@@ -119,6 +128,20 @@ public class JsoniterSpi {
                 JsoniterSpi.addNewDecoder(binding.decoderCacheKey(), binding.decoder);
             }
         }
+        return desc;
+    }
+
+    public static ClassDescriptor getEncodingClassDescriptor(Class clazz, boolean includingPrivate) {
+        Map<String, Type> lookup = collectTypeVariableLookup(clazz);
+        ClassDescriptor desc = new ClassDescriptor();
+        desc.clazz = clazz;
+        desc.lookup = lookup;
+        desc.fields = getFields(lookup, clazz, includingPrivate);
+        desc.getters = getGetters(lookup, clazz, includingPrivate);
+        for (Extension extension : extensions) {
+            extension.updateClassDescriptor(desc);
+        }
+//        encodingDeduplicate(desc);
         for (Binding binding : desc.allEncoderBindings()) {
             if (binding.toNames == null) {
                 binding.toNames = new String[]{binding.name};
@@ -136,7 +159,7 @@ public class JsoniterSpi {
         return desc;
     }
 
-    private static void setterOrCtorOverrideField(ClassDescriptor desc) {
+    private static void decodingDeduplicate(ClassDescriptor desc) {
         HashMap<String, Binding> fields = new HashMap<String, Binding>();
 
         for (Binding field : new ArrayList<Binding>(desc.fields)) {

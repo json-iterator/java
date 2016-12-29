@@ -11,7 +11,13 @@ import java.util.List;
 
 public class JsoniterAnnotationSupport extends EmptyExtension {
 
+    private static boolean enabled = false;
+
     public static void enable() {
+        if (enabled) {
+            return;
+        }
+        enabled = true;
         JsoniterSpi.registerExtension(new JsoniterAnnotationSupport());
     }
 
@@ -161,7 +167,7 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
     }
 
     private void updateBindings(ClassDescriptor desc) {
-        for (Binding binding : desc.allDecoderBindings()) {
+        for (Binding binding : desc.allBindings()) {
             JsonIgnore jsonIgnore = getJsonIgnore(binding.annotations);
             if (jsonIgnore != null && jsonIgnore.value()) {
                 binding.fromNames = new String[0];

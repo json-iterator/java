@@ -90,11 +90,6 @@ class CodegenImplNative {
         }
     }
 
-    private static void append(StringBuilder lines, String str) {
-        lines.append(str);
-        lines.append("\n");
-    }
-
     public static boolean isNative(Type valueType) {
         if (valueType instanceof  Class) {
             Class clazz  = (Class) valueType;

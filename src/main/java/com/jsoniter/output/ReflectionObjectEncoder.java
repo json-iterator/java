@@ -13,7 +13,7 @@ class ReflectionObjectEncoder implements Encoder {
     private final ClassDescriptor desc;
 
     public ReflectionObjectEncoder(Class clazz) {
-        desc = JsoniterSpi.getClassDescriptor(clazz, true);
+        desc = JsoniterSpi.getEncodingClassDescriptor(clazz, true);
     }
 
     @Override

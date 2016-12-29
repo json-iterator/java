@@ -31,7 +31,7 @@ class ReflectionObjectDecoder {
     }
 
     private final void init(Class clazz) throws Exception {
-        ClassDescriptor desc = JsoniterSpi.getClassDescriptor(clazz, true);
+        ClassDescriptor desc = JsoniterSpi.getDecodingClassDescriptor(clazz, true);
         for (Binding param : desc.ctor.parameters) {
             addBinding(clazz, param);
         }
@@ -41,6 +41,9 @@ class ReflectionObjectDecoder {
         }
         for (Binding field : desc.fields) {
             addBinding(clazz, field);
+        }
+        for (Binding setter : desc.setters) {
+            addBinding(clazz, setter);
         }
         for (WrapperDescriptor setter : desc.wrappers) {
             for (Binding param : setter.parameters) {
@@ -59,11 +62,6 @@ class ReflectionObjectDecoder {
     }
 
     private void addBinding(Class clazz, final Binding binding) {
-        if (binding.field != null) {
-            if (binding.valueTypeLiteral.getNativeType() == null) {
-                binding.valueCanReuse = true;
-            }
-        }
         if (binding.asMissingWhenNotPresent) {
             binding.mask = 1L << requiredIdx;
             requiredIdx++;
@@ -228,7 +226,13 @@ class ReflectionObjectDecoder {
                     field.field.set(obj, val);
                 }
             }
-            applySetters(temp, obj);
+            for (Binding setter : desc.setters) {
+                Object val = temp[setter.idx];
+                if (val != NOT_SET) {
+                    setter.method.invoke(obj, val);
+                }
+            }
+            applyWrappers(temp, obj);
             return obj;
         }
     }
@@ -276,7 +280,7 @@ class ReflectionObjectDecoder {
                 if (binding.asMissingWhenNotPresent) {
                     tracker |= binding.mask;
                 }
-                if (canSetDirectly(binding)) {
+                if (canNotSetDirectly(binding)) {
                     temp[binding.idx] = decodeBinding(iter, obj, binding);
                 } else {
                     setToBinding(obj, binding, decodeBinding(iter, obj, binding));
@@ -291,7 +295,7 @@ class ReflectionObjectDecoder {
                     if (binding.asMissingWhenNotPresent) {
                         tracker |= binding.mask;
                     }
-                    if (canSetDirectly(binding)) {
+                    if (canNotSetDirectly(binding)) {
                         temp[binding.idx] = decodeBinding(iter, obj, binding);
                     } else {
                         setToBinding(obj, binding, decodeBinding(iter, obj, binding));
@@ -306,7 +310,7 @@ class ReflectionObjectDecoder {
                 }
             }
             setExtra(obj, extra);
-            applySetters(temp, obj);
+            applyWrappers(temp, obj);
             return obj;
         }
     }
@@ -329,7 +333,7 @@ class ReflectionObjectDecoder {
         }
     }
 
-    private boolean canSetDirectly(Binding binding) {
+    private boolean canNotSetDirectly(Binding binding) {
         return binding.field == null && binding.method == null;
     }
 
@@ -377,13 +381,13 @@ class ReflectionObjectDecoder {
         return missingFields;
     }
 
-    private void applySetters(Object[] temp, Object obj) throws Exception {
-        for (WrapperDescriptor setter : desc.wrappers) {
-            Object[] args = new Object[setter.parameters.size()];
-            for (int i = 0; i < setter.parameters.size(); i++) {
-                args[i] = temp[setter.parameters.get(i).idx];
+    private void applyWrappers(Object[] temp, Object obj) throws Exception {
+        for (WrapperDescriptor wrapper : desc.wrappers) {
+            Object[] args = new Object[wrapper.parameters.size()];
+            for (int i = 0; i < wrapper.parameters.size(); i++) {
+                args[i] = temp[wrapper.parameters.get(i).idx];
             }
-            setter.method.invoke(obj, args);
+            wrapper.method.invoke(obj, args);
         }
     }
 

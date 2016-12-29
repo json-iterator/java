@@ -28,7 +28,7 @@ public class Binding {
     public Method method; // obj.setXXX() or obj.getXXX()
     public int idx;
     public long mask;
-    public boolean valueCanReuse; // only used in reflection mode
+    public boolean valueCanReuse;
 
     public Binding(Class clazz, Map<String, Type> lookup, Type valueType) {
         this.clazz = clazz;

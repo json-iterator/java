@@ -90,12 +90,12 @@ public class TestGenerics extends TestCase {
     }
 
     public void test_generic_super_class() throws IOException {
-        ClassDescriptor desc = JsoniterSpi.getClassDescriptor(Class3.class, true);
+        ClassDescriptor desc = JsoniterSpi.getDecodingClassDescriptor(Class3.class, true);
         Map<String, String> fieldDecoderCacheKeys = new HashMap<String, String>();
         for (Binding field : desc.allDecoderBindings()) {
             fieldDecoderCacheKeys.put(field.name, field.valueTypeLiteral.getDecoderCacheKey());
         }
-        for (Binding field : desc.getters) {
+        for (Binding field : JsoniterSpi.getEncodingClassDescriptor(Class3.class, true).getters) {
             fieldDecoderCacheKeys.put(field.name, field.valueTypeLiteral.getDecoderCacheKey());
         }
         assertEquals(new HashMap<String, String>() {{

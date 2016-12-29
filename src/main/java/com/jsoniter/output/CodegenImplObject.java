@@ -7,7 +7,7 @@ import com.jsoniter.spi.JsoniterSpi;
 
 class CodegenImplObject {
     public static String genObject(Class clazz) {
-        ClassDescriptor desc = JsoniterSpi.getClassDescriptor(clazz, false);
+        ClassDescriptor desc = JsoniterSpi.getEncodingClassDescriptor(clazz, false);
         StringBuilder lines = new StringBuilder();
         append(lines, String.format("public static void encode_(%s obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {", clazz.getCanonicalName()));
         append(lines, "if (obj == null) { stream.writeNull(); return; }");

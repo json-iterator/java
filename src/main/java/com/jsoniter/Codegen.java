@@ -214,7 +214,7 @@ class Codegen {
         if (Collection.class.isAssignableFrom(clazz)) {
             return CodegenImplArray.genCollection(clazz, typeArgs);
         }
-        ClassDescriptor desc = JsoniterSpi.getClassDescriptor(clazz, false);
+        ClassDescriptor desc = JsoniterSpi.getDecodingClassDescriptor(clazz, false);
         if (shouldUseStrictMode(desc)) {
             return CodegenImplObject.genObjectUsingStrict(clazz, desc);
         } else {
