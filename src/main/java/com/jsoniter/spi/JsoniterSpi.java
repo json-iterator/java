@@ -315,6 +315,7 @@ public class JsoniterSpi {
             binding.fromNames = new String[]{fromName};
             binding.name = fromName;
             binding.method = method;
+            binding.annotations = method.getAnnotations();
             setters.add(binding);
         }
         return setters;
@@ -358,6 +359,7 @@ public class JsoniterSpi {
             getter.toNames = new String[]{toName};
             getter.name = toName;
             getter.method = method;
+            getter.annotations = method.getAnnotations();
             getters.add(getter);
         }
         return getters;

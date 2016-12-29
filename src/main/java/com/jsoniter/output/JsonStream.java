@@ -242,6 +242,10 @@ public class JsonStream extends OutputStream {
     }
 
     public final void writeVal(Object obj) throws IOException {
+        if (obj == null) {
+            writeNull();
+            return;
+        }
         Class<?> clazz = obj.getClass();
         String cacheKey = TypeLiteral.create(clazz).getEncoderCacheKey();
         Codegen.getEncoder(cacheKey, clazz).encode(obj, this);

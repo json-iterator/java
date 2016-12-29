@@ -1,9 +1,6 @@
 package com.jsoniter.output;
 
-import com.jsoniter.DecodingMode;
 import com.jsoniter.JsonException;
-import com.jsoniter.ReflectionDecoderFactory;
-import com.jsoniter.spi.Decoder;
 import com.jsoniter.spi.Encoder;
 import com.jsoniter.spi.JsoniterSpi;
 import com.jsoniter.spi.TypeLiteral;
@@ -18,7 +15,7 @@ import java.util.*;
 
 class Codegen {
 
-    private static EncodingMode mode = EncodingMode.DYNAMIC_MODE;
+    private static EncodingMode mode = EncodingMode.REFLECTION_MODE;
     static boolean isDoingStaticCodegen;
     // only read/write when generating code with synchronized protection
     private final static Set<String> generatedClassNames = new HashSet<String>();

@@ -2,9 +2,9 @@ package com.jsoniter;
 
 public class Slice implements Cloneable {
 
-    public byte[] data;
-    public int head;
-    public int tail;
+    private byte[] data;
+    private int head;
+    private int tail;
     private int hash;
 
     public Slice(byte[] data, int head, int tail) {
@@ -13,13 +13,28 @@ public class Slice implements Cloneable {
         this.tail = tail;
     }
 
+    public void reset(byte[] data, int head, int tail) {
+        this.data = data;
+        this.head = head;
+        this.tail = tail;
+        this.hash = 0;
+    }
+
+    public final byte[] data() {
+        return data;
+    }
+
+    public final int head() {
+        return head;
+    }
+
+    public final int tail() {
+        return tail;
+    }
+
     public static Slice make(String str) {
         byte[] data = str.getBytes();
         return new Slice(data, 0, data.length);
-    }
-
-    public final byte at(int pos) {
-        return data[head + pos];
     }
 
     @Override

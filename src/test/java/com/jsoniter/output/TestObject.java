@@ -67,4 +67,15 @@ public class TestObject extends TestCase {
         stream.close();
         assertEquals("{}".replace('\'', '"'), baos.toString());
     }
+
+    public static class TestObject4 {
+        public String field1;
+    }
+
+    public void test_null_field() throws IOException {
+        TestObject4 obj = new TestObject4();
+        stream.writeVal(obj);
+        stream.close();
+        assertEquals("{'field1':null}".replace('\'', '"'), baos.toString());
+    }
 }

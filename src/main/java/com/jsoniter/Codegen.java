@@ -15,7 +15,7 @@ class Codegen {
     // only read/write when generating code with synchronized protection
     private final static Set<String> generatedClassNames = new HashSet<String>();
     static boolean isDoingStaticCodegen = false;
-    static DecodingMode mode = DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_WITH_HASH;
+    static DecodingMode mode = DecodingMode.REFLECTION_MODE;
     static {
         String envMode = System.getenv("JSONITER_DECODING_MODE");
         if (envMode != null) {

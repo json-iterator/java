@@ -164,11 +164,11 @@ class IterImplString {
             return null;
         }
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        int end = slice.tail;
-        for (int i = slice.head; i < end; i++) {
+        int end = slice.tail();
+        for (int i = slice.head(); i < end; i++) {
             int b = 0;
-            if (base64Tbl[slice.data[i]] != -1) {
-                b = (base64Tbl[slice.data[i]] & 0xFF) << 18;
+            if (base64Tbl[slice.data()[i]] != -1) {
+                b = (base64Tbl[slice.data()[i]] & 0xFF) << 18;
             }
             // skip unknown characters
             else {
@@ -177,16 +177,16 @@ class IterImplString {
             }
 
             int num = 0;
-            if (i + 1 < end && base64Tbl[slice.data[i + 1]] != -1) {
-                b = b | ((base64Tbl[slice.data[i + 1]] & 0xFF) << 12);
+            if (i + 1 < end && base64Tbl[slice.data()[i + 1]] != -1) {
+                b = b | ((base64Tbl[slice.data()[i + 1]] & 0xFF) << 12);
                 num++;
             }
-            if (i + 2 < end && base64Tbl[slice.data[i + 2]] != -1) {
-                b = b | ((base64Tbl[slice.data[i + 2]] & 0xFF) << 6);
+            if (i + 2 < end && base64Tbl[slice.data()[i + 2]] != -1) {
+                b = b | ((base64Tbl[slice.data()[i + 2]] & 0xFF) << 6);
                 num++;
             }
-            if (i + 3 < end && base64Tbl[slice.data[i + 3]] != -1) {
-                b = b | (base64Tbl[slice.data[i + 3]] & 0xFF);
+            if (i + 3 < end && base64Tbl[slice.data()[i + 3]] != -1) {
+                b = b | (base64Tbl[slice.data()[i + 3]] & 0xFF);
                 num++;
             }
 
@@ -206,9 +206,7 @@ class IterImplString {
         int end = findSliceEnd(iter);
         if (end != -1) {
             // reuse current buffer
-            iter.reusableSlice.data = iter.buf;
-            iter.reusableSlice.head = iter.head;
-            iter.reusableSlice.tail = end - 1;
+            iter.reusableSlice.reset(iter.buf, iter.head, end - 1);
             iter.head = end;
             return iter.reusableSlice;
         }
@@ -229,9 +227,7 @@ class IterImplString {
                 System.arraycopy(part1, 0, part2, 0, part1.length);
                 System.arraycopy(iter.buf, 0, part2, part1.length, end - 1);
                 iter.head = end;
-                iter.reusableSlice.data = part2;
-                iter.reusableSlice.head = 0;
-                iter.reusableSlice.tail = part2.length;
+                iter.reusableSlice.reset(part2, 0, part2.length);
                 return iter.reusableSlice;
             }
         }

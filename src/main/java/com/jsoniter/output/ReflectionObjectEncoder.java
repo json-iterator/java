@@ -72,6 +72,11 @@ class ReflectionObjectEncoder implements Encoder {
             }
         }
         for (Method unwrapper : desc.unwrappers) {
+            if (notFirst) {
+                stream.writeMore();
+            } else {
+                notFirst = true;
+            }
             unwrapper.invoke(obj, stream);
         }
         stream.writeObjectEnd();

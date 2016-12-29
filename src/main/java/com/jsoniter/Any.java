@@ -26,8 +26,8 @@ public class Any extends Slice {
                 }
             } else {
                 Slice slice = (Slice) object;
-                for (int i = slice.head; i < slice.tail; i++) {
-                    byte b = slice.data[i];
+                for (int i = slice.head(); i < slice.tail(); i++) {
+                    byte b = slice.data()[i];
                     hash = hash * 31 + b;
                 }
             }
@@ -207,9 +207,9 @@ public class Any extends Slice {
             return null;
         }
         if (ValueType.NUMBER == valueType) {
-            char[] chars = new char[tail - head];
-            for (int i = head, j = 0; i < tail; i++, j++) {
-                chars[j] = (char) data[i];
+            char[] chars = new char[tail() - head()];
+            for (int i = head(), j = 0; i < tail(); i++, j++) {
+                chars[j] = (char) data()[i];
             }
             return new String(chars);
         }
@@ -362,13 +362,13 @@ public class Any extends Slice {
         int start = iter.head;
         ValueType elementType = iter.skip();
         int end = iter.head;
-        object.put(field, new Any(elementType, data, start, end));
+        object.put(field, new Any(elementType, data(), start, end));
         while (iter.nextToken() == ',') {
             field = CodegenAccess.readObjectFieldAsSlice(iter).clone();
             start = iter.head;
             elementType = iter.skip();
             end = iter.head;
-            object.put(field, new Any(elementType, data, start, end));
+            object.put(field, new Any(elementType, data(), start, end));
         }
     }
 
@@ -382,7 +382,7 @@ public class Any extends Slice {
             int start = iter.head;
             ValueType elementType = iter.skip();
             int end = iter.head;
-            array.add(new Any(elementType, data, start, end));
+            array.add(new Any(elementType, data(), start, end));
         }
     }
 }

@@ -81,9 +81,9 @@ public class JsonIterator implements Closeable {
 
 
     public final void reset(Slice value) {
-        this.buf = value.data;
-        this.head = value.head;
-        this.tail = value.tail;
+        this.buf = value.data();
+        this.head = value.head();
+        this.tail = value.tail();
         this.eof = false;
     }
 

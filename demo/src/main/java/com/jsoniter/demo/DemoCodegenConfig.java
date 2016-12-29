@@ -2,6 +2,7 @@ package com.jsoniter.demo;
 
 import com.jsoniter.JsonIterator;
 import com.jsoniter.StaticCodeGenerator;
+import com.jsoniter.output.JsonStream;
 import com.jsoniter.spi.CodegenConfig;
 import com.jsoniter.spi.Decoder;
 import com.jsoniter.spi.JsoniterSpi;

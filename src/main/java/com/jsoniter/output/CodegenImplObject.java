@@ -16,18 +16,23 @@ class CodegenImplObject {
         if (hasFieldOutput(desc)) {
             boolean notFirst = false;
             append(lines, "stream.writeObjectStart();");
-            for (Binding field : desc.allEncoderBindings()) {
-                for (String toName : field.toNames) {
+            for (Binding binding : desc.allEncoderBindings()) {
+                for (String toName : binding.toNames) {
                     if (notFirst) {
                         append(lines, "stream.writeMore();");
                     } else {
                         notFirst = true;
                     }
                     append(lines, String.format("stream.writeObjectField(\"%s\");", toName));
-                    append(lines, genField(field));
+                    append(lines, genField(binding));
                 }
             }
             for (Method unwrapper : desc.unwrappers) {
+                if (notFirst) {
+                    append(lines, "stream.writeMore();");
+                } else {
+                    notFirst = true;
+                }
                 append(lines, String.format("obj.%s(stream);", unwrapper.getName()));
             }
             append(lines, "stream.writeObjectEnd();");
