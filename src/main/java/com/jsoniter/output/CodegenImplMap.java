@@ -31,16 +31,16 @@ class CodegenImplMap {
         append(lines, "java.util.Iterator iter = map.entrySet().iterator();");
         append(lines, "if(!iter.hasNext()) { stream.writeEmptyObject(); return; }");
         append(lines, "java.util.Map.Entry entry = (java.util.Map.Entry)iter.next();");
-        append(lines, "stream.startObject();");
-        append(lines, "stream.writeField((String)entry.getKey());");
+        append(lines, "stream.writeObjectStart();");
+        append(lines, "stream.writeObjectField((String)entry.getKey());");
         append(lines, "{{op}}");
         append(lines, "while(iter.hasNext()) {");
         append(lines, "entry = (java.util.Map.Entry)iter.next();");
         append(lines, "stream.writeMore();");
-        append(lines, "stream.writeField((String)entry.getKey());");
+        append(lines, "stream.writeObjectField((String)entry.getKey());");
         append(lines, "{{op}}");
         append(lines, "}");
-        append(lines, "stream.endObject();");
+        append(lines, "stream.writeObjectEnd();");
         append(lines, "}");
         return lines.toString()
                 .replace("{{clazz}}", clazz.getName())

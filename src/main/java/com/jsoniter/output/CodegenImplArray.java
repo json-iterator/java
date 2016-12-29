@@ -15,14 +15,14 @@ class CodegenImplArray {
         append(lines, "if (obj == null) { stream.writeNull(); return; }");
         append(lines, "{{comp}}[] arr = ({{comp}}[])obj;");
         append(lines, "if (arr.length == 0) { stream.writeEmptyArray(); return; }");
-        append(lines, "stream.startArray();");
+        append(lines, "stream.writeArrayStart();");
         append(lines, "int i = 0;");
         append(lines, "{{op}}");
         append(lines, "while (i < arr.length) {");
         append(lines, "stream.writeMore();");
         append(lines, "{{op}}");
         append(lines, "}");
-        append(lines, "stream.endArray();");
+        append(lines, "stream.writeArrayEnd();");
         append(lines, "}");
         return lines.toString()
                 .replace("{{comp}}", compType.getCanonicalName())
@@ -59,13 +59,13 @@ class CodegenImplArray {
         append(lines, "if (obj == null) { stream.writeNull(); return; }");
         append(lines, "java.util.Iterator iter = ((java.util.Collection)obj).iterator();");
         append(lines, "if (!iter.hasNext()) { stream.writeEmptyArray(); return; }");
-        append(lines, "stream.startArray();");
+        append(lines, "stream.writeArrayStart();");
         append(lines, "{{op}}");
         append(lines, "while (iter.hasNext()) {");
         append(lines, "stream.writeMore();");
         append(lines, "{{op}}");
         append(lines, "}");
-        append(lines, "stream.endArray();");
+        append(lines, "stream.writeArrayEnd();");
         append(lines, "}");
         return lines.toString()
                 .replace("{{comp}}", CodegenImplNative.getTypeName(compType))

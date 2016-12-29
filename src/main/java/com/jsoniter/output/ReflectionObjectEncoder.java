@@ -30,21 +30,32 @@ class ReflectionObjectEncoder implements Encoder {
             stream.writeNull();
             return;
         }
-        stream.startObject();
+        stream.writeObjectStart();
+        boolean notFirst = false;
         for (Binding field : desc.fields) {
             Object val = field.field.get(obj);
             for (String toName : field.toNames) {
-                stream.writeField(toName);
+                if (notFirst) {
+                    stream.writeMore();
+                } else {
+                    notFirst = true;
+                }
+                stream.writeObjectField(toName);
                 stream.writeVal(val);
             }
         }
         for (Binding getter : desc.getters) {
             Object val = getter.method.invoke(obj);
             for (String toName : getter.toNames) {
-                stream.writeField(toName);
+                if (notFirst) {
+                    stream.writeMore();
+                } else {
+                    notFirst = true;
+                }
+                stream.writeObjectField(toName);
                 stream.writeVal(val);
             }
         }
-        stream.endObject();
+        stream.writeObjectEnd();
     }
 }

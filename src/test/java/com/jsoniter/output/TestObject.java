@@ -12,7 +12,7 @@ public class TestObject extends TestCase {
 
     static {
         JsoniterAnnotationSupport.enable();
-        JsonStream.setMode(EncodingMode.REFLECTION_MODE);
+//        JsonStream.setMode(EncodingMode.REFLECTION_MODE);
     }
 
     private ByteArrayOutputStream baos;

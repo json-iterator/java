@@ -13,7 +13,7 @@ class CodegenImplObject {
         append(lines, "if (obj == null) { stream.writeNull(); return; }");
         if (hasFieldOutput(desc)) {
             boolean notFirst = false;
-            append(lines, "stream.startObject();");
+            append(lines, "stream.writeObjectStart();");
             for (Binding field : desc.allEncoderBindings()) {
                 for (String toName : field.toNames) {
                     if (notFirst) {
@@ -21,11 +21,11 @@ class CodegenImplObject {
                     } else {
                         notFirst = true;
                     }
-                    append(lines, String.format("stream.writeField(\"%s\");", toName));
+                    append(lines, String.format("stream.writeObjectField(\"%s\");", toName));
                     append(lines, genField(field));
                 }
             }
-            append(lines, "stream.endObject();");
+            append(lines, "stream.writeObjectEnd();");
         } else {
             append(lines, "stream.writeEmptyObject();");
         }

@@ -184,7 +184,7 @@ public class JsonStream extends OutputStream {
         write(']');
     }
 
-    public final void startArray() throws IOException {
+    public final void writeArrayStart() throws IOException {
         indention += indentionStep;
         write('[');
         writeIndention();
@@ -218,24 +218,24 @@ public class JsonStream extends OutputStream {
         }
     }
 
-    public final void endArray() throws IOException {
+    public final void writeArrayEnd() throws IOException {
         writeIndention(indentionStep);
         indention -= indentionStep;
         write(']');
     }
 
-    public final void startObject() throws IOException {
+    public final void writeObjectStart() throws IOException {
         indention += indentionStep;
         write('{');
         writeIndention();
     }
 
-    public final void writeField(String field) throws IOException {
+    public final void writeObjectField(String field) throws IOException {
         writeVal(field);
         write(':');
     }
 
-    public final void endObject() throws IOException {
+    public final void writeObjectEnd() throws IOException {
         writeIndention(indentionStep);
         indention -= indentionStep;
         write('}');
