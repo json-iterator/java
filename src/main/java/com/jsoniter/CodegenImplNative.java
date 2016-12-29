@@ -30,7 +30,7 @@ class CodegenImplNative {
         put(BigDecimal.class.getName(), "iter.readBigDecimal()");
         put(BigInteger.class.getName(), "iter.readBigInteger()");
         put(String.class.getName(), "iter.readString()");
-        put(Object.class.getName(), "iter.readAnyObject()");
+        put(Object.class.getName(), "iter.read()");
         put(Any.class.getName(), "iter.readAny()");
     }};
 

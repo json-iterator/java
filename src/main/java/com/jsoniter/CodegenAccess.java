@@ -67,7 +67,7 @@ public class CodegenAccess {
                 case STRING:
                     return (T) iter.readString();
                 case OBJECT:
-                    return (T) iter.readAnyObject();
+                    return (T) iter.read();
                 case ANY:
                     return (T) iter.readAny();
                 default:

@@ -310,7 +310,7 @@ public class JsonIterator implements Closeable {
         return new Any(valueType, buf, start, end);
     }
 
-    public final Object readAnyObject() throws IOException {
+    public final Object read() throws IOException {
         ValueType valueType = whatIsNext();
         switch (valueType) {
             case STRING:
@@ -324,17 +324,17 @@ public class JsonIterator implements Closeable {
             case ARRAY:
                 ArrayList list = new ArrayList();
                 while (readArray()) {
-                    list.add(readAnyObject());
+                    list.add(read());
                 }
                 return list;
             case OBJECT:
                 Map map = new HashMap();
                 for (String field = readObject(); field != null; field = readObject()) {
-                    map.put(field, readAnyObject());
+                    map.put(field, read());
                 }
                 return map;
             default:
-                throw reportError("readAnyObject", "unexpected value type: " + valueType);
+                throw reportError("read", "unexpected value type: " + valueType);
         }
     }
 
