@@ -16,11 +16,12 @@ public class Any extends Slice implements Iterable<Any> {
     private ValueType valueType;
     private List<Any> array;
     private Map<Object, Any> object;
-    private boolean objectFullyParsed;
+    private int objectParsedHead;
 
     public Any(ValueType valueType, byte[] data, int head, int tail) {
         super(data, head, tail);
         this.valueType = valueType;
+        objectParsedHead = head;
     }
 
     public final ValueType valueType() {
@@ -348,56 +349,62 @@ public class Any extends Slice implements Iterable<Any> {
     }
 
     private Any fillObject(Object target) throws IOException {
-        if (objectFullyParsed || (object != null && object.containsKey(target))) {
+        if (objectParsedHead == tail() || (object != null && object.containsKey(target))) {
             return object.get(target);
         }
-        JsonIterator iter = createIterator();
+        JsonIterator iter = tlsIter.get();
+        iter.reset(data(), objectParsedHead, tail());
         if (object == null) {
             object = new HashMap<Object, Any>(4);
         }
-        if (!CodegenAccess.readObjectStart(iter)) {
-            objectFullyParsed = true;
-            return null;
-        }
-        String field = CodegenAccess.readObjectFieldAsString(iter);
-        int start = iter.head;
-        ValueType elementType = iter.skip();
-        int end = iter.head;
-        if (!object.containsKey(field)) {
-            Any value = new Any(elementType, data(), start, end);
-            object.put(field, value);
-            if (field.hashCode() == target.hashCode() && field.equals(target)) {
-                return value;
+        if (objectParsedHead == head()) {
+            if (!CodegenAccess.readObjectStart(iter)) {
+                objectParsedHead = tail();
+                return null;
             }
-        }
-        while (iter.nextToken() == ',') {
-            field = CodegenAccess.readObjectFieldAsString(iter);
-            start = iter.head;
-            elementType = iter.skip();
-            end = iter.head;
+            String field = CodegenAccess.readObjectFieldAsString(iter);
+            int start = iter.head;
+            ValueType elementType = iter.skip();
+            int end = iter.head;
             if (!object.containsKey(field)) {
                 Any value = new Any(elementType, data(), start, end);
                 object.put(field, value);
                 if (field.hashCode() == target.hashCode() && field.equals(target)) {
+                    objectParsedHead = iter.head;
                     return value;
                 }
             }
         }
-        objectFullyParsed = true;
+        while (iter.nextToken() == ',') {
+            String field = CodegenAccess.readObjectFieldAsString(iter);
+            int start = iter.head;
+            ValueType elementType = iter.skip();
+            int end = iter.head;
+            if (!object.containsKey(field)) {
+                Any value = new Any(elementType, data(), start, end);
+                object.put(field, value);
+                if (field.hashCode() == target.hashCode() && field.equals(target)) {
+                    objectParsedHead = iter.head;
+                    return value;
+                }
+            }
+        }
+        objectParsedHead = tail();
         object.put(target, null);
         return null;
     }
 
     private void fillObject() throws IOException {
-        if (objectFullyParsed) {
+        if (objectParsedHead == tail()) {
             return;
         }
-        JsonIterator iter = createIterator();
+        JsonIterator iter = tlsIter.get();
+        iter.reset(data(), objectParsedHead, tail());
         if (object == null) {
             object = new HashMap<Object, Any>(4);
         }
         if (!CodegenAccess.readObjectStart(iter)) {
-            objectFullyParsed = true;
+            objectParsedHead = tail();
             return;
         }
         String field = CodegenAccess.readObjectFieldAsString(iter);
@@ -418,7 +425,7 @@ public class Any extends Slice implements Iterable<Any> {
                 object.put(field, value);
             }
         }
-        objectFullyParsed = true;
+        objectParsedHead = tail();
     }
 
     private void fillArray() throws IOException {

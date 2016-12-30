@@ -67,6 +67,10 @@ public class JsonIterator implements Closeable {
         return new JsonIterator(null, buf, 0, buf.length);
     }
 
+    public static JsonIterator parse(byte[] buf, int head, int tail) {
+        return new JsonIterator(null, buf, head, tail);
+    }
+
     public static JsonIterator parse(String str) {
         return parse(str.getBytes());
     }
@@ -82,6 +86,12 @@ public class JsonIterator implements Closeable {
         this.eof = false;
     }
 
+    public final void reset(byte[] buf, int head, int tail) {
+        this.buf = buf;
+        this.head = head;
+        this.tail = tail;
+        this.eof = false;
+    }
 
     public final void reset(Slice value) {
         this.buf = value.data();
@@ -89,7 +99,6 @@ public class JsonIterator implements Closeable {
         this.tail = value.tail();
         this.eof = false;
     }
-
 
     public final void reset(InputStream in) {
         this.in = in;

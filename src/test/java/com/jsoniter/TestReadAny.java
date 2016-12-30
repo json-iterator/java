@@ -120,4 +120,15 @@ public class TestReadAny extends TestCase {
         TestObject1 obj = JsonIterator.deserialize("{\"field1\": 100}").to(TestObject1.class);
         assertEquals(100, obj.field1);
     }
+
+    public void test_read_multiple_field() throws IOException {
+        Any any = JsonIterator.deserialize("{\"a\":1,\"b\":2,\"c\":3}");
+        assertEquals(2, any.toInt("b"));
+        assertEquals(1, any.toInt("a"));
+        assertEquals(3, any.toInt("c"));
+        any = JsonIterator.deserialize("{\"a\":1,\"b\":2,\"c\":3}");
+        assertEquals(3, any.toInt("c"));
+        assertEquals(2, any.toInt("b"));
+        assertEquals(1, any.toInt("a"));
+    }
 }
