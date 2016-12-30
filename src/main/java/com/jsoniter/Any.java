@@ -1,5 +1,7 @@
 package com.jsoniter;
 
+import com.jsoniter.spi.TypeLiteral;
+
 import java.io.IOException;
 import java.util.*;
 
@@ -23,6 +25,38 @@ public class Any extends Slice implements Iterable<Any> {
 
     public final ValueType valueType() {
         return valueType;
+    }
+
+    public final <T> T to(Class<T> clazz, Object... keys) {
+        Any found = get(keys);
+        if (found == null) {
+            return null;
+        }
+        return found.to(clazz);
+    }
+
+    private <T> T to(Class<T> clazz) {
+        try {
+            return createIterator().read(clazz);
+        } catch (IOException e) {
+            throw new JsonException(e);
+        }
+    }
+
+    public final <T> T to(TypeLiteral<T> typeLiteral, Object... keys) {
+        Any found = get(keys);
+        if (found == null) {
+            return null;
+        }
+        return found.to(typeLiteral);
+    }
+
+    private <T> T to(TypeLiteral<T> typeLiteral) {
+        try {
+            return createIterator().read(typeLiteral);
+        } catch (IOException e) {
+            throw new JsonException(e);
+        }
     }
 
     public final int toInt(Object... keys) {
@@ -409,7 +443,7 @@ public class Any extends Slice implements Iterable<Any> {
     }
 
     @Override
-    public Iterator<Any> iterator() {
+    public final Iterator<Any> iterator() {
         if (ValueType.ARRAY != valueType()) {
             throw unexpectedValueType(ValueType.ARRAY);
         }

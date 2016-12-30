@@ -5,7 +5,7 @@ import junit.framework.TestCase;
 
 import java.io.IOException;
 
-public class TestReflectionDecoder extends TestCase {
+public class TestReflection extends TestCase {
 
     public static class PackageLocal {
         String field;

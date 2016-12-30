@@ -11,6 +11,7 @@ import org.openjdk.jmh.infra.Blackhole;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -44,6 +45,10 @@ public class LazyAny {
         benchSetup(null);
         System.out.println(jsoniter());
         System.out.println(jsoniter_object());
+
+        String input = "{'numbers': ['1', '2', ['3', '4']]}".replace('\'', '"');
+        String[] array = JsonIterator.deserialize(input).get("numbers", 2).to(String[].class);
+        System.out.println(Arrays.toString(array));
     }
 
     @Benchmark

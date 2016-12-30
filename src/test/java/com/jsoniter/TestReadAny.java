@@ -111,4 +111,13 @@ public class TestReadAny extends TestCase {
         assertEquals(100.1D, JsonIterator.deserialize("100.1").toDouble());
         assertEquals(100.1D, JsonIterator.deserialize("\"100.1\"").toDouble());
     }
+
+    public static class TestObject1 {
+        public int field1;
+    }
+
+    public void test_read_class() throws IOException {
+        TestObject1 obj = JsonIterator.deserialize("{\"field1\": 100}").to(TestObject1.class);
+        assertEquals(100, obj.field1);
+    }
 }
