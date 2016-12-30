@@ -1,12 +1,9 @@
 package com.jsoniter;
 
-import com.jsoniter.gnu.trove.map.hash.TCustomHashMap;
-import com.jsoniter.gnu.trove.strategy.HashingStrategy;
-
 import java.io.IOException;
 import java.util.*;
 
-public class Any extends Slice {
+public class Any extends Slice implements Iterable<Any> {
 
     private final static ThreadLocal<JsonIterator> tlsIter = new ThreadLocal<JsonIterator>() {
         @Override
@@ -14,40 +11,10 @@ public class Any extends Slice {
             return new JsonIterator();
         }
     };
-    private final static HashingStrategy<Object> SLICE_HASHING_STRATEGY = new HashingStrategy<Object>() {
-        @Override
-        public int computeHashCode(Object object) {
-            int hash = 0;
-            if (object instanceof String) {
-                String str = (String) object;
-                for (int i = 0; i < str.length(); i++) {
-                    byte b = (byte) str.charAt(i);
-                    hash = hash * 31 + b;
-                }
-            } else {
-                Slice slice = (Slice) object;
-                for (int i = slice.head(); i < slice.tail(); i++) {
-                    byte b = slice.data()[i];
-                    hash = hash * 31 + b;
-                }
-            }
-            return hash;
-        }
-
-        @Override
-        public boolean equals(Object o1, Object o2) {
-            if (o1 instanceof String) {
-                return o2.equals(o1);
-            } else {
-                return o1.equals(o2);
-            }
-        }
-    };
     private ValueType valueType;
     private List<Any> array;
-    // key can be slice or string
-    // string only support ascii
-    private TCustomHashMap<Object, Any> object;
+    private Map<Object, Any> object;
+    private boolean objectFullyParsed;
 
     public Any(ValueType valueType, byte[] data, int head, int tail) {
         super(data, head, tail);
@@ -267,8 +234,7 @@ public class Any extends Slice {
 
     public final Any getValue(Object key) {
         try {
-            fillObject();
-            return object.get(key);
+            return fillObject(key);
         } catch (IndexOutOfBoundsException e) {
             return null;
         } catch (ClassCastException e) {
@@ -296,8 +262,7 @@ public class Any extends Slice {
         }
         Any result;
         if (ValueType.OBJECT == valueType) {
-            fillObject();
-            result = object.get(keys[idx]);
+            result = fillObject(keys[idx]);
         } else if (ValueType.ARRAY == valueType) {
             fillArray();
             result = array.get((Integer) keys[idx]);
@@ -326,8 +291,7 @@ public class Any extends Slice {
         }
         Any result = null;
         if (ValueType.OBJECT == valueType) {
-            fillObject();
-            result = object.get(keys[idx]);
+            result = fillObject(keys[idx]);
         } else if (ValueType.ARRAY == valueType) {
             fillArray();
             result = array.get((Integer) keys[idx]);
@@ -349,27 +313,78 @@ public class Any extends Slice {
         return iter;
     }
 
-    private void fillObject() throws IOException {
-        if (object != null) {
-            return;
+    private Any fillObject(Object target) throws IOException {
+        if (objectFullyParsed || (object != null && object.containsKey(target))) {
+            return object.get(target);
         }
         JsonIterator iter = createIterator();
-        object = new TCustomHashMap<Object, Any>(SLICE_HASHING_STRATEGY, 8);
-        if (!CodegenAccess.readObjectStart(iter)) {
-            return;
+        if (object == null) {
+            object = new HashMap<Object, Any>(4);
         }
-        Slice field = CodegenAccess.readObjectFieldAsSlice(iter).clone();
+        if (!CodegenAccess.readObjectStart(iter)) {
+            objectFullyParsed = true;
+            return null;
+        }
+        String field = CodegenAccess.readObjectFieldAsString(iter);
         int start = iter.head;
         ValueType elementType = iter.skip();
         int end = iter.head;
-        object.put(field, new Any(elementType, data(), start, end));
+        if (!object.containsKey(field)) {
+            Any value = new Any(elementType, data(), start, end);
+            object.put(field, value);
+            if (field.hashCode() == target.hashCode() && field.equals(target)) {
+                return value;
+            }
+        }
         while (iter.nextToken() == ',') {
-            field = CodegenAccess.readObjectFieldAsSlice(iter).clone();
+            field = CodegenAccess.readObjectFieldAsString(iter);
             start = iter.head;
             elementType = iter.skip();
             end = iter.head;
-            object.put(field, new Any(elementType, data(), start, end));
+            if (!object.containsKey(field)) {
+                Any value = new Any(elementType, data(), start, end);
+                object.put(field, value);
+                if (field.hashCode() == target.hashCode() && field.equals(target)) {
+                    return value;
+                }
+            }
         }
+        objectFullyParsed = true;
+        object.put(target, null);
+        return null;
+    }
+
+    private void fillObject() throws IOException {
+        if (objectFullyParsed) {
+            return;
+        }
+        JsonIterator iter = createIterator();
+        if (object == null) {
+            object = new HashMap<Object, Any>(4);
+        }
+        if (!CodegenAccess.readObjectStart(iter)) {
+            objectFullyParsed = true;
+            return;
+        }
+        String field = CodegenAccess.readObjectFieldAsString(iter);
+        int start = iter.head;
+        ValueType elementType = iter.skip();
+        int end = iter.head;
+        if (!object.containsKey(field)) {
+            Any value = new Any(elementType, data(), start, end);
+            object.put(field, value);
+        }
+        while (iter.nextToken() == ',') {
+            field = CodegenAccess.readObjectFieldAsString(iter);
+            start = iter.head;
+            elementType = iter.skip();
+            end = iter.head;
+            if (!object.containsKey(field)) {
+                Any value = new Any(elementType, data(), start, end);
+                object.put(field, value);
+            }
+        }
+        objectFullyParsed = true;
     }
 
     private void fillArray() throws IOException {
@@ -377,12 +392,53 @@ public class Any extends Slice {
             return;
         }
         JsonIterator iter = createIterator();
-        array = new ArrayList<Any>(8);
-        while (iter.readArray()) {
-            int start = iter.head;
-            ValueType elementType = iter.skip();
-            int end = iter.head;
+        array = new ArrayList<Any>(4);
+        if (!CodegenAccess.readArrayStart(iter)) {
+            return;
+        }
+        int start = iter.head;
+        ValueType elementType = iter.skip();
+        int end = iter.head;
+        array.add(new Any(elementType, data(), start, end));
+        while (iter.nextToken() == ',') {
+            start = iter.head;
+            elementType = iter.skip();
+            end = iter.head;
             array.add(new Any(elementType, data(), start, end));
+        }
+    }
+
+    @Override
+    public Iterator<Any> iterator() {
+        if (ValueType.ARRAY != valueType()) {
+            throw unexpectedValueType(ValueType.ARRAY);
+        }
+        return new ArrayIterator();
+    }
+
+    private class ArrayIterator implements Iterator<Any> {
+
+        private final int size;
+        private int idx;
+
+        public ArrayIterator() {
+            size = size();
+            idx = 0;
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean hasNext() {
+            return idx < size;
+        }
+
+        @Override
+        public Any next() {
+            return array.get(idx++);
         }
     }
 }

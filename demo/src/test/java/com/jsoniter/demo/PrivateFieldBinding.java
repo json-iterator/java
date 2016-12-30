@@ -100,7 +100,7 @@ public class PrivateFieldBinding {
     }
 
     private TestObject withJsoniter() throws IOException {
-        iter.reset();
+        iter.reset(input);
         return iter.read(typeLiteral);
     }
 

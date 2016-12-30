@@ -21,13 +21,13 @@ public class TestObject extends TestCase {
     public void test_empty_object() throws IOException {
         JsonIterator iter = JsonIterator.parse("{}");
         assertNull(iter.readObject());
-        iter.reset();
+        iter.reset(iter.buf);
         SimpleObject simpleObj = iter.read(SimpleObject.class);
         assertNull(simpleObj.field1);
-        iter.reset();
+        iter.reset(iter.buf);
         Map obj = (Map) iter.read(Object.class);
         assertEquals(0, obj.size());
-        iter.reset();
+        iter.reset(iter.buf);
         Any any = iter.readAny();
         assertEquals(0, any.size());
     }
@@ -37,11 +37,11 @@ public class TestObject extends TestCase {
         assertEquals("field1", iter.readObject());
         assertEquals("hello", iter.readString());
         assertNull(iter.readObject());
-        iter.reset();
+        iter.reset(iter.buf);
         SimpleObject simpleObj = iter.read(SimpleObject.class);
         assertEquals("hello", simpleObj.field1);
         assertNull(simpleObj.field2);
-        iter.reset();
+        iter.reset(iter.buf);
         Any any = iter.readAny();
         assertEquals("hello", any.toString("field1"));
         assertNull(any.get("field2"));
@@ -54,11 +54,11 @@ public class TestObject extends TestCase {
         assertEquals("field2", iter.readObject());
         assertEquals("world", iter.readString());
         assertNull(iter.readObject());
-        iter.reset();
+        iter.reset(iter.buf);
         SimpleObject simpleObj = iter.read(SimpleObject.class);
         assertEquals("hello", simpleObj.field1);
         assertEquals("world", simpleObj.field2);
-        iter.reset();
+        iter.reset(iter.buf);
         Any any = iter.readAny();
         any.require("field1");
         assertEquals("hello", any.toString("field1"));
@@ -68,10 +68,10 @@ public class TestObject extends TestCase {
     public void test_read_null() throws IOException {
         JsonIterator iter = JsonIterator.parse("null".replace('\'', '"'));
         assertTrue(iter.readNull());
-        iter.reset();
+        iter.reset(iter.buf);
         SimpleObject simpleObj = iter.read(SimpleObject.class);
         assertNull(simpleObj);
-        iter.reset();
+        iter.reset(iter.buf);
         Any any = iter.readAny();
         assertEquals(ValueType.NULL, any.get().valueType());
     }
@@ -80,7 +80,7 @@ public class TestObject extends TestCase {
         JsonIterator iter = JsonIterator.parse("{ 'field1' : 100 }".replace('\'', '"'));
         ComplexObject complexObject = iter.read(ComplexObject.class);
         assertEquals(100, complexObject.field1);
-        iter.reset();
+        iter.reset(iter.buf);
         Any any = iter.readAny();
         assertEquals(100, any.toInt("field1"));
     }

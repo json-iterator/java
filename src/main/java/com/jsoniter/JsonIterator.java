@@ -48,28 +48,31 @@ public class JsonIterator implements Closeable {
         valueTypes['{'] = ValueType.OBJECT;
     }
 
-    public JsonIterator(InputStream in, byte[] buf) {
+    private JsonIterator(InputStream in, byte[] buf, int head, int tail) {
         this.in = in;
         this.buf = buf;
-        if (this.in == null) {
-            tail = buf.length;
-        }
+        this.head = head;
+        this.tail = tail;
     }
 
     public JsonIterator() {
-        this(null, new byte[0]);
+        this(null, new byte[0], 0, 0);
     }
 
     public static JsonIterator parse(InputStream in, int bufSize) {
-        return new JsonIterator(in, new byte[bufSize]);
+        return new JsonIterator(in, new byte[bufSize], 0, 0);
     }
 
     public static JsonIterator parse(byte[] buf) {
-        return new JsonIterator(null, buf);
+        return new JsonIterator(null, buf, 0, buf.length);
     }
 
     public static JsonIterator parse(String str) {
         return parse(str.getBytes());
+    }
+
+    public static JsonIterator parse(Slice slice) {
+        return new JsonIterator(null, slice.data(), slice.head(), slice.tail());
     }
 
     public final void reset(byte[] buf) {
@@ -93,10 +96,6 @@ public class JsonIterator implements Closeable {
         this.head = 0;
         this.tail = 0;
         this.eof = false;
-    }
-
-    public void reset() {
-        reset(this.buf);
     }
 
     public final void close() throws IOException {
@@ -218,7 +217,7 @@ public class JsonIterator implements Closeable {
             case 'n':
                 return false;
             default:
-                throw reportError("readArray", "expect [ or , or n or ], but found: " + (char)c);
+                throw reportError("readArray", "expect [ or , or n or ], but found: " + (char) c);
         }
     }
 

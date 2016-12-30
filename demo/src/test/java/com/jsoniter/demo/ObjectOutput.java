@@ -5,6 +5,7 @@ import com.dslplatform.json.CompiledJson;
 import com.dslplatform.json.DslJson;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jsoniter.output.EncodingMode;
 import com.jsoniter.output.JsonStream;
 import com.jsoniter.spi.TypeLiteral;
 import org.junit.Test;
@@ -59,6 +60,7 @@ public class ObjectOutput {
         baos = new ByteArrayOutputStream(1024 * 64);
         objectMapper = new ObjectMapper();
         objectMapper.getFactory().configure(JsonGenerator.Feature.ESCAPE_NON_ASCII, true);
+        JsonStream.setMode(EncodingMode.DYNAMIC_MODE);
         stream = new JsonStream(baos, 4096);
         buffer = new byte[4096];
         dslJson = new DslJson();

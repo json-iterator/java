@@ -40,7 +40,6 @@ public class TestReadAny extends TestCase {
         JsonIterator iter = JsonIterator.parse("{\"field1\":100}");
         Any any = iter.readAny();
         assertEquals(100, any.toInt("field1"));
-        assertEquals(100, any.toInt(Slice.make("field1")));
     }
 
     public void test_read_null_as_int() throws IOException {

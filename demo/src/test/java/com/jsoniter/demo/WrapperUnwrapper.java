@@ -1,5 +1,6 @@
 package com.jsoniter.demo;
 
+import com.jsoniter.Any;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.annotation.*;
 import com.jsoniter.output.JsonStream;
@@ -60,5 +61,7 @@ public static class User {
         User user = JsonIterator.deserialize(input, User.class);
         System.out.println(user.getName().getFirstName());
         System.out.println(JsonStream.serialize(user));
+
+        System.out.println(JsonStream.serialize(new int[]{1,2,3}));
     }
 }

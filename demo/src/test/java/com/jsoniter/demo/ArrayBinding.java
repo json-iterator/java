@@ -80,7 +80,7 @@ public class ArrayBinding {
     }
 
     private int withJsoniter() throws IOException {
-        iter.reset();
+        iter.reset(input);
         int[] arr = iter.read(typeLiteral);
         int total = 0;
         for (int i = 0; i < arr.length; i++) {
@@ -108,7 +108,7 @@ public class ArrayBinding {
     }
 
     private int withIterator() throws IOException {
-        iter.reset();
+        iter.reset(input);
         int total = 0;
         while (iter.readArray()) {
             total += iter.readInt();

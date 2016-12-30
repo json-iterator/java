@@ -77,7 +77,7 @@ public class MapBinding {
     }
 
     private Map<String, Float> withJsoniter() throws IOException {
-        iter.reset();
+        iter.reset(input);
         return iter.read(typeLiteral);
     }
 

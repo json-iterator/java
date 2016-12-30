@@ -110,7 +110,7 @@ public class SetterBinding {
     }
 
     private ConstructorBinding.TestObject withJsoniter() throws IOException {
-        iter.reset();
+        iter.reset(input);
         return iter.read(typeLiteral);
     }
 

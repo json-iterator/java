@@ -79,13 +79,24 @@ public class JsonStream extends OutputStream {
             writeNull();
         } else {
             write((int) (byte) '"');
-            writeRaw(val);
+            StreamImplString.writeString(this, val);
             write((int) (byte) '"');
         }
     }
 
     public final void writeRaw(String val) throws IOException {
-        StreamImplString.writeString(this, val);
+        int i = 0;
+        int valLen = val.length();
+        for(;;) {
+            for (; i < valLen && count < buf.length; i++) {
+                char c = val.charAt(i);
+                buf[count++] = (byte) c;
+            }
+            if (i == valLen) {
+                break;
+            }
+            flushBuffer();
+        }
     }
 
     public final void writeVal(Boolean val) throws IOException {
@@ -150,7 +161,7 @@ public class JsonStream extends OutputStream {
         if (val == null) {
             writeNull();
         } else {
-            writeRaw(Float.toString(val));
+            writeVal(val.floatValue());
         }
     }
 
@@ -162,7 +173,7 @@ public class JsonStream extends OutputStream {
         if (val == null) {
             writeNull();
         } else {
-            writeRaw(Double.toString(val));
+            writeVal(val.doubleValue());
         }
     }
 

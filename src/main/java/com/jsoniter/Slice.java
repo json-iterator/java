@@ -1,6 +1,6 @@
 package com.jsoniter;
 
-public class Slice implements Cloneable {
+public class Slice {
 
     private byte[] data;
     private int head;
@@ -38,25 +38,7 @@ public class Slice implements Cloneable {
     }
 
     @Override
-    public Slice clone() {
-        try {
-            return (Slice) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new JsonException(e);
-        }
-    }
-
-    @Override
     public final boolean equals(Object o) {
-        if (o.getClass() == String.class) {
-            String str = (String) o;
-            if ((tail - head) != str.length()) return false;
-            for (int i = head, j = 0; i < tail; i++, j++)
-                if (data[i] != str.charAt(j)) {
-                    return false;
-                }
-            return true;
-        }
         Slice slice = (Slice) o;
         if ((tail - head) != (slice.tail - slice.head)) return false;
         for (int i = head, j = slice.head; i < tail; i++, j++)

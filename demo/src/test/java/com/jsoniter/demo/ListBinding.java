@@ -75,7 +75,7 @@ public class ListBinding {
     }
 
     private List<String> withJsoniter() throws IOException {
-        iter.reset();
+        iter.reset(input);
         return iter.read(typeLiteral);
     }
 

@@ -24,6 +24,8 @@ public class FieldMatching {
     private TypeLiteral<TestObject4> testObject4Type;
     private JsonIterator iter0;
     private JsonIterator iter1Success;
+    private byte[] iter0Input;
+    private byte[] iter1SuccessInput;
 
     public static class TestObject0 {
         public int field1;
@@ -60,8 +62,10 @@ public class FieldMatching {
     public void benchSetup() {
         JsoniterAnnotationSupport.enable();
         JsonIterator.setMode(DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_STRICTLY);
-        iter0 = JsonIterator.parse("{'field1':101,'field2':101,'field3':101}".replace('\'', '"').getBytes());
-        iter1Success = JsonIterator.parse("{'field1':101,'field2':101,'field3':101}".replace('\'', '"').getBytes());
+        iter0Input = "{'field1':101,'field2':101,'field3':101}".replace('\'', '"').getBytes();
+        iter0 = JsonIterator.parse(iter0Input);
+        iter1SuccessInput = "{'field1':101,'field2':101,'field3':101}".replace('\'', '"').getBytes();
+        iter1Success = JsonIterator.parse(iter1SuccessInput);
         testObject0Type = new TypeLiteral<TestObject0>() {
         };
         testObject1Type = new TypeLiteral<TestObject1>() {
@@ -118,13 +122,13 @@ public class FieldMatching {
 
     @Benchmark
     public void iter0(Blackhole bh) throws IOException {
-        iter0.reset();
+        iter0.reset(iter0Input);
         bh.consume(iter0.read(testObject0Type));
     }
 
     @Benchmark
     public void iter1Success(Blackhole bh) throws IOException {
-        iter1Success.reset();
+        iter1Success.reset(iter1SuccessInput);
         bh.consume(iter1Success.read(testObject1Type));
     }
 }

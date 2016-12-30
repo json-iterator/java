@@ -153,7 +153,7 @@ public class SimpleObjectBinding {
     }
 
     private TestObject withIterator() throws IOException {
-        iter.reset();
+        iter.reset(input);
         TestObject obj = new TestObject();
         for (String field = iter.readObject(); field != null; field = iter.readObject()) {
             switch (field) {
@@ -171,7 +171,7 @@ public class SimpleObjectBinding {
     }
 
     private TestObject withIteratorIfElse() throws IOException {
-        iter.reset();
+        iter.reset(input);
         TestObject obj = new TestObject();
         for (String field = iter.readObject(); field != null; field = iter.readObject()) {
             if (field.equals("field1")) {
@@ -188,7 +188,7 @@ public class SimpleObjectBinding {
     }
 
     private TestObject withIteratorIntern() throws IOException {
-        iter.reset();
+        iter.reset(input);
         TestObject obj = new TestObject();
         for (String field = iter.readObject(); field != null; field = iter.readObject()) {
             field = field.intern();
@@ -206,12 +206,12 @@ public class SimpleObjectBinding {
     }
 
     private TestObject withBindApi() throws IOException {
-        iter.reset();
+        iter.reset(input);
         return iter.read(typeLiteral);
     }
 
     private TestObject withExistingObject() throws IOException {
-        iter.reset();
+        iter.reset(input);
         return iter.read(typeLiteral, testObject);
     }
 

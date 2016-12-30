@@ -20,7 +20,7 @@ public class TestNested extends TestCase {
                     field2 = "22";
                 }}
         }, objects);
-        iter.reset();
+        iter.reset(iter.buf);
         Any any = iter.readAny();
         assertEquals("22", any.toString(1, "field2"));
     }
