@@ -25,8 +25,21 @@ public class TestReadAny extends TestCase {
     }
 
     public void test_read_int() throws IOException {
-        JsonIterator iter = JsonIterator.parse("100");
-        assertEquals(100, iter.readAny().toInt());
+        assertEquals(100, JsonIterator.deserialize("100").toInt());
+        assertEquals(0, JsonIterator.deserialize("{}").toInt());
+        assertEquals(1, JsonIterator.deserialize("{\"field1\":100}").toInt());
+        assertEquals(0, JsonIterator.deserialize("null").toInt());
+        assertEquals(100, JsonIterator.deserialize("\"100\"").toInt());
+        assertEquals(1, JsonIterator.deserialize("true").toInt());
+    }
+
+    public void test_read_boolean() throws IOException {
+        assertEquals(true, JsonIterator.deserialize("100").toBoolean());
+        assertEquals(false, JsonIterator.deserialize("{}").toBoolean());
+        assertEquals(true, JsonIterator.deserialize("{\"field1\":100}").toBoolean());
+        assertEquals(false, JsonIterator.deserialize("null").toBoolean());
+        assertEquals(true, JsonIterator.deserialize("\"100\"").toBoolean());
+        assertEquals(true, JsonIterator.deserialize("true").toBoolean());
     }
 
     public void test_read_int_array() throws IOException {
@@ -40,18 +53,6 @@ public class TestReadAny extends TestCase {
         JsonIterator iter = JsonIterator.parse("{\"field1\":100}");
         Any any = iter.readAny();
         assertEquals(100, any.toInt("field1"));
-    }
-
-    public void test_read_null_as_int() throws IOException {
-        JsonIterator iter = JsonIterator.parse("null");
-        Any any = iter.readAny();
-        assertEquals(0, any.toInt());
-    }
-
-    public void test_read_string_as_int() throws IOException {
-        JsonIterator iter = JsonIterator.parse("\"100\"");
-        Any any = iter.readAny();
-        assertEquals(100, any.toInt());
     }
 
     public void test_read_float_as_int() throws IOException {
@@ -85,7 +86,9 @@ public class TestReadAny extends TestCase {
     public void test_read_long() throws IOException {
         assertEquals(100L, JsonIterator.deserialize("100").toLong());
         assertEquals(100L, JsonIterator.deserialize("100.1").toLong());
-        assertEquals(100L, JsonIterator.deserialize("\"100.1\"").toLong());
+        Any any = JsonIterator.deserialize("\"100.1\"");
+        assertEquals(100L, any.toLong());
+        assertEquals(100L, any.toLong());
     }
 
     public void test_read_float() throws IOException {
@@ -103,7 +106,7 @@ public class TestReadAny extends TestCase {
 
     public void test_keys() throws IOException {
         assertEquals(new HashSet<Object>(Arrays.asList("field1")), JsonIterator.deserialize("{\"field1\":1}").keys());
-        assertEquals(new HashSet<Object>(Arrays.asList(0,1)), JsonIterator.deserialize("[3,5]").keys());
+        assertEquals(new HashSet<Object>(Arrays.asList()), JsonIterator.deserialize("[3,5]").keys());
     }
 
     public void test_read_double() throws IOException {
@@ -117,7 +120,7 @@ public class TestReadAny extends TestCase {
     }
 
     public void test_read_class() throws IOException {
-        TestObject1 obj = JsonIterator.deserialize("{\"field1\": 100}").to(TestObject1.class);
+        TestObject1 obj = JsonIterator.deserialize("{\"field1\": 100}").as(TestObject1.class);
         assertEquals(100, obj.field1);
     }
 
@@ -130,5 +133,19 @@ public class TestReadAny extends TestCase {
         assertEquals(3, any.toInt("c"));
         assertEquals(2, any.toInt("b"));
         assertEquals(1, any.toInt("a"));
+    }
+
+    public void test_require_path() throws IOException {
+        assertNotNull(JsonIterator.deserialize("null").require());
+        try {
+            JsonIterator.deserialize("[]").require(0);
+        } catch (JsonException e) {
+            System.out.println(e);
+        }
+        try {
+            JsonIterator.deserialize("{}").require("hello");
+        } catch (JsonException e) {
+            System.out.println(e);
+        }
     }
 }

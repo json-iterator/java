@@ -7,6 +7,23 @@ import java.util.*;
 
 public class Any extends Slice implements Iterable<Any> {
 
+    private final static Set<String> EMPTY_KEYS = Collections.unmodifiableSet(new HashSet<String>());
+    private final static Iterator<Any> EMPTY_ITERATOR = new Iterator<Any>() {
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean hasNext() {
+            return false;
+        }
+
+        @Override
+        public Any next() {
+            throw new UnsupportedOperationException();
+        }
+    };
     private final static ThreadLocal<JsonIterator> tlsIter = new ThreadLocal<JsonIterator>() {
         @Override
         protected JsonIterator initialValue() {
@@ -14,21 +31,20 @@ public class Any extends Slice implements Iterable<Any> {
         }
     };
     private ValueType valueType;
-    private List<Any> array;
-    private Map<Object, Any> object;
-    private int objectParsedHead;
+    private Object objVal;
+    private int intVal;
 
     public Any(ValueType valueType, byte[] data, int head, int tail) {
         super(data, head, tail);
         this.valueType = valueType;
-        objectParsedHead = head;
+        intVal = head;
     }
 
     public final ValueType valueType() {
         return valueType;
     }
 
-    public <T> T bindTo(T obj, Object... keys) {
+    public final <T> T bindTo(T obj, Object... keys) {
         Any found = get(keys);
         if (found == null) {
             return null;
@@ -36,7 +52,7 @@ public class Any extends Slice implements Iterable<Any> {
         return found.bindTo(obj);
     }
 
-    public <T> T bindTo(T obj) {
+    public final <T> T bindTo(T obj) {
         try {
             return createIterator().read(obj);
         } catch (IOException e) {
@@ -44,7 +60,7 @@ public class Any extends Slice implements Iterable<Any> {
         }
     }
 
-    public <T> T bindTo(TypeLiteral<T> typeLiteral, T obj, Object... keys) {
+    public final <T> T bindTo(TypeLiteral<T> typeLiteral, T obj, Object... keys) {
         Any found = get(keys);
         if (found == null) {
             return null;
@@ -52,7 +68,7 @@ public class Any extends Slice implements Iterable<Any> {
         return found.bindTo(typeLiteral, obj);
     }
 
-    public <T> T bindTo(TypeLiteral<T> typeLiteral, T obj) {
+    public final <T> T bindTo(TypeLiteral<T> typeLiteral, T obj) {
         try {
             return createIterator().read(typeLiteral, obj);
         } catch (IOException e) {
@@ -60,15 +76,31 @@ public class Any extends Slice implements Iterable<Any> {
         }
     }
 
-    public final <T> T to(Class<T> clazz, Object... keys) {
+    public final Object asObject(Object... keys) {
         Any found = get(keys);
         if (found == null) {
             return null;
         }
-        return found.to(clazz);
+        return found.asObject();
     }
 
-    private <T> T to(Class<T> clazz) {
+    public final Object asObject() {
+        try {
+            return createIterator().read();
+        } catch (IOException e) {
+            throw new JsonException(e);
+        }
+    }
+
+    public final <T> T as(Class<T> clazz, Object... keys) {
+        Any found = get(keys);
+        if (found == null) {
+            return null;
+        }
+        return found.as(clazz);
+    }
+
+    private <T> T as(Class<T> clazz) {
         try {
             return createIterator().read(clazz);
         } catch (IOException e) {
@@ -76,19 +108,55 @@ public class Any extends Slice implements Iterable<Any> {
         }
     }
 
-    public final <T> T to(TypeLiteral<T> typeLiteral, Object... keys) {
+    public final <T> T as(TypeLiteral<T> typeLiteral, Object... keys) {
         Any found = get(keys);
         if (found == null) {
             return null;
         }
-        return found.to(typeLiteral);
+        return found.as(typeLiteral);
     }
 
-    private <T> T to(TypeLiteral<T> typeLiteral) {
+    private <T> T as(TypeLiteral<T> typeLiteral) {
         try {
             return createIterator().read(typeLiteral);
         } catch (IOException e) {
             throw new JsonException(e);
+        }
+    }
+
+    public final boolean toBoolean(Object... keys) {
+        Any found = get(keys);
+        if (found == null) {
+            return false;
+        }
+        return found.toBoolean();
+    }
+
+    public final boolean toBoolean() {
+        try {
+            return toBoolean_();
+        } catch (IOException e) {
+            throw new JsonException(e);
+        }
+    }
+
+    private boolean toBoolean_() throws IOException {
+        if (ValueType.BOOLEAN == valueType) {
+            return createIterator().readBoolean();
+        }
+        switch (valueType) {
+            case STRING:
+                return !createIterator().readString().trim().isEmpty();
+            case NULL:
+                return false;
+            case ARRAY:
+                return fillArray().isEmpty() ? false : true;
+            case OBJECT:
+                return fillObject().isEmpty() ? false : true;
+            case NUMBER:
+                return createIterator().readDouble() != 0;
+            default:
+                return false;
         }
     }
 
@@ -112,15 +180,22 @@ public class Any extends Slice implements Iterable<Any> {
         if (ValueType.NUMBER == valueType) {
             return createIterator().readInt();
         }
-        if (ValueType.STRING == valueType) {
-            JsonIterator iter = createIterator();
-            iter.nextToken();
-            return iter.readInt();
+        switch (valueType) {
+            case STRING:
+                JsonIterator iter = createIterator();
+                iter.nextToken();
+                return iter.readInt();
+            case NULL:
+                return 0;
+            case ARRAY:
+                return fillArray().isEmpty() ? 0 : 1;
+            case OBJECT:
+                return fillObject().isEmpty() ? 0 : 1;
+            case BOOLEAN:
+                return createIterator().readBoolean() ? 1 : 0;
+            default:
+                return 0;
         }
-        if (ValueType.NULL == valueType) {
-            return 0;
-        }
-        throw unexpectedValueType(ValueType.NUMBER);
     }
 
     public final long toLong(Object... keys) {
@@ -143,15 +218,22 @@ public class Any extends Slice implements Iterable<Any> {
         if (ValueType.NUMBER == valueType) {
             return createIterator().readLong();
         }
-        if (ValueType.STRING == valueType) {
-            JsonIterator iter = createIterator();
-            iter.nextToken();
-            return iter.readLong();
+        switch (valueType) {
+            case STRING:
+                JsonIterator iter = createIterator();
+                iter.nextToken();
+                return iter.readLong();
+            case NULL:
+                return 0;
+            case OBJECT:
+                return fillObject().isEmpty() ? 0 : 1;
+            case ARRAY:
+                return fillArray().isEmpty() ? 0 : 1;
+            case BOOLEAN:
+                return createIterator().readBoolean() ? 1 : 0;
+            default:
+                return 0;
         }
-        if (ValueType.NULL == valueType) {
-            return 0;
-        }
-        throw unexpectedValueType(ValueType.NUMBER);
     }
 
     public final float toFloat(Object... keys) {
@@ -174,15 +256,22 @@ public class Any extends Slice implements Iterable<Any> {
         if (ValueType.NUMBER == valueType) {
             return createIterator().readFloat();
         }
-        if (ValueType.STRING == valueType) {
-            JsonIterator iter = createIterator();
-            iter.nextToken();
-            return iter.readFloat();
+        switch (valueType) {
+            case STRING:
+                JsonIterator iter = createIterator();
+                iter.nextToken();
+                return iter.readFloat();
+            case NULL:
+                return 0;
+            case OBJECT:
+                return fillObject().isEmpty() ? 0 : 1;
+            case ARRAY:
+                return fillArray().isEmpty() ? 0 : 1;
+            case BOOLEAN:
+                return createIterator().readBoolean() ? 1 : 0;
+            default:
+                return 0;
         }
-        if (ValueType.NULL == valueType) {
-            return 0;
-        }
-        throw unexpectedValueType(ValueType.NUMBER);
     }
 
     public final double toDouble(Object... keys) {
@@ -205,15 +294,22 @@ public class Any extends Slice implements Iterable<Any> {
         if (ValueType.NUMBER == valueType) {
             return createIterator().readDouble();
         }
-        if (ValueType.STRING == valueType) {
-            JsonIterator iter = createIterator();
-            iter.nextToken();
-            return iter.readDouble();
+        switch (valueType) {
+            case STRING:
+                JsonIterator iter = createIterator();
+                iter.nextToken();
+                return iter.readDouble();
+            case NULL:
+                return 0;
+            case OBJECT:
+                return fillObject().isEmpty() ? 0 : 1;
+            case ARRAY:
+                return fillArray().isEmpty() ? 0 : 1;
+            case BOOLEAN:
+                return createIterator().readBoolean() ? 1 : 0;
+            default:
+                return 0;
         }
-        if (ValueType.NULL == valueType) {
-            return 0;
-        }
-        throw unexpectedValueType(ValueType.NUMBER);
     }
 
     public final String toString(Object... keys) {
@@ -237,10 +333,7 @@ public class Any extends Slice implements Iterable<Any> {
         if (ValueType.STRING == valueType) {
             return createIterator().readString();
         }
-        if (ValueType.NULL == valueType) {
-            return null;
-        }
-        if (ValueType.NUMBER == valueType) {
+        if (ValueType.NUMBER == valueType || ValueType.NULL == valueType || ValueType.BOOLEAN == valueType) {
             char[] chars = new char[tail() - head()];
             for (int i = head(), j = 0; i < tail(); i++, j++) {
                 chars[j] = (char) data()[i];
@@ -254,42 +347,46 @@ public class Any extends Slice implements Iterable<Any> {
         try {
             if (ValueType.ARRAY == valueType) {
                 fillArray();
-                return array.size();
+                return fillArray().size();
             }
             if (ValueType.OBJECT == valueType) {
-                fillObject();
-                return object.size();
+                return fillObject().size();
             }
+            return 0;
         } catch (IOException e) {
             throw new JsonException(e);
         }
-        throw unexpectedValueType(ValueType.OBJECT);
     }
 
-    public Set<Object> keys() {
+    public Set<String> keys() {
+        try {
+            if (ValueType.OBJECT == valueType) {
+                return fillObject().keySet();
+            }
+            return EMPTY_KEYS;
+        } catch (IOException e) {
+            throw new JsonException(e);
+        }
+    }
+
+    @Override
+    public final Iterator<Any> iterator() {
+        if (ValueType.ARRAY != valueType()) {
+            try {
+                return new ArrayIterator(fillArray());
+            } catch (IOException e) {
+                throw new JsonException(e);
+            }
+        }
+        return EMPTY_ITERATOR;
+    }
+
+    public final Any get(int index) {
         try {
             if (ValueType.ARRAY == valueType) {
-                fillArray();
-                Set<Object> keys = new HashSet<Object>(array.size());
-                for (int i = 0; i < array.size(); i++) {
-                    keys.add(i);
-                }
-                return keys;
+                return fillArray().get(index);
             }
-            if (ValueType.OBJECT == valueType) {
-                fillObject();
-                return object.keySet();
-            }
-        } catch (IOException e) {
-            throw new JsonException(e);
-        }
-        throw unexpectedValueType(ValueType.OBJECT);
-    }
-
-    public final Any getValue(int index) {
-        try {
-            fillArray();
-            return array.get(index);
+            return null;
         } catch (IndexOutOfBoundsException e) {
             return null;
         } catch (ClassCastException e) {
@@ -299,9 +396,12 @@ public class Any extends Slice implements Iterable<Any> {
         }
     }
 
-    public final Any getValue(Object key) {
+    public final Any get(Object key) {
         try {
-            return fillObject(key);
+            if (ValueType.OBJECT == valueType) {
+                return fillObject(key);
+            }
+            return null;
         } catch (IndexOutOfBoundsException e) {
             return null;
         } catch (ClassCastException e) {
@@ -331,8 +431,7 @@ public class Any extends Slice implements Iterable<Any> {
         if (ValueType.OBJECT == valueType) {
             result = fillObject(keys[idx]);
         } else if (ValueType.ARRAY == valueType) {
-            fillArray();
-            result = array.get((Integer) keys[idx]);
+            result = fillArray().get((Integer) keys[idx]);
         } else {
             result = null;
         }
@@ -360,20 +459,24 @@ public class Any extends Slice implements Iterable<Any> {
         if (ValueType.OBJECT == valueType) {
             result = fillObject(keys[idx]);
         } else if (ValueType.ARRAY == valueType) {
-            fillArray();
-            result = array.get((Integer) keys[idx]);
+            try {
+                result = fillArray().get((Integer) keys[idx]);
+            } catch (IndexOutOfBoundsException e) {
+                reportPathNotFound(keys, idx);
+            }
         }
         if (result == null) {
-            throw new JsonException(String.format("failed to get path %s, because %s not found in %s",
-                    Arrays.toString(keys), keys[idx], object));
+            return reportPathNotFound(keys, idx);
         }
         return result.get_(keys, idx + 1);
     }
 
-    private JsonException unexpectedValueType(ValueType expectedType) {
-        throw new JsonException("unexpected value type: " + valueType);
+    private Any reportPathNotFound(Object[] keys, int idx) {
+        throw new JsonException(String.format("failed to get path %s, because #%s %s not found in %s",
+                Arrays.toString(keys), idx, keys[idx], objVal));
     }
 
+    // TODO: add value caching
     private JsonIterator createIterator() {
         JsonIterator iter = tlsIter.get();
         iter.reset(this);
@@ -381,17 +484,18 @@ public class Any extends Slice implements Iterable<Any> {
     }
 
     private Any fillObject(Object target) throws IOException {
-        if (objectParsedHead == tail() || (object != null && object.containsKey(target))) {
+        Map<Object, Any> object = (Map<Object, Any>) objVal;
+        if (intVal == tail() || (object != null && object.containsKey(target))) {
             return object.get(target);
         }
         JsonIterator iter = tlsIter.get();
-        iter.reset(data(), objectParsedHead, tail());
+        iter.reset(data(), intVal, tail());
         if (object == null) {
-            object = new HashMap<Object, Any>(4);
+            objVal = object = new HashMap<Object, Any>(4);
         }
-        if (objectParsedHead == head()) {
+        if (intVal == head()) {
             if (!CodegenAccess.readObjectStart(iter)) {
-                objectParsedHead = tail();
+                intVal = tail();
                 return null;
             }
             String field = CodegenAccess.readObjectFieldAsString(iter);
@@ -402,7 +506,7 @@ public class Any extends Slice implements Iterable<Any> {
                 Any value = new Any(elementType, data(), start, end);
                 object.put(field, value);
                 if (field.hashCode() == target.hashCode() && field.equals(target)) {
-                    objectParsedHead = iter.head;
+                    intVal = iter.head;
                     return value;
                 }
             }
@@ -416,28 +520,29 @@ public class Any extends Slice implements Iterable<Any> {
                 Any value = new Any(elementType, data(), start, end);
                 object.put(field, value);
                 if (field.hashCode() == target.hashCode() && field.equals(target)) {
-                    objectParsedHead = iter.head;
+                    intVal = iter.head;
                     return value;
                 }
             }
         }
-        objectParsedHead = tail();
+        intVal = tail();
         object.put(target, null);
         return null;
     }
 
-    private void fillObject() throws IOException {
-        if (objectParsedHead == tail()) {
-            return;
+    private Map<String, Any> fillObject() throws IOException {
+        Map<String, Any> object = (Map<String, Any>) objVal;
+        if (intVal == tail()) {
+            return object;
         }
         JsonIterator iter = tlsIter.get();
-        iter.reset(data(), objectParsedHead, tail());
+        iter.reset(data(), intVal, tail());
         if (object == null) {
-            object = new HashMap<Object, Any>(4);
+            objVal = object = new HashMap<String, Any>(4);
         }
         if (!CodegenAccess.readObjectStart(iter)) {
-            objectParsedHead = tail();
-            return;
+            intVal = tail();
+            return object;
         }
         String field = CodegenAccess.readObjectFieldAsString(iter);
         int start = iter.head;
@@ -457,17 +562,19 @@ public class Any extends Slice implements Iterable<Any> {
                 object.put(field, value);
             }
         }
-        objectParsedHead = tail();
+        intVal = tail();
+        return object;
     }
 
-    private void fillArray() throws IOException {
+    private List<Any> fillArray() throws IOException {
+        List<Any> array = (List<Any>) objVal;
         if (array != null) {
-            return;
+            return array;
         }
         JsonIterator iter = createIterator();
-        array = new ArrayList<Any>(4);
+        objVal = array = new ArrayList<Any>(4);
         if (!CodegenAccess.readArrayStart(iter)) {
-            return;
+            return array;
         }
         int start = iter.head;
         ValueType elementType = iter.skip();
@@ -479,23 +586,18 @@ public class Any extends Slice implements Iterable<Any> {
             end = iter.head;
             array.add(new Any(elementType, data(), start, end));
         }
-    }
-
-    @Override
-    public final Iterator<Any> iterator() {
-        if (ValueType.ARRAY != valueType()) {
-            throw unexpectedValueType(ValueType.ARRAY);
-        }
-        return new ArrayIterator();
+        return array;
     }
 
     private class ArrayIterator implements Iterator<Any> {
 
         private final int size;
+        private final List<Any> array;
         private int idx;
 
-        public ArrayIterator() {
-            size = size();
+        public ArrayIterator(List<Any> array) {
+            size = array.size();
+            this.array = array;
             idx = 0;
         }
 
