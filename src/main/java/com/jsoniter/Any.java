@@ -28,6 +28,38 @@ public class Any extends Slice implements Iterable<Any> {
         return valueType;
     }
 
+    public <T> T bindTo(T obj, Object... keys) {
+        Any found = get(keys);
+        if (found == null) {
+            return null;
+        }
+        return found.bindTo(obj);
+    }
+
+    public <T> T bindTo(T obj) {
+        try {
+            return createIterator().read(obj);
+        } catch (IOException e) {
+            throw new JsonException(e);
+        }
+    }
+
+    public <T> T bindTo(TypeLiteral<T> typeLiteral, T obj, Object... keys) {
+        Any found = get(keys);
+        if (found == null) {
+            return null;
+        }
+        return found.bindTo(typeLiteral, obj);
+    }
+
+    public <T> T bindTo(TypeLiteral<T> typeLiteral, T obj) {
+        try {
+            return createIterator().read(typeLiteral, obj);
+        } catch (IOException e) {
+            throw new JsonException(e);
+        }
+    }
+
     public final <T> T to(Class<T> clazz, Object... keys) {
         Any found = get(keys);
         if (found == null) {
