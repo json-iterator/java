@@ -47,7 +47,7 @@ public class LazyAny {
         System.out.println(jsoniter_object());
 
         String input = "{'numbers': ['1', '2', ['3', '4']]}".replace('\'', '"');
-        String[] array = JsonIterator.deserialize(input).get("numbers", 2).to(String[].class);
+        String[] array = JsonIterator.deserialize(input).get("numbers", 2).as(String[].class);
         System.out.println(Arrays.toString(array));
     }
 
@@ -63,23 +63,23 @@ public class LazyAny {
 
     public int jsoniter() throws IOException {
         iter.reset(input);
-Any users = iter.readAny();
-int total = 0;
-for (Any user : users) {
-    total += user.getValue("friends").size();
-}
-return total;
+        Any users = iter.readAny();
+        int total = 0;
+        for (Any user : users) {
+            total += user.get("friends").size();
+        }
+        return total;
     }
 
     public int jsoniter_object() throws IOException {
         iter.reset(input);
-List users = (List) iter.read();
-int total = 0;
-for (Object userObj : users) {
-    Map user = (Map) userObj;
-    List friends = (List) user.get("friends");
-    total += friends.size();
-}
-return total;
+        List users = (List) iter.read();
+        int total = 0;
+        for (Object userObj : users) {
+            Map user = (Map) userObj;
+            List friends = (List) user.get("friends");
+            total += friends.size();
+        }
+        return total;
     }
 }
