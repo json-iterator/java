@@ -26,11 +26,17 @@ public class TestReadAny extends TestCase {
 
     public void test_read_int() throws IOException {
         assertEquals(100, JsonIterator.deserialize("100").toInt());
-        assertEquals(0, JsonIterator.deserialize("{}").toInt());
-        assertEquals(1, JsonIterator.deserialize("{\"field1\":100}").toInt());
         assertEquals(0, JsonIterator.deserialize("null").toInt());
         assertEquals(100, JsonIterator.deserialize("\"100\"").toInt());
         assertEquals(1, JsonIterator.deserialize("true").toInt());
+        Any any = JsonIterator.deserialize("100");
+        assertEquals(Double.valueOf(100), any.asObject());
+        assertEquals(Double.valueOf(100), any.asObject());
+        assertEquals(100, any.toInt());
+        assertEquals(100L, any.toLong());
+        assertEquals(100F, any.toFloat());
+        assertEquals(100D, any.toDouble());
+        assertEquals("100", any.toString());
     }
 
     public void test_read_boolean() throws IOException {
@@ -40,6 +46,10 @@ public class TestReadAny extends TestCase {
         assertEquals(false, JsonIterator.deserialize("null").toBoolean());
         assertEquals(true, JsonIterator.deserialize("\"100\"").toBoolean());
         assertEquals(true, JsonIterator.deserialize("true").toBoolean());
+        assertEquals(1, JsonIterator.deserialize("true").toInt());
+        assertEquals(0, JsonIterator.deserialize("false").toInt());
+        assertEquals("false", JsonIterator.deserialize("false").toString());
+        assertEquals(Boolean.FALSE, JsonIterator.deserialize("false").asObject());
     }
 
     public void test_read_int_array() throws IOException {
@@ -63,9 +73,12 @@ public class TestReadAny extends TestCase {
     }
 
     public void test_read_string() throws IOException {
-        JsonIterator iter = JsonIterator.parse("\"hello\"");
-        Any any = iter.readAny();
-        assertEquals("hello", any.toString());
+        assertEquals("hello", JsonIterator.deserialize("\"hello\"").toString());
+        assertEquals("true", JsonIterator.deserialize("true").toString());
+        assertEquals(null, JsonIterator.deserialize("null").toString());
+        assertEquals("100", JsonIterator.deserialize("100").toString());
+        assertEquals(100, JsonIterator.deserialize("\"100\"").toInt());
+        assertEquals(true, JsonIterator.deserialize("\"hello\"").toBoolean());
     }
 
     public void test_read_int_as_string() throws IOException {

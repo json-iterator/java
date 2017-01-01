@@ -231,4 +231,8 @@ public class CodegenAccess {
     public static void staticGenDecoders(TypeLiteral[] typeLiterals) {
         Codegen.staticGenDecoders(typeLiterals);
     }
+
+    public static int head(JsonIterator iter) {
+        return iter.head;
+    }
 }

@@ -1,5 +1,6 @@
 package com.jsoniter;
 
+import com.jsoniter.any.LazyAny;
 import com.jsoniter.spi.TypeLiteral;
 
 import java.io.Closeable;
@@ -308,14 +309,11 @@ public class JsonIterator implements Closeable {
         return new BigInteger(IterImplNumber.readNumber(this));
     }
 
-    public final Any readAny() throws IOException {
+    public final LazyAny readAny() throws IOException {
         if (in != null) {
             throw new JsonException("input can not be InputStream when readAny");
         }
-        int start = this.head;
-        ValueType valueType = skip();
-        int end = this.head;
-        return new Any(valueType, buf, start, end);
+        return IterImplSkip.readAny(this);
     }
 
     public final Object read() throws IOException {
@@ -372,8 +370,8 @@ public class JsonIterator implements Closeable {
         return valueType;
     }
 
-    public ValueType skip() throws IOException {
-        return IterImplSkip.skip(this);
+    public void skip() throws IOException {
+        IterImplSkip.skip(this);
     }
 
     private static ThreadLocal<JsonIterator> tlsIter = new ThreadLocal<JsonIterator>() {

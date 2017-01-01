@@ -1,5 +1,7 @@
 package com.jsoniter;
 
+import com.jsoniter.any.*;
+
 import java.io.IOException;
 
 class IterImplSkip {
@@ -16,12 +18,13 @@ class IterImplSkip {
         breaks[']'] = true;
     }
 
-    public static final ValueType skip(JsonIterator iter) throws IOException {
+    public static final LazyAny readAny(JsonIterator iter) throws IOException {
+        int start = iter.head;
         byte c = iter.nextToken();
         switch (c) {
             case '"':
                 skipString(iter);
-                return ValueType.STRING;
+                return new StringLazyAny(iter.buf, start, iter.head);
             case '-':
             case '0':
             case '1':
@@ -34,20 +37,53 @@ class IterImplSkip {
             case '8':
             case '9':
                 skipUntilBreak(iter);
-                return ValueType.NUMBER;
+                return new NumberLazyAny(iter.buf, start, iter.head);
             case 't':
             case 'f':
                 skipUntilBreak(iter);
-                return ValueType.BOOLEAN;
+                return new BooleanLazyAny(iter.buf, start, iter.head);
             case 'n':
                 skipUntilBreak(iter);
-                return ValueType.NULL;
+                return new NullLazyAny(iter.buf, start, iter.head);
             case '[':
                 skipArray(iter);
-                return ValueType.ARRAY;
+                return new ArrayLazyAny(iter.buf, start, iter.head);
             case '{':
                 skipObject(iter);
-                return ValueType.OBJECT;
+                return new ObjectLazyAny(iter.buf, start, iter.head);
+            default:
+                throw iter.reportError("IterImplSkip", "do not know how to skip: " + c);
+        }
+    }
+
+    public static final void skip(JsonIterator iter) throws IOException {
+        byte c = iter.nextToken();
+        switch (c) {
+            case '"':
+                skipString(iter);
+                return;
+            case '-':
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9':
+            case 't':
+            case 'f':
+            case 'n':
+                skipUntilBreak(iter);
+                return;
+            case '[':
+                skipArray(iter);
+                return;
+            case '{':
+                skipObject(iter);
+                return;
             default:
                 throw iter.reportError("IterImplSkip", "do not know how to skip: " + c);
         }
