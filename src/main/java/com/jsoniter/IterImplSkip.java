@@ -18,13 +18,13 @@ class IterImplSkip {
         breaks[']'] = true;
     }
 
-    public static final LazyAny readAny(JsonIterator iter) throws IOException {
+    public static final Any readAny(JsonIterator iter) throws IOException {
         int start = iter.head;
         byte c = IterImpl.nextToken(iter);
         switch (c) {
             case '"':
                 IterImpl.skipString(iter);
-                return new StringLazyAny(iter.buf, start, iter.head);
+                return Any.lazyString(iter.buf, start, iter.head);
             case '-':
             case '0':
             case '1':
@@ -37,20 +37,20 @@ class IterImplSkip {
             case '8':
             case '9':
                 IterImpl.skipUntilBreak(iter);
-                return new NumberLazyAny(iter.buf, start, iter.head);
+                return Any.lazyNumber(iter.buf, start, iter.head);
             case 't':
             case 'f':
                 IterImpl.skipUntilBreak(iter);
-                return new BooleanLazyAny(iter.buf, start, iter.head);
+                return Any.lazyBoolean(iter.buf, start, iter.head);
             case 'n':
                 IterImpl.skipUntilBreak(iter);
-                return new NullLazyAny(iter.buf, start, iter.head);
+                return Any.lazyNull(iter.buf, start, iter.head);
             case '[':
                 IterImpl.skipArray(iter);
-                return new ArrayLazyAny(iter.buf, start, iter.head);
+                return Any.lazyArray(iter.buf, start, iter.head);
             case '{':
                 IterImpl.skipObject(iter);
-                return new ObjectLazyAny(iter.buf, start, iter.head);
+                return Any.lazyObject(iter.buf, start, iter.head);
             default:
                 throw iter.reportError("IterImplSkip", "do not know how to skip: " + c);
         }

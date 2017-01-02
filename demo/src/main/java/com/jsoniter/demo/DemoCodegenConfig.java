@@ -38,7 +38,7 @@ public class DemoCodegenConfig implements CodegenConfig {
                 },
                 // array
                 TypeLiteral.create(int[].class),
-                // object
+                // set
                 TypeLiteral.create(User.class)
         };
     }

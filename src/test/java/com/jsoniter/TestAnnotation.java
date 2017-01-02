@@ -1,6 +1,7 @@
 package com.jsoniter;
 
 import com.jsoniter.annotation.*;
+import com.jsoniter.any.Any;
 import com.jsoniter.spi.Decoder;
 import com.jsoniter.spi.JsoniterSpi;
 import junit.framework.TestCase;

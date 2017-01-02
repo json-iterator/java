@@ -1,50 +1,58 @@
 package com.jsoniter.any;
 
 import com.jsoniter.ValueType;
+import com.jsoniter.spi.TypeLiteral;
 
-class NullLazyAny extends LazyAny {
+class FloatObjectAny extends ObjectAny {
 
-    public NullLazyAny(byte[] data, int head, int tail) {
-        super(data, head, tail);
+    private float val;
+
+    public FloatObjectAny(float val) {
+        this.val = val;
     }
 
     @Override
     public ValueType valueType() {
-        return ValueType.NULL;
+        return ValueType.NUMBER;
     }
 
     @Override
     public Object object() {
-        return null;
+        return val;
     }
 
     @Override
     public boolean toBoolean() {
-        return false;
+        return val != 0;
     }
 
     @Override
     public int toInt() {
-        return 0;
+        return (int) val;
     }
 
     @Override
     public long toLong() {
-        return 0;
+        return (long) val;
     }
 
     @Override
     public float toFloat() {
-        return 0;
+        return val;
     }
 
     @Override
     public double toDouble() {
-        return 0;
+        return val;
     }
 
     @Override
     public String toString() {
-        return null;
+        return String.valueOf(val);
+    }
+
+    public Any set(float newVal) {
+        this.val = newVal;
+        return this;
     }
 }

@@ -1,5 +1,7 @@
 package com.jsoniter;
 
+import com.jsoniter.any.Any;
+
 import java.util.List;
 
 public class ComplexObject {

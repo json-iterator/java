@@ -1,7 +1,7 @@
 package com.jsoniter;
 
 import com.jsoniter.annotation.JsoniterAnnotationSupport;
-import com.jsoniter.any.LazyAny;
+import com.jsoniter.any.Any;
 import com.jsoniter.spi.TypeLiteral;
 
 import java.io.Closeable;
@@ -15,6 +15,7 @@ import java.util.Map;
 
 public class JsonIterator implements Closeable {
 
+    private static boolean isStreamingEnabled = false;
     final static ValueType[] valueTypes = new ValueType[256];
     InputStream in;
     byte[] buf;
@@ -24,7 +25,7 @@ public class JsonIterator implements Closeable {
     Map<String, Object> tempObjects = new HashMap<String, Object>();
     final Slice reusableSlice = new Slice(null, 0, 0);
     char[] reusableChars = new char[32];
-    Object existingObject = null; // the object should be bind to next
+    Object existingObject = null; // the set should be bind to next
 
     static {
         for (int i = 0; i < valueTypes.length; i++) {
@@ -61,6 +62,7 @@ public class JsonIterator implements Closeable {
     }
 
     public static JsonIterator parse(InputStream in, int bufSize) {
+        enableStreamingSupport();
         return new JsonIterator(in, new byte[bufSize], 0, 0);
     }
 
@@ -99,6 +101,7 @@ public class JsonIterator implements Closeable {
     }
 
     public final void reset(InputStream in) {
+        enableStreamingSupport();
         this.in = in;
         this.head = 0;
         this.tail = 0;
@@ -216,7 +219,7 @@ public class JsonIterator implements Closeable {
                 c = IterImpl.nextToken(this);
                 switch (c) {
                     case '}':
-                        return null; // end of object
+                        return null; // end of set
                     case '"':
                         unreadByte();
                         String field = readString();
@@ -234,7 +237,7 @@ public class JsonIterator implements Closeable {
                 }
                 return field;
             case '}':
-                return null; // end of object
+                return null; // end of set
             default:
                 throw reportError("readObject", "expect { or , or } or n");
         }
@@ -256,7 +259,7 @@ public class JsonIterator implements Closeable {
         return new BigInteger(IterImplNumber.readNumber(this));
     }
 
-    public final LazyAny readAny() throws IOException {
+    public final Any readAny() throws IOException {
         if (in != null) {
             throw new JsonException("input can not be InputStream when readAny");
         }
@@ -393,7 +396,7 @@ public class JsonIterator implements Closeable {
         JsonIterator iter = tlsIter.get();
         iter.reset(input);
         try {
-            LazyAny val = iter.readAny();
+            Any val = iter.readAny();
             if (IterImpl.nextToken(iter) != 0) {
                 throw iter.reportError("deserialize", "trailing garbage found");
             }
@@ -408,6 +411,10 @@ public class JsonIterator implements Closeable {
     }
 
     public static void enableStreamingSupport() {
+        if (isStreamingEnabled) {
+            return;
+        }
+        isStreamingEnabled = true;
         try {
             DynamicCodegen.enableStreamingSupport();
         } catch (Exception e) {

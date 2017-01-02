@@ -7,9 +7,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class ArrayLazyAny extends LazyAny {
+class ArrayLazyAny extends LazyAny {
 
-    private List<LazyAny> cache;
+    private List<Any> cache;
 
     public ArrayLazyAny(byte[] data, int head, int tail) {
         super(data, head, tail);
@@ -21,7 +21,7 @@ public class ArrayLazyAny extends LazyAny {
     }
 
     @Override
-    public Object asObject() {
+    public Object object() {
         fillCache();
         return cache;
     }
@@ -67,13 +67,11 @@ public class ArrayLazyAny extends LazyAny {
             return null;
         } catch (ClassCastException e) {
             return null;
-        } catch (IOException e) {
-            throw new JsonException(e);
         }
     }
 
     @Override
-    public Any get(Object[] keys, int idx) throws IOException {
+    public Any get(Object[] keys, int idx) {
         if (idx == keys.length) {
             return this;
         }
@@ -83,19 +81,15 @@ public class ArrayLazyAny extends LazyAny {
 
     @Override
     public Any require(Object... keys) {
-        try {
-            return require(keys, 0);
-        } catch (IOException e) {
-            throw new JsonException(e);
-        }
+        return require(keys, 0);
     }
 
     @Override
-    public Any require(Object[] keys, int idx) throws IOException {
+    public Any require(Object[] keys, int idx) {
         if (idx == keys.length) {
             return this;
         }
-        LazyAny result = null;
+        Any result = null;
         try {
             fillCache();
             result = cache.get((Integer) keys[idx]);
@@ -111,7 +105,7 @@ public class ArrayLazyAny extends LazyAny {
         }
         try {
             JsonIterator iter = parse();
-            cache = new ArrayList<LazyAny>(4);
+            cache = new ArrayList<Any>(4);
             if (!CodegenAccess.readArrayStart(iter)) {
                 return;
             }
@@ -127,10 +121,10 @@ public class ArrayLazyAny extends LazyAny {
     private static class ArrayIterator implements Iterator<Any> {
 
         private final int size;
-        private final List<LazyAny> array;
+        private final List<Any> array;
         private int idx;
 
-        public ArrayIterator(List<LazyAny> array) {
+        public ArrayIterator(List<Any> array) {
             size = array.size();
             this.array = array;
             idx = 0;

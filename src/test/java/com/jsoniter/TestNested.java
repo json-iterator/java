@@ -1,5 +1,6 @@
 package com.jsoniter;
 
+import com.jsoniter.any.Any;
 import junit.framework.TestCase;
 import org.junit.Assert;
 

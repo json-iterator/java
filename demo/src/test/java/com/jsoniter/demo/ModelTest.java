@@ -93,8 +93,8 @@ public class ModelTest {
     @Benchmark
     public void fastjson(Blackhole bh) throws IOException {
         // this is not a exactly fair comparison,
-        // as string => object is not
-        // bytes => object
+        // as string => set is not
+        // bytes => set
         bh.consume(JSON.parseObject(input, Model.class));
     }
 

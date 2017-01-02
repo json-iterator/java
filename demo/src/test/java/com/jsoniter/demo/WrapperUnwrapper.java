@@ -1,6 +1,5 @@
 package com.jsoniter.demo;
 
-import com.jsoniter.Any;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.annotation.*;
 import com.jsoniter.output.JsonStream;

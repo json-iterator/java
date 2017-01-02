@@ -7,7 +7,7 @@ import com.jsoniter.ValueType;
 
 import java.io.IOException;
 
-public class StringLazyAny extends LazyAny {
+class StringLazyAny extends LazyAny {
     private final static String FALSE = "false";
     private String cache;
 
@@ -21,7 +21,7 @@ public class StringLazyAny extends LazyAny {
     }
 
     @Override
-    public Object asObject() {
+    public Object object() {
         fillCache();
         return cache;
     }

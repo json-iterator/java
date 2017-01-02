@@ -29,9 +29,5 @@ public class AllTests {
     @Categories.IncludeCategory(StreamingCategory.class)
     @Suite.SuiteClasses({AllTestCases.class})
     public static class StreamingTests {
-        @BeforeClass
-        public static void setUp() {
-            JsonIterator.enableStreamingSupport();
-        }
     }
 }

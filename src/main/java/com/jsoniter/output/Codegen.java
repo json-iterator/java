@@ -120,8 +120,8 @@ class Codegen {
         writer.write("package " + packageName + ";\n");
         writer.write("public class " + className + " implements com.jsoniter.spi.Encoder {\n");
         writer.write(source);
-        writer.write("public void encode(java.lang.Object obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {\n");
-        writer.write(String.format("encode_((%s)obj, stream);\n", clazz.getCanonicalName()));
+        writer.write("public void encode(java.lang.Object set, com.jsoniter.output.JsonStream stream) throws java.io.IOException {\n");
+        writer.write(String.format("encode_((%s)set, stream);\n", clazz.getCanonicalName()));
         writer.write("}\n");
         writer.write("}\n");
     }

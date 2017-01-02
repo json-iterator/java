@@ -5,7 +5,7 @@ import com.jsoniter.ValueType;
 
 import java.io.IOException;
 
-public class NumberLazyAny extends LazyAny {
+class NumberLazyAny extends LazyAny {
 
     private boolean isCached;
     private double cache;
@@ -20,7 +20,7 @@ public class NumberLazyAny extends LazyAny {
     }
 
     @Override
-    public Object asObject() {
+    public Object object() {
         fillCache();
         return cache;
     }

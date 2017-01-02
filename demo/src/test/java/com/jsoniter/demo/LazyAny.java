@@ -1,6 +1,6 @@
 package com.jsoniter.demo;
 
-import com.jsoniter.Any;
+import com.jsoniter.any.Any;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.Slice;
 import org.junit.Test;

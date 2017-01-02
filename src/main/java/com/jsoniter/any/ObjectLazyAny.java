@@ -7,9 +7,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class ObjectLazyAny extends LazyAny {
+class ObjectLazyAny extends LazyAny {
 
-    private Map<Object, LazyAny> cache;
+    private Map<Object, Any> cache;
     private int lastParsedPos;
 
     public ObjectLazyAny(byte[] data, int head, int tail) {
@@ -23,7 +23,7 @@ public class ObjectLazyAny extends LazyAny {
     }
 
     @Override
-    public Object asObject() {
+    public Object object() {
         fillCache();
         return cache;
     }
@@ -70,62 +70,68 @@ public class ObjectLazyAny extends LazyAny {
             return null;
         } catch (ClassCastException e) {
             return null;
-        } catch (IOException e) {
-            throw new JsonException(e);
         }
     }
 
     @Override
-    public Any get(Object[] keys, int idx) throws IOException {
+    public Any get(Object[] keys, int idx) {
         if (idx == keys.length) {
             return this;
         }
-        return fillCache(keys[idx]).get(keys, idx+1);
+        try {
+            Any child = fillCache(keys[idx]);
+            if (child == null) {
+                return null;
+            }
+            return child.get(keys, idx+1);
+        } catch (IOException e) {
+            throw new JsonException(e);
+        }
     }
 
     @Override
     public Any require(Object... keys) {
+        return require(keys, 0);
+    }
+
+    @Override
+    public Any require(Object[] keys, int idx) {
+        if (idx == keys.length) {
+            return this;
+        }
         try {
-            return require(keys, 0);
+            Any result = fillCache(keys[idx]);
+            if (result == null) {
+                throw reportPathNotFound(keys, idx);
+            }
+            return result.require(keys, idx + 1);
         } catch (IOException e) {
             throw new JsonException(e);
         }
     }
 
-    @Override
-    public Any require(Object[] keys, int idx) throws IOException {
-        if (idx == keys.length) {
-            return this;
-        }
-        LazyAny result = fillCache(keys[idx]);
-        if (result == null) {
-            throw reportPathNotFound(keys, idx);
-        }
-        return result.require(keys, idx + 1);
-    }
-
-    private LazyAny fillCache(Object target) throws IOException {
-        if (lastParsedPos == tail()) {
+    private Any fillCache(Object target) throws IOException {
+        if (lastParsedPos == tail) {
             return cache.get(target);
         }
         if (cache != null) {
-            LazyAny value = cache.get(target);
+            Any value = cache.get(target);
             if (value != null) {
                 return value;
             }
         }
         JsonIterator iter = tlsIter.get();
-        iter.reset(data(), lastParsedPos, tail());
+        iter.reset(data, lastParsedPos, tail);
         if (cache == null) {
-            cache = new HashMap<Object, LazyAny>(4);
+            cache = new HashMap<Object, Any>(4);
         }
-        if (lastParsedPos == head()) {
+        if (lastParsedPos == head) {
             if (!CodegenAccess.readObjectStart(iter)) {
-                lastParsedPos = tail();
+                lastParsedPos = tail;
                 return null;
             }
             String field = CodegenAccess.readObjectFieldAsString(iter);
-            LazyAny value = iter.readAny();
+            Any value = iter.readAny();
             cache.put(field, value);
             if (field.hashCode() == target.hashCode() && field.equals(target)) {
                 lastParsedPos = CodegenAccess.head(iter);
@@ -134,29 +140,29 @@ public class ObjectLazyAny extends LazyAny {
         }
         while (CodegenAccess.nextToken(iter) == ',') {
             String field = CodegenAccess.readObjectFieldAsString(iter);
-            LazyAny value = iter.readAny();
+            Any value = iter.readAny();
             cache.put(field, value);
             if (field.hashCode() == target.hashCode() && field.equals(target)) {
                 lastParsedPos = CodegenAccess.head(iter);
                 return value;
             }
         }
-        lastParsedPos = tail();
+        lastParsedPos = tail;
         return null;
     }
 
     private void fillCache() {
-        if (lastParsedPos == tail()) {
+        if (lastParsedPos == tail) {
             return;
         }
         try {
             JsonIterator iter = tlsIter.get();
-            iter.reset(data(), lastParsedPos, tail());
+            iter.reset(data, lastParsedPos, tail);
             if (cache == null) {
-                cache = new HashMap<Object, LazyAny>(4);
+                cache = new HashMap<Object, Any>(4);
             }
             if (!CodegenAccess.readObjectStart(iter)) {
-                lastParsedPos = tail();
+                lastParsedPos = tail;
                 return;
             }
             String field = CodegenAccess.readObjectFieldAsString(iter);
@@ -165,7 +171,7 @@ public class ObjectLazyAny extends LazyAny {
                 field = CodegenAccess.readObjectFieldAsString(iter);
                 cache.put(field, iter.readAny());
             }
-            lastParsedPos = tail();
+            lastParsedPos = tail;
         } catch (IOException e) {
             throw new JsonException(e);
         }

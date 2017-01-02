@@ -32,26 +32,26 @@ class CodegenImplObject {
          * 3. bind first field
          * 4. while (nextToken() == ',') { bind more fields }
          * 5. handle missing/extra properties
-         * 6. create object with args (if ctor binding)
-         * 7. assign fields to object (if ctor binding)
+         * 6. create set with args (if ctor binding)
+         * 7. assign fields to set (if ctor binding)
          * 8. apply multi param wrappers
          */
         // === if null, return null
         append(lines, "if (iter.readNull()) { com.jsoniter.CodegenAccess.resetExistingObject(iter); return null; }");
-        // === if input is empty object, return empty object
+        // === if input is empty set, return empty set
         if (hasRequiredBinding) {
             append(lines, "long tracker = 0;");
         }
         if (desc.ctor.parameters.isEmpty()) {
-            append(lines, "{{clazz}} obj = {{newInst}};");
+            append(lines, "{{clazz}} set = {{newInst}};");
             append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) {");
             if (hasRequiredBinding) {
                 appendMissingRequiredProperties(lines, desc);
             }
-            append(lines, "return obj;");
+            append(lines, "return set;");
             append(lines, "}");
-            // because object can be created without binding
-            // so that fields and setters can be bind to object directly without temp var
+            // because set can be created without binding
+            // so that fields and setters can be bind to set directly without temp var
         } else {
             for (Binding parameter : desc.ctor.parameters) {
                 appendVarDef(lines, parameter);
@@ -119,16 +119,16 @@ class CodegenImplObject {
             appendSetExtraProperteis(lines, desc);
         }
         if (!desc.ctor.parameters.isEmpty()) {
-            append(lines, String.format("%s obj = {{newInst}};", CodegenImplNative.getTypeName(clazz)));
+            append(lines, String.format("%s set = {{newInst}};", CodegenImplNative.getTypeName(clazz)));
             for (Binding field : desc.fields) {
-                append(lines, String.format("obj.%s = _%s_;", field.field.getName(), field.name));
+                append(lines, String.format("set.%s = _%s_;", field.field.getName(), field.name));
             }
             for (Binding setter : desc.setters) {
-                append(lines, String.format("obj.%s(_%s_);", setter.method.getName(), setter.name));
+                append(lines, String.format("set.%s(_%s_);", setter.method.getName(), setter.name));
             }
         }
         appendWrappers(desc.wrappers, lines);
-        append(lines, "return obj;");
+        append(lines, "return set;");
         return lines.toString()
                 .replace("{{clazz}}", clazz.getCanonicalName())
                 .replace("{{newInst}}", genNewInstCode(clazz, desc.ctor));
@@ -138,9 +138,9 @@ class CodegenImplObject {
         Binding onExtraProperties = desc.onExtraProperties;
         if (ParameterizedTypeImpl.isSameClass(onExtraProperties.valueType, Map.class)) {
             if (onExtraProperties.field != null) {
-                append(lines, String.format("obj.%s = extra;", onExtraProperties.field.getName()));
+                append(lines, String.format("set.%s = extra;", onExtraProperties.field.getName()));
             } else {
-                append(lines, String.format("obj.%s(extra);", onExtraProperties.method.getName()));
+                append(lines, String.format("set.%s(extra);", onExtraProperties.method.getName()));
             }
             return;
         }
@@ -191,7 +191,7 @@ class CodegenImplObject {
             if (binding.field != null) {
                 if (binding.valueCanReuse) {
                     // reuse; then field set
-                    rendered = String.format("%scom.jsoniter.CodegenAccess.setExistingObject(iter, obj.%s);obj.%s=%s%s",
+                    rendered = String.format("%scom.jsoniter.CodegenAccess.setExistingObject(iter, set.%s);set.%s=%s%s",
                             rendered.substring(0, start), binding.field.getName(), binding.field.getName(), op, rendered.substring(end));
                 } else {
                     // just field set
@@ -219,9 +219,9 @@ class CodegenImplObject {
             append(lines, "throw new com.jsoniter.JsonException(\"missing required properties: \" + missingFields);");
         } else {
             if (desc.onMissingProperties.field != null) {
-                append(lines, String.format("obj.%s = missingFields;", desc.onMissingProperties.field.getName()));
+                append(lines, String.format("set.%s = missingFields;", desc.onMissingProperties.field.getName()));
             } else {
-                append(lines, String.format("obj.%s(missingFields);", desc.onMissingProperties.method.getName()));
+                append(lines, String.format("set.%s(missingFields);", desc.onMissingProperties.method.getName()));
             }
         }
     }
@@ -333,8 +333,8 @@ class CodegenImplObject {
         // === if empty, return empty
         if (desc.ctor.parameters.isEmpty()) {
             // has default ctor
-            append(lines, "{{clazz}} obj = {{newInst}};");
-            append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) { return obj; }");
+            append(lines, "{{clazz}} set = {{newInst}};");
+            append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) { return set; }");
         } else {
             // ctor requires binding
             for (Binding parameter : desc.ctor.parameters) {
@@ -402,16 +402,16 @@ class CodegenImplObject {
         append(lines, "iter.skip();");
         append(lines, "}");
         if (!desc.ctor.parameters.isEmpty()) {
-            append(lines, CodegenImplNative.getTypeName(clazz) + " obj = {{newInst}};");
+            append(lines, CodegenImplNative.getTypeName(clazz) + " set = {{newInst}};");
             for (Binding field : desc.fields) {
-                append(lines, String.format("obj.%s = _%s_;", field.field.getName(), field.name));
+                append(lines, String.format("set.%s = _%s_;", field.field.getName(), field.name));
             }
             for (Binding setter : desc.setters) {
-                append(lines, String.format("obj.%s(_%s_);", setter.method.getName(), setter.name));
+                append(lines, String.format("set.%s(_%s_);", setter.method.getName(), setter.name));
             }
         }
         appendWrappers(desc.wrappers, lines);
-        append(lines, "return obj;");
+        append(lines, "return set;");
         return lines.toString()
                 .replace("{{clazz}}", clazz.getCanonicalName())
                 .replace("{{newInst}}", genNewInstCode(clazz, desc.ctor));
@@ -420,12 +420,12 @@ class CodegenImplObject {
     private static void appendBindingSet(StringBuilder lines, ClassDescriptor desc, Binding binding) {
         if (desc.ctor.parameters.isEmpty() && (desc.fields.contains(binding) || desc.setters.contains(binding))) {
             if (binding.valueCanReuse) {
-                append(lines, String.format("com.jsoniter.CodegenAccess.setExistingObject(iter, obj.%s);", binding.field.getName()));
+                append(lines, String.format("com.jsoniter.CodegenAccess.setExistingObject(iter, set.%s);", binding.field.getName()));
             }
             if (binding.field != null) {
-                append(lines, String.format("obj.%s = %s;", binding.field.getName(), genField(binding)));
+                append(lines, String.format("set.%s = %s;", binding.field.getName(), genField(binding)));
             } else {
-                append(lines, String.format("obj.%s(%s);", binding.method.getName(), genField(binding)));
+                append(lines, String.format("set.%s(%s);", binding.method.getName(), genField(binding)));
             }
         } else {
             append(lines, String.format("_%s_ = %s;", binding.name, genField(binding)));
@@ -434,7 +434,7 @@ class CodegenImplObject {
 
     private static void appendWrappers(List<WrapperDescriptor> wrappers, StringBuilder lines) {
         for (WrapperDescriptor wrapper : wrappers) {
-            lines.append("obj.");
+            lines.append("set.");
             lines.append(wrapper.method.getName());
             appendInvocation(lines, wrapper.parameters);
             lines.append(";\n");
@@ -449,9 +449,9 @@ class CodegenImplObject {
     public static String genObjectUsingSkip(Class clazz, ConstructorDescriptor ctor) {
         StringBuilder lines = new StringBuilder();
         append(lines, "if (iter.readNull()) { return null; }");
-        append(lines, "{{clazz}} obj = {{newInst}};");
+        append(lines, "{{clazz}} set = {{newInst}};");
         append(lines, "iter.skip();");
-        append(lines, "return obj;");
+        append(lines, "return set;");
         return lines.toString()
                 .replace("{{clazz}}", clazz.getCanonicalName())
                 .replace("{{newInst}}", genNewInstCode(clazz, ctor));
@@ -460,7 +460,7 @@ class CodegenImplObject {
     private static String genNewInstCode(Class clazz, ConstructorDescriptor ctor) {
         StringBuilder code = new StringBuilder();
         if (ctor.parameters.isEmpty()) {
-            // nothing to bind, safe to reuse existing object
+            // nothing to bind, safe to reuse existing set
             code.append("(com.jsoniter.CodegenAccess.existingObject(iter) == null ? ");
         }
         if (ctor.staticMethodName == null) {
@@ -471,7 +471,7 @@ class CodegenImplObject {
         List<Binding> params = ctor.parameters;
         appendInvocation(code, params);
         if (ctor.parameters.isEmpty()) {
-            // nothing to bind, safe to reuse existing object
+            // nothing to bind, safe to reuse existing set
             code.append(String.format(" : (%s)com.jsoniter.CodegenAccess.resetExistingObject(iter))", clazz.getCanonicalName()));
         }
         return code.toString();

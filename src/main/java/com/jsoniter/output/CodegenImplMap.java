@@ -25,9 +25,9 @@ class CodegenImplMap {
             clazz = HashMap.class;
         }
         StringBuilder lines = new StringBuilder();
-        append(lines, "public static void encode_(java.lang.Object obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {");
-        append(lines, "if (obj == null) { stream.writeNull(); return; }");
-        append(lines, "java.util.Map map = (java.util.Map)obj;");
+        append(lines, "public static void encode_(java.lang.Object set, com.jsoniter.output.JsonStream stream) throws java.io.IOException {");
+        append(lines, "if (set == null) { stream.writeNull(); return; }");
+        append(lines, "java.util.Map map = (java.util.Map)set;");
         append(lines, "java.util.Iterator iter = map.entrySet().iterator();");
         append(lines, "if(!iter.hasNext()) { stream.writeEmptyObject(); return; }");
         append(lines, "java.util.Map.Entry entry = (java.util.Map.Entry)iter.next();");

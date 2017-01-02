@@ -5,7 +5,7 @@ import com.jsoniter.ValueType;
 
 import java.io.IOException;
 
-public class BooleanLazyAny extends LazyAny {
+class BooleanLazyAny extends LazyAny {
 
     private boolean isCached;
     private boolean cache;
@@ -20,7 +20,7 @@ public class BooleanLazyAny extends LazyAny {
     }
 
     @Override
-    public Object asObject() {
+    public Object object() {
         fillCache();
         return cache;
     }

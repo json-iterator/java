@@ -1,5 +1,6 @@
 package com.jsoniter;
 
+import com.jsoniter.any.Any;
 import com.jsoniter.spi.Decoder;
 import com.jsoniter.spi.EmptyExtension;
 import com.jsoniter.spi.JsoniterSpi;
@@ -38,7 +39,7 @@ public class TestDemo extends TestCase {
     public void test_abc() throws IOException {
         JsonIterator iter = JsonIterator.parse("{'a': {'b': {'c': 'd'}}}".replace('\'', '"'));
         ABC abc = iter.read(ABC.class);
-        System.out.println(abc.a.get("b", "c"));
+        assertEquals("d", abc.a.get("b", "c").object());
     }
 
     public void test_iterator_api_and_bind() throws IOException {

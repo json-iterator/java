@@ -1,5 +1,6 @@
 package com.jsoniter;
 
+import com.jsoniter.any.Any;
 import junit.framework.TestCase;
 
 import java.io.IOException;
@@ -30,8 +31,8 @@ public class TestReadAny extends TestCase {
         assertEquals(100, JsonIterator.deserialize("\"100\"").toInt());
         assertEquals(1, JsonIterator.deserialize("true").toInt());
         Any any = JsonIterator.deserialize("100");
-        assertEquals(Double.valueOf(100), any.asObject());
-        assertEquals(Double.valueOf(100), any.asObject());
+        assertEquals(Double.valueOf(100), any.object());
+        assertEquals(Double.valueOf(100), any.object());
         assertEquals(100, any.toInt());
         assertEquals(100L, any.toLong());
         assertEquals(100F, any.toFloat());
@@ -49,7 +50,7 @@ public class TestReadAny extends TestCase {
         assertEquals(1, JsonIterator.deserialize("true").toInt());
         assertEquals(0, JsonIterator.deserialize("false").toInt());
         assertEquals("false", JsonIterator.deserialize("false").toString());
-        assertEquals(Boolean.FALSE, JsonIterator.deserialize("false").asObject());
+        assertEquals(Boolean.FALSE, JsonIterator.deserialize("false").object());
     }
 
     public void test_read_int_array() throws IOException {

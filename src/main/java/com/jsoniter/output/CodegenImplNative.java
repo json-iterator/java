@@ -1,6 +1,8 @@
 package com.jsoniter.output;
 
+import com.jsoniter.any.Any;
 import com.jsoniter.JsonException;
+import com.jsoniter.any.*;
 import com.jsoniter.spi.TypeLiteral;
 import com.jsoniter.spi.Encoder;
 
@@ -120,6 +122,26 @@ class CodegenImplNative {
                 stream.writeVal(obj);
             }
         });
+        Encoder anyEncoder = new Encoder() {
+            @Override
+            public void encode(Object obj, JsonStream stream) throws IOException {
+                Any any = (Any) obj;
+                stream.writeVal(any.object());
+            }
+        };
+//        put(IntObjectAny.class, anyEncoder);
+//        put(LongObjectAny.class, anyEncoder);
+//        put(FloatObjectAny.class, anyEncoder);
+//        put(DoubleObjectAny.class, anyEncoder);
+//        put(NullObjectAny.class, anyEncoder);
+//        put(BooleanObjectAny.class, anyEncoder);
+//        put(StringObjectAny.class, anyEncoder);
+//        put(BooleanLazyAny.class, anyEncoder);
+//        put(NullLazyAny.class, anyEncoder);
+//        put(NumberLazyAny.class, anyEncoder);
+//        put(ObjectLazyAny.class, anyEncoder);
+//        put(StringLazyAny.class, anyEncoder);
+//        put(ArrayLazyAny.class, anyEncoder);
     }};
 
     public static String genWriteOp(String code, Type valueType) {

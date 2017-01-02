@@ -47,11 +47,11 @@ class IterImplForStreaming {
                 field.reset(newBuf, 0, newBuf.length);
             }
             if (!loadMore(iter)) {
-                throw iter.reportError("readObjectFieldAsSlice", "expect : after object field");
+                throw iter.reportError("readObjectFieldAsSlice", "expect : after set field");
             }
         }
         if (iter.buf[iter.head] != ':') {
-            throw iter.reportError("readObjectFieldAsSlice", "expect : after object field");
+            throw iter.reportError("readObjectFieldAsSlice", "expect : after set field");
         }
         iter.head++;
         return field;

@@ -1,49 +1,19 @@
 package com.jsoniter.any;
 
-import com.jsoniter.*;
+import com.jsoniter.JsonException;
+import com.jsoniter.JsonIterator;
+import com.jsoniter.ValueType;
 import com.jsoniter.spi.TypeLiteral;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.Set;
 
-abstract class LazyAny extends Any {
+abstract class ObjectAny extends Any {
 
-    final static Set<String> EMPTY_KEYS = Collections.unmodifiableSet(new HashSet<String>());
-    final static Iterator<Any> EMPTY_ITERATOR = new Iterator<Any>() {
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public boolean hasNext() {
-            return false;
-        }
-
-        @Override
-        public Any next() {
-            throw new UnsupportedOperationException();
-        }
-    };
-    protected final static ThreadLocal<JsonIterator> tlsIter = new ThreadLocal<JsonIterator>() {
-        @Override
-        protected JsonIterator initialValue() {
-            return new JsonIterator();
-        }
-    };
-    protected final byte[] data;
-    protected final int head;
-    protected final int tail;
-
-    public LazyAny(byte[] data, int head, int tail) {
-        this.data = data;
-        this.head = head;
-        this.tail = tail;
-    }
-
-    public abstract ValueType valueType();
-
-    public final <T> T bindTo(T obj, Object... keys) {
+    @Override
+    public <T> T bindTo(T obj, Object... keys) {
         Any found = get(keys);
         if (found == null) {
             return null;
@@ -51,15 +21,7 @@ abstract class LazyAny extends Any {
         return found.bindTo(obj);
     }
 
-    public final <T> T bindTo(T obj) {
-        try {
-            return parse().read(obj);
-        } catch (IOException e) {
-            throw new JsonException(e);
-        }
-    }
-
-    public final <T> T bindTo(TypeLiteral<T> typeLiteral, T obj, Object... keys) {
+    public <T> T bindTo(TypeLiteral<T> typeLiteral, T obj, Object... keys) {
         Any found = get(keys);
         if (found == null) {
             return null;
@@ -67,15 +29,28 @@ abstract class LazyAny extends Any {
         return found.bindTo(typeLiteral, obj);
     }
 
-    public final <T> T bindTo(TypeLiteral<T> typeLiteral, T obj) {
-        try {
-            return parse().read(typeLiteral, obj);
-        } catch (IOException e) {
-            throw new JsonException(e);
-        }
+    @Override
+    public final <T> T bindTo(T obj) {
+        return (T) object();
     }
 
-    public final Object object(Object... keys) {
+    @Override
+    public final <T> T bindTo(TypeLiteral<T> typeLiteral, T obj) {
+        return (T) object();
+    }
+
+    @Override
+    public final <T> T as(Class<T> clazz) {
+        return (T) object();
+    }
+
+    @Override
+    public final <T> T as(TypeLiteral<T> typeLiteral) {
+        return (T) object();
+    }
+
+    @Override
+    public Object object(Object... keys) {
         Any found = get(keys);
         if (found == null) {
             return null;
@@ -83,9 +58,8 @@ abstract class LazyAny extends Any {
         return found.object();
     }
 
-    public abstract Object object();
-
-    public final <T> T as(Class<T> clazz, Object... keys) {
+    @Override
+    public <T> T as(Class<T> clazz, Object... keys) {
         Any found = get(keys);
         if (found == null) {
             return null;
@@ -93,28 +67,13 @@ abstract class LazyAny extends Any {
         return found.as(clazz);
     }
 
-    public final <T> T as(Class<T> clazz) {
-        try {
-            return parse().read(clazz);
-        } catch (IOException e) {
-            throw new JsonException(e);
-        }
-    }
-
-    public final <T> T as(TypeLiteral<T> typeLiteral, Object... keys) {
+    @Override
+    public <T> T as(TypeLiteral<T> typeLiteral, Object... keys) {
         Any found = get(keys);
         if (found == null) {
             return null;
         }
         return found.as(typeLiteral);
-    }
-
-    public final <T> T as(TypeLiteral<T> typeLiteral) {
-        try {
-            return parse().read(typeLiteral);
-        } catch (IOException e) {
-            throw new JsonException(e);
-        }
     }
 
     public final boolean toBoolean(Object... keys) {
@@ -185,21 +144,17 @@ abstract class LazyAny extends Any {
         return found.toString();
     }
 
-    public String toString() {
-        return new String(data, head, tail - head);
-    }
-
     public int size() {
         return 0;
     }
 
     public Set<String> keys() {
-        return EMPTY_KEYS;
+        return LazyAny.EMPTY_KEYS;
     }
 
     @Override
     public Iterator<Any> iterator() {
-        return EMPTY_ITERATOR;
+        return LazyAny.EMPTY_ITERATOR;
     }
 
     public Any get(int index) {
@@ -211,8 +166,8 @@ abstract class LazyAny extends Any {
     }
 
     public final JsonIterator parse() {
-        JsonIterator iter = tlsIter.get();
-        iter.reset(data, head, tail);
-        return iter;
+        throw new UnsupportedOperationException();
     }
+
+
 }
