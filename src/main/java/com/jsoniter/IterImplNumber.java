@@ -22,7 +22,7 @@ class IterImplNumber {
     }
 
     public static final double readDouble(JsonIterator iter) throws IOException {
-        final byte c = iter.nextToken();
+        final byte c = IterImpl.nextToken(iter);
         // when re-read using slowpath, it should include the first byte
         iter.unreadByte();
         if (c == '-') {
@@ -111,7 +111,7 @@ class IterImplNumber {
     }
 
     public static final float readFloat(JsonIterator iter) throws IOException {
-        final byte c = iter.nextToken();
+        final byte c = IterImpl.nextToken(iter);
         // when re-read using slowpath, it should include the first byte
         iter.unreadByte();
         if (c == '-') {
@@ -201,7 +201,7 @@ class IterImplNumber {
 
     public static final String readNumber(JsonIterator iter) throws IOException {
         int j = 0;
-        for (byte c = iter.nextToken(); !iter.eof; c = iter.readByte()) {
+        for (byte c = IterImpl.nextToken(iter); ; c = IterImpl.readByte(iter)) {
             if (j == iter.reusableChars.length) {
                 char[] newBuf = new char[iter.reusableChars.length * 2];
                 System.arraycopy(iter.reusableChars, 0, newBuf, 0, iter.reusableChars.length);
@@ -230,11 +230,10 @@ class IterImplNumber {
                     return new String(iter.reusableChars, 0, j);
             }
         }
-        return new String(iter.reusableChars, 0, j);
     }
 
     public static final int readInt(JsonIterator iter) throws IOException {
-        byte c = iter.nextToken();
+        byte c = IterImpl.nextToken(iter);
         if (c == '-') {
             return -readUnsignedInt(iter);
         } else {
@@ -245,7 +244,7 @@ class IterImplNumber {
 
     public static final int readUnsignedInt(JsonIterator iter) throws IOException {
         // TODO: throw overflow
-        byte c = iter.readByte();
+        byte c = IterImpl.readByte(iter);
         int v = digits[c];
         if (v == 0) {
             return 0;
@@ -256,7 +255,7 @@ class IterImplNumber {
         int result = 0;
         for (; ; ) {
             result = result * 10 + v;
-            c = iter.readByte();
+            c = IterImpl.readByte(iter);
             v = digits[c];
             if (v == -1) {
                 iter.unreadByte();
@@ -267,7 +266,7 @@ class IterImplNumber {
     }
 
     public static final long readLong(JsonIterator iter) throws IOException {
-        byte c = iter.nextToken();
+        byte c = IterImpl.nextToken(iter);
         if (c == '-') {
             return -readUnsignedLong(iter);
         } else {
@@ -278,7 +277,7 @@ class IterImplNumber {
 
     public static final long readUnsignedLong(JsonIterator iter) throws IOException {
         // TODO: throw overflow
-        byte c = iter.readByte();
+        byte c = IterImpl.readByte(iter);
         int v = digits[c];
         if (v == 0) {
             return 0;
@@ -289,7 +288,7 @@ class IterImplNumber {
         long result = 0;
         for (; ; ) {
             result = result * 10 + v;
-            c = iter.readByte();
+            c = IterImpl.readByte(iter);
             v = digits[c];
             if (v == -1) {
                 iter.unreadByte();
@@ -300,24 +299,24 @@ class IterImplNumber {
     }
 
     public static final char readU4(JsonIterator iter) throws IOException {
-        int v = digits[iter.readByte()];
+        int v = digits[IterImpl.readByte(iter)];
         if (v == -1) {
             throw iter.reportError("readU4", "bad unicode");
         }
         char b = (char) v;
-        v = digits[iter.readByte()];
+        v = digits[IterImpl.readByte(iter)];
         if (v == -1) {
             throw iter.reportError("readU4", "bad unicode");
         }
         b = (char) (b << 4);
         b += v;
-        v = digits[iter.readByte()];
+        v = digits[IterImpl.readByte(iter)];
         if (v == -1) {
             throw iter.reportError("readU4", "bad unicode");
         }
         b = (char) (b << 4);
         b += v;
-        v = digits[iter.readByte()];
+        v = digits[IterImpl.readByte(iter)];
         if (v == -1) {
             throw iter.reportError("readU4", "bad unicode");
         }

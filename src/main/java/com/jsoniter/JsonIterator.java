@@ -1,5 +1,6 @@
 package com.jsoniter;
 
+import com.jsoniter.annotation.JsoniterAnnotationSupport;
 import com.jsoniter.any.LazyAny;
 import com.jsoniter.spi.TypeLiteral;
 
@@ -19,7 +20,6 @@ public class JsonIterator implements Closeable {
     byte[] buf;
     int head;
     int tail;
-    boolean eof;
 
     Map<String, Object> tempObjects = new HashMap<String, Object>();
     final Slice reusableSlice = new Slice(null, 0, 0);
@@ -84,63 +84,30 @@ public class JsonIterator implements Closeable {
         this.buf = buf;
         this.head = 0;
         this.tail = buf.length;
-        this.eof = false;
     }
 
     public final void reset(byte[] buf, int head, int tail) {
         this.buf = buf;
         this.head = head;
         this.tail = tail;
-        this.eof = false;
     }
 
     public final void reset(Slice value) {
         this.buf = value.data();
         this.head = value.head();
         this.tail = value.tail();
-        this.eof = false;
     }
 
     public final void reset(InputStream in) {
         this.in = in;
         this.head = 0;
         this.tail = 0;
-        this.eof = false;
     }
 
     public final void close() throws IOException {
         if (in != null) {
             in.close();
         }
-    }
-
-    final byte readByte() throws IOException {
-        if (head == tail) {
-            if (!loadMore()) {
-                return 0;
-            }
-        }
-        return buf[head++];
-    }
-
-    final boolean loadMore() throws IOException {
-        if (in == null) {
-            eof = true;
-            return false;
-        }
-        int n = in.read(buf);
-        if (n < 1) {
-            if (n == -1) {
-                eof = true;
-                return false;
-            } else {
-                throw reportError("loadMore", "read from input stream returned " + n);
-            }
-        } else {
-            head = 0;
-            tail = n;
-        }
-        return true;
     }
 
     final void unreadByte() throws IOException {
@@ -169,9 +136,9 @@ public class JsonIterator implements Closeable {
     }
 
     public final boolean readNull() throws IOException {
-        byte c = nextToken();
+        byte c = IterImpl.nextToken(this);
         if (c == 'n') {
-            IterImplSkip.skipUntilBreak(this);
+            IterImpl.skipUntilBreak(this);
             return true;
         }
         unreadByte();
@@ -179,13 +146,13 @@ public class JsonIterator implements Closeable {
     }
 
     public final boolean readBoolean() throws IOException {
-        byte c = nextToken();
+        byte c = IterImpl.nextToken(this);
         switch (c) {
             case 't':
-                IterImplSkip.skipUntilBreak(this);
+                IterImpl.skipUntilBreak(this);
                 return true;
             case 'f':
-                IterImplSkip.skipUntilBreak(this);
+                IterImpl.skipUntilBreak(this);
                 return false;
             default:
                 throw reportError("readBoolean", "expect t or f, found: " + c);
@@ -210,10 +177,10 @@ public class JsonIterator implements Closeable {
     }
 
     public final boolean readArray() throws IOException {
-        byte c = nextToken();
+        byte c = IterImpl.nextToken(this);
         switch (c) {
             case '[':
-                c = nextToken();
+                c = IterImpl.nextToken(this);
                 if (c == ']') {
                     return false;
                 } else {
@@ -231,26 +198,6 @@ public class JsonIterator implements Closeable {
         }
     }
 
-    final byte nextToken() throws IOException {
-        for (; ; ) {
-            for (int i = head; i < tail; i++) {
-                byte c = buf[i];
-                switch (c) {
-                    case ' ':
-                    case '\n':
-                    case '\t':
-                    case '\r':
-                        continue;
-                }
-                head = i + 1;
-                return c;
-            }
-            if (!loadMore()) {
-                return 0;
-            }
-        }
-    }
-
     public final String readString() throws IOException {
         return IterImplString.readString(this);
     }
@@ -260,20 +207,20 @@ public class JsonIterator implements Closeable {
     }
 
     public final String readObject() throws IOException {
-        byte c = nextToken();
+        byte c = IterImpl.nextToken(this);
         switch (c) {
             case 'n':
-                IterImplSkip.skipUntilBreak(this);
+                IterImpl.skipUntilBreak(this);
                 return null;
             case '{':
-                c = nextToken();
+                c = IterImpl.nextToken(this);
                 switch (c) {
                     case '}':
                         return null; // end of object
                     case '"':
                         unreadByte();
                         String field = readString();
-                        if (nextToken() != ':') {
+                        if (IterImpl.nextToken(this) != ':') {
                             throw reportError("readObject", "expect :");
                         }
                         return field;
@@ -282,7 +229,7 @@ public class JsonIterator implements Closeable {
                 }
             case ',':
                 String field = readString();
-                if (nextToken() != ':') {
+                if (IterImpl.nextToken(this) != ':') {
                     throw reportError("readObject", "expect :");
                 }
                 return field;
@@ -365,7 +312,7 @@ public class JsonIterator implements Closeable {
     }
 
     public ValueType whatIsNext() throws IOException {
-        ValueType valueType = valueTypes[nextToken()];
+        ValueType valueType = valueTypes[IterImpl.nextToken(this)];
         unreadByte();
         return valueType;
     }
@@ -437,5 +384,17 @@ public class JsonIterator implements Closeable {
 
     public static void setMode(DecodingMode mode) {
         Codegen.setMode(mode);
+    }
+
+    public static void enableStreamingSupport() {
+        try {
+            DynamicCodegen.enableStreamingSupport();
+        } catch (Exception e) {
+            throw new JsonException(e);
+        }
+    }
+
+    public static void enableAnnotationSupport() {
+        JsoniterAnnotationSupport.enable();
     }
 }

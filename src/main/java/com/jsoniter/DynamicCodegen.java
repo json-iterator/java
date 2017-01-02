@@ -27,4 +27,10 @@ class DynamicCodegen {
         decoder = (Decoder) ctClass.toClass().newInstance();
         return decoder;
     }
+
+    public static void enableStreamingSupport() throws Exception {
+        CtClass ctClass = pool.makeClass("com.jsoniter.IterImpl");
+        ctClass.setSuperclass(pool.get(IterImplForStreaming.class.getName()));
+        ctClass.toClass();
+    }
 }

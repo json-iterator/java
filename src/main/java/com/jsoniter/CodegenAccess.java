@@ -37,7 +37,7 @@ public class CodegenAccess {
     }
 
     public static byte nextToken(JsonIterator iter) throws IOException {
-        return iter.nextToken();
+        return IterImpl.nextToken(iter);
     }
 
     public static final <T> T read(JsonIterator iter, TypeLiteral<T> typeLiteral) throws IOException {
@@ -107,29 +107,29 @@ public class CodegenAccess {
     }
 
     public static boolean readArrayStart(JsonIterator iter) throws IOException {
-        byte c = iter.nextToken();
-        if (c != '[') {
-            throw iter.reportError("readArrayStart", "expect [ or n");
+        byte c = IterImpl.nextToken(iter);
+        if (c == '[') {
+            c = IterImpl.nextToken(iter);
+            if (c == ']') {
+                return false;
+            }
+            iter.unreadByte();
+            return true;
         }
-        c = iter.nextToken();
-        if (c == ']') {
-            return false;
-        }
-        iter.unreadByte();
-        return true;
+        throw iter.reportError("readArrayStart", "expect [ or n");
     }
 
     public static boolean readObjectStart(JsonIterator iter) throws IOException {
-        byte c = iter.nextToken();
-        if (c != '{') {
-            throw iter.reportError("readObjectStart", "expect { or n, found: " + (char) c);
+        byte c = IterImpl.nextToken(iter);
+        if (c == '{') {
+            c = IterImpl.nextToken(iter);
+            if (c == '}') {
+                return false;
+            }
+            iter.unreadByte();
+            return true;
         }
-        c = iter.nextToken();
-        if (c == '}') {
-            return false;
-        }
-        iter.unreadByte();
-        return true;
+        throw iter.reportError("readObjectStart", "expect { or n, found: " + (char) c);
     }
 
     public static void reportIncompleteObject(JsonIterator iter) {
@@ -142,66 +142,21 @@ public class CodegenAccess {
 
     public static final String readObjectFieldAsString(JsonIterator iter) throws IOException {
         String field = iter.readString();
-        if (iter.nextToken() != ':') {
+        if (IterImpl.nextToken(iter) != ':') {
             throw iter.reportError("readObjectFieldAsString", "expect :");
         }
         return field;
     }
 
     public static final int readObjectFieldAsHash(JsonIterator iter) throws IOException {
-        if (iter.nextToken() != '"') {
-            throw iter.reportError("readObjectFieldAsHash", "expect \"");
-        }
-        long hash = 0x811c9dc5;
-        for (; ; ) {
-            byte c = 0;
-            int i = iter.head;
-            for (; i < iter.tail; i++) {
-                c = iter.buf[i];
-                if (c == '"') {
-                    break;
-                }
-                hash ^= c;
-                hash *= 0x1000193;
-            }
-            if (c == '"') {
-                iter.head = i + 1;
-                if (iter.nextToken() != ':') {
-                    throw iter.reportError("readObjectFieldAsHash", "expect :");
-                }
-                return (int) hash;
-            }
-            if (!iter.loadMore()) {
-                throw iter.reportError("readObjectFieldAsHash", "unmatched quote");
-            }
-        }
+        return IterImpl.readObjectFieldAsHash(iter);
     }
 
     public static final Slice readObjectFieldAsSlice(JsonIterator iter) throws IOException {
-        if (iter.nextToken() != '"') {
-            throw iter.reportError("readObjectFieldAsSlice", "expect \"");
-        }
-        Slice field = IterImplString.readSlice(iter);
-        boolean notCopied = field != null;
-        if (skipWhitespacesWithoutLoadMore(iter)) {
-            if (notCopied) {
-                int len = field.tail() - field.head();
-                byte[] newBuf = new byte[len];
-                System.arraycopy(field.data(), field.head(), newBuf, 0, len);
-                field.reset(newBuf, 0, newBuf.length);
-            }
-            if (!iter.loadMore()) {
-                throw iter.reportError("readObjectFieldAsSlice", "expect : after object field");
-            }
-        }
-        if (iter.buf[iter.head] != ':') {
-            throw iter.reportError("readObjectFieldAsSlice", "expect : after object field");
-        }
-        iter.head++;
-        return field;
+        return IterImpl.readObjectFieldAsSlice(iter);
     }
 
-    private final static boolean skipWhitespacesWithoutLoadMore(JsonIterator iter) throws IOException {
+    final static boolean skipWhitespacesWithoutLoadMore(JsonIterator iter) throws IOException {
         for (int i = iter.head; i < iter.tail; i++) {
             byte c = iter.buf[i];
             switch (c) {

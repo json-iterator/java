@@ -12,6 +12,7 @@ import org.openjdk.jmh.Main;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.BenchmarkParams;
 import org.openjdk.jmh.infra.Blackhole;
+import org.openjdk.jmh.runner.RunnerException;
 
 import java.io.IOException;
 
@@ -31,6 +32,7 @@ public class ModelTest {
 
     @Setup(Level.Trial)
     public void benchSetup(BenchmarkParams params) {
+        JsonIterator.enableStreamingSupport();
         input = "{\"name\":\"wenshao\",\"id\":1001}";
         inputBytes = input.getBytes();
         iter = new JsonIterator();
@@ -43,16 +45,7 @@ public class ModelTest {
         };
     }
 
-    @Test
-    public void test() throws IOException {
-        benchSetup(null);
-        iter.reset(inputBytes);
-        System.out.println(iter.read(modelTypeLiteral).name);
-        System.out.println(JSON.parseObject(input, Model.class).name);
-
-    }
-
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws IOException, RunnerException {
         Main.main(new String[]{
                 "ModelTest",
                 "-i", "5",
@@ -61,18 +54,42 @@ public class ModelTest {
         });
     }
 
+    @Test
+    public void test() throws IOException {
+        benchSetup(null);
+        iter.reset(inputBytes);
+        System.out.println(iter.read(modelTypeLiteral).name);
+    }
+
+//    public static void main(String[] args) throws Exception {
+//        Options opt = new OptionsBuilder()
+//                .include("ModelTest")
+//                .addProfiler(JmhFlightRecorderProfiler.class)
+//                .jvmArgs("-Xmx512m", "-Xms512m", "-XX:+UnlockCommercialFeatures",
+//                        "-XX:+UnlockDiagnosticVMOptions", "-XX:+PrintAssembly",
+//                        "-Djmh.stack.profiles=" + "/tmp",
+//                        "-Djmh.executor=FJP",
+//                        "-Djmh.fr.options=defaultrecording=true,settings=profile")
+//                .warmupIterations(5)
+//                .measurementTime(TimeValue.seconds(5))
+//                .measurementIterations(5)
+//                .forks(1)
+//                .build();
+//        new Runner(opt).run();
+//    }
+
     @Benchmark
     public void jsoniter(Blackhole bh) throws IOException {
         iter.reset(inputBytes);
         bh.consume(iter.read(modelTypeLiteral));
     }
 
-    @Benchmark
+//    @Benchmark
     public void jsoniter_easy_mode(Blackhole bh) throws IOException {
         bh.consume(JsonIterator.deserialize(inputBytes, Model.class));
     }
 
-    @Benchmark
+//    @Benchmark
     public void fastjson(Blackhole bh) throws IOException {
         // this is not a exactly fair comparison,
         // as string => object is not
@@ -80,7 +97,7 @@ public class ModelTest {
         bh.consume(JSON.parseObject(input, Model.class));
     }
 
-    @Benchmark
+//    @Benchmark
     public void jackson(Blackhole bh) throws IOException {
         bh.consume(jackson.readValue(inputBytes, modelTypeReference));
     }

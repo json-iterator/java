@@ -27,29 +27,29 @@ class IterImplString {
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
 
     public static final String readString(JsonIterator iter) throws IOException {
-        byte c = iter.nextToken();
+        byte c = IterImpl.nextToken(iter);
+        if (c == '"') {
+            // try fast path first
+            for (int i = iter.head, j = 0; i < iter.tail && j < iter.reusableChars.length; i++, j++) {
+                c = iter.buf[i];
+                if (c == '"') {
+                    iter.head = i + 1;
+                    return new String(iter.reusableChars, 0, j);
+                }
+                // If we encounter a backslash, which is a beginning of an escape sequence
+                // or a high bit was set - indicating an UTF-8 encoded multibyte character,
+                // there is no chance that we can decode the string without instantiating
+                // a temporary buffer, so quit this loop
+                if ((c ^ '\\') < 1) break;
+                iter.reusableChars[j] = (char) c;
+            }
+            return readStringSlowPath(iter);
+        }
         if (c == 'n') {
-            IterImplSkip.skipUntilBreak(iter);
+            IterImpl.skipUntilBreak(iter);
             return null;
         }
-        if (c != '"') {
-            throw iter.reportError("readString", "expect n or \"");
-        }
-        // try fast path first
-        for (int i = iter.head, j = 0; i < iter.tail && j < iter.reusableChars.length; i++, j++) {
-            c = iter.buf[i];
-            if (c == '"') {
-                iter.head = i + 1;
-                return new String(iter.reusableChars, 0, j);
-            }
-            // If we encounter a backslash, which is a beginning of an escape sequence
-            // or a high bit was set - indicating an UTF-8 encoded multibyte character,
-            // there is no chance that we can decode the string without instantiating
-            // a temporary buffer, so quit this loop
-            if ((c ^ '\\') < 1) break;
-            iter.reusableChars[j] = (char) c;
-        }
-        return readStringSlowPath(iter);
+        throw iter.reportError("readString", "expect n or \"");
     }
 
     final static String readStringSlowPath(JsonIterator iter) throws IOException {
@@ -64,12 +64,12 @@ class IterImplString {
                 iter.reusableChars = newBuf;
                 minimumCapacity = iter.reusableChars.length - 2;
             }
-            int b1 = iter.readByte();
+            int b1 = IterImpl.readByte(iter);
             if (b1 >= 0) {
                 if (b1 == '"') {
                     return new String(iter.reusableChars, 0, j);
                 } else if (b1 == '\\') {
-                    int b2 = iter.readByte();
+                    int b2 = IterImpl.readByte(iter);
                     switch (b2) {
                         case '"':
                             iter.reusableChars[j++] = '"';
@@ -107,15 +107,15 @@ class IterImplString {
                 }
             } else if ((b1 >> 5) == -2 && (b1 & 0x1e) != 0) {
                 // 2 bytes, 11 bits: 110xxxxx 10xxxxxx
-                int b2 = iter.readByte();
+                int b2 = IterImpl.readByte(iter);
                 iter.reusableChars[j++] = (char) (((b1 << 6) ^ b2)
                         ^
                         (((byte) 0xC0 << 6) ^
                                 ((byte) 0x80 << 0)));
             } else if ((b1 >> 4) == -2) {
                 // 3 bytes, 16 bits: 1110xxxx 10xxxxxx 10xxxxxx
-                int b2 = iter.readByte();
-                int b3 = iter.readByte();
+                int b2 = IterImpl.readByte(iter);
+                int b3 = IterImpl.readByte(iter);
                 char c = (char)
                         ((b1 << 12) ^
                                 (b2 << 6) ^
@@ -126,9 +126,9 @@ class IterImplString {
                 iter.reusableChars[j++] = c;
             } else if ((b1 >> 3) == -2) {
                 // 4 bytes, 21 bits: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
-                int b2 = iter.readByte();
-                int b3 = iter.readByte();
-                int b4 = iter.readByte();
+                int b2 = IterImpl.readByte(iter);
+                int b3 = IterImpl.readByte(iter);
+                int b4 = IterImpl.readByte(iter);
                 int uc = ((b1 << 18) ^
                         (b2 << 12) ^
                         (b3 << 6) ^
@@ -156,10 +156,10 @@ class IterImplString {
 
     public static final byte[] readBase64(JsonIterator iter) throws IOException {
         // from https://gist.github.com/EmilHernvall/953733
-        if (iter.nextToken() != '"') {
+        if (IterImpl.nextToken(iter) != '"') {
             throw iter.reportError("readBase64", "expect \" for base64");
         }
-        Slice slice = readSlice(iter);
+        Slice slice = IterImpl.readSlice(iter);
         if (slice == null) {
             return null;
         }
@@ -199,38 +199,6 @@ class IterImplString {
             i += 4;
         }
         return buffer.toByteArray();
-    }
-
-    // read the bytes between " "
-    final static Slice readSlice(JsonIterator iter) throws IOException {
-        int end = findSliceEnd(iter);
-        if (end != -1) {
-            // reuse current buffer
-            iter.reusableSlice.reset(iter.buf, iter.head, end - 1);
-            iter.head = end;
-            return iter.reusableSlice;
-        }
-        byte[] part1 = new byte[iter.tail - iter.head];
-        System.arraycopy(iter.buf, iter.head, part1, 0, part1.length);
-        for (; ; ) {
-            if (!iter.loadMore()) {
-                throw iter.reportError("readSlice", "unmatched quote");
-            }
-            end = findSliceEnd(iter);
-            if (end == -1) {
-                byte[] part2 = new byte[part1.length + iter.buf.length];
-                System.arraycopy(part1, 0, part2, 0, part1.length);
-                System.arraycopy(iter.buf, 0, part2, part1.length, iter.buf.length);
-                part1 = part2;
-            } else {
-                byte[] part2 = new byte[part1.length + end - 1];
-                System.arraycopy(part1, 0, part2, 0, part1.length);
-                System.arraycopy(iter.buf, 0, part2, part1.length, end - 1);
-                iter.head = end;
-                iter.reusableSlice.reset(part2, 0, part2.length);
-                return iter.reusableSlice;
-            }
-        }
     }
 
     // slice does not allow escape
