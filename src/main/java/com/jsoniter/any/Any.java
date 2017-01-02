@@ -3,70 +3,221 @@ package com.jsoniter.any;
 import com.jsoniter.JsonException;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.ValueType;
+import com.jsoniter.output.JsonStream;
+import com.jsoniter.spi.Encoder;
+import com.jsoniter.spi.JsoniterSpi;
 import com.jsoniter.spi.TypeLiteral;
 
-import java.util.Arrays;
-import java.util.Set;
+import java.io.IOException;
+import java.util.*;
 
 public abstract class Any implements Iterable<Any> {
 
+    static {
+        Encoder anyEncoder = new Encoder() {
+            @Override
+            public void encode(Object obj, JsonStream stream) throws IOException {
+                Any any = (Any) obj;
+                any.writeTo(stream);
+            }
+
+            @Override
+            public Any wrap(Object obj) {
+                return (Any) obj;
+            }
+        };
+        JsonStream.registerNativeEncoder(TrueAny.class, anyEncoder);
+        JsonStream.registerNativeEncoder(FalseAny.class, anyEncoder);
+        JsonStream.registerNativeEncoder(ArrayLazyAny.class, anyEncoder);
+        JsonStream.registerNativeEncoder(DoubleAny.class, anyEncoder);
+        JsonStream.registerNativeEncoder(FloatAny.class, anyEncoder);
+        JsonStream.registerNativeEncoder(IntAny.class, anyEncoder);
+        JsonStream.registerNativeEncoder(LongAny.class, anyEncoder);
+        JsonStream.registerNativeEncoder(NullAny.class, anyEncoder);
+        JsonStream.registerNativeEncoder(NumberLazyAny.class, anyEncoder);
+        JsonStream.registerNativeEncoder(ObjectLazyAny.class, anyEncoder);
+        JsonStream.registerNativeEncoder(StringAny.class, anyEncoder);
+        JsonStream.registerNativeEncoder(StringLazyAny.class, anyEncoder);
+        JsonStream.registerNativeEncoder(ArrayAny.class, anyEncoder);
+        JsonStream.registerNativeEncoder(ObjectAny.class, anyEncoder);
+    }
+
+    protected final static Set<String> EMPTY_KEYS = Collections.unmodifiableSet(new HashSet<String>());
+    protected final static Iterator<Any> EMPTY_ITERATOR = new Iterator<Any>() {
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean hasNext() {
+            return false;
+        }
+
+        @Override
+        public Any next() {
+            throw new UnsupportedOperationException();
+        }
+    };
+
     public abstract ValueType valueType();
 
-    public abstract <T> T bindTo(T obj, Object... keys);
+    public <T> T bindTo(T obj, Object... keys) {
+        Any found = get(keys);
+        if (found == null) {
+            return null;
+        }
+        return found.bindTo(obj);
+    }
 
-    public abstract <T> T bindTo(T obj);
+    public <T> T bindTo(T obj) {
+        return (T) object();
+    }
 
-    public abstract <T> T bindTo(TypeLiteral<T> typeLiteral, T obj, Object... keys);
+    public <T> T bindTo(TypeLiteral<T> typeLiteral, T obj, Object... keys) {
+        Any found = get(keys);
+        if (found == null) {
+            return null;
+        }
+        return found.bindTo(typeLiteral, obj);
+    }
 
-    public abstract <T> T bindTo(TypeLiteral<T> typeLiteral, T obj);
+    public <T> T bindTo(TypeLiteral<T> typeLiteral, T obj) {
+        return (T) object();
+    }
 
-    public abstract Object object(Object... keys);
+    public Object object(Object... keys) {
+        Any found = get(keys);
+        if (found == null) {
+            return null;
+        }
+        return found.object();
+    }
 
     public abstract Object object();
 
-    public abstract <T> T as(Class<T> clazz, Object... keys);
-
-    public abstract <T> T as(Class<T> clazz);
-
-    public abstract <T> T as(TypeLiteral<T> typeLiteral, Object... keys);
-
-    public abstract <T> T as(TypeLiteral<T> typeLiteral);
-
-    public abstract boolean toBoolean(Object... keys);
-
-    public abstract boolean toBoolean();
-
-    public abstract int toInt(Object... keys);
-
-    public abstract int toInt();
-
-    public abstract long toLong(Object... keys);
-
-    public abstract long toLong();
-
-    public abstract float toFloat(Object... keys);
-
-    public abstract float toFloat();
-
-    public abstract double toDouble(Object... keys);
-
-    public abstract double toDouble();
-
-    public abstract String toString(Object... keys);
-
-    public abstract int size();
-
-    public abstract Set<String> keys();
-
-    public abstract Any get(int index);
-
-    public abstract Any get(Object key);
-
-    public Any get(Object... keys) {
-        if (keys.length == 0) {
-            return this;
+    public <T> T as(Class<T> clazz, Object... keys) {
+        Any found = get(keys);
+        if (found == null) {
+            return null;
         }
+        return found.as(clazz);
+    }
+
+    public <T> T as(Class<T> clazz) {
+        return (T) object();
+    }
+
+    public <T> T as(TypeLiteral<T> typeLiteral, Object... keys) {
+        Any found = get(keys);
+        if (found == null) {
+            return null;
+        }
+        return found.as(typeLiteral);
+    }
+
+    public <T> T as(TypeLiteral<T> typeLiteral) {
+        return (T) object();
+    }
+
+    public final boolean toBoolean(Object... keys) {
+        Any found = get(keys);
+        if (found == null) {
+            return false;
+        }
+        return found.toBoolean();
+    }
+
+    public boolean toBoolean() {
+        throw reportUnexpectedType(ValueType.BOOLEAN);
+    }
+
+    public final int toInt(Object... keys) {
+        Any found = get(keys);
+        if (found == null) {
+            return 0;
+        }
+        return found.toInt();
+    }
+
+    public int toInt() {
+        throw reportUnexpectedType(ValueType.NUMBER);
+    }
+
+    public final long toLong(Object... keys) {
+        Any found = get(keys);
+        if (found == null) {
+            return 0;
+        }
+        return found.toLong();
+    }
+
+    public long toLong() {
+        throw reportUnexpectedType(ValueType.NUMBER);
+    }
+
+    public final float toFloat(Object... keys) {
+        Any found = get(keys);
+        if (found == null) {
+            return 0;
+        }
+        return found.toFloat();
+    }
+
+    public float toFloat() {
+        throw reportUnexpectedType(ValueType.NUMBER);
+    }
+
+    public final double toDouble(Object... keys) {
+        Any found = get(keys);
+        if (found == null) {
+            return 0;
+        }
+        return found.toDouble();
+    }
+
+    public double toDouble() {
+        throw reportUnexpectedType(ValueType.NUMBER);
+    }
+
+    public final String toString(Object... keys) {
+        Any found = get(keys);
+        if (found == null) {
+            return null;
+        }
+        return found.toString();
+    }
+
+
+    public int size() {
+        return 0;
+    }
+
+    public Set<String> keys() {
+        return LazyAny.EMPTY_KEYS;
+    }
+
+    @Override
+    public Iterator<Any> iterator() {
+        return LazyAny.EMPTY_ITERATOR;
+    }
+
+    public Any get(int index) {
         return null;
+    }
+
+    public Any get(Object key) {
+        return null;
+    }
+
+    public final Any get(Object... keys) {
+        try {
+            return get(keys, 0);
+        } catch (IndexOutOfBoundsException e) {
+            return null;
+        } catch (ClassCastException e) {
+            return null;
+        }
     }
 
     public Any get(Object[] keys, int idx) {
@@ -76,11 +227,8 @@ public abstract class Any implements Iterable<Any> {
         return null;
     }
 
-    public Any require(Object... keys) {
-        if (keys.length == 0) {
-            return this;
-        }
-        throw reportPathNotFound(keys, 0);
+    public final Any require(Object... keys) {
+        return require(keys, 0);
     }
 
     public Any require(Object[] keys, int idx) {
@@ -88,14 +236,6 @@ public abstract class Any implements Iterable<Any> {
             return this;
         }
         throw reportPathNotFound(keys, idx);
-    }
-
-    public Any set(Object newVal) {
-        return wrap(newVal);
-    }
-
-    public Any set(boolean newVal) {
-        return wrap(newVal);
     }
 
     public Any set(int newVal) {
@@ -118,7 +258,11 @@ public abstract class Any implements Iterable<Any> {
         return wrap(newVal);
     }
 
-    public abstract JsonIterator parse();
+    public JsonIterator parse() {
+        throw new UnsupportedOperationException();
+    }
+
+    public abstract void writeTo(JsonStream stream) throws IOException;
 
     protected JsonException reportPathNotFound(Object[] keys, int idx) {
         throw new JsonException(String.format("failed to get path %s, because #%s %s not found in %s",
@@ -137,16 +281,6 @@ public abstract class Any implements Iterable<Any> {
         return new NumberLazyAny(data, head, tail);
     }
 
-    public static Any lazyBoolean(byte[] data, int head, int tail) {
-        // TODO: remove lazy boolean
-        return new BooleanLazyAny(data, head, tail);
-    }
-
-    public static Any lazyNull(byte[] data, int head, int tail) {
-        // TODO: remove lazy null
-        return new NullLazyAny(data, head, tail);
-    }
-
     public static Any lazyArray(byte[] data, int head, int tail) {
         return new ArrayLazyAny(data, head, tail);
     }
@@ -156,30 +290,71 @@ public abstract class Any implements Iterable<Any> {
     }
 
     public static Any wrap(int val) {
-        return new IntObjectAny(val);
+        return new IntAny(val);
     }
 
     public static Any wrap(long val) {
-        return new LongObjectAny(val);
+        return new LongAny(val);
     }
 
     public static Any wrap(float val) {
-        return new FloatObjectAny(val);
+        return new FloatAny(val);
     }
 
     public static Any wrap(double val) {
-        return new DoubleObjectAny(val);
+        return new DoubleAny(val);
     }
 
     public static Any wrap(boolean val) {
-        return new BooleanObjectAny(val);
+        if (val) {
+            return TrueAny.INSTANCE;
+        } else {
+            return FalseAny.INSTANCE;
+        }
     }
 
     public static Any wrap(String val) {
-        return new StringObjectAny(val);
+        if (val == null) {
+            return NullAny.INSTANCE;
+        }
+        return new StringAny(val);
+    }
+
+    public static <T> Any wrap(Collection<T> val) {
+        if (val == null) {
+            return NullAny.INSTANCE;
+        }
+        ArrayList<Any> copied = new ArrayList<Any>(val.size());
+        for (T element : val) {
+            copied.add(wrap(element));
+        }
+        return new ArrayAny(copied);
+    }
+
+    public static <T> Any wrap(Map<String, T> val) {
+        if (val == null) {
+            return NullAny.INSTANCE;
+        }
+        HashMap<String, Any> copied = new HashMap<String, Any>(val.size());
+        for (Map.Entry<String, T> entry : val.entrySet()) {
+            copied.put(entry.getKey(), wrap(entry.getValue()));
+        }
+        return new ObjectAny(copied);
     }
 
     public static Any wrap(Object val) {
-        return NullObjectAny.INSTANCE;
+        return JsonStream.wrap(val);
+    }
+
+    public static Any wrapNull() {
+        return NullAny.INSTANCE;
+    }
+
+    public static Any wrapAnyList(List<Any> val) {
+        return new ArrayAny(val);
+    }
+
+    public static Any wrapAnyMap(Map<String, Any> val) {
+        return new ObjectAny(val);
     }
 }

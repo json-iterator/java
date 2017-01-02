@@ -19,6 +19,7 @@ class Codegen {
     static boolean isDoingStaticCodegen;
     // only read/write when generating code with synchronized protection
     private final static Set<String> generatedClassNames = new HashSet<String>();
+    private volatile static Map<String, Encoder> reflectionEncoders = new HashMap<String, Encoder>();
 
     static {
         String envMode = System.getenv("JSONITER_ENCODING_MODE");
@@ -29,6 +30,38 @@ class Codegen {
 
     public static void setMode(EncodingMode mode) {
         Codegen.mode = mode;
+    }
+
+
+    public static Encoder getReflectionEncoder(String cacheKey, Type type) {
+        Encoder encoder = CodegenImplNative.NATIVE_ENCODERS.get(type);
+        if (encoder != null) {
+            return encoder;
+        }
+        encoder = reflectionEncoders.get(cacheKey);
+        if (encoder != null) {
+            return encoder;
+        }
+        synchronized (Codegen.class) {
+            encoder = reflectionEncoders.get(cacheKey);
+            if (encoder != null) {
+                return encoder;
+            }
+            Type[] typeArgs = new Type[0];
+            Class clazz;
+            if (type instanceof ParameterizedType) {
+                ParameterizedType pType = (ParameterizedType) type;
+                clazz = (Class) pType.getRawType();
+                typeArgs = pType.getActualTypeArguments();
+            } else {
+                clazz = (Class) type;
+            }
+            encoder = ReflectionEncoderFactory.create(clazz, typeArgs);
+            HashMap<String, Encoder> copy = new HashMap<String, Encoder>(reflectionEncoders);
+            copy.put(cacheKey, encoder);
+            reflectionEncoders = copy;
+            return encoder;
+        }
     }
 
     public static Encoder getEncoder(String cacheKey, Type type) {
@@ -118,7 +151,7 @@ class Codegen {
         String className = cacheKey.substring(cacheKey.lastIndexOf('.') + 1);
         String packageName = cacheKey.substring(0, cacheKey.lastIndexOf('.'));
         writer.write("package " + packageName + ";\n");
-        writer.write("public class " + className + " implements com.jsoniter.spi.Encoder {\n");
+        writer.write("public class " + className + " extends com.jsoniter.spi.EmptyEncoder {\n");
         writer.write(source);
         writer.write("public void encode(java.lang.Object set, com.jsoniter.output.JsonStream stream) throws java.io.IOException {\n");
         writer.write(String.format("encode_((%s)set, stream);\n", clazz.getCanonicalName()));

@@ -1,5 +1,6 @@
 package com.jsoniter.spi;
 
+import com.jsoniter.any.Any;
 import com.jsoniter.output.JsonStream;
 
 import java.io.IOException;
@@ -7,6 +8,8 @@ import java.io.IOException;
 public interface Encoder {
 
     void encode(Object obj, JsonStream stream) throws IOException;
+
+    Any wrap(Object obj);
 
     abstract class BooleanEncoder implements Encoder {
         @Override
@@ -22,6 +25,12 @@ public interface Encoder {
         @Override
         public void encode(Object obj, JsonStream stream) throws IOException {
             encodeShort((Short) obj, stream);
+        }
+
+        @Override
+        public Any wrap(Object obj) {
+            Short val = (Short) obj;
+            return Any.wrap((int) val);
         }
 
         public abstract void encodeShort(short obj, JsonStream stream) throws IOException;
@@ -43,6 +52,12 @@ public interface Encoder {
             encodeInt((Integer) obj, stream);
         }
 
+        @Override
+        public Any wrap(Object obj) {
+            Integer val = (Integer) obj;
+            return Any.wrap((int)val);
+        }
+
         public abstract void encodeInt(int obj, JsonStream stream) throws IOException;
     }
 
@@ -60,6 +75,12 @@ public interface Encoder {
         @Override
         public void encode(Object obj, JsonStream stream) throws IOException {
             encodeLong((Long) obj, stream);
+        }
+
+        @Override
+        public Any wrap(Object obj) {
+            Long val = (Long) obj;
+            return Any.wrap((long)val);
         }
 
         public abstract void encodeLong(long obj, JsonStream stream) throws IOException;
@@ -81,6 +102,12 @@ public interface Encoder {
             encodeFloat((Float) obj, stream);
         }
 
+        @Override
+        public Any wrap(Object obj) {
+            Float val = (Float) obj;
+            return Any.wrap((float)val);
+        }
+
         public abstract void encodeFloat(float obj, JsonStream stream) throws IOException;
     }
 
@@ -98,6 +125,12 @@ public interface Encoder {
         @Override
         public void encode(Object obj, JsonStream stream) throws IOException {
             encodeDouble((Double) obj, stream);
+        }
+
+        @Override
+        public Any wrap(Object obj) {
+            Double val = (Double) obj;
+            return Any.wrap((double)val);
         }
 
         public abstract void encodeDouble(double obj, JsonStream stream) throws IOException;

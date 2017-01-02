@@ -1,10 +1,12 @@
 package com.jsoniter.output;
 
+import com.jsoniter.any.Any;
 import com.jsoniter.spi.Encoder;
 import com.jsoniter.spi.TypeLiteral;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.util.HashMap;
 import java.util.Map;
 
 class ReflectionMapEncoder implements Encoder {
@@ -38,5 +40,15 @@ class ReflectionMapEncoder implements Encoder {
             stream.writeVal(valueTypeLiteral, entry.getValue());
         }
         stream.writeObjectEnd();
+    }
+
+    @Override
+    public Any wrap(Object obj) {
+        Map<String, Object> map = (Map<String, Object>) obj;
+        Map<String, Any> copied = new HashMap<String, Any>();
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            copied.put(entry.getKey(), JsonStream.wrap(entry.getValue()));
+        }
+        return Any.wrapAnyMap(copied);
     }
 }

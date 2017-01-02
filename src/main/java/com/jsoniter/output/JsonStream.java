@@ -1,6 +1,8 @@
 package com.jsoniter.output;
 
 import com.jsoniter.JsonException;
+import com.jsoniter.any.Any;
+import com.jsoniter.spi.Encoder;
 import com.jsoniter.spi.TypeLiteral;
 
 import java.io.IOException;
@@ -104,19 +106,27 @@ public class JsonStream extends OutputStream {
             writeNull();
         } else {
             if (val) {
-                write(TRUE);
+                writeTrue();
             } else {
-                write(FALSE);
+                writeFalse();
             }
         }
     }
 
     public final void writeVal(boolean val) throws IOException {
         if (val) {
-            write(TRUE);
+            writeTrue();
         } else {
-            write(FALSE);
+            writeFalse();
         }
+    }
+
+    public final void writeTrue() throws IOException {
+        write(TRUE);
+    }
+
+    public final void writeFalse() throws IOException {
+        write(FALSE);
     }
 
     public final void writeVal(Short val) throws IOException {
@@ -179,6 +189,10 @@ public class JsonStream extends OutputStream {
 
     public final void writeVal(double val) throws IOException {
         StreamImplNumber.writeDouble(this, val);
+    }
+
+    public final void writeVal(Any val) throws IOException {
+        val.writeTo(this);
     }
 
     public final void writeNull() throws IOException {
@@ -303,5 +317,18 @@ public class JsonStream extends OutputStream {
 
     public static void setMode(EncodingMode mode) {
         Codegen.setMode(mode);
+    }
+
+    public static Any wrap(Object val) {
+        if (val == null) {
+            return Any.wrapNull();
+        }
+        Class<?> clazz = val.getClass();
+        String cacheKey = TypeLiteral.create(clazz).getEncoderCacheKey();
+        return Codegen.getReflectionEncoder(cacheKey, clazz).wrap(val);
+    }
+
+    public static void registerNativeEncoder(Class clazz, Encoder encoder) {
+        CodegenImplNative.NATIVE_ENCODERS.put(clazz, encoder);
     }
 }

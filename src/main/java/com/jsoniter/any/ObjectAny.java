@@ -1,173 +1,82 @@
 package com.jsoniter.any;
 
 import com.jsoniter.JsonException;
-import com.jsoniter.JsonIterator;
 import com.jsoniter.ValueType;
-import com.jsoniter.spi.TypeLiteral;
+import com.jsoniter.output.JsonStream;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.Map;
 
-abstract class ObjectAny extends Any {
+public class ObjectAny extends Any {
+
+    private final Map<String, Any> val;
+
+    public ObjectAny(Map<String, Any> val) {
+        this.val = val;
+    }
 
     @Override
-    public <T> T bindTo(T obj, Object... keys) {
-        Any found = get(keys);
-        if (found == null) {
-            return null;
+    public ValueType valueType() {
+        return ValueType.OBJECT;
+    }
+
+    @Override
+    public Object object() {
+        return val;
+    }
+
+    @Override
+    public void writeTo(JsonStream stream) throws IOException {
+        stream.writeObjectStart();
+        boolean notFirst = false;
+        for (Map.Entry<String, Any> entry : val.entrySet()) {
+            if (notFirst) {
+                stream.writeMore();
+            } else {
+                notFirst = true;
+            }
+            stream.writeObjectField(entry.getKey());
+            entry.getValue().writeTo(stream);
         }
-        return found.bindTo(obj);
-    }
-
-    public <T> T bindTo(TypeLiteral<T> typeLiteral, T obj, Object... keys) {
-        Any found = get(keys);
-        if (found == null) {
-            return null;
-        }
-        return found.bindTo(typeLiteral, obj);
+        stream.writeObjectEnd();
     }
 
     @Override
-    public final <T> T bindTo(T obj) {
-        return (T) object();
-    }
-
-    @Override
-    public final <T> T bindTo(TypeLiteral<T> typeLiteral, T obj) {
-        return (T) object();
-    }
-
-    @Override
-    public final <T> T as(Class<T> clazz) {
-        return (T) object();
-    }
-
-    @Override
-    public final <T> T as(TypeLiteral<T> typeLiteral) {
-        return (T) object();
-    }
-
-    @Override
-    public Object object(Object... keys) {
-        Any found = get(keys);
-        if (found == null) {
-            return null;
-        }
-        return found.object();
-    }
-
-    @Override
-    public <T> T as(Class<T> clazz, Object... keys) {
-        Any found = get(keys);
-        if (found == null) {
-            return null;
-        }
-        return found.as(clazz);
-    }
-
-    @Override
-    public <T> T as(TypeLiteral<T> typeLiteral, Object... keys) {
-        Any found = get(keys);
-        if (found == null) {
-            return null;
-        }
-        return found.as(typeLiteral);
-    }
-
-    public final boolean toBoolean(Object... keys) {
-        Any found = get(keys);
-        if (found == null) {
-            return false;
-        }
-        return found.toBoolean();
-    }
-
     public boolean toBoolean() {
-        throw reportUnexpectedType(ValueType.BOOLEAN);
-    }
-
-    public final int toInt(Object... keys) {
-        Any found = get(keys);
-        if (found == null) {
-            return 0;
-        }
-        return found.toInt();
-    }
-
-    public int toInt() {
-        throw reportUnexpectedType(ValueType.NUMBER);
-    }
-
-    public final long toLong(Object... keys) {
-        Any found = get(keys);
-        if (found == null) {
-            return 0;
-        }
-        return found.toLong();
-    }
-
-    public long toLong() {
-        throw reportUnexpectedType(ValueType.NUMBER);
-    }
-
-    public final float toFloat(Object... keys) {
-        Any found = get(keys);
-        if (found == null) {
-            return 0;
-        }
-        return found.toFloat();
-    }
-
-    public float toFloat() {
-        throw reportUnexpectedType(ValueType.NUMBER);
-    }
-
-    public final double toDouble(Object... keys) {
-        Any found = get(keys);
-        if (found == null) {
-            return 0;
-        }
-        return found.toDouble();
-    }
-
-    public double toDouble() {
-        throw reportUnexpectedType(ValueType.NUMBER);
-    }
-
-    public final String toString(Object... keys) {
-        Any found = get(keys);
-        if (found == null) {
-            return null;
-        }
-        return found.toString();
-    }
-
-    public int size() {
-        return 0;
-    }
-
-    public Set<String> keys() {
-        return LazyAny.EMPTY_KEYS;
+        return !val.isEmpty();
     }
 
     @Override
-    public Iterator<Any> iterator() {
-        return LazyAny.EMPTY_ITERATOR;
+    public String toString() {
+        return JsonStream.serialize(this);
     }
 
-    public Any get(int index) {
-        return null;
-    }
-
+    @Override
     public Any get(Object key) {
-        return null;
+        return val.get(key);
     }
 
-    public final JsonIterator parse() {
-        throw new UnsupportedOperationException();
+    @Override
+    public Any get(Object[] keys, int idx) {
+        if (idx == keys.length) {
+            return this;
+        }
+        Any child = val.get(keys[idx]);
+        if (child == null) {
+            return null;
+        }
+        return child.get(keys, idx+1);
     }
 
-
+    @Override
+    public Any require(Object[] keys, int idx) {
+        if (idx == keys.length) {
+            return this;
+        }
+        Any result = val.get(keys[idx]);
+        if (result == null) {
+            throw reportPathNotFound(keys, idx);
+        }
+        return result.require(keys, idx + 1);
+    }
 }

@@ -1,13 +1,16 @@
 package com.jsoniter.any;
 
 import com.jsoniter.ValueType;
+import com.jsoniter.output.JsonStream;
 
-class StringObjectAny extends ObjectAny {
+import java.io.IOException;
+
+class StringAny extends Any {
 
     private final static String FALSE = "false";
     private String val;
 
-    public StringObjectAny(String val) {
+    public StringAny(String val) {
         this.val = val;
     }
 
@@ -24,6 +27,11 @@ class StringObjectAny extends ObjectAny {
     public Any set(String newVal) {
         val = newVal;
         return this;
+    }
+
+    @Override
+    public void writeTo(JsonStream stream) throws IOException {
+        stream.writeVal(val);
     }
 
     @Override

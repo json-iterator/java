@@ -1,8 +1,8 @@
 package encoder.java.util.List_com.jsoniter.demo;
-public class User implements com.jsoniter.spi.Encoder {
-public static void encode_(java.lang.Object obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {
-if (obj == null) { stream.writeNull(); return; }
-java.util.Iterator iter = ((java.util.Collection)obj).iterator();
+public class User extends com.jsoniter.spi.EmptyEncoder {
+public static void encode_(java.lang.Object set, com.jsoniter.output.JsonStream stream) throws java.io.IOException {
+if (set == null) { stream.writeNull(); return; }
+java.util.Iterator iter = ((java.util.Collection)set).iterator();
 if (!iter.hasNext()) { stream.writeEmptyArray(); return; }
 stream.writeArrayStart();
 encoder.com.jsoniter.demo.User.encode_((com.jsoniter.demo.User)iter.next(), stream);
@@ -12,7 +12,7 @@ encoder.com.jsoniter.demo.User.encode_((com.jsoniter.demo.User)iter.next(), stre
 }
 stream.writeArrayEnd();
 }
-public void encode(java.lang.Object obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {
-encode_((java.util.List)obj, stream);
+public void encode(java.lang.Object set, com.jsoniter.output.JsonStream stream) throws java.io.IOException {
+encode_((java.util.List)set, stream);
 }
 }

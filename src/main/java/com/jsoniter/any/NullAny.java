@@ -1,12 +1,13 @@
 package com.jsoniter.any;
 
 import com.jsoniter.ValueType;
+import com.jsoniter.output.JsonStream;
 
-class NullLazyAny extends LazyAny {
+import java.io.IOException;
 
-    public NullLazyAny(byte[] data, int head, int tail) {
-        super(data, head, tail);
-    }
+class NullAny extends Any {
+
+    public final static NullAny INSTANCE = new NullAny();
 
     @Override
     public ValueType valueType() {
@@ -44,7 +45,12 @@ class NullLazyAny extends LazyAny {
     }
 
     @Override
+    public void writeTo(JsonStream stream) throws IOException {
+        stream.writeNull();
+    }
+
+    @Override
     public String toString() {
-        return null;
+        return "null";
     }
 }

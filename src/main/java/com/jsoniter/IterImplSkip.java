@@ -39,12 +39,14 @@ class IterImplSkip {
                 IterImpl.skipUntilBreak(iter);
                 return Any.lazyNumber(iter.buf, start, iter.head);
             case 't':
+                IterImpl.skipUntilBreak(iter);
+                return Any.wrap(true);
             case 'f':
                 IterImpl.skipUntilBreak(iter);
-                return Any.lazyBoolean(iter.buf, start, iter.head);
+                return Any.wrap(false);
             case 'n':
                 IterImpl.skipUntilBreak(iter);
-                return Any.lazyNull(iter.buf, start, iter.head);
+                return Any.wrap((Object)null);
             case '[':
                 IterImpl.skipArray(iter);
                 return Any.lazyArray(iter.buf, start, iter.head);

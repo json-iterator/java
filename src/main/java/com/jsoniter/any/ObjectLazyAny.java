@@ -63,17 +63,6 @@ class ObjectLazyAny extends LazyAny {
     }
 
     @Override
-    public Any get(Object... keys) {
-        try {
-            return get(keys, 0);
-        } catch (IndexOutOfBoundsException e) {
-            return null;
-        } catch (ClassCastException e) {
-            return null;
-        }
-    }
-
-    @Override
     public Any get(Object[] keys, int idx) {
         if (idx == keys.length) {
             return this;
@@ -87,11 +76,6 @@ class ObjectLazyAny extends LazyAny {
         } catch (IOException e) {
             throw new JsonException(e);
         }
-    }
-
-    @Override
-    public Any require(Object... keys) {
-        return require(keys, 0);
     }
 
     @Override

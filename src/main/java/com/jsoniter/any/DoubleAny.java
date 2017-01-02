@@ -1,58 +1,66 @@
 package com.jsoniter.any;
 
 import com.jsoniter.ValueType;
+import com.jsoniter.output.JsonStream;
 import com.jsoniter.spi.TypeLiteral;
 
-class BooleanObjectAny extends ObjectAny {
+import java.io.IOException;
 
-    private boolean val;
+class DoubleAny extends Any {
 
-    public BooleanObjectAny(boolean val) {
+    private double val;
+
+    public DoubleAny(double val) {
         this.val = val;
     }
 
     @Override
     public ValueType valueType() {
-        return ValueType.BOOLEAN;
+        return ValueType.NUMBER;
     }
 
     @Override
     public Object object() {
-        return null;
-    }
-
-    @Override
-    public boolean toBoolean() {
         return val;
     }
 
     @Override
+    public boolean toBoolean() {
+        return val != 0;
+    }
+
+    @Override
     public int toInt() {
-        return val ? 1 : 0;
+        return (int) val;
     }
 
     @Override
     public long toLong() {
-        return val ? 1 : 0;
+        return (long) val;
     }
 
     @Override
     public float toFloat() {
-        return val ? 1 : 0;
+        return (float) val;
     }
 
     @Override
     public double toDouble() {
-        return val ? 1 : 0;
+        return val;
     }
 
     @Override
     public String toString() {
-        return Boolean.toString(val);
+        return String.valueOf(val);
     }
 
-    public Any set(boolean newVal) {
-        val = newVal;
+    public Any set(double newVal) {
+        this.val = newVal;
         return this;
+    }
+
+    @Override
+    public void writeTo(JsonStream stream) throws IOException {
+        stream.writeVal(val);
     }
 }

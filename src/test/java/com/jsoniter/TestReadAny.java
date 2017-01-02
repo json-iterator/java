@@ -76,7 +76,7 @@ public class TestReadAny extends TestCase {
     public void test_read_string() throws IOException {
         assertEquals("hello", JsonIterator.deserialize("\"hello\"").toString());
         assertEquals("true", JsonIterator.deserialize("true").toString());
-        assertEquals(null, JsonIterator.deserialize("null").toString());
+        assertEquals("null", JsonIterator.deserialize("null").toString());
         assertEquals("100", JsonIterator.deserialize("100").toString());
         assertEquals(100, JsonIterator.deserialize("\"100\"").toInt());
         assertEquals(true, JsonIterator.deserialize("\"hello\"").toBoolean());

@@ -1,5 +1,6 @@
 package com.jsoniter.output;
 
+import com.jsoniter.any.Any;
 import com.jsoniter.spi.Encoder;
 import com.jsoniter.spi.JsoniterSpi;
 import junit.framework.TestCase;
@@ -27,6 +28,11 @@ public class TestCustomizeField extends TestCase {
             public void encode(Object obj, JsonStream stream) throws IOException {
                 String str = (String) obj;
                 stream.writeVal(Integer.valueOf(str));
+            }
+
+            @Override
+            public Any wrap(Object obj) {
+                throw new UnsupportedOperationException();
             }
         });
         TestObject1 obj = new TestObject1();

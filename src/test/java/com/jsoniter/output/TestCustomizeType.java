@@ -1,7 +1,7 @@
 package com.jsoniter.output;
 
+import com.jsoniter.spi.EmptyEncoder;
 import com.jsoniter.spi.JsoniterSpi;
-import com.jsoniter.spi.Encoder;
 import junit.framework.TestCase;
 
 import java.io.ByteArrayOutputStream;
@@ -23,7 +23,7 @@ public class TestCustomizeType extends TestCase {
     }
 
     public void test() throws IOException {
-        JsoniterSpi.registerTypeEncoder(MyDate.class, new Encoder() {
+        JsoniterSpi.registerTypeEncoder(MyDate.class, new EmptyEncoder() {
             @Override
             public void encode(Object obj, JsonStream stream) throws IOException {
                 MyDate date = (MyDate) obj;

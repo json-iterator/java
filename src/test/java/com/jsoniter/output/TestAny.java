@@ -4,6 +4,9 @@ import com.jsoniter.ValueType;
 import com.jsoniter.any.*;
 import junit.framework.TestCase;
 
+import java.util.Arrays;
+import java.util.HashMap;
+
 public class TestAny extends TestCase {
 
     public void test_int() {
@@ -64,7 +67,7 @@ public class TestAny extends TestCase {
     }
 
     public void test_null() {
-        Any any = Any.wrap(null);
+        Any any = Any.wrap((Object) null);
         assertEquals(ValueType.NULL, any.valueType());
         assertEquals("null", JsonStream.serialize(any));
         assertEquals(false, any.toBoolean());
@@ -80,8 +83,6 @@ public class TestAny extends TestCase {
         assertEquals(1F, any.toFloat());
         assertEquals(1D, any.toDouble());
         assertEquals("true", any.toString());
-        any.set(false);
-        assertEquals("false", any.toString());
     }
 
     public void test_string() {
@@ -95,5 +96,55 @@ public class TestAny extends TestCase {
         assertEquals(100D, any.toDouble());
         assertEquals(true, any.toBoolean());
         assertEquals("100", any.toString());
+    }
+
+    public void test_list() {
+        Any any = Any.wrap(Arrays.asList(1, 2, 3));
+        assertEquals(ValueType.ARRAY, any.valueType());
+        assertEquals("[1,2,3]", JsonStream.serialize(any));
+        assertEquals(Integer.valueOf(1), any.get(0).object());
+        assertEquals(true, any.toBoolean());
+        assertEquals("[1,2,3]", any.toString());
+    }
+
+    public void test_array() {
+        Any any = Any.wrap(new int[]{1, 2, 3});
+        assertEquals(ValueType.ARRAY, any.valueType());
+        assertEquals("[1,2,3]", JsonStream.serialize(any));
+        assertEquals(Integer.valueOf(1), any.get(0).object());
+        assertEquals(true, any.toBoolean());
+        assertEquals("[1,2,3]", any.toString());
+    }
+
+    public void test_map() {
+        HashMap<String, Object> val = new HashMap<String, Object>();
+        val.put("hello", 1);
+        val.put("world", "!!");
+        Any any = Any.wrap(val);
+        assertEquals(ValueType.OBJECT, any.valueType());
+        assertEquals("{\"world\":\"!!\",\"hello\":1}", JsonStream.serialize(any));
+        assertEquals(Integer.valueOf(1), any.get("hello").object());
+        assertEquals(true, any.toBoolean());
+        assertEquals("{\"world\":\"!!\",\"hello\":1}", any.toString());
+    }
+
+    public static class MyClass {
+        public Object field1;
+        public Any field2;
+    }
+
+    public void test_my_class() {
+        MyClass val = new MyClass();
+        val.field1 = "hello";
+        val.field2 = Any.wrap(new long[]{1, 2});
+        Any any = Any.wrap(val);
+        assertEquals(ValueType.OBJECT, any.valueType());
+        assertEquals("{\"field1\":\"hello\",\"field2\":[1,2]}", JsonStream.serialize(any));
+    }
+
+    public void test_object() {
+        Any any = Any.wrap(new Object());
+        assertEquals(ValueType.OBJECT, any.valueType());
+        assertEquals("{}", JsonStream.serialize(new Object()));
     }
 }

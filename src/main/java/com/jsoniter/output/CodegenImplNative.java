@@ -1,14 +1,14 @@
 package com.jsoniter.output;
 
-import com.jsoniter.any.Any;
 import com.jsoniter.JsonException;
-import com.jsoniter.any.*;
-import com.jsoniter.spi.TypeLiteral;
+import com.jsoniter.any.Any;
 import com.jsoniter.spi.Encoder;
+import com.jsoniter.spi.TypeLiteral;
 
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
@@ -19,11 +19,23 @@ class CodegenImplNative {
             public void encode(Object obj, JsonStream stream) throws IOException {
                 stream.writeVal((Boolean) obj);
             }
+
+            @Override
+            public Any wrap(Object obj) {
+                Boolean val = (Boolean) obj;
+                return Any.wrap((boolean) val);
+            }
         });
         put(Boolean.class, new Encoder() {
             @Override
             public void encode(Object obj, JsonStream stream) throws IOException {
                 stream.writeVal((Boolean) obj);
+            }
+
+            @Override
+            public Any wrap(Object obj) {
+                Boolean val = (Boolean) obj;
+                return Any.wrap((boolean) val);
             }
         });
         put(byte.class, new Encoder() {
@@ -31,11 +43,23 @@ class CodegenImplNative {
             public void encode(Object obj, JsonStream stream) throws IOException {
                 stream.writeVal((Short) obj);
             }
+
+            @Override
+            public Any wrap(Object obj) {
+                Byte val = (Byte) obj;
+                return Any.wrap((int) val);
+            }
         });
         put(Byte.class, new Encoder() {
             @Override
             public void encode(Object obj, JsonStream stream) throws IOException {
                 stream.writeVal((Short) obj);
+            }
+
+            @Override
+            public Any wrap(Object obj) {
+                Byte val = (Byte) obj;
+                return Any.wrap((int) val);
             }
         });
         put(short.class, new Encoder() {
@@ -43,11 +67,23 @@ class CodegenImplNative {
             public void encode(Object obj, JsonStream stream) throws IOException {
                 stream.writeVal((Short) obj);
             }
+
+            @Override
+            public Any wrap(Object obj) {
+                Short val = (Short) obj;
+                return Any.wrap((int) val);
+            }
         });
         put(Short.class, new Encoder() {
             @Override
             public void encode(Object obj, JsonStream stream) throws IOException {
                 stream.writeVal((Short) obj);
+            }
+
+            @Override
+            public Any wrap(Object obj) {
+                Short val = (Short) obj;
+                return Any.wrap((int) val);
             }
         });
         put(int.class, new Encoder() {
@@ -55,11 +91,23 @@ class CodegenImplNative {
             public void encode(Object obj, JsonStream stream) throws IOException {
                 stream.writeVal((Integer) obj);
             }
+
+            @Override
+            public Any wrap(Object obj) {
+                Integer val = (Integer) obj;
+                return Any.wrap((int) val);
+            }
         });
         put(Integer.class, new Encoder() {
             @Override
             public void encode(Object obj, JsonStream stream) throws IOException {
                 stream.writeVal((Integer) obj);
+            }
+
+            @Override
+            public Any wrap(Object obj) {
+                Integer val = (Integer) obj;
+                return Any.wrap((int) val);
             }
         });
         put(char.class, new Encoder() {
@@ -67,11 +115,23 @@ class CodegenImplNative {
             public void encode(Object obj, JsonStream stream) throws IOException {
                 stream.writeVal((Integer) obj);
             }
+
+            @Override
+            public Any wrap(Object obj) {
+                Character val = (Character) obj;
+                return Any.wrap((int) val);
+            }
         });
         put(Character.class, new Encoder() {
             @Override
             public void encode(Object obj, JsonStream stream) throws IOException {
                 stream.writeVal((Integer) obj);
+            }
+
+            @Override
+            public Any wrap(Object obj) {
+                Character val = (Character) obj;
+                return Any.wrap((int) val);
             }
         });
         put(long.class, new Encoder() {
@@ -79,11 +139,23 @@ class CodegenImplNative {
             public void encode(Object obj, JsonStream stream) throws IOException {
                 stream.writeVal((Long) obj);
             }
+
+            @Override
+            public Any wrap(Object obj) {
+                Long val = (Long) obj;
+                return Any.wrap((long) val);
+            }
         });
         put(Long.class, new Encoder() {
             @Override
             public void encode(Object obj, JsonStream stream) throws IOException {
                 stream.writeVal((Long) obj);
+            }
+
+            @Override
+            public Any wrap(Object obj) {
+                Long val = (Long) obj;
+                return Any.wrap((long) val);
             }
         });
         put(float.class, new Encoder() {
@@ -91,11 +163,23 @@ class CodegenImplNative {
             public void encode(Object obj, JsonStream stream) throws IOException {
                 stream.writeVal((Float) obj);
             }
+
+            @Override
+            public Any wrap(Object obj) {
+                Float val = (Float) obj;
+                return Any.wrap((float) val);
+            }
         });
         put(Float.class, new Encoder() {
             @Override
             public void encode(Object obj, JsonStream stream) throws IOException {
                 stream.writeVal((Float) obj);
+            }
+
+            @Override
+            public Any wrap(Object obj) {
+                Float val = (Float) obj;
+                return Any.wrap((float) val);
             }
         });
         put(double.class, new Encoder() {
@@ -103,11 +187,23 @@ class CodegenImplNative {
             public void encode(Object obj, JsonStream stream) throws IOException {
                 stream.writeVal((Double) obj);
             }
+
+            @Override
+            public Any wrap(Object obj) {
+                Double val = (Double) obj;
+                return Any.wrap((double) val);
+            }
         });
         put(Double.class, new Encoder() {
             @Override
             public void encode(Object obj, JsonStream stream) throws IOException {
                 stream.writeVal((Double) obj);
+            }
+
+            @Override
+            public Any wrap(Object obj) {
+                Double val = (Double) obj;
+                return Any.wrap((double) val);
             }
         });
         put(String.class, new Encoder() {
@@ -115,33 +211,31 @@ class CodegenImplNative {
             public void encode(Object obj, JsonStream stream) throws IOException {
                 stream.writeVal((String) obj);
             }
+
+            @Override
+            public Any wrap(Object obj) {
+                String val = (String) obj;
+                return Any.wrap(val);
+            }
         });
         put(Object.class, new Encoder() {
             @Override
             public void encode(Object obj, JsonStream stream) throws IOException {
+                if (obj != null && obj.getClass() == Object.class) {
+                    stream.writeEmptyObject();
+                    return;
+                }
                 stream.writeVal(obj);
             }
-        });
-        Encoder anyEncoder = new Encoder() {
+
             @Override
-            public void encode(Object obj, JsonStream stream) throws IOException {
-                Any any = (Any) obj;
-                stream.writeVal(any.object());
+            public Any wrap(Object obj) {
+                if (obj != null && obj.getClass() == Object.class) {
+                    return Any.wrapAnyMap(new HashMap<String, Any>());
+                }
+                return JsonStream.wrap(obj);
             }
-        };
-//        put(IntObjectAny.class, anyEncoder);
-//        put(LongObjectAny.class, anyEncoder);
-//        put(FloatObjectAny.class, anyEncoder);
-//        put(DoubleObjectAny.class, anyEncoder);
-//        put(NullObjectAny.class, anyEncoder);
-//        put(BooleanObjectAny.class, anyEncoder);
-//        put(StringObjectAny.class, anyEncoder);
-//        put(BooleanLazyAny.class, anyEncoder);
-//        put(NullLazyAny.class, anyEncoder);
-//        put(NumberLazyAny.class, anyEncoder);
-//        put(ObjectLazyAny.class, anyEncoder);
-//        put(StringLazyAny.class, anyEncoder);
-//        put(ArrayLazyAny.class, anyEncoder);
+        });
     }};
 
     public static String genWriteOp(String code, Type valueType) {

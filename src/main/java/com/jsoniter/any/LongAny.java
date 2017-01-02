@@ -1,12 +1,16 @@
 package com.jsoniter.any;
 
 import com.jsoniter.ValueType;
+import com.jsoniter.output.JsonStream;
+import com.jsoniter.spi.TypeLiteral;
 
-class IntObjectAny extends ObjectAny {
+import java.io.IOException;
 
-    private int val;
+class LongAny extends Any {
 
-    public IntObjectAny(int val) {
+    private long val;
+
+    public LongAny(long val) {
         this.val = val;
     }
 
@@ -27,7 +31,7 @@ class IntObjectAny extends ObjectAny {
 
     @Override
     public int toInt() {
-        return val;
+        return (int) val;
     }
 
     @Override
@@ -50,8 +54,13 @@ class IntObjectAny extends ObjectAny {
         return String.valueOf(val);
     }
 
-    public Any set(int newVal) {
+    public Any set(long newVal) {
         this.val = newVal;
         return this;
+    }
+
+    @Override
+    public void writeTo(JsonStream stream) throws IOException {
+        stream.writeVal(val);
     }
 }

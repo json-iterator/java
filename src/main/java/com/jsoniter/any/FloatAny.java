@@ -1,13 +1,16 @@
 package com.jsoniter.any;
 
 import com.jsoniter.ValueType;
+import com.jsoniter.output.JsonStream;
 import com.jsoniter.spi.TypeLiteral;
 
-class FloatObjectAny extends ObjectAny {
+import java.io.IOException;
+
+class FloatAny extends Any {
 
     private float val;
 
-    public FloatObjectAny(float val) {
+    public FloatAny(float val) {
         this.val = val;
     }
 
@@ -54,5 +57,10 @@ class FloatObjectAny extends ObjectAny {
     public Any set(float newVal) {
         this.val = newVal;
         return this;
+    }
+
+    @Override
+    public void writeTo(JsonStream stream) throws IOException {
+        stream.writeVal(val);
     }
 }

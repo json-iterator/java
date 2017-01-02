@@ -60,28 +60,12 @@ class ArrayLazyAny extends LazyAny {
     }
 
     @Override
-    public Any get(Object... keys) {
-        try {
-            return get(keys, 0);
-        } catch (IndexOutOfBoundsException e) {
-            return null;
-        } catch (ClassCastException e) {
-            return null;
-        }
-    }
-
-    @Override
     public Any get(Object[] keys, int idx) {
         if (idx == keys.length) {
             return this;
         }
         fillCache();
         return cache.get((Integer) keys[idx]).get(keys, idx+1);
-    }
-
-    @Override
-    public Any require(Object... keys) {
-        return require(keys, 0);
     }
 
     @Override

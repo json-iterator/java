@@ -1,5 +1,6 @@
 package com.jsoniter.output;
 
+import com.jsoniter.any.Any;
 import com.jsoniter.spi.Encoder;
 import com.jsoniter.spi.TypeLiteral;
 
@@ -39,5 +40,11 @@ class ReflectionCollectionEncoder implements Encoder {
             stream.writeVal(compTypeLiteral, iter.next());
         }
         stream.writeArrayEnd();
+    }
+
+    @Override
+    public Any wrap(Object obj) {
+        Collection col = (Collection) obj;
+        return Any.wrap(col);
     }
 }

@@ -1,58 +1,56 @@
 package com.jsoniter.any;
 
 import com.jsoniter.ValueType;
-import com.jsoniter.spi.TypeLiteral;
+import com.jsoniter.output.JsonStream;
 
-class LongObjectAny extends ObjectAny {
+import java.io.IOException;
 
-    private long val;
+class FalseAny extends Any {
 
-    public LongObjectAny(long val) {
-        this.val = val;
-    }
+    public final static FalseAny INSTANCE = new FalseAny();
 
     @Override
     public ValueType valueType() {
-        return ValueType.NUMBER;
+        return ValueType.BOOLEAN;
     }
 
     @Override
     public Object object() {
-        return val;
+        return Boolean.FALSE;
     }
 
     @Override
     public boolean toBoolean() {
-        return val != 0;
+        return false;
     }
 
     @Override
     public int toInt() {
-        return (int) val;
+        return 0;
     }
 
     @Override
     public long toLong() {
-        return val;
+        return 0;
     }
 
     @Override
     public float toFloat() {
-        return val;
+        return 0;
     }
 
     @Override
     public double toDouble() {
-        return val;
+        return 0;
     }
 
     @Override
     public String toString() {
-        return String.valueOf(val);
+        return "false";
     }
 
-    public Any set(long newVal) {
-        this.val = newVal;
-        return this;
+    @Override
+    public void writeTo(JsonStream stream) throws IOException {
+        stream.writeFalse();
     }
 }
