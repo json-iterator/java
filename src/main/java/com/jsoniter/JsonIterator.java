@@ -21,6 +21,7 @@ public class JsonIterator implements Closeable {
     byte[] buf;
     int head;
     int tail;
+    int skipStartedAt = -1; // skip should keep bytes starting at this pos
 
     Map<String, Object> tempObjects = new HashMap<String, Object>();
     final Slice reusableSlice = new Slice(null, 0, 0);
@@ -260,10 +261,7 @@ public class JsonIterator implements Closeable {
     }
 
     public final Any readAny() throws IOException {
-        if (in != null) {
-            throw new JsonException("input can not be InputStream when readAny");
-        }
-        return IterImplSkip.readAny(this);
+        return IterImpl.readAny(this);
     }
 
     public final Object read() throws IOException {

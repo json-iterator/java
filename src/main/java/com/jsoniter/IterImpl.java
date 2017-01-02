@@ -1,5 +1,7 @@
 package com.jsoniter;
 
+import com.jsoniter.any.Any;
+
 import java.io.IOException;
 
 class IterImpl {
@@ -158,5 +160,45 @@ class IterImpl {
             return 0;
         }
         return iter.buf[iter.head++];
+    }
+
+    public static Any readAny(JsonIterator iter) throws IOException {
+        int start = iter.head;
+        byte c = nextToken(iter);
+        switch (c) {
+            case '"':
+                skipString(iter);
+                return Any.lazyString(iter.buf, start, iter.head);
+            case '-':
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9':
+                skipUntilBreak(iter);
+                return Any.lazyNumber(iter.buf, start, iter.head);
+            case 't':
+                skipUntilBreak(iter);
+                return Any.wrap(true);
+            case 'f':
+                skipUntilBreak(iter);
+                return Any.wrap(false);
+            case 'n':
+                skipUntilBreak(iter);
+                return Any.wrap((Object)null);
+            case '[':
+                skipArray(iter);
+                return Any.lazyArray(iter.buf, start, iter.head);
+            case '{':
+                skipObject(iter);
+                return Any.lazyObject(iter.buf, start, iter.head);
+            default:
+                throw iter.reportError("IterImplSkip", "do not know how to skip: " + c);
+        }
     }
 }

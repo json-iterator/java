@@ -1,5 +1,7 @@
 package com.jsoniter;
 
+import com.jsoniter.any.Any;
+
 import java.io.IOException;
 
 class IterImplForStreaming {
@@ -227,6 +229,9 @@ class IterImplForStreaming {
         if (iter.in == null) {
             return false;
         }
+        if (iter.skipStartedAt != -1) {
+            return keepSkippedBytesThenRead(iter);
+        }
         int n = iter.in.read(iter.buf);
         if (n < 1) {
             if (n == -1) {
@@ -241,6 +246,34 @@ class IterImplForStreaming {
         return true;
     }
 
+    private static boolean keepSkippedBytesThenRead(JsonIterator iter) throws IOException {
+        int n;
+        int offset;
+        if (iter.skipStartedAt == 0 || iter.skipStartedAt < iter.tail / 2) {
+            byte[] newBuf = new byte[iter.buf.length * 2];
+            offset = iter.tail - iter.skipStartedAt;
+            System.arraycopy(iter.buf, iter.skipStartedAt, newBuf, 0, offset);
+            iter.buf = newBuf;
+            n = iter.in.read(iter.buf, offset, iter.buf.length - offset);
+        } else {
+            offset = iter.tail - iter.skipStartedAt;
+            System.arraycopy(iter.buf, iter.skipStartedAt, iter.buf, 0, offset);
+            n = iter.in.read(iter.buf, offset, iter.buf.length - offset);
+        }
+        iter.skipStartedAt = 0;
+        if (n < 1) {
+            if (n == -1) {
+                return false;
+            } else {
+                throw iter.reportError("loadMore", "read from input stream returned " + n);
+            }
+        } else {
+            iter.head = offset;
+            iter.tail = offset + n;
+        }
+        return true;
+    }
+
     final static byte readByte(JsonIterator iter) throws IOException {
         if (iter.head == iter.tail) {
             if (!loadMore(iter)) {
@@ -248,5 +281,61 @@ class IterImplForStreaming {
             }
         }
         return iter.buf[iter.head++];
+    }
+
+    public static Any readAny(JsonIterator iter) throws IOException {
+        iter.skipStartedAt = iter.head;
+        byte c = IterImpl.nextToken(iter);
+        switch (c) {
+            case '"':
+                IterImpl.skipString(iter);
+                byte[] copied = copySkippedBytes(iter);
+                return Any.lazyString(copied, 0, copied.length);
+            case '-':
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9':
+                IterImpl.skipUntilBreak(iter);
+                copied = copySkippedBytes(iter);
+                return Any.lazyNumber(copied, 0, copied.length);
+            case 't':
+                IterImpl.skipUntilBreak(iter);
+                iter.skipStartedAt = -1;
+                return Any.wrap(true);
+            case 'f':
+                IterImpl.skipUntilBreak(iter);
+                iter.skipStartedAt = -1;
+                return Any.wrap(false);
+            case 'n':
+                IterImpl.skipUntilBreak(iter);
+                iter.skipStartedAt = -1;
+                return Any.wrap((Object)null);
+            case '[':
+                IterImpl.skipArray(iter);
+                copied = copySkippedBytes(iter);
+                return Any.lazyArray(copied, 0, copied.length);
+            case '{':
+                IterImpl.skipObject(iter);
+                copied = copySkippedBytes(iter);
+                return Any.lazyObject(copied, 0, copied.length);
+            default:
+                throw iter.reportError("IterImplSkip", "do not know how to skip: " + c);
+        }
+    }
+
+    private static byte[] copySkippedBytes(JsonIterator iter) {
+        int start = iter.skipStartedAt;
+        iter.skipStartedAt = -1;
+        int end = iter.head;
+        byte[] bytes = new byte[end - start];
+        System.arraycopy(iter.buf, start, bytes, 0, bytes.length);
+        return bytes;
     }
 }
