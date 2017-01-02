@@ -51,6 +51,7 @@ public class ModelTest {
                 "-i", "5",
                 "-wi", "5",
                 "-f", "1",
+//                "-jvmArgsAppend", "-server -XX:+DoEscapeAnalysis",
         });
     }
 
@@ -89,7 +90,7 @@ public class ModelTest {
         bh.consume(JsonIterator.deserialize(inputBytes, Model.class));
     }
 
-//    @Benchmark
+    @Benchmark
     public void fastjson(Blackhole bh) throws IOException {
         // this is not a exactly fair comparison,
         // as string => object is not

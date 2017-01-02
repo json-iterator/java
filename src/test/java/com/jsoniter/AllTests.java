@@ -1,7 +1,6 @@
 package com.jsoniter;
 
 import org.junit.BeforeClass;
-import org.junit.Test;
 import org.junit.experimental.categories.Categories;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -16,19 +15,19 @@ public class AllTests {
             TestExisting.class, TestGenerics.class, TestGenerics.class, TestIO.class, TestNested.class,
             TestObject.class, TestReadAny.class, TestReflection.class, TestSkip.class, TestSlice.class,
             TestString.class, TestWhatIsNext.class})
-    public static class AllTests {
+    public static class AllTestCases {
     }
 
     @RunWith(Categories.class)
     @Categories.ExcludeCategory(StreamingCategory.class)
-    @Suite.SuiteClasses({AllTests.class})
+    @Suite.SuiteClasses({AllTestCases.class})
     public static class NonStreamingTests {
 
     }
 
     @RunWith(Categories.class)
     @Categories.IncludeCategory(StreamingCategory.class)
-    @Suite.SuiteClasses({AllTests.class})
+    @Suite.SuiteClasses({AllTestCases.class})
     public static class StreamingTests {
         @BeforeClass
         public static void setUp() {

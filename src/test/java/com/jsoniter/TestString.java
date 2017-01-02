@@ -4,6 +4,8 @@ import junit.framework.TestCase;
 import org.junit.experimental.categories.Category;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 
 public class TestString extends TestCase {
@@ -57,5 +59,13 @@ public class TestString extends TestCase {
     public void test_null_string() throws IOException {
         JsonIterator iter = JsonIterator.parse("null".replace('\'', '"'));
         assertEquals(null, iter.readString());
+    }
+
+    public void test_incomplete_string() throws IOException {
+        try {
+            JsonIterator.parse("\"abc").read();
+            fail();
+        } catch (JsonException e) {
+        }
     }
 }

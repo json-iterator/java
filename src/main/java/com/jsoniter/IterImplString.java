@@ -101,6 +101,8 @@ class IterImplString {
                         default:
                             throw iter.reportError("readStringSlowPath", "unexpected escape char: " + b2);
                     }
+                } else if (b1 == 0) {
+                    throw iter.reportError("readStringSlowPath", "incomplete string");
                 } else {
                     // 1 byte, 7 bits: 0xxxxxxx
                     iter.reusableChars[j++] = (char) b1;

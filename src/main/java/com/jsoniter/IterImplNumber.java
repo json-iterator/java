@@ -225,6 +225,8 @@ class IterImplNumber {
                 case '9':
                     iter.reusableChars[j++] = (char) c;
                     break;
+                case 0:
+                    return new String(iter.reusableChars, 0, j);
                 default:
                     iter.unreadByte();
                     return new String(iter.reusableChars, 0, j);

@@ -8,7 +8,7 @@ import java.util.Map;
 public class TestObject extends TestCase {
 
     static {
-//        JsonIterator.setMode(DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_STRICTLY);
+//        JsonIterator.setMode(DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_WITH_HASH);
     }
 
     public static class EmptyClass {}
@@ -93,5 +93,13 @@ public class TestObject extends TestCase {
         JsonIterator iter = JsonIterator.parse("{'inheritedField': 'hello'}".replace('\'', '"'));
         InheritedObject inheritedObject = iter.read(InheritedObject.class);
         assertEquals("hello", inheritedObject.inheritedField);
+    }
+
+    public void test_incomplete_field_name() throws IOException {
+        try {
+            JsonIterator.parse("{\"abc").read(InheritedObject.class);
+            fail();
+        } catch (JsonException e) {
+        }
     }
 }

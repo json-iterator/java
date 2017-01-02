@@ -271,6 +271,7 @@ public class JsonIterator implements Closeable {
             case NUMBER:
                 return readDouble();
             case NULL:
+                IterImpl.skipUntilBreak(this);
                 return null;
             case BOOLEAN:
                 return readBoolean();
@@ -332,7 +333,11 @@ public class JsonIterator implements Closeable {
         JsonIterator iter = tlsIter.get();
         iter.reset(input.getBytes());
         try {
-            return iter.read(clazz);
+            T val = iter.read(clazz);
+            if (IterImpl.nextToken(iter) != 0) {
+                throw iter.reportError("deserialize", "trailing garbage found");
+            }
+            return val;
         } catch (IOException e) {
             throw new JsonException(e);
         }
@@ -342,7 +347,11 @@ public class JsonIterator implements Closeable {
         JsonIterator iter = tlsIter.get();
         iter.reset(input.getBytes());
         try {
-            return iter.read(typeLiteral);
+            T val = iter.read(typeLiteral);
+            if (IterImpl.nextToken(iter) != 0) {
+                throw iter.reportError("deserialize", "trailing garbage found");
+            }
+            return val;
         } catch (IOException e) {
             throw new JsonException(e);
         }
@@ -352,7 +361,11 @@ public class JsonIterator implements Closeable {
         JsonIterator iter = tlsIter.get();
         iter.reset(input);
         try {
-            return iter.read(clazz);
+            T val = iter.read(clazz);
+            if (IterImpl.nextToken(iter) != 0) {
+                throw iter.reportError("deserialize", "trailing garbage found");
+            }
+            return val;
         } catch (IOException e) {
             throw new JsonException(e);
         }
@@ -362,7 +375,11 @@ public class JsonIterator implements Closeable {
         JsonIterator iter = tlsIter.get();
         iter.reset(input);
         try {
-            return iter.read(typeLiteral);
+            T val = iter.read(typeLiteral);
+            if (IterImpl.nextToken(iter) != 0) {
+                throw iter.reportError("deserialize", "trailing garbage found");
+            }
+            return val;
         } catch (IOException e) {
             throw new JsonException(e);
         }
@@ -376,7 +393,11 @@ public class JsonIterator implements Closeable {
         JsonIterator iter = tlsIter.get();
         iter.reset(input);
         try {
-            return iter.readAny();
+            LazyAny val = iter.readAny();
+            if (IterImpl.nextToken(iter) != 0) {
+                throw iter.reportError("deserialize", "trailing garbage found");
+            }
+            return val;
         } catch (IOException e) {
             throw new JsonException(e);
         }
