@@ -179,6 +179,9 @@ class ReflectionObjectDecoder {
                 CodegenAccess.resetExistingObject(iter);
                 return null;
             }
+            if (iter.tempObjects == null) {
+                iter.tempObjects = new HashMap<String, Object>();
+            }
             Object[] temp = (Object[]) iter.tempObjects.get(tempCacheKey);
             if (temp == null) {
                 temp = new Object[tempCount];
@@ -266,6 +269,9 @@ class ReflectionObjectDecoder {
             }
             Map<String, Object> extra = null;
             long tracker = 0L;
+            if (iter.tempObjects == null) {
+                iter.tempObjects = new HashMap<String, Object>();
+            }
             Object[] temp = (Object[]) iter.tempObjects.get(tempCacheKey);
             if (temp == null) {
                 temp = new Object[tempCount];
@@ -388,6 +394,9 @@ class ReflectionObjectDecoder {
     }
 
     private Object createNewObject(JsonIterator iter, Object[] temp) throws Exception {
+        if (iter.tempObjects == null) {
+            iter.tempObjects = new HashMap<String, Object>();
+        }
         Object[] ctorArgs = (Object[]) iter.tempObjects.get(ctorArgsCacheKey);
         if (ctorArgs == null) {
             ctorArgs = new Object[desc.ctor.parameters.size()];

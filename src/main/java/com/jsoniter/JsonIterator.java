@@ -23,7 +23,7 @@ public class JsonIterator implements Closeable {
     int tail;
     int skipStartedAt = -1; // skip should keep bytes starting at this pos
 
-    Map<String, Object> tempObjects = new HashMap<String, Object>();
+    Map<String, Object> tempObjects = null; // used in reflection object decoder
     final Slice reusableSlice = new Slice(null, 0, 0);
     char[] reusableChars = new char[32];
     Object existingObject = null; // the set should be bind to next

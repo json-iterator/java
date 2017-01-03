@@ -180,6 +180,7 @@ class IterImplForStreaming {
             iter.head = end;
             return iter.reusableSlice;
         }
+        // TODO: avoid small memory allocation
         byte[] part1 = new byte[iter.tail - iter.head];
         System.arraycopy(iter.buf, iter.head, part1, 0, part1.length);
         for (; ; ) {
@@ -284,6 +285,7 @@ class IterImplForStreaming {
     }
 
     public static Any readAny(JsonIterator iter) throws IOException {
+        // TODO: avoid small memory allocation
         iter.skipStartedAt = iter.head;
         byte c = IterImpl.nextToken(iter);
         switch (c) {

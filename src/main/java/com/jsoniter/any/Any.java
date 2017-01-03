@@ -96,6 +96,14 @@ public abstract class Any implements Iterable<Any> {
 
     public abstract Object object();
 
+    public Map<String, Any> asMap() {
+        return (Map<String, Any>) object();
+    }
+
+    public List<Any> asList() {
+        return (List<Any>) object();
+    }
+
     public <T> T as(Class<T> clazz, Object... keys) {
         Any found = get(keys);
         if (found == null) {

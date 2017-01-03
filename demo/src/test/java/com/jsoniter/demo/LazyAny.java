@@ -3,6 +3,7 @@ package com.jsoniter.demo;
 import com.jsoniter.any.Any;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.Slice;
+import com.jsoniter.output.JsonStream;
 import org.junit.Test;
 import org.openjdk.jmh.Main;
 import org.openjdk.jmh.annotations.*;
@@ -12,6 +13,7 @@ import org.openjdk.jmh.infra.Blackhole;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -40,15 +42,23 @@ public class LazyAny {
         });
     }
 
+    public static class User {
+        public int index;
+        public String name;
+    }
+
     @Test
     public void test() throws IOException {
         benchSetup(null);
         System.out.println(jsoniter());
         System.out.println(jsoniter_object());
 
-        String input = "{'numbers': ['1', '2', ['3', '4']]}".replace('\'', '"');
-        String[] array = JsonIterator.deserialize(input).get("numbers", 2).as(String[].class);
-        System.out.println(Arrays.toString(array));
+        User tom = new User();
+        tom.index = 1;
+        tom.name = "tom";
+        Map<String, Any> tomAsMap = Any.wrap(tom).asMap();
+        tomAsMap.put("age", Any.wrap(17));
+        System.out.println(JsonStream.serialize(tomAsMap));
     }
 
     @Benchmark
