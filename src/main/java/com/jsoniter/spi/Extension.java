@@ -30,16 +30,23 @@ public interface Extension {
     /**
      * Customize type decoding
      *
-     * @param cacheKey cacheKey parameter
+     * @param cacheKey name of the decoder
      * @param type     change how to decode the type
      * @return null, if no special customization needed
      */
     Decoder createDecoder(String cacheKey, Type type);
 
-    // TODO: add createEncoder
+    /**
+     * Customize type encoding
+     *
+     * @param cacheKey name of the encoder
+     * @param type     change how to encode the type
+     * @return null, if not special customization needed
+     */
+    Encoder createEncoder(String cacheKey, Type type);
 
     /**
-     * Update binding is done for the class
+     * Update how binding is done for the class
      *
      * @param desc binding information
      */

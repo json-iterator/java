@@ -2,6 +2,7 @@ package com.jsoniter.output;
 
 import com.jsoniter.JsonException;
 import com.jsoniter.spi.Encoder;
+import com.jsoniter.spi.Extension;
 import com.jsoniter.spi.JsoniterSpi;
 import com.jsoniter.spi.TypeLiteral;
 
@@ -76,6 +77,14 @@ class Codegen {
         Encoder encoder = JsoniterSpi.getEncoder(cacheKey);
         if (encoder != null) {
             return encoder;
+        }
+        List<Extension> extensions = JsoniterSpi.getExtensions();
+        for (Extension extension : extensions) {
+            encoder = extension.createEncoder(cacheKey, type);
+            if (encoder != null) {
+                JsoniterSpi.addNewEncoder(cacheKey, encoder);
+                return encoder;
+            }
         }
         encoder = CodegenImplNative.NATIVE_ENCODERS.get(type);
         if (encoder != null) {

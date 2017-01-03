@@ -25,6 +25,11 @@ public class EmptyExtension implements Extension {
     }
 
     @Override
+    public Encoder createEncoder(String cacheKey, Type type) {
+        return null;
+    }
+
+    @Override
     public void updateClassDescriptor(ClassDescriptor desc) {
     }
 }
