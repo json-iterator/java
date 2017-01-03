@@ -11,7 +11,7 @@ import java.util.List;
 public class TestArray extends TestCase {
 
     static {
-//        JsonStream.setMode(EncodingMode.REFLECTION_MODE);
+//        JsonStream.setMode(EncodingMode.DYNAMIC_MODE);
     }
 
     private ByteArrayOutputStream baos;

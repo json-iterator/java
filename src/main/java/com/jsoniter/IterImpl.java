@@ -39,7 +39,7 @@ class IterImpl {
         }
         Slice field = readSlice(iter);
         if (nextToken(iter) != ':') {
-            throw iter.reportError("readObjectFieldAsSlice", "expect : after set field");
+            throw iter.reportError("readObjectFieldAsSlice", "expect : after object field");
         }
         return field;
     }
@@ -93,7 +93,7 @@ class IterImpl {
                     break;
             }
         }
-        throw iter.reportError("skipObject", "incomplete set");
+        throw iter.reportError("skipObject", "incomplete object");
     }
 
     final static void skipString(JsonIterator iter) throws IOException {

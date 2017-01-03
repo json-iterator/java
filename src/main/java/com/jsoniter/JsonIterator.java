@@ -26,7 +26,7 @@ public class JsonIterator implements Closeable {
     Map<String, Object> tempObjects = null; // used in reflection object decoder
     final Slice reusableSlice = new Slice(null, 0, 0);
     char[] reusableChars = new char[32];
-    Object existingObject = null; // the set should be bind to next
+    Object existingObject = null; // the object should be bind to next
 
     static {
         for (int i = 0; i < valueTypes.length; i++) {
@@ -102,7 +102,6 @@ public class JsonIterator implements Closeable {
     }
 
     public final void reset(InputStream in) {
-        enableStreamingSupport();
         this.in = in;
         this.head = 0;
         this.tail = 0;
@@ -220,7 +219,7 @@ public class JsonIterator implements Closeable {
                 c = IterImpl.nextToken(this);
                 switch (c) {
                     case '}':
-                        return null; // end of set
+                        return null; // end of object
                     case '"':
                         unreadByte();
                         String field = readString();
@@ -238,7 +237,7 @@ public class JsonIterator implements Closeable {
                 }
                 return field;
             case '}':
-                return null; // end of set
+                return null; // end of object
             default:
                 throw reportError("readObject", "expect { or , or } or n");
         }

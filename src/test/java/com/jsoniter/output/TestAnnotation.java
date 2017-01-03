@@ -13,7 +13,7 @@ import java.io.IOException;
 public class TestAnnotation extends TestCase {
     static {
         JsoniterAnnotationSupport.enable();
-//        JsonStream.setMode(EncodingMode.REFLECTION_MODE);
+//        JsonStream.setMode(EncodingMode.DYNAMIC_MODE);
     }
 
     private ByteArrayOutputStream baos;

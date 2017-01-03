@@ -2,11 +2,11 @@ package com.jsoniter;
 
 public enum DecodingMode {
     /**
-     * dynamically codegen, generate set decoder using hash
+     * dynamically codegen, generate object decoder using hash
      */
     DYNAMIC_MODE_AND_MATCH_FIELD_WITH_HASH,
     /**
-     * dynamically codegen, generate set decoder which compares fields strictly
+     * dynamically codegen, generate object decoder which compares fields strictly
      */
     DYNAMIC_MODE_AND_MATCH_FIELD_STRICTLY,
     /**

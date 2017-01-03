@@ -11,8 +11,8 @@ class CodegenImplObject {
     public static String genObject(Class clazz) {
         ClassDescriptor desc = JsoniterSpi.getEncodingClassDescriptor(clazz, false);
         StringBuilder lines = new StringBuilder();
-        append(lines, String.format("public static void encode_(%s set, com.jsoniter.output.JsonStream stream) throws java.io.IOException {", clazz.getCanonicalName()));
-        append(lines, "if (set == null) { stream.writeNull(); return; }");
+        append(lines, String.format("public static void encode_(%s obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {", clazz.getCanonicalName()));
+        append(lines, "if (obj == null) { stream.writeNull(); return; }");
         if (hasFieldOutput(desc)) {
             boolean notFirst = false;
             append(lines, "stream.writeObjectStart();");
@@ -33,7 +33,7 @@ class CodegenImplObject {
                 } else {
                     notFirst = true;
                 }
-                append(lines, String.format("set.%s(stream);", unwrapper.getName()));
+                append(lines, String.format("obj.%s(stream);", unwrapper.getName()));
             }
             append(lines, "stream.writeObjectEnd();");
         } else {
@@ -60,16 +60,16 @@ class CodegenImplObject {
         Encoder encoder = JsoniterSpi.getEncoder(fieldCacheKey);
         if (binding.field != null) {
             if (encoder == null) {
-                return CodegenImplNative.genWriteOp("set." + binding.field.getName(), binding.valueType);
+                return CodegenImplNative.genWriteOp("obj." + binding.field.getName(), binding.valueType);
             } else {
-                return String.format("com.jsoniter.output.CodegenAccess.writeVal(\"%s\", set.%s, stream);",
+                return String.format("com.jsoniter.output.CodegenAccess.writeVal(\"%s\", obj.%s, stream);",
                         fieldCacheKey, binding.field.getName());
             }
         } else {
             if (encoder == null) {
-                return CodegenImplNative.genWriteOp("set." + binding.method.getName() + "()", binding.valueType);
+                return CodegenImplNative.genWriteOp("obj." + binding.method.getName() + "()", binding.valueType);
             } else {
-                return String.format("com.jsoniter.output.CodegenAccess.writeVal(\"%s\", set.%s(), stream);",
+                return String.format("com.jsoniter.output.CodegenAccess.writeVal(\"%s\", obj.%s(), stream);",
                         fieldCacheKey, binding.method.getName());
             }
         }

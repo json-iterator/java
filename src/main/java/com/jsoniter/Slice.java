@@ -20,6 +20,14 @@ public class Slice {
         this.hash = 0;
     }
 
+    public final byte at(int pos) {
+        return data[head + pos];
+    }
+
+    public final int len() {
+        return tail - head;
+    }
+
     public final byte[] data() {
         return data;
     }

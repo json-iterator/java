@@ -18,8 +18,8 @@ class DynamicCodegen {
         CtMethod staticMethod = CtNewMethod.make(source, ctClass);
         ctClass.addMethod(staticMethod);
         CtMethod interfaceMethod = CtNewMethod.make("" +
-                "public void encode(Object set, com.jsoniter.output.JsonStream stream) throws java.io.IOException {" +
-                String.format("return encode_((%s)set, stream);", clazz.getCanonicalName()) +
+                "public void encode(Object obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {" +
+                String.format("return encode_((%s)obj, stream);", clazz.getCanonicalName()) +
                 "}", ctClass);
         ctClass.addMethod(interfaceMethod);
         return (Encoder) ctClass.toClass().newInstance();

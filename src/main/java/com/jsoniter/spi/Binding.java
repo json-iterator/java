@@ -9,8 +9,8 @@ public class Binding {
     public final Class clazz;
     public final TypeLiteral clazzTypeLiteral;
     public Annotation[] annotations;
-    public Field field; // set.XXX
-    public Method method; // set.setXXX() or set.getXXX()
+    public Field field; // obj.XXX
+    public Method method; // obj.setXXX() or obj.getXXX()
     public boolean valueCanReuse;
     // input/output
     public String name;
