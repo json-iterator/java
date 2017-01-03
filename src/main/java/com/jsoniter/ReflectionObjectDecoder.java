@@ -36,7 +36,7 @@ class ReflectionObjectDecoder {
             addBinding(clazz, param);
         }
         this.desc = desc;
-        if (desc.ctor.ctor == null && desc.ctor.staticFactory == null) {
+        if (desc.ctor.objectFactory == null && desc.ctor.ctor == null && desc.ctor.staticFactory == null) {
             throw new JsonException("no constructor for: " + desc.clazz);
         }
         for (Binding field : desc.fields) {
@@ -413,6 +413,9 @@ class ReflectionObjectDecoder {
     }
 
     private Object createNewObject(Object... args) throws Exception {
+        if (desc.ctor.objectFactory != null) {
+            return desc.ctor.objectFactory.create(desc.clazz);
+        }
         if (desc.ctor.staticFactory != null) {
             return desc.ctor.staticFactory.invoke(null, args);
         } else {

@@ -1,13 +1,10 @@
 package com.jsoniter;
 
 import com.jsoniter.spi.Decoder;
-import com.jsoniter.spi.JsoniterSpi;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.CtNewMethod;
-
-import java.lang.reflect.Type;
 
 class DynamicCodegen {
 

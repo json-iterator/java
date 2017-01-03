@@ -11,10 +11,12 @@ public class ConstructorDescriptor {
      * otherwise use static method
      */
     public String staticMethodName;
-    // optional
+    // option 1: use constructor
     public Constructor ctor;
-    // optional
+    // option 2: use static method
     public Method staticFactory;
+    // option 3: create by extension
+    public Extension objectFactory;
 
     /**
      * the parameters to call constructor or static method

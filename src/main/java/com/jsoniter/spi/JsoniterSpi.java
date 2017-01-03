@@ -11,6 +11,7 @@ public class JsoniterSpi {
     static Map<Class, Class> typeImpls = new HashMap<Class, Class>();
     static volatile Map<String, Encoder> encoders = new HashMap<String, Encoder>();
     static volatile Map<String, Decoder> decoders = new HashMap<String, Decoder>();
+    static volatile Map<Class, Extension> objectFactories = new HashMap<Class, Extension>();
 
     public static void registerExtension(Extension extension) {
         extensions.add(extension);
@@ -78,6 +79,29 @@ public class JsoniterSpi {
         HashMap<String, Encoder> newCache = new HashMap<String, Encoder>(encoders);
         newCache.put(cacheKey, encoder);
         encoders = newCache;
+    }
+
+    public static boolean canCreate(Class clazz) {
+        if (objectFactories.containsKey(clazz)) {
+            return true;
+        }
+        for (Extension extension : extensions) {
+            if (extension.canCreate(clazz)) {
+                addObjectFactory(clazz, extension);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static Object create(Class clazz) {
+        return objectFactories.get(clazz).create(clazz);
+    }
+
+    private synchronized static void addObjectFactory(Class clazz, Extension extension) {
+        HashMap<Class, Extension> copy = new HashMap<Class, Extension>(objectFactories);
+        copy.put(clazz, extension);
+        objectFactories = copy;
     }
 
     public static ClassDescriptor getDecodingClassDescriptor(Class clazz, boolean includingPrivate) {
@@ -236,6 +260,10 @@ public class JsoniterSpi {
 
     private static ConstructorDescriptor getCtor(Class clazz) {
         ConstructorDescriptor cctor = new ConstructorDescriptor();
+        if (canCreate(clazz)) {
+            cctor.objectFactory = objectFactories.get(clazz);
+            return cctor;
+        }
         try {
             cctor.ctor = clazz.getDeclaredConstructor();
         } catch (Exception e) {

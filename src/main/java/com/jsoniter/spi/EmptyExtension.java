@@ -10,6 +10,16 @@ public class EmptyExtension implements Extension {
     }
 
     @Override
+    public boolean canCreate(Class clazz) {
+        return false;
+    }
+
+    @Override
+    public Object create(Class clazz) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public Decoder createDecoder(String cacheKey, Type type) {
         return null;
     }

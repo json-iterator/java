@@ -12,6 +12,22 @@ public interface Extension {
     Type chooseImplementation(Type type);
 
     /**
+     * Can this extension create object instance for given interface type
+     *
+     * @param clazz the interface
+     * @return true if can create, false if can not
+     */
+    boolean canCreate(Class clazz);
+
+    /**
+     * Create object instance for given interface type
+     *
+     * @param clazz the interface
+     * @return the object instance, throw exception if can not create
+     */
+    Object create(Class clazz);
+
+    /**
      * Customize type decoding
      *
      * @param cacheKey cacheKey parameter
@@ -19,6 +35,8 @@ public interface Extension {
      * @return null, if no special customization needed
      */
     Decoder createDecoder(String cacheKey, Type type);
+
+    // TODO: add createEncoder
 
     /**
      * Update binding is done for the class

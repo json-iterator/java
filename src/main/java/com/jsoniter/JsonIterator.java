@@ -293,12 +293,29 @@ public class JsonIterator implements Closeable {
         }
     }
 
+    /**
+     * try to bind to existing object, returned object might not the same instance
+     *
+     * @param existingObject the object instance to reuse
+     * @param <T> object type
+     * @return data binding result, might not be the same object
+     * @throws IOException if I/O went wrong
+     */
     public final <T> T read(T existingObject) throws IOException {
         this.existingObject = existingObject;
         Class<?> clazz = existingObject.getClass();
         return (T) Codegen.getDecoder(TypeLiteral.create(clazz).getDecoderCacheKey(), clazz).decode(this);
     }
 
+    /**
+     * try to bind to existing object, returned object might not the same instance
+     *
+     * @param typeLiteral the type object
+     * @param existingObject the object instance to reuse
+     * @param <T> object type
+     * @return data binding result, might not be the same object
+     * @throws IOException if I/O went wrong
+     */
     public final <T> T read(TypeLiteral<T> typeLiteral, T existingObject) throws IOException {
         this.existingObject = existingObject;
         return (T) Codegen.getDecoder(typeLiteral.getDecoderCacheKey(), typeLiteral.getType()).decode(this);

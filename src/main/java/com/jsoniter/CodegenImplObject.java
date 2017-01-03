@@ -446,30 +446,26 @@ class CodegenImplObject {
         append(lines, String.format("%s _%s_ = %s;", typeName, parameter.name, DEFAULT_VALUES.get(typeName)));
     }
 
-    public static String genObjectUsingSkip(Class clazz, ConstructorDescriptor ctor) {
-        StringBuilder lines = new StringBuilder();
-        append(lines, "if (iter.readNull()) { return null; }");
-        append(lines, "{{clazz}} set = {{newInst}};");
-        append(lines, "iter.skip();");
-        append(lines, "return set;");
-        return lines.toString()
-                .replace("{{clazz}}", clazz.getCanonicalName())
-                .replace("{{newInst}}", genNewInstCode(clazz, ctor));
-    }
-
     private static String genNewInstCode(Class clazz, ConstructorDescriptor ctor) {
         StringBuilder code = new StringBuilder();
         if (ctor.parameters.isEmpty()) {
             // nothing to bind, safe to reuse existing set
             code.append("(com.jsoniter.CodegenAccess.existingObject(iter) == null ? ");
         }
-        if (ctor.staticMethodName == null) {
-            code.append(String.format("new %s", clazz.getCanonicalName()));
+        if (ctor.objectFactory != null) {
+            code.append(String.format("(%s)com.jsoniter.spi.JsoniterSpi.create(%s.class)",
+                    clazz.getCanonicalName(), clazz.getCanonicalName()));
         } else {
-            code.append(String.format("%s.%s", clazz.getCanonicalName(), ctor.staticMethodName));
+            if (ctor.staticMethodName == null) {
+                code.append(String.format("new %s", clazz.getCanonicalName()));
+            } else {
+                code.append(String.format("%s.%s", clazz.getCanonicalName(), ctor.staticMethodName));
+            }
         }
         List<Binding> params = ctor.parameters;
-        appendInvocation(code, params);
+        if (ctor.objectFactory == null) {
+            appendInvocation(code, params);
+        }
         if (ctor.parameters.isEmpty()) {
             // nothing to bind, safe to reuse existing set
             code.append(String.format(" : (%s)com.jsoniter.CodegenAccess.resetExistingObject(iter))", clazz.getCanonicalName()));

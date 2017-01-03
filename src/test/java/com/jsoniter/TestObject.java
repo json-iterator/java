@@ -1,6 +1,8 @@
 package com.jsoniter;
 
 import com.jsoniter.any.Any;
+import com.jsoniter.spi.EmptyExtension;
+import com.jsoniter.spi.JsoniterSpi;
 import junit.framework.TestCase;
 
 import java.io.IOException;
@@ -12,7 +14,8 @@ public class TestObject extends TestCase {
 //        JsonIterator.setMode(DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_WITH_HASH);
     }
 
-    public static class EmptyClass {}
+    public static class EmptyClass {
+    }
 
     public void test_empty_class() throws IOException {
         JsonIterator iter = JsonIterator.parse("{}");
@@ -26,8 +29,8 @@ public class TestObject extends TestCase {
         SimpleObject simpleObj = iter.read(SimpleObject.class);
         assertNull(simpleObj.field1);
         iter.reset(iter.buf);
-        Map obj = (Map) iter.read(Object.class);
-        assertEquals(0, obj.size());
+        Object obj = iter.read(Object.class);
+        assertEquals(0, ((Map)obj).size());
         iter.reset(iter.buf);
         Any any = iter.readAny();
         assertEquals(0, any.size());
@@ -102,5 +105,38 @@ public class TestObject extends TestCase {
             fail();
         } catch (JsonException e) {
         }
+    }
+
+    public static interface IDependenceInjectedObject {
+        String getSomeService();
+    }
+
+    public static class DependenceInjectedObject implements IDependenceInjectedObject {
+
+        private String someService;
+
+        public DependenceInjectedObject(String someService) {
+            this.someService = someService;
+        }
+
+        public String getSomeService() {
+            return someService;
+        }
+    }
+
+    public void test_object_creation() throws IOException {
+        JsoniterSpi.registerExtension(new EmptyExtension() {
+            @Override
+            public boolean canCreate(Class clazz) {
+                return clazz.equals(DependenceInjectedObject.class) || clazz.equals(IDependenceInjectedObject.class);
+            }
+
+            @Override
+            public Object create(Class clazz) {
+                return new DependenceInjectedObject("hello");
+            }
+        });
+        IDependenceInjectedObject obj = JsonIterator.deserialize("{}", IDependenceInjectedObject.class);
+        assertEquals("hello", obj.getSomeService());
     }
 }
