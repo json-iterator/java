@@ -8,6 +8,8 @@ import com.jsoniter.spi.TypeLiteral;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
@@ -234,6 +236,31 @@ class CodegenImplNative {
                     return Any.wrapAnyMap(new HashMap<String, Any>());
                 }
                 return JsonStream.wrap(obj);
+            }
+        });
+
+        put(BigDecimal.class, new Encoder() {
+            @Override
+            public void encode(Object obj, JsonStream stream) throws IOException {
+                BigDecimal val = (BigDecimal) obj;
+                stream.writeVal(val.toString());
+            }
+
+            @Override
+            public Any wrap(Object obj) {
+                return Any.wrap(obj.toString());
+            }
+        });
+        put(BigInteger.class, new Encoder() {
+            @Override
+            public void encode(Object obj, JsonStream stream) throws IOException {
+                BigInteger val = (BigInteger) obj;
+                stream.writeVal(val.toString());
+            }
+
+            @Override
+            public Any wrap(Object obj) {
+                return Any.wrap(obj.toString());
             }
         });
     }};

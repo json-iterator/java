@@ -4,6 +4,8 @@ import junit.framework.TestCase;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 
 public class TestNative extends TestCase {
 
@@ -109,5 +111,17 @@ public class TestNative extends TestCase {
         stream.writeVal(false);
         stream.close();
         assertEquals("truefalse".replace('\'', '"'), baos.toString());
+    }
+
+    public void test_big_decimal() throws IOException {
+        stream.writeVal(new BigDecimal("12.34"));
+        stream.close();
+        assertEquals("'12.34'".replace('\'', '"'), baos.toString());
+    }
+
+    public void test_big_integer() throws IOException {
+        stream.writeVal(new BigInteger("1234"));
+        stream.close();
+        assertEquals("'1234'".replace('\'', '"'), baos.toString());
     }
 }
