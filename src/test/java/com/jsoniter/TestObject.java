@@ -1,5 +1,6 @@
 package com.jsoniter;
 
+import com.jsoniter.annotation.JsoniterAnnotationSupport;
 import com.jsoniter.any.Any;
 import com.jsoniter.spi.EmptyExtension;
 import com.jsoniter.spi.JsoniterSpi;

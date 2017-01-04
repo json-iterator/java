@@ -107,7 +107,11 @@ class IterImplNumber {
     }
 
     public static final double readDoubleSlowPath(JsonIterator iter) throws IOException {
-        return Double.valueOf(readNumber(iter));
+        try {
+            return Double.valueOf(readNumber(iter));
+        } catch (NumberFormatException e) {
+            throw iter.reportError("readDoubleSlowPath", e.toString());
+        }
     }
 
     public static final float readFloat(JsonIterator iter) throws IOException {
@@ -196,7 +200,11 @@ class IterImplNumber {
     }
 
     public static final float readFloatSlowPath(JsonIterator iter) throws IOException {
-        return Float.valueOf(readNumber(iter));
+        try {
+            return Float.valueOf(readNumber(iter));
+        } catch (NumberFormatException e) {
+            throw iter.reportError("readDoubleSlowPath", e.toString());
+        }
     }
 
     public static final String readNumber(JsonIterator iter) throws IOException {

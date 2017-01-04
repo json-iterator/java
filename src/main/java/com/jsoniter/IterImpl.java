@@ -174,6 +174,7 @@ class IterImpl {
             case '8':
             case '9':
                 skipUntilBreak(iter);
+                // TODO: LongLazyAny or DoubleLazyAny
                 return Any.lazyNumber(iter.buf, start, iter.head);
             case 't':
                 skipUntilBreak(iter);
