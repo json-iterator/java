@@ -37,7 +37,7 @@ public class TestObject extends TestCase {
     }
 
     public void test_one_field() throws IOException {
-        JsonIterator iter = JsonIterator.parse("{ 'field1' : 'hello' }".replace('\'', '"'));
+        JsonIterator iter = JsonIterator.parse("{ 'field1'\r:\n\t'hello' }".replace('\'', '"'));
         assertEquals("field1", iter.readObject());
         assertEquals("hello", iter.readString());
         assertNull(iter.readObject());

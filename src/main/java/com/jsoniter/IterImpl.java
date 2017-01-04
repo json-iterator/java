@@ -138,8 +138,8 @@ class IterImpl {
                 switch (c) {
                     case ' ':
                     case '\n':
-                    case '\t':
                     case '\r':
+                    case '\t':
                         continue;
                     default:
                         if (i > iter.tail) {

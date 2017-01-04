@@ -4,6 +4,7 @@ import com.jsoniter.spi.*;
 
 import java.lang.reflect.Type;
 import java.util.*;
+import java.util.zip.CRC32;
 
 class CodegenImplObject {
 
