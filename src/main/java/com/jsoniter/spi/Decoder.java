@@ -94,7 +94,23 @@ public interface Decoder {
         }
     }
 
-    // TODO: add MaybeStringIntDecoder
+    class MaybeStringIntDecoder extends IntDecoder {
+
+        @Override
+        public int decodeInt(JsonIterator iter) throws IOException {
+            byte c = CodegenAccess.nextToken(iter);
+            if (c != '"') {
+                CodegenAccess.unreadByte(iter);
+                return iter.readInt();
+            }
+            int val = iter.readInt();
+            c = CodegenAccess.nextToken(iter);
+            if (c != '"') {
+                throw iter.reportError("StringIntDecoder", "expect \", but found: " + (char) c);
+            }
+            return val;
+        }
+    }
 
     abstract class LongDecoder implements Decoder {
         @Override
@@ -112,6 +128,24 @@ public interface Decoder {
             byte c = CodegenAccess.nextToken(iter);
             if (c != '"') {
                 throw iter.reportError("StringLongDecoder", "expect \", but found: " + (char) c);
+            }
+            long val = iter.readLong();
+            c = CodegenAccess.nextToken(iter);
+            if (c != '"') {
+                throw iter.reportError("StringLongDecoder", "expect \", but found: " + (char) c);
+            }
+            return val;
+        }
+    }
+
+    class MaybeStringLongDecoder extends LongDecoder {
+
+        @Override
+        public long decodeLong(JsonIterator iter) throws IOException {
+            byte c = CodegenAccess.nextToken(iter);
+            if (c != '"') {
+                CodegenAccess.unreadByte(iter);
+                return iter.readLong();
             }
             long val = iter.readLong();
             c = CodegenAccess.nextToken(iter);
@@ -148,6 +182,24 @@ public interface Decoder {
         }
     }
 
+    class MaybeStringFloatDecoder extends FloatDecoder {
+
+        @Override
+        public float decodeFloat(JsonIterator iter) throws IOException {
+            byte c = CodegenAccess.nextToken(iter);
+            if (c != '"') {
+                CodegenAccess.unreadByte(iter);
+                return iter.readFloat();
+            }
+            float val = iter.readFloat();
+            c = CodegenAccess.nextToken(iter);
+            if (c != '"') {
+                throw iter.reportError("StringFloatDecoder", "expect \", but found: " + (char) c);
+            }
+            return val;
+        }
+    }
+
     abstract class DoubleDecoder implements Decoder {
 
         @Override
@@ -165,6 +217,24 @@ public interface Decoder {
             byte c = CodegenAccess.nextToken(iter);
             if (c != '"') {
                 throw iter.reportError("StringDoubleDecoder", "expect \", but found: " + (char) c);
+            }
+            double val = iter.readDouble();
+            c = CodegenAccess.nextToken(iter);
+            if (c != '"') {
+                throw iter.reportError("StringDoubleDecoder", "expect \", but found: " + (char) c);
+            }
+            return val;
+        }
+    }
+
+    class MaybeStringDoubleDecoder extends DoubleDecoder {
+
+        @Override
+        public double decodeDouble(JsonIterator iter) throws IOException {
+            byte c = CodegenAccess.nextToken(iter);
+            if (c != '"') {
+                CodegenAccess.unreadByte(iter);
+                return iter.readDouble();
             }
             double val = iter.readDouble();
             c = CodegenAccess.nextToken(iter);
