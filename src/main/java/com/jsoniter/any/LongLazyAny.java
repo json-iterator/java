@@ -5,12 +5,12 @@ import com.jsoniter.ValueType;
 
 import java.io.IOException;
 
-class NumberLazyAny extends LazyAny {
+class LongLazyAny extends LazyAny {
 
     private boolean isCached;
-    private double cache;
+    private long cache;
 
-    public NumberLazyAny(byte[] data, int head, int tail) {
+    public LongLazyAny(byte[] data, int head, int tail) {
         super(data, head, tail);
     }
 
@@ -40,13 +40,13 @@ class NumberLazyAny extends LazyAny {
     @Override
     public long toLong() {
         fillCache();
-        return (long) cache;
+        return cache;
     }
 
     @Override
     public float toFloat() {
         fillCache();
-        return (float) cache;
+        return cache;
     }
 
     @Override
@@ -58,7 +58,7 @@ class NumberLazyAny extends LazyAny {
     private void fillCache() {
         if (!isCached) {
             try {
-                cache = parse().readDouble();
+                cache = parse().readLong();
             } catch (IOException e) {
                 throw new JsonException(e);
             }

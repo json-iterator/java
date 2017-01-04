@@ -110,6 +110,24 @@ class IterImpl {
         iter.head = iter.tail;
     }
 
+    final static boolean skipNumber(JsonIterator iter) throws IOException {
+        // true, false, null, number
+        boolean dotFound = false;
+        for (int i = iter.head; i < iter.tail; i++) {
+            byte c = iter.buf[i];
+            if (c == '.') {
+                dotFound = true;
+                continue;
+            }
+            if (IterImplSkip.breaks[c]) {
+                iter.head = i;
+                return dotFound;
+            }
+        }
+        iter.head = iter.tail;
+        return dotFound;
+    }
+
     // read the bytes between " "
     final static Slice readSlice(JsonIterator iter) throws IOException {
         int end = IterImplString.findSliceEnd(iter);
@@ -173,9 +191,11 @@ class IterImpl {
             case '7':
             case '8':
             case '9':
-                skipUntilBreak(iter);
-                // TODO: LongLazyAny or DoubleLazyAny
-                return Any.lazyNumber(iter.buf, start, iter.head);
+                if (skipNumber(iter)) {
+                    return Any.lazyDouble(iter.buf, start, iter.head);
+                } else {
+                    return Any.lazyLong(iter.buf, start, iter.head);
+                }
             case 't':
                 skipUntilBreak(iter);
                 return Any.wrap(true);

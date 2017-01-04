@@ -5,7 +5,6 @@ import com.jsoniter.JsonIterator;
 import com.jsoniter.ValueType;
 import com.jsoniter.output.JsonStream;
 import com.jsoniter.spi.Encoder;
-import com.jsoniter.spi.JsoniterSpi;
 import com.jsoniter.spi.TypeLiteral;
 
 import java.io.IOException;
@@ -34,7 +33,7 @@ public abstract class Any implements Iterable<Any> {
         JsonStream.registerNativeEncoder(IntAny.class, anyEncoder);
         JsonStream.registerNativeEncoder(LongAny.class, anyEncoder);
         JsonStream.registerNativeEncoder(NullAny.class, anyEncoder);
-        JsonStream.registerNativeEncoder(NumberLazyAny.class, anyEncoder);
+        JsonStream.registerNativeEncoder(DoubleLazyAny.class, anyEncoder);
         JsonStream.registerNativeEncoder(ObjectLazyAny.class, anyEncoder);
         JsonStream.registerNativeEncoder(StringAny.class, anyEncoder);
         JsonStream.registerNativeEncoder(StringLazyAny.class, anyEncoder);
@@ -285,8 +284,12 @@ public abstract class Any implements Iterable<Any> {
         return new StringLazyAny(data, head, tail);
     }
 
-    public static Any lazyNumber(byte[] data, int head, int tail) {
-        return new NumberLazyAny(data, head, tail);
+    public static Any lazyDouble(byte[] data, int head, int tail) {
+        return new DoubleLazyAny(data, head, tail);
+    }
+
+    public static Any lazyLong(byte[] data, int head, int tail) {
+        return new LongLazyAny(data, head, tail);
     }
 
     public static Any lazyArray(byte[] data, int head, int tail) {

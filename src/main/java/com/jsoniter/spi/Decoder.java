@@ -50,6 +50,24 @@ public interface Decoder {
         }
     }
 
+    class MaybeStringShortDecoder extends ShortDecoder {
+
+        @Override
+        public short decodeShort(JsonIterator iter) throws IOException {
+            byte c = CodegenAccess.nextToken(iter);
+            if (c != '"') {
+                CodegenAccess.unreadByte(iter);
+                return iter.readShort();
+            }
+            short val = iter.readShort();
+            c = CodegenAccess.nextToken(iter);
+            if (c != '"') {
+                throw iter.reportError("StringShortDecoder", "expect \", but found: " + (char) c);
+            }
+            return val;
+        }
+    }
+
     abstract class IntDecoder implements Decoder {
         @Override
         public Object decode(JsonIterator iter) throws IOException {
@@ -75,6 +93,8 @@ public interface Decoder {
             return val;
         }
     }
+
+    // TODO: add MaybeStringIntDecoder
 
     abstract class LongDecoder implements Decoder {
         @Override

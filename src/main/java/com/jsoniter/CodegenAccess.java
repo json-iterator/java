@@ -179,4 +179,8 @@ public class CodegenAccess {
     public static int head(JsonIterator iter) {
         return iter.head;
     }
+
+    public static void unreadByte(JsonIterator iter) throws IOException {
+        iter.unreadByte();
+    }
 }

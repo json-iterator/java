@@ -1,7 +1,5 @@
 package com.jsoniter;
 
-import com.jsoniter.any.*;
-
 import java.io.IOException;
 
 class IterImplSkip {

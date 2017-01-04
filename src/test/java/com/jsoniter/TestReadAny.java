@@ -35,8 +35,7 @@ public class TestReadAny extends TestCase {
         assertEquals(100, JsonIterator.deserialize("\"100\"").toInt());
         assertEquals(1, JsonIterator.deserialize("true").toInt());
         Any any = JsonIterator.deserialize("100");
-        assertEquals(Double.valueOf(100), any.object());
-        assertEquals(Double.valueOf(100), any.object());
+        assertEquals(Long.valueOf(100), any.object());
         assertEquals(100, any.toInt());
         assertEquals(100L, any.toLong());
         assertEquals(100F, any.toFloat());

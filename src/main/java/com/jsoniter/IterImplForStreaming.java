@@ -306,7 +306,7 @@ class IterImplForStreaming {
             case '9':
                 IterImpl.skipUntilBreak(iter);
                 copied = copySkippedBytes(iter);
-                return Any.lazyNumber(copied, 0, copied.length);
+                return Any.lazyDouble(copied, 0, copied.length);
             case 't':
                 IterImpl.skipUntilBreak(iter);
                 iter.skipStartedAt = -1;
