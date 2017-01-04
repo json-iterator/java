@@ -171,6 +171,28 @@ class IterImplForStreaming {
         }
     }
 
+    final static boolean skipNumber(JsonIterator iter) throws IOException {
+        // true, false, null, number
+        boolean dotFound = false;
+        for (; ; ) {
+            for (int i = iter.head; i < iter.tail; i++) {
+                byte c = iter.buf[i];
+                if (c == '.') {
+                    dotFound = true;
+                    continue;
+                }
+                if (IterImplSkip.breaks[c]) {
+                    iter.head = i;
+                    return dotFound;
+                }
+            }
+            if (!loadMore(iter)) {
+                iter.head = iter.tail;
+                return dotFound;
+            }
+        }
+    }
+
     // read the bytes between " "
     final static Slice readSlice(JsonIterator iter) throws IOException {
         int end = IterImplString.findSliceEnd(iter);
@@ -287,10 +309,10 @@ class IterImplForStreaming {
     public static Any readAny(JsonIterator iter) throws IOException {
         // TODO: avoid small memory allocation
         iter.skipStartedAt = iter.head;
-        byte c = IterImpl.nextToken(iter);
+        byte c = nextToken(iter);
         switch (c) {
             case '"':
-                IterImpl.skipString(iter);
+                skipString(iter);
                 byte[] copied = copySkippedBytes(iter);
                 return Any.lazyString(copied, 0, copied.length);
             case '-':
@@ -304,27 +326,31 @@ class IterImplForStreaming {
             case '7':
             case '8':
             case '9':
-                IterImpl.skipUntilBreak(iter);
-                copied = copySkippedBytes(iter);
-                return Any.lazyDouble(copied, 0, copied.length);
+                if (skipNumber(iter)) {
+                    copied = copySkippedBytes(iter);
+                    return Any.lazyDouble(copied, 0, copied.length);
+                } else {
+                    copied = copySkippedBytes(iter);
+                    return Any.lazyLong(copied, 0, copied.length);
+                }
             case 't':
-                IterImpl.skipUntilBreak(iter);
+                skipUntilBreak(iter);
                 iter.skipStartedAt = -1;
                 return Any.wrap(true);
             case 'f':
-                IterImpl.skipUntilBreak(iter);
+                skipUntilBreak(iter);
                 iter.skipStartedAt = -1;
                 return Any.wrap(false);
             case 'n':
-                IterImpl.skipUntilBreak(iter);
+                skipUntilBreak(iter);
                 iter.skipStartedAt = -1;
                 return Any.wrap((Object)null);
             case '[':
-                IterImpl.skipArray(iter);
+                skipArray(iter);
                 copied = copySkippedBytes(iter);
                 return Any.lazyArray(copied, 0, copied.length);
             case '{':
-                IterImpl.skipObject(iter);
+                skipObject(iter);
                 copied = copySkippedBytes(iter);
                 return Any.lazyObject(copied, 0, copied.length);
             default:

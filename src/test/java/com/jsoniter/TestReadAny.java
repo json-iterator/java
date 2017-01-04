@@ -13,6 +13,10 @@ import java.util.List;
 
 public class TestReadAny extends TestCase {
 
+    static {
+//        JsonIterator.enableStreamingSupport();
+    }
+
     public void test_read_any() throws IOException {
         JsonIterator iter = JsonIterator.parse("[0,1,2,3]");
         assertEquals(3, iter.readAny().toInt(3));
