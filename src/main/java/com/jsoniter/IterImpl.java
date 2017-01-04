@@ -7,30 +7,23 @@ import java.io.IOException;
 class IterImpl {
 
     public static final int readObjectFieldAsHash(JsonIterator iter) throws IOException {
-        if (IterImpl.nextToken(iter) != '"') {
+        if (nextToken(iter) != '"') {
             throw iter.reportError("readObjectFieldAsHash", "expect \"");
         }
         long hash = 0x811c9dc5;
-        for (; ; ) {
-            byte c = 0;
-            int i = iter.head;
-            for (; i < iter.tail; i++) {
-                c = iter.buf[i];
-                if (c == '"') {
-                    break;
-                }
-                hash ^= c;
-                hash *= 0x1000193;
-            }
+        for (int i = iter.head; i < iter.tail; i++) {
+            byte c = iter.buf[i];
             if (c == '"') {
                 iter.head = i + 1;
-                if (IterImpl.nextToken(iter) != ':') {
+                if (nextToken(iter) != ':') {
                     throw iter.reportError("readObjectFieldAsHash", "expect :");
                 }
                 return (int) hash;
             }
-            throw iter.reportError("readObjectFieldAsHash", "unmatched quote");
+            hash ^= c;
+            hash *= 0x1000193;
         }
+        throw iter.reportError("readObjectFieldAsHash", "unmatched quote");
     }
 
     public static final Slice readObjectFieldAsSlice(JsonIterator iter) throws IOException {
@@ -76,7 +69,7 @@ class IterImpl {
             switch (iter.buf[i]) {
                 case '"': // If inside string, skip it
                     iter.head = i + 1;
-                    IterImpl.skipString(iter);
+                    skipString(iter);
                     i = iter.head - 1; // it will be i++ soon
                     break;
                 case '{': // If open symbol, increase level
@@ -190,7 +183,7 @@ class IterImpl {
                 return Any.wrap(false);
             case 'n':
                 skipUntilBreak(iter);
-                return Any.wrap((Object)null);
+                return Any.wrap((Object) null);
             case '[':
                 skipArray(iter);
                 return Any.lazyArray(iter.buf, start, iter.head);

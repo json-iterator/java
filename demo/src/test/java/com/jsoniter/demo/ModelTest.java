@@ -32,7 +32,7 @@ public class ModelTest {
 
     @Setup(Level.Trial)
     public void benchSetup(BenchmarkParams params) {
-        JsonIterator.enableStreamingSupport();
+//        JsonIterator.enableStreamingSupport();
         input = "{\"name\":\"wenshao\",\"id\":1001}";
         inputBytes = input.getBytes();
         iter = new JsonIterator();
