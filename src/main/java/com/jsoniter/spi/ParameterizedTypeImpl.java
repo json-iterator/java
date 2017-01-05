@@ -53,10 +53,15 @@ public class ParameterizedTypeImpl implements ParameterizedType {
 
     @Override
     public String toString() {
+        String rawTypeName = rawType.toString();
+        if (rawType instanceof Class) {
+            Class clazz = (Class) rawType;
+            rawTypeName = clazz.getName();
+        }
         return "ParameterizedTypeImpl{" +
                 "actualTypeArguments=" + Arrays.toString(actualTypeArguments) +
                 ", ownerType=" + ownerType +
-                ", rawType=" + rawType +
+                ", rawType=" + rawTypeName +
                 '}';
     }
 

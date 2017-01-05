@@ -278,6 +278,9 @@ public class JsoniterSpi {
             if (Modifier.isStatic(field.getModifiers())) {
                 continue;
             }
+            if (Modifier.isTransient(field.getModifiers())) {
+                continue;
+            }
             if (includingPrivate) {
                 field.setAccessible(true);
             }
@@ -288,12 +291,16 @@ public class JsoniterSpi {
     }
 
     private static Binding createBindingFromField(Map<String, Type> lookup, Class clazz, Field field) {
-        Binding binding = new Binding(clazz, lookup, field.getGenericType());
-        binding.fromNames = new String[]{field.getName()};
-        binding.name = field.getName();
-        binding.annotations = field.getAnnotations();
-        binding.field = field;
-        return binding;
+        try {
+            Binding binding = new Binding(clazz, lookup, field.getGenericType());
+            binding.fromNames = new String[]{field.getName()};
+            binding.name = field.getName();
+            binding.annotations = field.getAnnotations();
+            binding.field = field;
+            return binding;
+        } catch (Exception e) {
+            throw new JsonException("failed to create binding for field: " + field, e);
+        }
     }
 
     private static List<Field> getAllFields(Class clazz, boolean includingPrivate) {
@@ -338,13 +345,17 @@ public class JsoniterSpi {
             if (includingPrivate) {
                 method.setAccessible(true);
             }
-            String fromName = translateSetterName(methodName);
-            Binding binding = new Binding(clazz, lookup, paramTypes[0]);
-            binding.fromNames = new String[]{fromName};
-            binding.name = fromName;
-            binding.method = method;
-            binding.annotations = method.getAnnotations();
-            setters.add(binding);
+            try {
+                String fromName = translateSetterName(methodName);
+                Binding binding = new Binding(clazz, lookup, paramTypes[0]);
+                binding.fromNames = new String[]{fromName};
+                binding.name = fromName;
+                binding.method = method;
+                binding.annotations = method.getAnnotations();
+                setters.add(binding);
+            } catch (Exception e) {
+                throw new JsonException("failed to create binding from setter: " + method, e);
+            }
         }
         return setters;
     }
