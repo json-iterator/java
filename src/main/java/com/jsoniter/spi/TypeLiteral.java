@@ -94,7 +94,12 @@ public class TypeLiteral<T> {
             if (clazz.isAnonymousClass()) {
                 throw new JsonException("anonymous class not supported: " + clazz);
             }
-            decoderClassName.append(clazz.getCanonicalName().replace("[]", "_array"));
+            if (clazz.isArray()) {
+                decoderClassName.append(clazz.getCanonicalName().replace("[]", "_array"));
+            } else {
+                // for nested class $
+                decoderClassName.append(clazz.getName().replace("[]", "_array"));
+            }
         } else if (type instanceof ParameterizedType) {
             try {
                 ParameterizedType pType = (ParameterizedType) type;

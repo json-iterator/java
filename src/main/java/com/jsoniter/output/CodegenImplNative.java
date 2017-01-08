@@ -2,10 +2,10 @@ package com.jsoniter.output;
 
 import com.jsoniter.JsonException;
 import com.jsoniter.any.Any;
-import com.jsoniter.spi.Encoder;
-import com.jsoniter.spi.TypeLiteral;
+import com.jsoniter.spi.*;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
@@ -290,5 +290,21 @@ class CodegenImplNative {
         } else {
             throw new JsonException("unsupported type: " + fieldType);
         }
+    }
+    public static String genEnum(Class clazz) {
+        ClassDescriptor desc = JsoniterSpi.getEncodingClassDescriptor(clazz, false);
+        StringBuilder lines = new StringBuilder();
+        append(lines, String.format("public static void encode_(java.lang.Object obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {", clazz.getCanonicalName()));
+        append(lines, "if (obj == null) { stream.writeNull(); return; }");
+        append(lines, "stream.write('\"');");
+        append(lines, "stream.writeRaw(obj.toString());");
+        append(lines, "stream.write('\"');");
+        append(lines, "}");
+        return lines.toString();
+    }
+
+    private static void append(StringBuilder lines, String str) {
+        lines.append(str);
+        lines.append("\n");
     }
 }

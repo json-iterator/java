@@ -162,6 +162,7 @@ class IterImpl {
                 }
             }
         } catch (IndexOutOfBoundsException e) {
+            iter.head = iter.tail;
             return 0;
         }
     }

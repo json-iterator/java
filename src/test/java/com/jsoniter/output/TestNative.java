@@ -100,6 +100,12 @@ public class TestNative extends TestCase {
         assertEquals("0.00001", baos.toString());
     }
 
+    public void test_big_float() throws IOException {
+        stream.writeVal(83886082f);
+        stream.close();
+        assertEquals("83886080", baos.toString());
+    }
+
     public void test_double() throws IOException {
         stream.writeVal(0.00001d);
         stream.close();

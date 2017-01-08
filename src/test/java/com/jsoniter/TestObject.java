@@ -1,6 +1,5 @@
 package com.jsoniter;
 
-import com.jsoniter.annotation.JsoniterAnnotationSupport;
 import com.jsoniter.any.Any;
 import com.jsoniter.spi.EmptyExtension;
 import com.jsoniter.spi.JsoniterSpi;
@@ -139,5 +138,18 @@ public class TestObject extends TestCase {
         });
         IDependenceInjectedObject obj = JsonIterator.deserialize("{}", IDependenceInjectedObject.class);
         assertEquals("hello", obj.getSomeService());
+    }
+
+    public static class TestObject5 {
+
+        public enum MyEnum {
+            HELLO
+        }
+        public MyEnum field1;
+    }
+
+    public void test_enum() throws IOException {
+        TestObject5 obj = JsonIterator.deserialize("{\"field1\":\"HELLO\"}", TestObject5.class);
+        assertEquals(TestObject5.MyEnum.HELLO, obj.field1);
     }
 }

@@ -152,16 +152,19 @@ class StreamImplNumber {
     }
 
     private static final int POW10[] = {1, 10, 100, 1000, 10000, 100000, 1000000};
-    private static final long MAX_DOUBLE_TO_WRITE = Long.MAX_VALUE / 1000000 - 1;
 
     public static final void writeFloat(JsonStream stream, float val) throws IOException {
         if (val < 0) {
             stream.write('-');
             val = -val;
         }
+        if (val > 0x4ffffff) {
+            stream.writeRaw(Float.toString(val));
+            return;
+        }
         int precision = 6;
-        int exp = POW10[precision];
-        long lval = (long)(val * exp + 0.5);
+        int exp = 1000000; // 6
+        long lval = (long)((double)val * exp + 0.5);
         stream.writeVal(lval / exp);
         long fval = lval % exp;
         if (fval == 0) {
@@ -172,7 +175,7 @@ class StreamImplNumber {
             stream.flushBuffer();
         }
         for (int p = precision - 1; p > 0 && fval < POW10[p]; p--) {
-            stream.write('0');
+            stream.buf[stream.count++] = '0';
         }
         stream.writeVal(fval);
         while(stream.buf[stream.count-1] == '0') {
@@ -185,12 +188,12 @@ class StreamImplNumber {
             val = -val;
             stream.write('-');
         }
-        if (val > MAX_DOUBLE_TO_WRITE) {
+        if (val > 0x4ffffff) {
             stream.writeRaw(Double.toString(val));
             return;
         }
         int precision = 6;
-        int exp = POW10[precision];
+        int exp = 1000000; // 6
         long lval = (long)(val * exp + 0.5);
         stream.writeVal(lval / exp);
         long fval = lval % exp;
@@ -202,7 +205,7 @@ class StreamImplNumber {
             stream.flushBuffer();
         }
         for (int p = precision - 1; p > 0 && fval < POW10[p]; p--) {
-            stream.write('0');
+            stream.buf[stream.count++] = '0';
         }
         stream.writeVal(fval);
         while(stream.buf[stream.count-1] == '0') {

@@ -12,7 +12,7 @@ public class TestObject extends TestCase {
 
     static {
         JsoniterAnnotationSupport.enable();
-//        JsonStream.setMode(EncodingMode.REFLECTION_MODE);
+//        JsonStream.setMode(EncodingMode.DYNAMIC_MODE);
     }
 
     private ByteArrayOutputStream baos;
@@ -77,5 +77,21 @@ public class TestObject extends TestCase {
         stream.writeVal(obj);
         stream.close();
         assertEquals("{'field1':null}".replace('\'', '"'), baos.toString());
+    }
+
+    public static enum MyEnum {
+        HELLO
+    }
+
+    public static class TestObject5 {
+        public MyEnum field1;
+    }
+
+    public void test_enum() throws IOException {
+        TestObject5 obj = new TestObject5();
+        obj.field1 = MyEnum.HELLO;
+        stream.writeVal(obj);
+        stream.close();
+        assertEquals("{'field1':'HELLO'}".replace('\'', '"'), baos.toString());
     }
 }

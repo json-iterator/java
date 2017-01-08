@@ -189,6 +189,9 @@ class Codegen {
         if (Collection.class.isAssignableFrom(clazz)) {
             return CodegenImplArray.genCollection(clazz, typeArgs);
         }
+        if (clazz.isEnum()) {
+            return CodegenImplNative.genEnum(clazz);
+        }
         return CodegenImplObject.genObject(clazz);
     }
 

@@ -60,6 +60,13 @@ class CodegenImplNative {
         return "return " + op + ";";
     }
 
+    public static String genEnum(Class clazz) {
+        // TODO: avoid create string
+        StringBuilder lines = new StringBuilder();
+        append(lines, "return {{clazz}}.valueOf(iter.readString());");
+        return lines.toString().replace("{{clazz}}", clazz.getName());
+    }
+
     public static String genReadOp(Type type) {
         if (type instanceof Class) {
             Class clazz = (Class) type;
@@ -91,11 +98,8 @@ class CodegenImplNative {
         }
     }
 
-    public static boolean isNative(Type valueType) {
-        if (valueType instanceof  Class) {
-            Class clazz  = (Class) valueType;
-            return NATIVE_READS.containsKey(clazz.getCanonicalName());
-        }
-        return false;
+    private static void append(StringBuilder lines, String str) {
+        lines.append(str);
+        lines.append("\n");
     }
 }

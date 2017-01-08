@@ -214,6 +214,9 @@ class Codegen {
         if (Collection.class.isAssignableFrom(clazz)) {
             return CodegenImplArray.genCollection(clazz, typeArgs);
         }
+        if (clazz.isEnum()) {
+            return CodegenImplNative.genEnum(clazz);
+        }
         ClassDescriptor desc = JsoniterSpi.getDecodingClassDescriptor(clazz, false);
         if (shouldUseStrictMode(desc)) {
             return CodegenImplObject.genObjectUsingStrict(clazz, desc);

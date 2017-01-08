@@ -12,7 +12,7 @@ public class JsonStream extends OutputStream {
 
     public static int defaultIndentionStep = 0;
     public int indentionStep = defaultIndentionStep;
-    public int indention = 0;
+    private int indention = 0;
     private OutputStream out;
     private static final byte[] NULL = "null".getBytes();
     private static final byte[] TRUE = "true".getBytes();

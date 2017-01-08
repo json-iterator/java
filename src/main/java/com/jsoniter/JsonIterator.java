@@ -113,9 +113,9 @@ public class JsonIterator implements Closeable {
         }
     }
 
-    final void unreadByte() throws IOException {
+    final void unreadByte() {
         if (head == 0) {
-            throw new IOException("unread too many bytes");
+            throw reportError("unreadByte", "unread too many bytes");
         }
         head--;
     }
