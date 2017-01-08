@@ -156,6 +156,10 @@ public class CodegenAccess {
         return IterImpl.readObjectFieldAsSlice(iter);
     }
 
+    public static final Slice readSlice(JsonIterator iter) throws IOException {
+        return IterImpl.readSlice(iter);
+    }
+
     final static boolean skipWhitespacesWithoutLoadMore(JsonIterator iter) throws IOException {
         for (int i = iter.head; i < iter.tail; i++) {
             byte c = iter.buf[i];

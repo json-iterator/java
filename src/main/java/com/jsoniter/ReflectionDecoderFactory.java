@@ -29,6 +29,9 @@ public class ReflectionDecoderFactory {
         if (Map.class.isAssignableFrom(clazz)) {
             return new ReflectionMapDecoder(clazz, typeArgs);
         }
+        if (clazz.isEnum()) {
+            return new ReflectionEnumDecoder(clazz);
+        }
         return new ReflectionObjectDecoder(clazz).create();
     }
 }

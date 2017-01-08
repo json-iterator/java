@@ -27,9 +27,6 @@ class IterImpl {
     }
 
     public static final Slice readObjectFieldAsSlice(JsonIterator iter) throws IOException {
-        if (nextToken(iter) != '"') {
-            throw iter.reportError("readObjectFieldAsSlice", "expect \"");
-        }
         Slice field = readSlice(iter);
         if (nextToken(iter) != ':') {
             throw iter.reportError("readObjectFieldAsSlice", "expect : after object field");
@@ -129,7 +126,10 @@ class IterImpl {
     }
 
     // read the bytes between " "
-    final static Slice readSlice(JsonIterator iter) throws IOException {
+    public final static Slice readSlice(JsonIterator iter) throws IOException {
+        if (IterImpl.nextToken(iter) != '"') {
+            throw iter.reportError("readSlice", "expect \" for string");
+        }
         int end = IterImplString.findSliceEnd(iter);
         if (end == -1) {
             throw iter.reportError("readSlice", "incomplete string");

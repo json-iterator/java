@@ -60,13 +60,6 @@ class CodegenImplNative {
         return "return " + op + ";";
     }
 
-    public static String genEnum(Class clazz) {
-        // TODO: avoid create string
-        StringBuilder lines = new StringBuilder();
-        append(lines, "return {{clazz}}.valueOf(iter.readString());");
-        return lines.toString().replace("{{clazz}}", clazz.getName());
-    }
-
     public static String genReadOp(Type type) {
         if (type instanceof Class) {
             Class clazz = (Class) type;
@@ -96,10 +89,5 @@ class CodegenImplNative {
         } else {
             throw new JsonException("unsupported type: " + fieldType);
         }
-    }
-
-    private static void append(StringBuilder lines, String str) {
-        lines.append(str);
-        lines.append("\n");
     }
 }

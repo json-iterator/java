@@ -158,9 +158,6 @@ class IterImplString {
 
     public static final byte[] readBase64(JsonIterator iter) throws IOException {
         // from https://gist.github.com/EmilHernvall/953733
-        if (IterImpl.nextToken(iter) != '"') {
-            throw iter.reportError("readBase64", "expect \" for base64");
-        }
         Slice slice = IterImpl.readSlice(iter);
         if (slice == null) {
             return null;

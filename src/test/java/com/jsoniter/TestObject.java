@@ -11,7 +11,7 @@ import java.util.Map;
 public class TestObject extends TestCase {
 
     static {
-//        JsonIterator.setMode(DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_WITH_HASH);
+        JsonIterator.setMode(DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_WITH_HASH);
     }
 
     public static class EmptyClass {
@@ -143,7 +143,9 @@ public class TestObject extends TestCase {
     public static class TestObject5 {
 
         public enum MyEnum {
-            HELLO
+            HELLO,
+            WORLD,
+            WOW
         }
         public MyEnum field1;
     }
@@ -151,5 +153,14 @@ public class TestObject extends TestCase {
     public void test_enum() throws IOException {
         TestObject5 obj = JsonIterator.deserialize("{\"field1\":\"HELLO\"}", TestObject5.class);
         assertEquals(TestObject5.MyEnum.HELLO, obj.field1);
+        try {
+            JsonIterator.deserialize("{\"field1\":\"HELLO1\"}", TestObject5.class);
+            fail();
+        } catch (JsonException e) {
+        }
+        obj = JsonIterator.deserialize("{\"field1\":null}", TestObject5.class);
+        assertNull(obj.field1);
+        obj = JsonIterator.deserialize("{\"field1\":\"WOW\"}", TestObject5.class);
+        assertEquals(TestObject5.MyEnum.WOW, obj.field1);
     }
 }
