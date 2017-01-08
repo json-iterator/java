@@ -18,6 +18,9 @@ public class ReflectionEncoderFactory {
         if (Map.class.isAssignableFrom(clazz)) {
             return new ReflectionMapEncoder(clazz, typeArgs);
         }
+        if (clazz.isEnum()) {
+            return new ReflectionEnumEncoder(clazz);
+        }
         return new ReflectionObjectEncoder(clazz);
     }
 }
