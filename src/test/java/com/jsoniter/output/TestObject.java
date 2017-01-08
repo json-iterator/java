@@ -12,7 +12,7 @@ public class TestObject extends TestCase {
 
     static {
         JsoniterAnnotationSupport.enable();
-//        JsonStream.setMode(EncodingMode.DYNAMIC_MODE);
+        JsonStream.setMode(EncodingMode.DYNAMIC_MODE);
     }
 
     private ByteArrayOutputStream baos;
@@ -93,5 +93,17 @@ public class TestObject extends TestCase {
         stream.writeVal(obj);
         stream.close();
         assertEquals("{'field1':'HELLO'}".replace('\'', '"'), baos.toString());
+    }
+
+    public static class TestObject6 {
+        public int[] field1;
+    }
+
+    public void test_array_field() throws IOException {
+        TestObject6 obj = new TestObject6();
+        obj.field1 = new int[]{1, 2, 3};
+        stream.writeVal(obj);
+        stream.close();
+        assertEquals("{\"field1\":[1,2,3]}", baos.toString());
     }
 }

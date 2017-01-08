@@ -3,11 +3,13 @@ package com.jsoniter.demo;
 
 import com.dslplatform.json.CompiledJson;
 import com.dslplatform.json.DslJson;
+import com.dslplatform.json.JsonWriter;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jsoniter.output.EncodingMode;
 import com.jsoniter.output.JsonStream;
 import com.jsoniter.spi.TypeLiteral;
+import json.ExternalSerialization;
 import org.junit.Test;
 import org.openjdk.jmh.Main;
 import org.openjdk.jmh.annotations.*;
@@ -27,6 +29,7 @@ public class ObjectOutput {
     private DslJson dslJson;
     private TestObject testObject;
     private TypeLiteral typeLiteral;
+    private JsonWriter jsonWriter;
 
     @CompiledJson
     public static class TestObject {
@@ -68,6 +71,7 @@ public class ObjectOutput {
         testObject.field1 = "hello";
         testObject.field2 = "world";
         typeLiteral = TypeLiteral.create(TestObject.class);
+        jsonWriter = new JsonWriter();
     }
 
     @Benchmark
@@ -78,20 +82,22 @@ public class ObjectOutput {
         stream.flush();
     }
 
-    @Benchmark
+//    @Benchmark
     public void jsoniter_easy_mode(Blackhole bh) throws IOException {
         bh.consume(JsonStream.serialize(testObject));
     }
 
-    @Benchmark
+//    @Benchmark
     public void jackson() throws IOException {
         baos.reset();
         objectMapper.writeValue(baos, testObject);
     }
 
-    @Benchmark
+//    @Benchmark
     public void dsljson() throws IOException {
         baos.reset();
-        dslJson.serialize(testObject, baos);
+        jsonWriter.reset();
+        ExternalSerialization.serialize(testObject, jsonWriter, false);
+        jsonWriter.toStream(baos);
     }
 }

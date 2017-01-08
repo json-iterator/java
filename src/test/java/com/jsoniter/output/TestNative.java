@@ -22,9 +22,10 @@ public class TestNative extends TestCase {
     }
 
     public void test_string() throws IOException {
-        stream.writeVal("hello");
+        stream = new JsonStream(baos, 32);
+        stream.writeVal("1234567890123456789012345678901234567890");
         stream.close();
-        assertEquals("'hello'".replace('\'', '"'), baos.toString());
+        assertEquals("'1234567890123456789012345678901234567890'".replace('\'', '"'), baos.toString());
     }
 
     public void test_escape() throws IOException {
@@ -129,5 +130,12 @@ public class TestNative extends TestCase {
         stream.writeVal(new BigInteger("1234"));
         stream.close();
         assertEquals("'1234'".replace('\'', '"'), baos.toString());
+    }
+
+    public void test_raw() throws IOException {
+        stream = new JsonStream(baos, 32);
+        stream.writeRaw("1234567890123456789012345678901234567890");
+        stream.close();
+        assertEquals("1234567890123456789012345678901234567890".replace('\'', '"'), baos.toString());
     }
 }

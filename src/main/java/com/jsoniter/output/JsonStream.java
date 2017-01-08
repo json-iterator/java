@@ -14,6 +14,7 @@ public class JsonStream extends OutputStream {
     public int indentionStep = defaultIndentionStep;
     private int indention = 0;
     private OutputStream out;
+    char[] reusableChars = new char[32];
     private static final byte[] NULL = "null".getBytes();
     private static final byte[] TRUE = "true".getBytes();
     private static final byte[] FALSE = "false".getBytes();
@@ -80,24 +81,30 @@ public class JsonStream extends OutputStream {
         if (val == null) {
             writeNull();
         } else {
-            write((int) (byte) '"');
+            write('"');
             StreamImplString.writeString(this, val);
-            write((int) (byte) '"');
+            write('"');
         }
     }
 
     public final void writeRaw(String val) throws IOException {
         int i = 0;
-        int valLen = val.length();
+        int remaining = val.length();
         for(;;) {
-            for (; i < valLen && count < buf.length; i++) {
-                char c = val.charAt(i);
-                buf[count++] = (byte) c;
+            int available = buf.length - count;
+            if (available < remaining) {
+                remaining -= available;
+                int j = i + available;
+                val.getBytes(i, j, buf, count);
+                count = buf.length;
+                flushBuffer();
+                i = j;
+            } else {
+                int j = i + remaining;
+                val.getBytes(i, j, buf, count);
+                count += remaining;
+                return;
             }
-            if (i == valLen) {
-                break;
-            }
-            flushBuffer();
         }
     }
 
