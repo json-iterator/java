@@ -55,12 +55,23 @@ public class ExternalSerialization implements com.dslplatform.json.Configuration
 				sw.writeString(self.field1);
 			}
 		
-			if (self.field2 != null) {
+		final java.util.List<String> _tmp_field2_ = self.field2;
+		if(_tmp_field2_ != null && _tmp_field2_.size() != 0) {
 			if(hasWrittenProperty) sw.writeByte(com.dslplatform.json.JsonWriter.COMMA);
 			hasWrittenProperty = true;
-				sw.writeAscii("\"field2\":", 9);
-				sw.writeString(self.field2);
+			sw.writeAscii("\"field2\":[", 10);
+			com.dslplatform.json.StringConverter.serializeNullable(_tmp_field2_.get(0), sw);
+			for(int i = 1; i < _tmp_field2_.size(); i++) {
+				sw.writeByte(com.dslplatform.json.JsonWriter.COMMA);
+				com.dslplatform.json.StringConverter.serializeNullable(_tmp_field2_.get(i), sw);
 			}
+			sw.writeByte(com.dslplatform.json.JsonWriter.ARRAY_END);
+		}
+		else if(self.field2 != null) {
+			if(hasWrittenProperty) sw.writeByte(com.dslplatform.json.JsonWriter.COMMA);
+			hasWrittenProperty = true;
+			sw.writeAscii("\"field2\":[]", 11);
+		}
 	}
 
 	static void __serializeJsonObjectFull(final com.jsoniter.demo.ObjectOutput.TestObject self, com.dslplatform.json.JsonWriter sw, boolean hasWrittenProperty) {
@@ -74,13 +85,18 @@ public class ExternalSerialization implements com.dslplatform.json.Configuration
 				sw.writeAscii("\"field1\":null", 13);
 			}
 		
-			
-			if (self.field2 != null) {
-				sw.writeAscii(",\"field2\":", 10);
-				sw.writeString(self.field2);
-			} else {
-				sw.writeAscii(",\"field2\":null", 14);
+		final java.util.List<String> _tmp_field2_ = self.field2;
+		if(_tmp_field2_ != null && _tmp_field2_.size() != 0) {
+			sw.writeAscii(",\"field2\":[", 11);
+			com.dslplatform.json.StringConverter.serializeNullable(_tmp_field2_.get(0), sw);
+			for(int i = 1; i < _tmp_field2_.size(); i++) {
+				sw.writeByte(com.dslplatform.json.JsonWriter.COMMA);
+				com.dslplatform.json.StringConverter.serializeNullable(_tmp_field2_.get(i), sw);
 			}
+			sw.writeByte(com.dslplatform.json.JsonWriter.ARRAY_END);
+		}
+		else if(self.field2 != null) sw.writeAscii(",\"field2\":[]", 12);
+		else sw.writeAscii(",\"field2\":null", 14);
 	}
 
 	public static final com.dslplatform.json.JsonReader.ReadObject<com.jsoniter.demo.ObjectOutput.TestObject> JSON_READER_struct0 = new com.dslplatform.json.JsonReader.ReadObject<com.jsoniter.demo.ObjectOutput.TestObject>() {
@@ -108,7 +124,7 @@ public class ExternalSerialization implements com.dslplatform.json.Configuration
 	static void deserialize(final com.jsoniter.demo.ObjectOutput.TestObject instance, final com.dslplatform.json.JsonReader reader) throws java.io.IOException {
 		
 		String _field1_ = null;
-		String _field2_ = null;
+		java.util.List<String> _field2_ = null;
 		byte nextToken = reader.last();
 		if(nextToken != '}') {
 			int nameHash = reader.fillName();
@@ -127,8 +143,16 @@ public class ExternalSerialization implements com.dslplatform.json.Configuration
 					nextToken = reader.getNextToken();
 						break;
 					case 1195428815:
-						_field2_ = com.dslplatform.json.StringConverter.deserialize(reader);
-					nextToken = reader.getNextToken();
+						
+					if (nextToken == '[') {
+						nextToken = reader.getNextToken();
+						if (nextToken != ']') {
+							java.util.List<String> __res = com.dslplatform.json.StringConverter.deserializeNullableCollection(reader);
+							_field2_ = __res;
+						}
+						nextToken = reader.getNextToken();
+					}
+					else throw new java.io.IOException("Expecting '[' at position " + reader.positionInStream() + ". Found " + (char)nextToken);
 						break;
 					default:
 						nextToken = reader.skip();
@@ -154,8 +178,16 @@ public class ExternalSerialization implements com.dslplatform.json.Configuration
 					nextToken = reader.getNextToken();
 						break;
 					case 1195428815:
-						_field2_ = com.dslplatform.json.StringConverter.deserialize(reader);
-					nextToken = reader.getNextToken();
+						
+					if (nextToken == '[') {
+						nextToken = reader.getNextToken();
+						if (nextToken != ']') {
+							java.util.List<String> __res = com.dslplatform.json.StringConverter.deserializeNullableCollection(reader);
+							_field2_ = __res;
+						}
+						nextToken = reader.getNextToken();
+					}
+					else throw new java.io.IOException("Expecting '[' at position " + reader.positionInStream() + ". Found " + (char)nextToken);
 						break;
 					default:
 						nextToken = reader.skip();

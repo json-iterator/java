@@ -19,7 +19,7 @@ class Codegen {
     private static EncodingMode mode = EncodingMode.REFLECTION_MODE;
     static boolean isDoingStaticCodegen;
     // only read/write when generating code with synchronized protection
-    private final static Set<String> generatedClassNames = new HashSet<String>();
+    private final static Map<String, CodegenResult> generatedSources = new HashMap<String, CodegenResult>();
     private volatile static Map<String, Encoder> reflectionEncoders = new HashMap<String, Encoder>();
 
     static {
@@ -114,13 +114,15 @@ class Codegen {
                 throw new JsonException("static gen should provide the encoder we need, but failed to create the encoder", e);
             }
         }
-        String source = genSource(clazz, typeArgs);
+        CodegenResult source = genSource(clazz, typeArgs);
         if ("true".equals(System.getenv("JSONITER_DEBUG"))) {
             System.out.println(">>> " + cacheKey);
+            System.out.println("prelude: " + source.prelude);
             System.out.println(source);
+            System.out.println("epilogue: " + source.epilogue);
         }
         try {
-            generatedClassNames.add(cacheKey);
+            generatedSources.put(cacheKey, source);
             if (isDoingStaticCodegen) {
                 staticGen(clazz, cacheKey, source);
             } else {
@@ -136,18 +138,19 @@ class Codegen {
         }
     }
 
-    public static boolean canStaticAccess(String cacheKey) {
-        return generatedClassNames.contains(cacheKey);
+    public static CodegenResult getGeneratedSource(String cacheKey) {
+        return generatedSources.get(cacheKey);
     }
 
-    private static void staticGen(Class clazz, String cacheKey, String source) throws IOException {
+    private static void staticGen(Class clazz, String cacheKey, CodegenResult source) throws IOException {
         createDir(cacheKey);
         String fileName = cacheKey.replace('.', '/') + ".java";
         FileOutputStream fileOutputStream = new FileOutputStream(fileName);
         try {
             OutputStreamWriter writer = new OutputStreamWriter(fileOutputStream);
             try {
-                staticGen(clazz, cacheKey, writer, source);
+                throw new UnsupportedOperationException();
+//                staticGen(clazz, cacheKey, writer, source);
             } finally {
                 writer.close();
             }
@@ -179,7 +182,7 @@ class Codegen {
         }
     }
 
-    private static String genSource(Class clazz, Type[] typeArgs) {
+    private static CodegenResult genSource(Class clazz, Type[] typeArgs) {
         if (clazz.isArray()) {
             return CodegenImplArray.genArray(clazz);
         }

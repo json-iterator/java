@@ -14,18 +14,12 @@ class StreamImplString {
         // write string, the fast path, without utf8 and escape support
         for (; i < valLen && stream.count < stream.buf.length; i++) {
             char c = val.charAt(i);
-            if (c > 125 || c < 32) {
+            if (c > 125 || c < 14) {
                 break;
             }
             switch (c) {
                 case '"':
                 case '\\':
-                case '/':
-                case '\b':
-                case '\f':
-                case '\n':
-                case '\r':
-                case '\t':
                     break;
                 default:
                     stream.buf[stream.count++] = (byte) c;
@@ -43,7 +37,7 @@ class StreamImplString {
     private static void writeStringSlowPath(JsonStream stream, String val, int i, int valLen) throws IOException {
         for (; i < valLen; i++) {
             int c = val.charAt(i);
-            if (c > 125 || c < 32) {
+            if (c > 125) {
                 stream.write('\\');
                 stream.write('u');
                 byte b4 = (byte) (c & 0xf);
@@ -63,10 +57,6 @@ class StreamImplString {
                     case '\\':
                         stream.write('\\');
                         stream.write('\\');
-                        break;
-                    case '/':
-                        stream.write('\\');
-                        stream.write('/');
                         break;
                     case '\b':
                         stream.write('\\');

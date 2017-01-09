@@ -184,10 +184,6 @@ class StreamImplNumber {
             val = -val;
             stream.write('-');
         }
-        if (val > 0x4ffffff) {
-            stream.writeRaw(Double.toString(val));
-            return;
-        }
         int precision = 6;
         int exp = 1000000; // 6
         long lval = (long)val;

@@ -5,36 +5,29 @@ import java.util.*;
 
 class CodegenImplArray {
 
-    public static String genArray(Class clazz) {
+    public static CodegenResult genArray(Class clazz) {
         Class compType = clazz.getComponentType();
         if (compType.isArray()) {
             throw new IllegalArgumentException("nested array not supported: " + clazz.getCanonicalName());
         }
-        StringBuilder lines = new StringBuilder();
-        append(lines, "public static void encode_(java.lang.Object obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {");
-        append(lines, "if (obj == null) { stream.writeNull(); return; }");
-        append(lines, "{{comp}}[] arr = ({{comp}}[])obj;");
-        append(lines, "if (arr.length == 0) { stream.writeEmptyArray(); return; }");
-        append(lines, "stream.writeArrayStart();");
-        append(lines, "int i = 0;");
-        append(lines, "{{op}}");
-        append(lines, "while (i < arr.length) {");
-        append(lines, "stream.writeMore();");
-        append(lines, "{{op}}");
-        append(lines, "}");
-        append(lines, "stream.writeArrayEnd();");
-        append(lines, "}");
-        return lines.toString()
-                .replace("{{comp}}", compType.getCanonicalName())
-                .replace("{{op}}", CodegenImplNative.genWriteOp("arr[i++]", compType));
+        CodegenResult ctx = new CodegenResult();
+        ctx.append("public static void encode_(java.lang.Object obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {");
+        ctx.append("if (obj == null) { stream.writeNull(); return; }");
+        ctx.append(String.format("%s[] arr = (%s[])obj;", compType.getCanonicalName(), compType.getCanonicalName()));
+        ctx.append("if (arr.length == 0) { return; }");
+        ctx.buffer('[');
+        ctx.append("int i = 0;");
+        CodegenImplNative.genWriteOp(ctx, "arr[i++]", compType);
+        ctx.append("while (i < arr.length) {");
+        ctx.buffer(',');
+        CodegenImplNative.genWriteOp(ctx, "arr[i++]", compType);
+        ctx.append("}");
+        ctx.buffer(']');
+        ctx.append("}");
+        return ctx;
     }
 
-    private static void append(StringBuilder lines, String str) {
-        lines.append(str);
-        lines.append("\n");
-    }
-
-    public static String genCollection(Class clazz, Type[] typeArgs) {
+    public static CodegenResult genCollection(Class clazz, Type[] typeArgs) {
         Type compType = Object.class;
         if (typeArgs.length == 0) {
             // default to List<Object>
@@ -53,23 +46,21 @@ class CodegenImplArray {
         return genCollection(clazz, compType);
     }
 
-    private static String genCollection(Class clazz, Type compType) {
-        StringBuilder lines = new StringBuilder();
-        append(lines, "public static void encode_(java.lang.Object obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {");
-        append(lines, "if (obj == null) { stream.writeNull(); return; }");
-        append(lines, "java.util.Iterator iter = ((java.util.Collection)obj).iterator();");
-        append(lines, "if (!iter.hasNext()) { stream.writeEmptyArray(); return; }");
-        append(lines, "stream.writeArrayStart();");
-        append(lines, "{{op}}");
-        append(lines, "while (iter.hasNext()) {");
-        append(lines, "stream.writeMore();");
-        append(lines, "{{op}}");
-        append(lines, "}");
-        append(lines, "stream.writeArrayEnd();");
-        append(lines, "}");
-        return lines.toString()
-                .replace("{{comp}}", CodegenImplNative.getTypeName(compType))
-                .replace("{{op}}", CodegenImplNative.genWriteOp("iter.next()", compType));
+    private static CodegenResult genCollection(Class clazz, Type compType) {
+        CodegenResult ctx = new CodegenResult();
+        ctx.append("public static void encode_(java.lang.Object obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {");
+        ctx.append("if (obj == null) { stream.writeNull(); return; }");
+        ctx.append("java.util.Iterator iter = ((java.util.Collection)obj).iterator();");
+        ctx.append("if (!iter.hasNext()) { return; }");
+        ctx.buffer('[');
+        CodegenImplNative.genWriteOp(ctx, "iter.next()", compType);
+        ctx.append("while (iter.hasNext()) {");
+        ctx.buffer(',');
+        CodegenImplNative.genWriteOp(ctx, "iter.next()", compType);
+        ctx.append("}");
+        ctx.buffer(']');
+        ctx.append("}");
+        return ctx;
     }
 
 }

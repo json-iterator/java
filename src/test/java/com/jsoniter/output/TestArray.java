@@ -6,6 +6,7 @@ import junit.framework.TestCase;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class TestArray extends TestCase {
@@ -23,7 +24,7 @@ public class TestArray extends TestCase {
     }
 
     public void test_gen_array() throws IOException {
-        stream.writeVal(new String[] {"hello", "world"});
+        stream.writeVal(new String[]{"hello", "world"});
         stream.close();
         assertEquals("['hello','world']".replace('\'', '"'), baos.toString());
     }
@@ -32,7 +33,8 @@ public class TestArray extends TestCase {
         ArrayList list = new ArrayList();
         list.add("hello");
         list.add("world");
-        stream.writeVal(new TypeLiteral<List<String>>(){}, list);
+        stream.writeVal(new TypeLiteral<List<String>>() {
+        }, list);
         stream.close();
         assertEquals("['hello','world']".replace('\'', '"'), baos.toString());
     }
@@ -53,7 +55,8 @@ public class TestArray extends TestCase {
     }
 
     public void test_null_array() throws IOException {
-        stream.writeVal(new TypeLiteral<String[]>(){}, null);
+        stream.writeVal(new TypeLiteral<String[]>() {
+        }, null);
         stream.close();
         assertEquals("null".replace('\'', '"'), baos.toString());
     }
@@ -65,8 +68,22 @@ public class TestArray extends TestCase {
     }
 
     public void test_null_collection() throws IOException {
-        stream.writeVal(new TypeLiteral<ArrayList>(){}, null);
+        stream.writeVal(new TypeLiteral<ArrayList>() {
+        }, null);
         stream.close();
         assertEquals("null".replace('\'', '"'), baos.toString());
+    }
+
+    public static class TestObject1 {
+        public List<String> field1;
+    }
+
+    public void test_list_of_objects() throws IOException {
+        TestObject1 obj = new TestObject1();
+        obj.field1 = Arrays.asList("a", "b");
+        stream.writeVal(new TypeLiteral<List<TestObject1>>() {
+        }, Arrays.asList(obj));
+        stream.close();
+        assertEquals("[{\"field1\":[\"a\",\"b\"]}]", baos.toString());
     }
 }

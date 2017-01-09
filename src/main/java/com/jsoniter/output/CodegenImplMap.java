@@ -1,11 +1,9 @@
 package com.jsoniter.output;
 
 import java.lang.reflect.Type;
-import java.util.HashMap;
-import java.util.Map;
 
 class CodegenImplMap {
-    public static String genMap(Class clazz, Type[] typeArgs) {
+    public static CodegenResult genMap(Class clazz, Type[] typeArgs) {
         Type keyType = String.class;
         Type valueType = Object.class;
         if (typeArgs.length == 0) {
@@ -21,34 +19,25 @@ class CodegenImplMap {
         if (keyType != String.class) {
             throw new IllegalArgumentException("map key must be String");
         }
-        if (clazz == Map.class) {
-            clazz = HashMap.class;
-        }
-        StringBuilder lines = new StringBuilder();
-        append(lines, "public static void encode_(java.lang.Object obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {");
-        append(lines, "if (obj == null) { stream.writeNull(); return; }");
-        append(lines, "java.util.Map map = (java.util.Map)obj;");
-        append(lines, "java.util.Iterator iter = map.entrySet().iterator();");
-        append(lines, "if(!iter.hasNext()) { stream.writeEmptyObject(); return; }");
-        append(lines, "java.util.Map.Entry entry = (java.util.Map.Entry)iter.next();");
-        append(lines, "stream.writeObjectStart();");
-        append(lines, "stream.writeObjectField((String)entry.getKey());");
-        append(lines, "{{op}}");
-        append(lines, "while(iter.hasNext()) {");
-        append(lines, "entry = (java.util.Map.Entry)iter.next();");
-        append(lines, "stream.writeMore();");
-        append(lines, "stream.writeObjectField((String)entry.getKey());");
-        append(lines, "{{op}}");
-        append(lines, "}");
-        append(lines, "stream.writeObjectEnd();");
-        append(lines, "}");
-        return lines.toString()
-                .replace("{{clazz}}", clazz.getName())
-                .replace("{{op}}", CodegenImplNative.genWriteOp("entry.getValue()", valueType));
-    }
-
-    private static void append(StringBuilder lines, String str) {
-        lines.append(str);
-        lines.append("\n");
+        CodegenResult ctx = new CodegenResult();
+        ctx.append("public static void encode_(java.lang.Object obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {");
+        ctx.append("if (obj == null) { stream.writeNull(); return; }");
+        ctx.append("java.util.Map map = (java.util.Map)obj;");
+        ctx.append("java.util.Iterator iter = map.entrySet().iterator();");
+        ctx.append("if(!iter.hasNext()) { return; }");
+        ctx.append("java.util.Map.Entry entry = (java.util.Map.Entry)iter.next();");
+        ctx.buffer('{');
+        ctx.append("stream.writeVal((String)entry.getKey());");
+        ctx.buffer(':');
+        CodegenImplNative.genWriteOp(ctx, "entry.getValue()", valueType);
+        ctx.append("while(iter.hasNext()) {");
+        ctx.append("entry = (java.util.Map.Entry)iter.next();");
+        ctx.buffer(',');
+        ctx.append("stream.writeObjectField((String)entry.getKey());");
+        CodegenImplNative.genWriteOp(ctx, "entry.getValue()", valueType);
+        ctx.append("}");
+        ctx.buffer('}');
+        ctx.append("}");
+        return ctx;
     }
 }

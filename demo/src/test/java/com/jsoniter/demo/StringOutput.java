@@ -2,6 +2,7 @@ package com.jsoniter.demo;
 
 
 import com.dslplatform.json.DslJson;
+import com.dslplatform.json.JsonWriter;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jsoniter.output.JsonStream;
@@ -21,6 +22,7 @@ public class StringOutput {
     private JsonStream stream;
     private byte[] buffer;
     private DslJson dslJson;
+    private JsonWriter jsonWriter;
 
     public static void main(String[] args) throws Exception {
         Main.main(new String[]{
@@ -50,6 +52,7 @@ public class StringOutput {
         stream = new JsonStream(baos, 4096);
         buffer = new byte[4096];
         dslJson = new DslJson();
+        jsonWriter = new JsonWriter();
     }
 
     @Benchmark
@@ -69,6 +72,8 @@ public class StringOutput {
     @Benchmark
     public void dsljson() throws IOException {
         baos.reset();
-        dslJson.serialize("hello world ~~ hello 中文 ~~~", baos);
+        jsonWriter.reset();
+        jsonWriter.write("hello world ~~ hello 中文 ~~~");
+        jsonWriter.toStream(baos);
     }
 }

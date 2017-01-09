@@ -28,6 +28,12 @@ public class TestNative extends TestCase {
         assertEquals("'1234567890123456789012345678901234567890'".replace('\'', '"'), baos.toString());
     }
 
+    public void test_slash() throws IOException {
+        stream.writeVal("/\\");
+        stream.close();
+        assertEquals("/\\", baos.toString());
+    }
+
     public void test_escape() throws IOException {
         stream.writeVal("hel\nlo");
         stream.close();

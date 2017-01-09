@@ -18,6 +18,8 @@ import org.openjdk.jmh.infra.Blackhole;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 @State(Scope.Thread)
 public class ObjectOutput {
@@ -34,7 +36,7 @@ public class ObjectOutput {
     @CompiledJson
     public static class TestObject {
         public String field1;
-        public String field2;
+        public List<String> field2;
     }
 
     public static void main(String[] args) throws Exception {
@@ -69,7 +71,7 @@ public class ObjectOutput {
         dslJson = new DslJson();
         testObject = new TestObject();
         testObject.field1 = "hello";
-        testObject.field2 = "world";
+        testObject.field2 = Arrays.asList("hello", "hello");
         typeLiteral = TypeLiteral.create(TestObject.class);
         jsonWriter = new JsonWriter();
     }
@@ -82,18 +84,18 @@ public class ObjectOutput {
         stream.flush();
     }
 
-//    @Benchmark
+    //    @Benchmark
     public void jsoniter_easy_mode(Blackhole bh) throws IOException {
         bh.consume(JsonStream.serialize(testObject));
     }
 
-//    @Benchmark
+    //    @Benchmark
     public void jackson() throws IOException {
         baos.reset();
         objectMapper.writeValue(baos, testObject);
     }
 
-//    @Benchmark
+        @Benchmark
     public void dsljson() throws IOException {
         baos.reset();
         jsonWriter.reset();

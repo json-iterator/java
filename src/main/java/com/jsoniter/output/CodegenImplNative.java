@@ -5,7 +5,6 @@ import com.jsoniter.any.Any;
 import com.jsoniter.spi.*;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
@@ -265,17 +264,21 @@ class CodegenImplNative {
         });
     }};
 
-    public static String genWriteOp(String code, Type valueType) {
+    public static void genWriteOp(CodegenResult ctx, String code, Type valueType) {
         if (NATIVE_ENCODERS.containsKey(valueType)) {
-            return String.format("stream.writeVal((%s)%s);", getTypeName(valueType), code);
+            ctx.append(String.format("stream.writeVal((%s)%s);", getTypeName(valueType), code));
+            return;
         }
 
         String cacheKey = TypeLiteral.create(valueType).getEncoderCacheKey();
         Codegen.getEncoder(cacheKey, valueType);
-        if (Codegen.canStaticAccess(cacheKey)) {
-            return String.format("%s.encode_((%s)%s, stream);", cacheKey, getTypeName(valueType), code);
+        CodegenResult generatedSource = Codegen.getGeneratedSource(cacheKey);
+        if (generatedSource != null) {
+            ctx.buffer(generatedSource.prelude);
+            ctx.append(String.format("%s.encode_((%s)%s, stream);", cacheKey, getTypeName(valueType), code));
+            ctx.buffer(generatedSource.epilogue);
         } else {
-            return String.format("com.jsoniter.output.CodegenAccess.writeVal(\"%s\", (%s)%s, stream);", cacheKey, getTypeName(valueType), code);
+            ctx.append(String.format("com.jsoniter.output.CodegenAccess.writeVal(\"%s\", (%s)%s, stream);", cacheKey, getTypeName(valueType), code));
         }
     }
 
@@ -291,16 +294,15 @@ class CodegenImplNative {
             throw new JsonException("unsupported type: " + fieldType);
         }
     }
-    public static String genEnum(Class clazz) {
-        ClassDescriptor desc = JsoniterSpi.getEncodingClassDescriptor(clazz, false);
-        StringBuilder lines = new StringBuilder();
-        append(lines, String.format("public static void encode_(java.lang.Object obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {", clazz.getCanonicalName()));
-        append(lines, "if (obj == null) { stream.writeNull(); return; }");
-        append(lines, "stream.write('\"');");
-        append(lines, "stream.writeRaw(obj.toString());");
-        append(lines, "stream.write('\"');");
-        append(lines, "}");
-        return lines.toString();
+    public static CodegenResult genEnum(Class clazz) {
+        CodegenResult ctx = new CodegenResult();
+        ctx.append(String.format("public static void encode_(java.lang.Object obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {", clazz.getCanonicalName()));
+        ctx.append("if (obj == null) { stream.writeNull(); return; }");
+        ctx.buffer("\\\"");
+        ctx.append("stream.writeRaw(obj.toString());");
+        ctx.buffer("\\\"");
+        ctx.append("}");
+        return ctx;
     }
 
     private static void append(StringBuilder lines, String str) {
