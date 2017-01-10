@@ -1,6 +1,9 @@
 package com.jsoniter;
 
+import com.jsoniter.annotation.JsonProperty;
+import com.jsoniter.annotation.JsoniterAnnotationSupport;
 import com.jsoniter.any.Any;
+import com.jsoniter.spi.Decoder;
 import com.jsoniter.spi.EmptyExtension;
 import com.jsoniter.spi.JsoniterSpi;
 import junit.framework.TestCase;
@@ -162,5 +165,16 @@ public class TestObject extends TestCase {
         assertNull(obj.field1);
         obj = JsonIterator.deserialize("{\"field1\":\"WOW\"}", TestObject5.class);
         assertEquals(TestObject5.MyEnum.WOW, obj.field1);
+    }
+
+    public static class TestObject6 {
+        @JsonProperty(decoder = Decoder.MaybeEmptyArrayDecoder.class)
+        public Map<String, Object> field1;
+    }
+
+    public void test_maybe_empty_array_field() {
+        JsoniterAnnotationSupport.enable();
+        TestObject6 obj = JsonIterator.deserialize("{\"field1\":[]}", TestObject6.class);
+        assertNull(obj.field1);
     }
 }
