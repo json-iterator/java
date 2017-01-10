@@ -29,12 +29,16 @@ class CodegenImplMap {
         ctx.buffer('{');
         ctx.append("stream.writeVal((String)entry.getKey());");
         ctx.buffer(':');
-        CodegenImplNative.genWriteOp(ctx, "entry.getValue()", valueType);
+        ctx.append("if (entry.getValue() == null) { stream.writeNull(); } else {");
+        CodegenImplNative.genWriteOp(ctx, "entry.getValue()", valueType, true);
+        ctx.append("}");
         ctx.append("while(iter.hasNext()) {");
         ctx.append("entry = (java.util.Map.Entry)iter.next();");
         ctx.buffer(',');
         ctx.append("stream.writeObjectField((String)entry.getKey());");
-        CodegenImplNative.genWriteOp(ctx, "entry.getValue()", valueType);
+        ctx.append("if (entry.getValue() == null) { stream.writeNull(); } else {");
+        CodegenImplNative.genWriteOp(ctx, "entry.getValue()", valueType, true);
+        ctx.append("}");
         ctx.append("}");
         ctx.buffer('}');
         ctx.append("}");

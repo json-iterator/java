@@ -86,4 +86,21 @@ public class TestArray extends TestCase {
         stream.close();
         assertEquals("[{\"field1\":[\"a\",\"b\"]}]", baos.toString());
     }
+
+    public void test_array_of_null() throws IOException {
+        stream.writeVal(new TestObject1[1]);
+        stream.close();
+        assertEquals("[null]", baos.toString());
+    }
+
+    public void test_list_of_null() throws IOException {
+        TestObject1 obj = new TestObject1();
+        obj.field1 = Arrays.asList("a", "b");
+        ArrayList<TestObject1> list = new ArrayList<TestObject1>();
+        list.add(null);
+        stream.writeVal(new TypeLiteral<List<TestObject1>>() {
+        }, list);
+        stream.close();
+        assertEquals("[null]", baos.toString());
+    }
 }

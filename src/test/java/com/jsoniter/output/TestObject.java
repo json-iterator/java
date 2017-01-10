@@ -106,4 +106,25 @@ public class TestObject extends TestCase {
         stream.close();
         assertEquals("{\"field1\":[1,2,3]}", baos.toString());
     }
+
+    public void test_array_field_is_null() throws IOException {
+        TestObject6 obj = new TestObject6();
+        stream.writeVal(obj);
+        stream.close();
+        assertEquals("{\"field1\":null}", baos.toString());
+    }
+
+    public static class TestObject7 {
+        private int[] field1;
+        public int[] getField1() {
+            return field1;
+        }
+    }
+
+    public void test_array_field_is_null_via_getter() throws IOException {
+        TestObject7 obj = new TestObject7();
+        stream.writeVal(obj);
+        stream.close();
+        assertEquals("{\"field1\":null}", baos.toString());
+    }
 }

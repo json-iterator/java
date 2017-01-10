@@ -6,6 +6,7 @@ import junit.framework.TestCase;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 
 public class TestMap extends TestCase {
 
@@ -40,5 +41,13 @@ public class TestMap extends TestCase {
         stream.writeVal(new TypeLiteral<HashMap>(){}, null);
         stream.close();
         assertEquals("null".replace('\'', '"'), baos.toString());
+    }
+
+    public void test_value_is_null() throws IOException {
+        HashMap<String, int[]> obj = new HashMap<String, int[]>();
+        obj.put("hello", null);
+        stream.writeVal(new TypeLiteral<Map<String, int[]>>(){}, obj);
+        stream.close();
+        assertEquals("{\"hello\":null}", baos.toString());
     }
 }

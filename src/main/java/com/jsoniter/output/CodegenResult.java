@@ -35,11 +35,7 @@ class CodegenResult {
         if (str.contains("stream")) {
             // maintain the order of write op
             // must flush now
-            flushBuffer();
-            if (epilogue != null) {
-                lines.append(bufferToWriteOp(epilogue));
-                lines.append("\n");
-            }
+            appendBuffer();
         }
         lines.append(str);
         lines.append("\n");
@@ -70,5 +66,14 @@ class CodegenResult {
 
     public String toString() {
         return lines.toString();
+    }
+
+    public void appendBuffer() {
+        flushBuffer();
+        if (epilogue != null) {
+            lines.append(bufferToWriteOp(epilogue));
+            lines.append("\n");
+            epilogue = null;
+        }
     }
 }

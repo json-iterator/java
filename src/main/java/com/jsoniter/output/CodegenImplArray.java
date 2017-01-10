@@ -12,15 +12,28 @@ class CodegenImplArray {
         }
         CodegenResult ctx = new CodegenResult();
         ctx.append("public static void encode_(java.lang.Object obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {");
-        ctx.append("if (obj == null) { stream.writeNull(); return; }");
         ctx.append(String.format("%s[] arr = (%s[])obj;", compType.getCanonicalName(), compType.getCanonicalName()));
         ctx.append("if (arr.length == 0) { return; }");
         ctx.buffer('[');
         ctx.append("int i = 0;");
-        CodegenImplNative.genWriteOp(ctx, "arr[i++]", compType);
+        ctx.append(String.format("%s e = arr[i++];", compType.getCanonicalName()));
+        if (compType.isPrimitive()) {
+            CodegenImplNative.genWriteOp(ctx, "e", compType, false);
+        } else {
+            ctx.append("if (e == null) { stream.writeNull(); } else {");
+            CodegenImplNative.genWriteOp(ctx, "e", compType, true);
+            ctx.append("}");
+        }
         ctx.append("while (i < arr.length) {");
-        ctx.buffer(',');
-        CodegenImplNative.genWriteOp(ctx, "arr[i++]", compType);
+        ctx.append("stream.write(',');");
+        ctx.append("e = arr[i++];");
+        if (compType.isPrimitive()) {
+            CodegenImplNative.genWriteOp(ctx, "e", compType, false);
+        } else {
+            ctx.append("if (e == null) { stream.writeNull(); } else {");
+            CodegenImplNative.genWriteOp(ctx, "e", compType, true);
+            ctx.append("}");
+        }
         ctx.append("}");
         ctx.buffer(']');
         ctx.append("}");
@@ -53,10 +66,16 @@ class CodegenImplArray {
         ctx.append("java.util.Iterator iter = ((java.util.Collection)obj).iterator();");
         ctx.append("if (!iter.hasNext()) { return; }");
         ctx.buffer('[');
-        CodegenImplNative.genWriteOp(ctx, "iter.next()", compType);
+        ctx.append("java.lang.Object e = iter.next();");
+        ctx.append("if (e == null) { stream.writeNull(); } else {");
+        CodegenImplNative.genWriteOp(ctx, "e", compType, true);
+        ctx.append("}");
         ctx.append("while (iter.hasNext()) {");
-        ctx.buffer(',');
-        CodegenImplNative.genWriteOp(ctx, "iter.next()", compType);
+        ctx.append("stream.write(',');");
+        ctx.append("e = iter.next();");
+        ctx.append("if (e == null) { stream.writeNull(); } else {");
+        CodegenImplNative.genWriteOp(ctx, "e", compType, true);
+        ctx.append("}");
         ctx.append("}");
         ctx.buffer(']');
         ctx.append("}");

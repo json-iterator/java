@@ -9,7 +9,6 @@ class CodegenImplObject {
         CodegenResult ctx = new CodegenResult();
         ClassDescriptor desc = JsoniterSpi.getEncodingClassDescriptor(clazz, false);
         ctx.append(String.format("public static void encode_(%s obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {", clazz.getCanonicalName()));
-        ctx.append("if (obj == null) { stream.writeNull(); return; }");
         if (hasFieldOutput(desc)) {
             boolean notFirst = false;
             ctx.buffer('{');
@@ -60,18 +59,32 @@ class CodegenImplObject {
         String fieldCacheKey = binding.encoderCacheKey();
         Encoder encoder = JsoniterSpi.getEncoder(fieldCacheKey);
         if (binding.field != null) {
+            boolean nullable = !binding.field.getType().isPrimitive();
+            if (nullable) {
+                ctx.append(String.format("if (obj.%s == null) { stream.writeNull(); } else {", binding.field.getName()));
+            }
             if (encoder == null) {
-                CodegenImplNative.genWriteOp(ctx, "obj." + binding.field.getName(), binding.valueType);
+                CodegenImplNative.genWriteOp(ctx, "obj." + binding.field.getName(), binding.valueType, nullable);
             } else {
                 ctx.append(String.format("com.jsoniter.output.CodegenAccess.writeVal(\"%s\", obj.%s, stream);",
                         fieldCacheKey, binding.field.getName()));
             }
+            if (nullable) {
+                ctx.append("}");
+            }
         } else {
+            boolean nullable = !binding.method.getReturnType().isPrimitive();
+            if (nullable) {
+                ctx.append(String.format("if (obj.%s() == null) { stream.writeNull(); } else {", binding.method.getName()));
+            }
             if (encoder == null) {
-                CodegenImplNative.genWriteOp(ctx, "obj." + binding.method.getName() + "()", binding.valueType);
+                CodegenImplNative.genWriteOp(ctx, "obj." + binding.method.getName() + "()", binding.valueType, nullable);
             } else {
                 ctx.append(String.format("com.jsoniter.output.CodegenAccess.writeVal(\"%s\", obj.%s(), stream);",
                         fieldCacheKey, binding.method.getName()));
+            }
+            if (nullable) {
+                ctx.append("}");
             }
         }
     }
