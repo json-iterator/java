@@ -35,7 +35,7 @@ public class JsonStream extends OutputStream {
     }
 
     public final void write(int b) throws IOException {
-        if (count >= buf.length) {
+        if (count == buf.length) {
             flushBuffer();
         }
         buf[count++] = (byte) b;
@@ -98,15 +98,16 @@ public class JsonStream extends OutputStream {
         if (val == null) {
             writeNull();
         } else {
-            write('"');
             StreamImplString.writeString(this, val);
-            write('"');
         }
     }
 
     public final void writeRaw(String val) throws IOException {
+        writeRaw(val, val.length());
+    }
+
+    public final void writeRaw(String val, int remaining) throws IOException {
         int i = 0;
-        int remaining = val.length();
         for(;;) {
             int available = buf.length - count;
             if (available < remaining) {

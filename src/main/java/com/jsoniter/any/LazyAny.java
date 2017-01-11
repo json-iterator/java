@@ -10,12 +10,6 @@ import java.io.IOException;
 
 abstract class LazyAny extends Any {
 
-    protected final static ThreadLocal<JsonIterator> tlsIter = new ThreadLocal<JsonIterator>() {
-        @Override
-        protected JsonIterator initialValue() {
-            return new JsonIterator();
-        }
-    };
     protected final byte[] data;
     protected final int head;
     protected final int tail;
@@ -65,7 +59,7 @@ abstract class LazyAny extends Any {
     }
 
     public final JsonIterator parse() {
-        JsonIterator iter = tlsIter.get();
+        JsonIterator iter = JsonIterator.tlsIter.get();
         iter.reset(data, head, tail);
         return iter;
     }

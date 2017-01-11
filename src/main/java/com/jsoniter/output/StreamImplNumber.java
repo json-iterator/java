@@ -1,154 +1,215 @@
+/*
+this implementations contains significant code from https://github.com/ngs-doo/dsl-json/blob/master/LICENSE
+
+Copyright (c) 2015, Nova Generacija Softvera d.o.o.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+
+    * Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer in the documentation
+      and/or other materials provided with the distribution.
+
+    * Neither the name of Nova Generacija Softvera d.o.o. nor the names of its
+      contributors may be used to endorse or promote products derived from this
+      software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 package com.jsoniter.output;
 
 import java.io.IOException;
 
 class StreamImplNumber {
 
-    private final static byte[] DigitTens = {
-            '0', '0', '0', '0', '0', '0', '0', '0', '0', '0',
-            '1', '1', '1', '1', '1', '1', '1', '1', '1', '1',
-            '2', '2', '2', '2', '2', '2', '2', '2', '2', '2',
-            '3', '3', '3', '3', '3', '3', '3', '3', '3', '3',
-            '4', '4', '4', '4', '4', '4', '4', '4', '4', '4',
-            '5', '5', '5', '5', '5', '5', '5', '5', '5', '5',
-            '6', '6', '6', '6', '6', '6', '6', '6', '6', '6',
-            '7', '7', '7', '7', '7', '7', '7', '7', '7', '7',
-            '8', '8', '8', '8', '8', '8', '8', '8', '8', '8',
-            '9', '9', '9', '9', '9', '9', '9', '9', '9', '9',
-    };
+    private final static int[] DIGITS = new int[1000];
 
-    private final static byte[] DigitOnes = {
-            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-    };
-
-    /**
-     * All possible chars for representing a number as a String
-     */
-    private final static byte[] digits = {
-            '0', '1', '2', '3', '4', '5',
-            '6', '7', '8', '9', 'a', 'b',
-            'c', 'd', 'e', 'f', 'g', 'h',
-            'i', 'j', 'k', 'l', 'm', 'n',
-            'o', 'p', 'q', 'r', 's', 't',
-            'u', 'v', 'w', 'x', 'y', 'z'
-    };
-    private static final byte[] INT_MIN = "-2147483648".getBytes();
-    private static final byte[] LONG_MIN = "-9223372036854775808".getBytes();
-
-    public static final void writeInt(JsonStream stream, int val) throws IOException {
-        if (val == Integer.MIN_VALUE) {
-            stream.write(INT_MIN);
-            return;
+    static {
+        for (int i = 0; i < 1000; i++) {
+            DIGITS[i] = (i < 10 ? (2 << 24) : i < 100 ? (1 << 24) : 0)
+                    + (((i / 100) + '0') << 16)
+                    + ((((i / 10) % 10) + '0') << 8)
+                    + i % 10 + '0';
         }
-        if (val < 0) {
-            stream.write('-');
-            val = -val;
-        }
-        if (stream.buf.length - stream.count < 10) {
+    }
+
+    private static final byte[] MIN_INT = "-2147483648".getBytes();
+
+    public static final void writeInt(final JsonStream stream, int value) throws IOException {
+        if (stream.buf.length - stream.count < 11) {
             stream.flushBuffer();
         }
-        int charPos = stream.count + stringSize(val);
-        stream.count = charPos;
-        int q, r;
-        // Generate two digits per iteration
-        while (val >= 65536) {
-            q = val / 100;
-            // really: r = i - (q * 100);
-            r = val - ((q << 6) + (q << 5) + (q << 2));
-            val = q;
-            stream.buf[--charPos] = DigitOnes[r];
-            stream.buf[--charPos] = DigitTens[r];
+        byte[] buf = stream.buf;
+        int pos = stream.count;
+        if (value < 0) {
+            if (value == Integer.MIN_VALUE) {
+                System.arraycopy(MIN_INT, 0, buf, pos, MIN_INT.length);
+                stream.count = pos + MIN_INT.length;
+                return;
+            }
+            value = -value;
+            buf[pos++] = '-';
         }
-
-        // Fall thru to fast mode for smaller numbers
-        // assert(i <= 65536, i);
-        for (; ; ) {
-            q = (val * 52429) >>> (16 + 3);
-            r = val - ((q << 3) + (q << 1));  // r = i-(q*10) ...
-            stream.buf[--charPos] = digits[r];
-            val = q;
-            if (val == 0) break;
-        }
-    }
-
-    private final static int[] sizeTable = {9, 99, 999, 9999, 99999, 999999, 9999999,
-            99999999, 999999999, Integer.MAX_VALUE};
-
-    // Requires positive x
-    private static int stringSize(int x) {
-        for (int i = 0; ; i++)
-            if (x <= sizeTable[i])
-                return i + 1;
-    }
-
-    public static final void writeLong(JsonStream stream, long val) throws IOException {
-        if (val == Long.MIN_VALUE) {
-            stream.write(LONG_MIN);
+        final int q1 = value / 1000;
+        if (q1 == 0) {
+            pos += writeFirstBuf(buf, DIGITS[value], pos);
+            stream.count = pos;
             return;
         }
-        if (val < 0) {
-            stream.write('-');
-            val = -val;
+        final int r1 = value - q1 * 1000;
+        final int q2 = q1 / 1000;
+        if (q2 == 0) {
+            final int v1 = DIGITS[r1];
+            final int v2 = DIGITS[q1];
+            int off = writeFirstBuf(buf, v2, pos);
+            writeBuf(buf, v1, pos + off);
+            stream.count = pos + 3 + off;
+            return;
         }
-        if (stream.buf.length - stream.count < 20) {
-            stream.flushBuffer();
+        final int r2 = q1 - q2 * 1000;
+        final long q3 = q2 / 1000;
+        final int v1 = DIGITS[r1];
+        final int v2 = DIGITS[r2];
+        if (q3 == 0) {
+            pos += writeFirstBuf(buf, DIGITS[q2], pos);
+        } else {
+            final int r3 = (int) (q2 - q3 * 1000);
+            buf[pos++] = (byte) (q3 + '0');
+            writeBuf(buf, DIGITS[r3], pos);
+            pos += 3;
         }
-        long q;
-        int r;
-        int charPos = stream.count + stringSize(val);
-        stream.count = charPos;
-        char sign = 0;
-
-        // Get 2 digits/iteration using longs until quotient fits into an int
-        while (val > Integer.MAX_VALUE) {
-            q = val / 100;
-            // really: r = i - (q * 100);
-            r = (int)(val - ((q << 6) + (q << 5) + (q << 2)));
-            val = q;
-            stream.buf[--charPos] = DigitOnes[r];
-            stream.buf[--charPos] = DigitTens[r];
-        }
-
-        // Get 2 digits/iteration using ints
-        int q2;
-        int i2 = (int)val;
-        while (i2 >= 65536) {
-            q2 = i2 / 100;
-            // really: r = i2 - (q * 100);
-            r = i2 - ((q2 << 6) + (q2 << 5) + (q2 << 2));
-            i2 = q2;
-            stream.buf[--charPos] = DigitOnes[r];
-            stream.buf[--charPos] = DigitTens[r];
-        }
-
-        // Fall thru to fast mode for smaller numbers
-        // assert(i2 <= 65536, i2);
-        for (;;) {
-            q2 = (i2 * 52429) >>> (16+3);
-            r = i2 - ((q2 << 3) + (q2 << 1));  // r = i2-(q2*10) ...
-            stream.buf[--charPos] = digits[r];
-            i2 = q2;
-            if (i2 == 0) break;
-        }
+        writeBuf(buf, v2, pos);
+        writeBuf(buf, v1, pos + 3);
+        stream.count = pos + 6;
     }
 
-    private static int stringSize(long x) {
-        long p = 10;
-        for (int i=1; i<19; i++) {
-            if (x < p)
-                return i;
-            p = 10*p;
+    private static int writeFirstBuf(final byte[] buf, final int v, int pos) {
+        final int start = v >> 24;
+        if (start == 0) {
+            buf[pos++] = (byte) (v >> 16);
+            buf[pos++] = (byte) (v >> 8);
+        } else if (start == 1) {
+            buf[pos++] = (byte) (v >> 8);
         }
-        return 19;
+        buf[pos] = (byte) v;
+        return 3 - start;
+    }
+
+    private static void writeBuf(final byte[] buf, final int v, int pos) {
+        buf[pos] = (byte) (v >> 16);
+        buf[pos + 1] = (byte) (v >> 8);
+        buf[pos + 2] = (byte) v;
+    }
+
+    private static final byte[] MIN_LONG = "-9223372036854775808".getBytes();
+
+    public static final void writeLong(final JsonStream stream, long value) throws IOException {
+        if (stream.buf.length - stream.count < 21) {
+            stream.flushBuffer();
+        }
+        byte[] buf = stream.buf;
+        int pos = stream.count;
+        if (value < 0) {
+            if (value == Long.MIN_VALUE) {
+                System.arraycopy(MIN_LONG, 0, buf, pos, MIN_LONG.length);
+                stream.count = pos + MIN_LONG.length;
+                return;
+            }
+            value = -value;
+            buf[pos++] = '-';
+        }
+        final long q1 = value / 1000;
+        if (q1 == 0) {
+            pos += writeFirstBuf(buf, DIGITS[(int) value], pos);
+            stream.count = pos;
+            return;
+        }
+        final int r1 = (int) (value - q1 * 1000);
+        final long q2 = q1 / 1000;
+        if (q2 == 0) {
+            final int v1 = DIGITS[r1];
+            final int v2 = DIGITS[(int) q1];
+            int off = writeFirstBuf(buf, v2, pos);
+            writeBuf(buf, v1, pos + off);
+            stream.count = pos + 3 + off;
+            return;
+        }
+        final int r2 = (int) (q1 - q2 * 1000);
+        final long q3 = q2 / 1000;
+        if (q3 == 0) {
+            final int v1 = DIGITS[r1];
+            final int v2 = DIGITS[r2];
+            final int v3 = DIGITS[(int) q2];
+            pos += writeFirstBuf(buf, v3, pos);
+            writeBuf(buf, v2, pos);
+            writeBuf(buf, v1, pos + 3);
+            stream.count = pos + 6;
+            return;
+        }
+        final int r3 = (int) (q2 - q3 * 1000);
+        final int q4 = (int) (q3 / 1000);
+        if (q4 == 0) {
+            final int v1 = DIGITS[r1];
+            final int v2 = DIGITS[r2];
+            final int v3 = DIGITS[r3];
+            final int v4 = DIGITS[(int) q3];
+            pos += writeFirstBuf(buf, v4, pos);
+            writeBuf(buf, v3, pos);
+            writeBuf(buf, v2, pos + 3);
+            writeBuf(buf, v1, pos + 6);
+            stream.count = pos + 9;
+            return;
+        }
+        final int r4 = (int) (q3 - q4 * 1000);
+        final int q5 = q4 / 1000;
+        if (q5 == 0) {
+            final int v1 = DIGITS[r1];
+            final int v2 = DIGITS[r2];
+            final int v3 = DIGITS[r3];
+            final int v4 = DIGITS[r4];
+            final int v5 = DIGITS[q4];
+            pos += writeFirstBuf(buf, v5, pos);
+            writeBuf(buf, v4, pos);
+            writeBuf(buf, v3, pos + 3);
+            writeBuf(buf, v2, pos + 6);
+            writeBuf(buf, v1, pos + 9);
+            stream.count = pos + 12;
+            return;
+        }
+        final int r5 = q4 - q5 * 1000;
+        final int q6 = q5 / 1000;
+        final int v1 = DIGITS[r1];
+        final int v2 = DIGITS[r2];
+        final int v3 = DIGITS[r3];
+        final int v4 = DIGITS[r4];
+        final int v5 = DIGITS[r5];
+        if (q6 == 0) {
+            pos += writeFirstBuf(buf, DIGITS[q5], pos);
+        } else {
+            final int r6 = q5 - q6 * 1000;
+            buf[pos++] = (byte) (q6 + '0');
+            writeBuf(buf, DIGITS[r6], pos);
+            pos += 3;
+        }
+        writeBuf(buf, v5, pos);
+        writeBuf(buf, v4, pos + 3);
+        writeBuf(buf, v3, pos + 6);
+        writeBuf(buf, v2, pos + 9);
+        writeBuf(buf, v1, pos + 12);
+        stream.count = pos + 15;
     }
 
     private static final int POW10[] = {1, 10, 100, 1000, 10000, 100000, 1000000};

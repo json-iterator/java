@@ -56,7 +56,35 @@ class CodegenImplArray {
         } else if (clazz == Set.class) {
             clazz = HashSet.class;
         }
-        return genCollection(clazz, compType);
+        if (List.class.isAssignableFrom(clazz)) {
+            return genList(clazz, compType);
+        } else {
+            return genCollection(clazz, compType);
+        }
+    }
+
+    private static CodegenResult genList(Class clazz, Type compType) {
+        CodegenResult ctx = new CodegenResult();
+        ctx.append("public static void encode_(java.lang.Object obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {");
+        ctx.append("if (obj == null) { stream.writeNull(); return; }");
+        ctx.append("java.util.List list = (java.util.List)obj;");
+        ctx.append("int size = list.size();");
+        ctx.append("if (size == 0) { return; }");
+        ctx.buffer('[');
+        ctx.append("java.lang.Object e = list.get(0);");
+        ctx.append("if (e == null) { stream.writeNull(); } else {");
+        CodegenImplNative.genWriteOp(ctx, "e", compType, true);
+        ctx.append("}");
+        ctx.append("for (int i = 1; i < size; i++) {");
+        ctx.append("stream.write(',');");
+        ctx.append("e = list.get(i);");
+        ctx.append("if (e == null) { stream.writeNull(); } else {");
+        CodegenImplNative.genWriteOp(ctx, "e", compType, true);
+        ctx.append("}");
+        ctx.append("}");
+        ctx.buffer(']');
+        ctx.append("}");
+        return ctx;
     }
 
     private static CodegenResult genCollection(Class clazz, Type compType) {

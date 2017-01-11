@@ -1,5 +1,10 @@
 package com.jsoniter.output;
 
+import com.jsoniter.JsonException;
+import com.jsoniter.JsonIterator;
+
+import java.io.IOException;
+
 class CodegenResult {
 
     String prelude = null; // first
@@ -17,7 +22,16 @@ class CodegenResult {
             return String.format("stream.write('%s', '%s', '%s');",
                     escape(buffered.charAt(0)), escape(buffered.charAt(1)), escape(buffered.charAt(2)));
         } else {
-            return String.format("stream.writeRaw(\"%s\");", buffered);
+            JsonIterator iter = JsonIterator.tlsIter.get();
+            String escapedStr = '"' + buffered + '"';
+            iter.reset(escapedStr.getBytes());
+            int unescapedLen;
+            try {
+                unescapedLen = iter.readString().length();
+            } catch (IOException e) {
+                throw new JsonException(e);
+            }
+            return String.format("stream.writeRaw(\"%s\", %s);", buffered, unescapedLen);
         }
     }
 

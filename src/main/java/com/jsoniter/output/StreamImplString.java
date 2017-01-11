@@ -11,27 +11,37 @@ class StreamImplString {
     public static final void writeString(JsonStream stream, String val) throws IOException {
         int i = 0;
         int valLen = val.length();
+        int toWriteLen = valLen;
+        int bufLengthMinusTwo = stream.buf.length - 2; // make room for the quotes
+        if (stream.count + toWriteLen > bufLengthMinusTwo) {
+            toWriteLen = bufLengthMinusTwo - stream.count;
+        }
+        if (toWriteLen < 0) {
+            stream.flushBuffer();
+            if (stream.count + toWriteLen > bufLengthMinusTwo) {
+                toWriteLen = bufLengthMinusTwo - stream.count;
+            }
+        }
+        int n = stream.count;
+        stream.buf[n++] = '"';
         // write string, the fast path, without utf8 and escape support
-        for (; i < valLen && stream.count < stream.buf.length; i++) {
+        for (; i < toWriteLen; i++) {
             char c = val.charAt(i);
-            if (c > 125 || c < 14) {
+            if (c > 31 && c != '"' && c != '\\' && c < 126) {
+                stream.buf[n++] = (byte) c;
+            } else {
                 break;
             }
-            switch (c) {
-                case '"':
-                case '\\':
-                    break;
-                default:
-                    stream.buf[stream.count++] = (byte) c;
-                    continue;
-            }
-            break;
         }
         if (i == valLen) {
+            stream.buf[n++] = '"';
+            stream.count = n;
             return;
         }
+        stream.count = n;
         // for the remaining parts, we process them char by char
         writeStringSlowPath(stream, val, i, valLen);
+        stream.write('"');
     }
 
     private static void writeStringSlowPath(JsonStream stream, String val, int i, int valLen) throws IOException {

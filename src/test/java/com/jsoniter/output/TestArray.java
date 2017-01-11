@@ -7,6 +7,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 public class TestArray extends TestCase {
@@ -102,5 +103,12 @@ public class TestArray extends TestCase {
         }, list);
         stream.close();
         assertEquals("[null]", baos.toString());
+    }
+
+    public void test_hash_set() throws IOException {
+        assertEquals("[]", JsonStream.serialize(new HashSet<Integer>()));
+        HashSet<Integer> set = new HashSet<Integer>();
+        set.add(1);
+        assertEquals("[1]", JsonStream.serialize(set));
     }
 }

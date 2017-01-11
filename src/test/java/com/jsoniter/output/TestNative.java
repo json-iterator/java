@@ -31,7 +31,7 @@ public class TestNative extends TestCase {
     public void test_slash() throws IOException {
         stream.writeVal("/\\");
         stream.close();
-        assertEquals("/\\", baos.toString());
+        assertEquals("\"/\\\\\"", baos.toString());
     }
 
     public void test_escape() throws IOException {
@@ -147,8 +147,9 @@ public class TestNative extends TestCase {
 
     public void test_raw() throws IOException {
         stream = new JsonStream(baos, 32);
-        stream.writeRaw("1234567890123456789012345678901234567890");
+        String val = "1234567890123456789012345678901234567890";
+        stream.writeRaw(val, val.length());
         stream.close();
-        assertEquals("1234567890123456789012345678901234567890".replace('\'', '"'), baos.toString());
+        assertEquals(val.replace('\'', '"'), baos.toString());
     }
 }

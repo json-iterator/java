@@ -104,7 +104,7 @@ class ObjectLazyAny extends LazyAny {
                 return value;
             }
         }
-        JsonIterator iter = tlsIter.get();
+        JsonIterator iter = JsonIterator.tlsIter.get();
         iter.reset(data, lastParsedPos, tail);
         if (cache == null) {
             cache = new HashMap<Object, Any>(4);
@@ -140,7 +140,7 @@ class ObjectLazyAny extends LazyAny {
             return;
         }
         try {
-            JsonIterator iter = tlsIter.get();
+            JsonIterator iter = JsonIterator.tlsIter.get();
             iter.reset(data, lastParsedPos, tail);
             if (cache == null) {
                 cache = new HashMap<Object, Any>(4);

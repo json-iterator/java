@@ -1,6 +1,7 @@
 package com.jsoniter.output;
 
 import java.lang.reflect.Type;
+import java.util.Collection;
 
 class CodegenImplMap {
     public static CodegenResult genMap(Class clazz, Type[] typeArgs) {

@@ -339,7 +339,7 @@ public class JsonIterator implements Closeable {
         IterImplSkip.skip(this);
     }
 
-    private static ThreadLocal<JsonIterator> tlsIter = new ThreadLocal<JsonIterator>() {
+    public static ThreadLocal<JsonIterator> tlsIter = new ThreadLocal<JsonIterator>() {
         @Override
         protected JsonIterator initialValue() {
             return new JsonIterator();
