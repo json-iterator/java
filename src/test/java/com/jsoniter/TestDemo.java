@@ -1,5 +1,6 @@
 package com.jsoniter;
 
+import com.jsoniter.annotation.JsonProperty;
 import com.jsoniter.any.Any;
 import com.jsoniter.spi.Decoder;
 import com.jsoniter.spi.EmptyExtension;
@@ -86,5 +87,16 @@ public class TestDemo extends TestCase {
         });
         JsonIterator iter = JsonIterator.parse("[]");
         assertNull(iter.read(Date.class));
+    }
+
+    public static class Order {
+        @JsonProperty(decoder = Decoder.MaybeStringLongDecoder.class)
+        public long order_id;
+        @JsonProperty(decoder = Decoder.MaybeEmptyArrayDecoder.class)
+        public OrderDetails order_details;
+    }
+
+    public static class OrderDetails {
+        public String pay_type;
     }
 }

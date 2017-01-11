@@ -89,6 +89,13 @@ public class TestNative extends TestCase {
         assertEquals("-100", baos.toString());
     }
 
+    public void test_short() throws IOException {
+        stream.writeVal(((short)555));
+        stream.close();
+        assertEquals("555", baos.toString());
+        assertEquals("555", JsonStream.serialize(new Short((short)555)));
+    }
+
     public void test_no_decimal_float() throws IOException {
         stream.writeVal(100f);
         stream.close();

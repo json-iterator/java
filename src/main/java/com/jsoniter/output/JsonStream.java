@@ -157,7 +157,7 @@ public class JsonStream extends OutputStream {
         if (val == null) {
             writeNull();
         } else {
-            write(val.intValue());
+            writeVal(val.intValue());
         }
     }
 
