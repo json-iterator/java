@@ -136,13 +136,13 @@ public class TestNative extends TestCase {
     public void test_big_decimal() throws IOException {
         stream.writeVal(new BigDecimal("12.34"));
         stream.close();
-        assertEquals("'12.34'".replace('\'', '"'), baos.toString());
+        assertEquals("12.34".replace('\'', '"'), baos.toString());
     }
 
     public void test_big_integer() throws IOException {
         stream.writeVal(new BigInteger("1234"));
         stream.close();
-        assertEquals("'1234'".replace('\'', '"'), baos.toString());
+        assertEquals("1234".replace('\'', '"'), baos.toString());
     }
 
     public void test_raw() throws IOException {

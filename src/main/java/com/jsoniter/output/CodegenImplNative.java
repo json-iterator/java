@@ -242,7 +242,7 @@ class CodegenImplNative {
             @Override
             public void encode(Object obj, JsonStream stream) throws IOException {
                 BigDecimal val = (BigDecimal) obj;
-                stream.writeVal(val.toString());
+                stream.writeRaw(val.toString());
             }
 
             @Override
@@ -254,7 +254,7 @@ class CodegenImplNative {
             @Override
             public void encode(Object obj, JsonStream stream) throws IOException {
                 BigInteger val = (BigInteger) obj;
-                stream.writeVal(val.toString());
+                stream.writeRaw(val.toString());
             }
 
             @Override
