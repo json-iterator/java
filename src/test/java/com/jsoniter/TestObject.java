@@ -3,7 +3,7 @@ package com.jsoniter;
 import com.jsoniter.annotation.JsonProperty;
 import com.jsoniter.annotation.JsoniterAnnotationSupport;
 import com.jsoniter.any.Any;
-import com.jsoniter.spi.Decoder;
+import com.jsoniter.fuzzy.MaybeEmptyArrayDecoder;
 import com.jsoniter.spi.EmptyExtension;
 import com.jsoniter.spi.JsoniterSpi;
 import junit.framework.TestCase;
@@ -168,7 +168,7 @@ public class TestObject extends TestCase {
     }
 
     public static class TestObject6 {
-        @JsonProperty(decoder = Decoder.MaybeEmptyArrayDecoder.class)
+        @JsonProperty(decoder = MaybeEmptyArrayDecoder.class)
         public Map<String, Object> field1;
     }
 

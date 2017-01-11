@@ -2,7 +2,7 @@ package com.jsoniter;
 
 import com.jsoniter.annotation.*;
 import com.jsoniter.any.Any;
-import com.jsoniter.spi.Decoder;
+import com.jsoniter.fuzzy.StringIntDecoder;
 import com.jsoniter.spi.JsoniterSpi;
 import junit.framework.TestCase;
 
@@ -165,7 +165,7 @@ public class TestAnnotation extends TestCase {
     }
 
     public static class TestObject10 {
-        @JsonProperty(decoder = Decoder.StringIntDecoder.class)
+        @JsonProperty(decoder = StringIntDecoder.class)
         public int field1;
     }
 
@@ -176,7 +176,7 @@ public class TestAnnotation extends TestCase {
     }
 
     public static class TestObject11 {
-        @JsonProperty(decoder = Decoder.StringIntDecoder.class)
+        @JsonProperty(decoder = StringIntDecoder.class)
         public Integer field1;
     }
 
