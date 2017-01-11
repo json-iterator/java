@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
@@ -114,6 +115,7 @@ class Codegen {
                 throw new JsonException("static gen should provide the encoder we need, but failed to create the encoder", e);
             }
         }
+        clazz = chooseAccessibleSuper(clazz);
         CodegenResult source = genSource(clazz, typeArgs);
         if ("true".equals(System.getenv("JSONITER_DEBUG"))) {
             System.out.println(">>> " + cacheKey);
@@ -136,6 +138,13 @@ class Codegen {
             JsoniterSpi.dump();
             throw new JsonException(e);
         }
+    }
+
+    private static Class chooseAccessibleSuper(Class clazz) {
+        if (Modifier.isPublic(clazz.getModifiers())) {
+            return clazz;
+        }
+        return chooseAccessibleSuper(clazz.getSuperclass());
     }
 
     public static CodegenResult getGeneratedSource(String cacheKey) {

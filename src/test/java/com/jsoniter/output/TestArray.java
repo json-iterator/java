@@ -5,10 +5,7 @@ import junit.framework.TestCase;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 public class TestArray extends TestCase {
 
@@ -110,5 +107,13 @@ public class TestArray extends TestCase {
         HashSet<Integer> set = new HashSet<Integer>();
         set.add(1);
         assertEquals("[1]", JsonStream.serialize(set));
+    }
+
+    public void test_arrays_as_list() throws IOException {
+        assertEquals("[1,2,3]", JsonStream.serialize(Arrays.asList(1, 2, 3)));
+    }
+
+    public void test_default_empty_collection() throws IOException {
+        assertEquals("[]", JsonStream.serialize(Collections.emptySet()));
     }
 }
