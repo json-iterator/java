@@ -366,4 +366,15 @@ class IterImplForStreaming {
         System.arraycopy(iter.buf, start, bytes, 0, bytes.length);
         return bytes;
     }
+
+    public static void skipFixedBytes(JsonIterator iter, int n) throws IOException {
+        iter.head += n;
+        if (iter.head >= iter.tail) {
+            int more = iter.head - iter.tail;
+            if (!loadMore(iter)) {
+                throw iter.reportError("skipFixedBytes", "unexpected end");
+            }
+            iter.head += more;
+        }
+    }
 }

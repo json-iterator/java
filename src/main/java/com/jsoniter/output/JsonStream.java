@@ -59,15 +59,15 @@ public class JsonStream extends OutputStream {
     }
 
     public final void write(byte b[], int off, int len) throws IOException {
-        if (len >= buf.length) {
+        if (len >= buf.length - count) {
+            if (len >= buf.length) {
             /* If the request length exceeds the size of the output buffer,
                flush the output buffer and then write the data directly.
                In this way buffered streams will cascade harmlessly. */
-            flushBuffer();
-            out.write(b, off, len);
-            return;
-        }
-        if (len > buf.length - count) {
+                flushBuffer();
+                out.write(b, off, len);
+                return;
+            }
             flushBuffer();
         }
         System.arraycopy(b, off, buf, count, len);

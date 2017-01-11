@@ -216,4 +216,8 @@ class IterImpl {
                 throw iter.reportError("IterImplSkip", "do not know how to skip: " + c);
         }
     }
+
+    public static void skipFixedBytes(JsonIterator iter, int n) throws IOException {
+        iter.head += n;
+    }
 }
