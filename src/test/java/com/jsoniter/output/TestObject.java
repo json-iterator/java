@@ -1,12 +1,14 @@
 package com.jsoniter.output;
 
 import com.jsoniter.annotation.JsonIgnore;
+import com.jsoniter.annotation.JsonProperty;
 import com.jsoniter.annotation.JsoniterAnnotationSupport;
 import com.jsoniter.spi.TypeLiteral;
 import junit.framework.TestCase;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.*;
 
 public class TestObject extends TestCase {
 
@@ -76,7 +78,7 @@ public class TestObject extends TestCase {
         TestObject4 obj = new TestObject4();
         stream.writeVal(obj);
         stream.close();
-        assertEquals("{'field1':null}".replace('\'', '"'), baos.toString());
+        assertEquals("{}".replace('\'', '"'), baos.toString());
     }
 
     public static enum MyEnum {
@@ -111,20 +113,101 @@ public class TestObject extends TestCase {
         TestObject6 obj = new TestObject6();
         stream.writeVal(obj);
         stream.close();
-        assertEquals("{\"field1\":null}", baos.toString());
+        assertEquals("{}", baos.toString());
     }
 
     public static class TestObject7 {
         private int[] field1;
+        @JsonProperty(omitNull = false)
         public int[] getField1() {
             return field1;
         }
     }
 
     public void test_array_field_is_null_via_getter() throws IOException {
+        JsoniterAnnotationSupport.enable();
         TestObject7 obj = new TestObject7();
         stream.writeVal(obj);
         stream.close();
         assertEquals("{\"field1\":null}", baos.toString());
+    }
+
+    public static class TestObject8 {
+        @JsonProperty(nullable = false)
+        public String[] field1;
+    }
+
+    public void test_not_nullable() {
+        JsoniterAnnotationSupport.enable();
+        TestObject8 obj = new TestObject8();
+        obj.field1 = new String[]{"hello"};
+        assertEquals("{\"field1\":[\"hello\"]}", JsonStream.serialize(obj));
+        try {
+            JsonStream.serialize(new TestObject8());
+            fail();
+        } catch (NullPointerException e) {
+        }
+    }
+
+    public static class TestObject9 {
+        @JsonProperty(collectionValueNullable = false)
+        public String[] field1;
+        @JsonProperty(collectionValueNullable = false)
+        public List<String> field2;
+        @JsonProperty(collectionValueNullable = false)
+        public Set<String> field3;
+        @JsonProperty(collectionValueNullable = false)
+        public Map<String, String> field4;
+    }
+
+    public void test_collection_value_not_nullable() {
+        JsoniterAnnotationSupport.enable();
+        TestObject9 obj = new TestObject9();
+        obj.field1 = new String[]{"hello"};
+        assertEquals("{\"field1\":[\"hello\"]}", JsonStream.serialize(obj));
+
+        obj = new TestObject9();
+        obj.field1 = new String[]{null};
+        try {
+            JsonStream.serialize(obj);
+            fail();
+        } catch (NullPointerException e) {
+        }
+
+        obj = new TestObject9();
+        obj.field2 = new ArrayList();
+        obj.field2.add(null);
+        try {
+            JsonStream.serialize(obj);
+            fail();
+        } catch (NullPointerException e) {
+        }
+
+        obj = new TestObject9();
+        obj.field3 = new HashSet<String>();
+        obj.field3.add(null);
+        try {
+            JsonStream.serialize(obj);
+            fail();
+        } catch (NullPointerException e) {
+        }
+
+        obj = new TestObject9();
+        obj.field4 = new HashMap<String, String>();
+        obj.field4.put("hello", null);
+        try {
+            JsonStream.serialize(obj);
+            fail();
+        } catch (NullPointerException e) {
+        }
+    }
+
+    public static class TestObject10 {
+        @JsonProperty(omitNull = false)
+        public String field1;
+    }
+
+    public void test_not_omit_null() {
+        assertEquals("{\"field1\":null}", JsonStream.serialize(new TestObject10()));
     }
 }

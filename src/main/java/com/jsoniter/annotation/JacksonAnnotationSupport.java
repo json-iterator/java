@@ -84,6 +84,21 @@ public class JacksonAnnotationSupport extends JsoniterAnnotationSupport {
             }
 
             @Override
+            public boolean nullable() {
+                return true;
+            }
+
+            @Override
+            public boolean collectionValueNullable() {
+                return true;
+            }
+
+            @Override
+            public boolean omitNull() {
+                return true;
+            }
+
+            @Override
             public Class<? extends Annotation> annotationType() {
                 return JsonProperty.class;
             }

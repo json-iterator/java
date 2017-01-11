@@ -302,7 +302,11 @@ public class JsonStream extends OutputStream {
     }
 
     public final <T> void writeVal(TypeLiteral<T> typeLiteral, T obj) throws IOException {
-        Codegen.getEncoder(typeLiteral.getEncoderCacheKey(), typeLiteral.getType()).encode(obj, this);
+        if (null == obj) {
+            writeNull();
+        } else {
+            Codegen.getEncoder(typeLiteral.getEncoderCacheKey(), typeLiteral.getType()).encode(obj, this);
+        }
     }
 
     private final static ThreadLocal<JsonStream> tlsStream = new ThreadLocal<JsonStream>() {

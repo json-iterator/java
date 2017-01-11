@@ -95,7 +95,7 @@ class ReflectionObjectEncoder implements Encoder {
                 }
             }
         }
-        for (Method unwrapper : desc.unwrappers) {
+        for (Method unwrapper : desc.unWrappers) {
             if (notFirst) {
                 stream.writeMore();
             } else {

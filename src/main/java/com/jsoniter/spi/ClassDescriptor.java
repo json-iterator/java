@@ -15,7 +15,7 @@ public class ClassDescriptor {
     public List<Binding> setters;
     public List<Binding> getters;
     public List<WrapperDescriptor> wrappers;
-    public List<Method> unwrappers;
+    public List<Method> unWrappers;
     public boolean asExtraForUnknownProperties;
     public Binding onMissingProperties;
     public Binding onExtraProperties;

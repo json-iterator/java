@@ -8,7 +8,7 @@ class StreamImplString {
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
             'a', 'b', 'c', 'd', 'e', 'f'};
 
-    public static final void writeString(JsonStream stream, String val) throws IOException {
+    public static final void writeString(final JsonStream stream, final String val) throws IOException {
         int i = 0;
         int valLen = val.length();
         int toWriteLen = valLen;
@@ -42,6 +42,39 @@ class StreamImplString {
         // for the remaining parts, we process them char by char
         writeStringSlowPath(stream, val, i, valLen);
         stream.write('"');
+    }
+
+    public static final void writeStringWithoutQuote(final JsonStream stream, final String val) throws IOException {
+        int i = 0;
+        int valLen = val.length();
+        int toWriteLen = valLen;
+        int bufLen = stream.buf.length;
+        if (stream.count + toWriteLen > bufLen) {
+            toWriteLen = bufLen - stream.count;
+        }
+        if (toWriteLen < 0) {
+            stream.flushBuffer();
+            if (stream.count + toWriteLen > bufLen) {
+                toWriteLen = bufLen - stream.count;
+            }
+        }
+        int n = stream.count;
+        // write string, the fast path, without utf8 and escape support
+        for (; i < toWriteLen; i++) {
+            char c = val.charAt(i);
+            if (c > 31 && c != '"' && c != '\\' && c < 126) {
+                stream.buf[n++] = (byte) c;
+            } else {
+                break;
+            }
+        }
+        if (i == valLen) {
+            stream.count = n;
+            return;
+        }
+        stream.count = n;
+        // for the remaining parts, we process them char by char
+        writeStringSlowPath(stream, val, i, valLen);
     }
 
     private static void writeStringSlowPath(JsonStream stream, String val, int i, int valLen) throws IOException {

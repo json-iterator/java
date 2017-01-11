@@ -264,17 +264,30 @@ class CodegenImplNative {
         });
     }};
 
-    public static void genWriteOp(CodegenResult ctx, String code, Type valueType, boolean disableBuffering) {
+    public static void genWriteOp(CodegenResult ctx, String code, Type valueType, boolean isNullable) {
+        genWriteOp(ctx, code, valueType, isNullable, true);
+    }
+
+    public static void genWriteOp(CodegenResult ctx, String code, Type valueType, boolean isNullable, boolean isCollectionValueNullable) {
+        if (!isNullable && String.class == valueType) {
+            ctx.buffer('"');
+            ctx.append(String.format("com.jsoniter.output.CodegenAccess.writeStringWithoutQuote((java.lang.String)%s, stream);", code));
+            ctx.buffer('"');
+            return;
+        }
         if (NATIVE_ENCODERS.containsKey(valueType)) {
             ctx.append(String.format("stream.writeVal((%s)%s);", getTypeName(valueType), code));
             return;
         }
 
         String cacheKey = TypeLiteral.create(valueType).getEncoderCacheKey();
+        if (!isCollectionValueNullable) {
+            cacheKey = cacheKey + "__value_not_nullable";
+        }
         Codegen.getEncoder(cacheKey, valueType);
         CodegenResult generatedSource = Codegen.getGeneratedSource(cacheKey);
         if (generatedSource != null) {
-            if (disableBuffering) {
+            if (isNullable) {
                 ctx.appendBuffer();
                 ctx.append(CodegenResult.bufferToWriteOp(generatedSource.prelude));
                 ctx.append(String.format("%s.encode_((%s)%s, stream);", cacheKey, getTypeName(valueType), code));

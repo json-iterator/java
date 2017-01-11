@@ -62,7 +62,7 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
             if (method.getAnnotation(JsonUnwrapper.class) == null) {
                 continue;
             }
-            desc.unwrappers.add(method);
+            desc.unWrappers.add(method);
         }
     }
 
@@ -83,10 +83,7 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
                 Binding binding = new Binding(desc.clazz, desc.lookup, method.getGenericParameterTypes()[i]);
                 JsonProperty jsonProperty = getJsonProperty(paramAnnotations);
                 if (jsonProperty != null) {
-                    binding.name = jsonProperty.value();
-                    if (jsonProperty.required()) {
-                        binding.asMissingWhenNotPresent = true;
-                    }
+                    updateBindingWithJsonProperty(binding, jsonProperty);
                 }
                 if (binding.name == null || binding.name.length() == 0) {
                     binding.name = paramNames[i];
@@ -134,10 +131,7 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
                 JsonProperty jsonProperty = getJsonProperty(paramAnnotations);
                 Binding binding = new Binding(desc.clazz, desc.lookup, method.getGenericParameterTypes()[i]);
                 if (jsonProperty != null) {
-                    binding.name = jsonProperty.value();
-                    if (jsonProperty.required()) {
-                        binding.asMissingWhenNotPresent = true;
-                    }
+                    updateBindingWithJsonProperty(binding, jsonProperty);
                 }
                 if (binding.name == null || binding.name.length() == 0) {
                     binding.name = paramNames[i];
@@ -164,10 +158,7 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
                 JsonProperty jsonProperty = getJsonProperty(paramAnnotations);
                 Binding binding = new Binding(desc.clazz, desc.lookup, ctor.getGenericParameterTypes()[i]);
                 if (jsonProperty != null) {
-                    binding.name = jsonProperty.value();
-                    if (jsonProperty.required()) {
-                        binding.asMissingWhenNotPresent = true;
-                    }
+                    updateBindingWithJsonProperty(binding, jsonProperty);
                 }
                 if (binding.name == null || binding.name.length() == 0) {
                     binding.name = paramNames[i];
@@ -187,38 +178,7 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
             }
             JsonProperty jsonProperty = getJsonProperty(binding.annotations);
             if (jsonProperty != null) {
-                String altName = jsonProperty.value();
-                if (!altName.isEmpty()) {
-                    binding.name = altName;
-                    binding.fromNames = new String[]{altName};
-                }
-                if (jsonProperty.from().length > 0) {
-                    binding.fromNames = jsonProperty.from();
-                }
-                if (jsonProperty.to().length > 0) {
-                    binding.toNames = jsonProperty.to();
-                }
-                if (jsonProperty.required()) {
-                    binding.asMissingWhenNotPresent = true;
-                }
-                if (jsonProperty.decoder() != Decoder.class) {
-                    try {
-                        binding.decoder = jsonProperty.decoder().newInstance();
-                    } catch (Exception e) {
-                        throw new JsonException(e);
-                    }
-                }
-                if (jsonProperty.encoder() != Encoder.class) {
-                    try {
-                        binding.encoder = jsonProperty.encoder().newInstance();
-                    } catch (Exception e) {
-                        throw new JsonException(e);
-                    }
-                }
-                if (jsonProperty.implementation() != Object.class) {
-                    binding.valueType = ParameterizedTypeImpl.useImpl(binding.valueType, jsonProperty.implementation());
-                    binding.valueTypeLiteral = TypeLiteral.create(binding.valueType);
-                }
+                updateBindingWithJsonProperty(binding, jsonProperty);
             }
             if (getAnnotation(binding.annotations, JsonMissingProperties.class) != null) {
                 // this binding will not bind from json
@@ -232,6 +192,42 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
                 binding.fromNames = new String[0];
                 desc.onExtraProperties = binding;
             }
+        }
+    }
+
+    private void updateBindingWithJsonProperty(Binding binding, JsonProperty jsonProperty) {
+        binding.asMissingWhenNotPresent = jsonProperty.required();
+        binding.isNullable = jsonProperty.nullable();
+        binding.isCollectionValueNullable = jsonProperty.collectionValueNullable();
+        binding.shouldOmitNull = jsonProperty.omitNull();
+        String altName = jsonProperty.value();
+        if (!altName.isEmpty()) {
+            binding.name = altName;
+            binding.fromNames = new String[]{altName};
+        }
+        if (jsonProperty.from().length > 0) {
+            binding.fromNames = jsonProperty.from();
+        }
+        if (jsonProperty.to().length > 0) {
+            binding.toNames = jsonProperty.to();
+        }
+        if (jsonProperty.decoder() != Decoder.class) {
+            try {
+                binding.decoder = jsonProperty.decoder().newInstance();
+            } catch (Exception e) {
+                throw new JsonException(e);
+            }
+        }
+        if (jsonProperty.encoder() != Encoder.class) {
+            try {
+                binding.encoder = jsonProperty.encoder().newInstance();
+            } catch (Exception e) {
+                throw new JsonException(e);
+            }
+        }
+        if (jsonProperty.implementation() != Object.class) {
+            binding.valueType = ParameterizedTypeImpl.useImpl(binding.valueType, jsonProperty.implementation());
+            binding.valueTypeLiteral = TypeLiteral.create(binding.valueType);
         }
     }
 

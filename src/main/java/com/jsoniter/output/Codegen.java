@@ -116,7 +116,7 @@ class Codegen {
             }
         }
         clazz = chooseAccessibleSuper(clazz);
-        CodegenResult source = genSource(clazz, typeArgs);
+        CodegenResult source = genSource(cacheKey, clazz, typeArgs);
         if ("true".equals(System.getenv("JSONITER_DEBUG"))) {
             System.out.println(">>> " + cacheKey);
             System.out.println("prelude: " + source.prelude);
@@ -191,15 +191,15 @@ class Codegen {
         }
     }
 
-    private static CodegenResult genSource(Class clazz, Type[] typeArgs) {
+    private static CodegenResult genSource(String cacheKey, Class clazz, Type[] typeArgs) {
         if (clazz.isArray()) {
-            return CodegenImplArray.genArray(clazz);
+            return CodegenImplArray.genArray(cacheKey, clazz);
         }
         if (Map.class.isAssignableFrom(clazz)) {
-            return CodegenImplMap.genMap(clazz, typeArgs);
+            return CodegenImplMap.genMap(cacheKey, clazz, typeArgs);
         }
         if (Collection.class.isAssignableFrom(clazz)) {
-            return CodegenImplArray.genCollection(clazz, typeArgs);
+            return CodegenImplArray.genCollection(cacheKey, clazz, typeArgs);
         }
         if (clazz.isEnum()) {
             return CodegenImplNative.genEnum(clazz);

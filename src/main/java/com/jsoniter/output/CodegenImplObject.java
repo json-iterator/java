@@ -3,6 +3,8 @@ package com.jsoniter.output;
 import com.jsoniter.spi.*;
 
 import java.lang.reflect.Method;
+import java.util.Collection;
+import java.util.Map;
 
 class CodegenImplObject {
     public static CodegenResult genObject(Class clazz) {
@@ -19,14 +21,10 @@ class CodegenImplObject {
                     } else {
                         notFirst = true;
                     }
-                    ctx.buffer("\\\"");
-                    ctx.buffer(toName);
-                    ctx.buffer("\\\"");
-                    ctx.buffer(':');
-                    genField(ctx, binding);
+                    genField(ctx, binding, toName);
                 }
             }
-            for (Method unwrapper : desc.unwrappers) {
+            for (Method unwrapper : desc.unWrappers) {
                 if (notFirst) {
                     ctx.buffer(',');
                 } else {
@@ -44,7 +42,7 @@ class CodegenImplObject {
 
 
     private static boolean hasFieldOutput(ClassDescriptor desc) {
-        if (!desc.unwrappers.isEmpty()) {
+        if (!desc.unWrappers.isEmpty()) {
             return true;
         }
         for (Binding binding : desc.allEncoderBindings()) {
@@ -55,37 +53,67 @@ class CodegenImplObject {
         return false;
     }
 
-    private static void genField(CodegenResult ctx, Binding binding) {
+    private static void genField(CodegenResult ctx, Binding binding, String toName) {
         String fieldCacheKey = binding.encoderCacheKey();
         Encoder encoder = JsoniterSpi.getEncoder(fieldCacheKey);
+        boolean isCollectionValueNullable = binding.isCollectionValueNullable;
+        Class valueClazz;
+        String valueAccessor;
         if (binding.field != null) {
-            boolean nullable = !binding.field.getType().isPrimitive();
-            if (nullable) {
-                ctx.append(String.format("if (obj.%s == null) { stream.writeNull(); } else {", binding.field.getName()));
-            }
-            if (encoder == null) {
-                CodegenImplNative.genWriteOp(ctx, "obj." + binding.field.getName(), binding.valueType, nullable);
+            valueClazz = binding.field.getType();
+            valueAccessor = "obj." + binding.field.getName();
+        } else {
+            valueClazz = binding.method.getReturnType();
+            valueAccessor = "obj." + binding.method.getName() + "()";
+        }
+        if (!supportCollectionValueNullable(valueClazz)) {
+            isCollectionValueNullable = true;
+        }
+        boolean nullable = !valueClazz.isPrimitive();
+        if (!binding.isNullable) {
+            nullable = false;
+        }
+        if (nullable) {
+            if (binding.shouldOmitNull) {
+                ctx.append(String.format("if (%s != null) {", valueAccessor));
+                ctx.append("stream.write('\"');");
+                ctx.buffer(toName);
+                ctx.append("stream.write('\"', ':');");
             } else {
-                ctx.append(String.format("com.jsoniter.output.CodegenAccess.writeVal(\"%s\", obj.%s, stream);",
-                        fieldCacheKey, binding.field.getName()));
-            }
-            if (nullable) {
-                ctx.append("}");
+                ctx.buffer('"');
+                ctx.buffer(toName);
+                ctx.buffer('"');
+                ctx.buffer(':');
+                ctx.append(String.format("if (%s == null) { stream.writeNull(); } else {", valueAccessor));
             }
         } else {
-            boolean nullable = !binding.method.getReturnType().isPrimitive();
-            if (nullable) {
-                ctx.append(String.format("if (obj.%s() == null) { stream.writeNull(); } else {", binding.method.getName()));
-            }
-            if (encoder == null) {
-                CodegenImplNative.genWriteOp(ctx, "obj." + binding.method.getName() + "()", binding.valueType, nullable);
-            } else {
-                ctx.append(String.format("com.jsoniter.output.CodegenAccess.writeVal(\"%s\", obj.%s(), stream);",
-                        fieldCacheKey, binding.method.getName()));
-            }
-            if (nullable) {
-                ctx.append("}");
-            }
+            ctx.buffer('"');
+            ctx.buffer(toName);
+            ctx.buffer('"');
+            ctx.buffer(':');
         }
+        if (encoder == null) {
+            CodegenImplNative.genWriteOp(ctx, valueAccessor, binding.valueType, nullable, isCollectionValueNullable);
+        } else {
+            ctx.append(String.format("com.jsoniter.output.CodegenAccess.writeVal(\"%s\", %s, stream);",
+                    fieldCacheKey, valueAccessor));
+        }
+        if (nullable) {
+            ctx.append("}");
+        }
+    }
+
+
+    private static boolean supportCollectionValueNullable(Class clazz) {
+        if (clazz.isArray()) {
+            return true;
+        }
+        if (Map.class.isAssignableFrom(clazz)) {
+            return true;
+        }
+        if (Collection.class.isAssignableFrom(clazz)) {
+            return true;
+        }
+        return false;
     }
 }

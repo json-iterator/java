@@ -9,14 +9,20 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface JsonObject {
 
-    // if the unknown property is in this list, it will be treated as extra
-    // if @JsonExtraProperties not defined, it will be treated as error
+    /**
+     * @return if the unknown property is in this list, it will be treated as extra,
+     * if the unknown property is in this list, it will be treated as extra
+     */
     String[] unknownPropertiesBlacklist() default {};
 
-    // if the unknown property is in this list, it will be silently ignored
+    /**
+     * @return if the unknown property is in this list, it will be silently ignored
+     */
     String[] unknownPropertiesWhitelist() default {};
 
-    // if true, all known properties will be treated as extra
-    // if @JsonExtraProperties not defined, it will be treated as error
+    /**
+     * @return if true, all known properties will be treated as extra,
+     * if @JsonExtraProperties not defined, it will be treated as error
+     */
     boolean asExtraForUnknownProperties() default false;
 }

@@ -4,7 +4,11 @@ import java.lang.reflect.Type;
 import java.util.Collection;
 
 class CodegenImplMap {
-    public static CodegenResult genMap(Class clazz, Type[] typeArgs) {
+    public static CodegenResult genMap(String cacheKey, Class clazz, Type[] typeArgs) {
+        boolean isCollectionValueNullable = true;
+        if (cacheKey.endsWith("__value_not_nullable")) {
+            isCollectionValueNullable = false;
+        }
         Type keyType = String.class;
         Type valueType = Object.class;
         if (typeArgs.length == 0) {
@@ -30,16 +34,24 @@ class CodegenImplMap {
         ctx.buffer('{');
         ctx.append("stream.writeVal((String)entry.getKey());");
         ctx.buffer(':');
-        ctx.append("if (entry.getValue() == null) { stream.writeNull(); } else {");
-        CodegenImplNative.genWriteOp(ctx, "entry.getValue()", valueType, true);
-        ctx.append("}");
+        if (isCollectionValueNullable) {
+            ctx.append("if (entry.getValue() == null) { stream.writeNull(); } else {");
+            CodegenImplNative.genWriteOp(ctx, "entry.getValue()", valueType, true);
+            ctx.append("}");
+        } else {
+            CodegenImplNative.genWriteOp(ctx, "entry.getValue()", valueType, false);
+        }
         ctx.append("while(iter.hasNext()) {");
         ctx.append("entry = (java.util.Map.Entry)iter.next();");
         ctx.buffer(',');
         ctx.append("stream.writeObjectField((String)entry.getKey());");
-        ctx.append("if (entry.getValue() == null) { stream.writeNull(); } else {");
-        CodegenImplNative.genWriteOp(ctx, "entry.getValue()", valueType, true);
-        ctx.append("}");
+        if (isCollectionValueNullable) {
+            ctx.append("if (entry.getValue() == null) { stream.writeNull(); } else {");
+            CodegenImplNative.genWriteOp(ctx, "entry.getValue()", valueType, true);
+            ctx.append("}");
+        } else {
+            CodegenImplNative.genWriteOp(ctx, "entry.getValue()", valueType, false);
+        }
         ctx.append("}");
         ctx.buffer('}');
         ctx.append("}");

@@ -52,6 +52,10 @@ public class CodegenAccess {
         encoder.encodeDouble(obj, stream);
     }
 
+    public static void writeStringWithoutQuote(String obj, JsonStream stream) throws IOException {
+        StreamImplString.writeStringWithoutQuote(stream, obj);
+    }
+
     public static void staticGenEncoders(TypeLiteral[] typeLiterals) {
         Codegen.staticGenEncoders(typeLiterals);
     }
