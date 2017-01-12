@@ -30,7 +30,6 @@ class DynamicCodegen {
             append(lines, CodegenResult.bufferToWriteOp(source.epilogue));
         }
         append(lines, "}");
-        System.out.println(lines.toString());
         CtMethod interfaceMethod = CtNewMethod.make(lines.toString(), ctClass);
         ctClass.addMethod(interfaceMethod);
         return (Encoder) ctClass.toClass().newInstance();

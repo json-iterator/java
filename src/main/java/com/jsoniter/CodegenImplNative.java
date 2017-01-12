@@ -1,6 +1,7 @@
 package com.jsoniter;
 
 import com.jsoniter.any.Any;
+import com.jsoniter.spi.JsoniterSpi;
 import com.jsoniter.spi.TypeLiteral;
 
 import java.lang.reflect.ParameterizedType;

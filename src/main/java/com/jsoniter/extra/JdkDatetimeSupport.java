@@ -1,4 +1,4 @@
-package com.jsoniter.datetime;
+package com.jsoniter.extra;
 
 import com.jsoniter.JsonException;
 import com.jsoniter.JsonIterator;
@@ -14,7 +14,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
- * this is just an example
+ * there is no official way to encode/decode datetime, this is just an option for you
  */
 public class JdkDatetimeSupport {
 
@@ -26,7 +26,10 @@ public class JdkDatetimeSupport {
         }
     };
 
-    public static void enable(String pattern) {
+    public static synchronized void enable(String pattern) {
+        if (JdkDatetimeSupport.pattern != null) {
+            throw new JsonException("JdkDatetimeSupport.enable can only be called once");
+        }
         JdkDatetimeSupport.pattern = pattern;
         JsoniterSpi.registerTypeEncoder(Date.class, new Encoder() {
             @Override

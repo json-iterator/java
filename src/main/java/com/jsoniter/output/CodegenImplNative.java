@@ -269,18 +269,20 @@ class CodegenImplNative {
     }
 
     public static void genWriteOp(CodegenResult ctx, String code, Type valueType, boolean isNullable, boolean isCollectionValueNullable) {
-        if (!isNullable && String.class == valueType) {
-            ctx.buffer('"');
-            ctx.append(String.format("com.jsoniter.output.CodegenAccess.writeStringWithoutQuote((java.lang.String)%s, stream);", code));
-            ctx.buffer('"');
-            return;
-        }
-        if (NATIVE_ENCODERS.containsKey(valueType)) {
-            ctx.append(String.format("stream.writeVal((%s)%s);", getTypeName(valueType), code));
-            return;
+        String cacheKey = TypeLiteral.create(valueType).getEncoderCacheKey();
+        if (JsoniterSpi.getEncoder(cacheKey) == null) {
+            if (!isNullable && String.class == valueType) {
+                ctx.buffer('"');
+                ctx.append(String.format("com.jsoniter.output.CodegenAccess.writeStringWithoutQuote((java.lang.String)%s, stream);", code));
+                ctx.buffer('"');
+                return;
+            }
+            if (NATIVE_ENCODERS.containsKey(valueType)) {
+                ctx.append(String.format("stream.writeVal((%s)%s);", getTypeName(valueType), code));
+                return;
+            }
         }
 
-        String cacheKey = TypeLiteral.create(valueType).getEncoderCacheKey();
         if (!isCollectionValueNullable) {
             cacheKey = cacheKey + "__value_not_nullable";
         }
@@ -323,10 +325,5 @@ class CodegenImplNative {
         ctx.buffer('"');
         ctx.append("}");
         return ctx;
-    }
-
-    private static void append(StringBuilder lines, String str) {
-        lines.append(str);
-        lines.append("\n");
     }
 }

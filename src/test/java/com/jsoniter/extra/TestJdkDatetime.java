@@ -1,6 +1,7 @@
-package com.jsoniter.datetime;
+package com.jsoniter.extra;
 
 import com.jsoniter.JsonIterator;
+import com.jsoniter.extra.JdkDatetimeSupport;
 import com.jsoniter.output.JsonStream;
 import junit.framework.TestCase;
 
