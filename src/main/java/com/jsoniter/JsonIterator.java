@@ -206,8 +206,8 @@ public class JsonIterator implements Closeable {
         return IterImplString.readString(this);
     }
 
-    public final byte[] readBase64() throws IOException {
-        return IterImplString.readBase64(this);
+    public final Slice readStringAsSlice() throws IOException {
+        return IterImpl.readSlice(this);
     }
 
     public final String readObject() throws IOException {

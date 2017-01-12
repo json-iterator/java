@@ -42,7 +42,7 @@ class CodegenImplNative {
         put(byte.class, new Encoder() {
             @Override
             public void encode(Object obj, JsonStream stream) throws IOException {
-                stream.writeVal((Short) obj);
+                stream.writeVal(((Byte) obj).shortValue());
             }
 
             @Override
@@ -54,7 +54,7 @@ class CodegenImplNative {
         put(Byte.class, new Encoder() {
             @Override
             public void encode(Object obj, JsonStream stream) throws IOException {
-                stream.writeVal((Short) obj);
+                stream.writeVal(((Byte) obj).shortValue());
             }
 
             @Override
@@ -114,7 +114,7 @@ class CodegenImplNative {
         put(char.class, new Encoder() {
             @Override
             public void encode(Object obj, JsonStream stream) throws IOException {
-                stream.writeVal((Integer) obj);
+                stream.writeVal(((Character) obj).charValue());
             }
 
             @Override
@@ -126,7 +126,7 @@ class CodegenImplNative {
         put(Character.class, new Encoder() {
             @Override
             public void encode(Object obj, JsonStream stream) throws IOException {
-                stream.writeVal((Integer) obj);
+                stream.writeVal(((Character) obj).charValue());
             }
 
             @Override

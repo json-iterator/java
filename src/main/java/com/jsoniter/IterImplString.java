@@ -1,30 +1,10 @@
 package com.jsoniter;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import static java.lang.Character.MIN_HIGH_SURROGATE;
-import static java.lang.Character.MIN_LOW_SURROGATE;
-import static java.lang.Character.MIN_SUPPLEMENTARY_CODE_POINT;
+import static java.lang.Character.*;
 
 class IterImplString {
-
-    static int[] base64Tbl = {
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1, -1, 63, 52, 53, 54,
-            55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -1, -1, -1, -1, 0, 1, 2,
-            3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-            20, 21, 22, 23, 24, 25, -1, -1, -1, -1, -1, -1, 26, 27, 28, 29, 30,
-            31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
-            48, 49, 50, 51, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
 
     public static final String readString(JsonIterator iter) throws IOException {
         byte c = IterImpl.nextToken(iter);
@@ -154,50 +134,6 @@ class IterImplString {
 
     private static char lowSurrogate(int codePoint) {
         return (char) ((codePoint & 0x3ff) + MIN_LOW_SURROGATE);
-    }
-
-    public static final byte[] readBase64(JsonIterator iter) throws IOException {
-        // from https://gist.github.com/EmilHernvall/953733
-        Slice slice = IterImpl.readSlice(iter);
-        if (slice == null) {
-            return null;
-        }
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        int end = slice.tail();
-        for (int i = slice.head(); i < end; i++) {
-            int b = 0;
-            if (base64Tbl[slice.data()[i]] != -1) {
-                b = (base64Tbl[slice.data()[i]] & 0xFF) << 18;
-            }
-            // skip unknown characters
-            else {
-                i++;
-                continue;
-            }
-
-            int num = 0;
-            if (i + 1 < end && base64Tbl[slice.data()[i + 1]] != -1) {
-                b = b | ((base64Tbl[slice.data()[i + 1]] & 0xFF) << 12);
-                num++;
-            }
-            if (i + 2 < end && base64Tbl[slice.data()[i + 2]] != -1) {
-                b = b | ((base64Tbl[slice.data()[i + 2]] & 0xFF) << 6);
-                num++;
-            }
-            if (i + 3 < end && base64Tbl[slice.data()[i + 3]] != -1) {
-                b = b | (base64Tbl[slice.data()[i + 3]] & 0xFF);
-                num++;
-            }
-
-            while (num > 0) {
-                int c = (b & 0xFF0000) >> 16;
-                buffer.write((char) c);
-                b <<= 8;
-                num--;
-            }
-            i += 4;
-        }
-        return buffer.toByteArray();
     }
 
     // slice does not allow escape

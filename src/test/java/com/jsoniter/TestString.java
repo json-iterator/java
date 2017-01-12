@@ -22,11 +22,6 @@ public class TestString extends TestCase {
         assertEquals("world", iter.readString());
     }
 
-    public void test_base64() throws IOException {
-        JsonIterator iter = JsonIterator.parse("'YWJj'".replace('\'', '"'));
-        assertEquals("abc", new String(iter.readBase64()));
-    }
-
     @Category(AllTests.StreamingCategory.class)
     public void test_string_across_buffer() throws IOException {
         JsonIterator iter = JsonIterator.parse(new ByteArrayInputStream("'hello''world'".replace('\'', '"').getBytes()), 2);
