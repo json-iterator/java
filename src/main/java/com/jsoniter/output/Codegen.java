@@ -17,7 +17,7 @@ import java.util.*;
 
 class Codegen {
 
-    private static EncodingMode mode = EncodingMode.REFLECTION_MODE;
+    static EncodingMode mode = EncodingMode.REFLECTION_MODE;
     static boolean isDoingStaticCodegen;
     // only read/write when generating code with synchronized protection
     private final static Map<String, CodegenResult> generatedSources = new HashMap<String, CodegenResult>();
