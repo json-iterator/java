@@ -154,6 +154,24 @@
                     <goals>deploy</goals>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.19.1</version>
+                <configuration>
+                    <parallel>methods</parallel>
+                    <threadCount>1</threadCount>
+                    <reuseForks>false</reuseForks>
+                    <forkCount>4</forkCount>
+                    <includes>
+                        <include>com.jsoniter.suite.StreamingTests</include>
+                        <include>com.jsoniter.suite.NonStreamingTests</include>
+                        <include>com.jsoniter.suite.NonStreamingTests4Hash</include>
+                        <include>com.jsoniter.suite.NonStreamingTests4Strict</include>
+                        <include>com.jsoniter.suite.ExtraTests</include>
+                    </includes>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 

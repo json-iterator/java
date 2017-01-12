@@ -15,7 +15,7 @@ import java.util.Map;
 public class TestObject extends TestCase {
 
     static {
-//        JsonIterator.setMode(DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_WITH_HASH);
+//        JsonIterator.setMode(DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_STRICTLY);
     }
 
     public static class EmptyClass {

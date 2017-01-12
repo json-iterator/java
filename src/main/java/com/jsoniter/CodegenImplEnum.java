@@ -2,7 +2,7 @@ package com.jsoniter;
 
 import java.util.*;
 
-public class CodegenImplEnum {
+class CodegenImplEnum {
     public static String genEnum(Class clazz) {
         StringBuilder lines = new StringBuilder();
         append(lines, "if (iter.readNull()) { return null; }");
