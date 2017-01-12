@@ -1,13 +1,12 @@
 package com.jsoniter.any;
 
-import com.jsoniter.JsonException;
 import com.jsoniter.ValueType;
 import com.jsoniter.output.JsonStream;
 
 import java.io.IOException;
 import java.util.Map;
 
-public class ObjectAny extends Any {
+class ObjectAny extends Any {
 
     private final Map<String, Any> val;
 

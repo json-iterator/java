@@ -1,6 +1,6 @@
 package com.jsoniter.output;
 
-import com.jsoniter.JsonException;
+import com.jsoniter.spi.JsonException;
 import com.jsoniter.spi.Encoder;
 import com.jsoniter.spi.Extension;
 import com.jsoniter.spi.JsoniterSpi;

@@ -5,6 +5,7 @@ import com.jsoniter.annotation.JsoniterAnnotationSupport;
 import com.jsoniter.any.Any;
 import com.jsoniter.fuzzy.MaybeEmptyArrayDecoder;
 import com.jsoniter.spi.EmptyExtension;
+import com.jsoniter.spi.JsonException;
 import com.jsoniter.spi.JsoniterSpi;
 import junit.framework.TestCase;
 

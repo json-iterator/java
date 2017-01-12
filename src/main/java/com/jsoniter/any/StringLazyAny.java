@@ -1,7 +1,7 @@
 package com.jsoniter.any;
 
 import com.jsoniter.CodegenAccess;
-import com.jsoniter.JsonException;
+import com.jsoniter.spi.JsonException;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.ValueType;
 

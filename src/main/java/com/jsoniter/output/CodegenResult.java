@@ -1,10 +1,5 @@
 package com.jsoniter.output;
 
-import com.jsoniter.JsonException;
-import com.jsoniter.JsonIterator;
-
-import java.io.IOException;
-
 class CodegenResult {
 
     String prelude = null; // first

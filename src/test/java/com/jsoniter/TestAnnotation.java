@@ -3,6 +3,7 @@ package com.jsoniter;
 import com.jsoniter.annotation.*;
 import com.jsoniter.any.Any;
 import com.jsoniter.fuzzy.StringIntDecoder;
+import com.jsoniter.spi.JsonException;
 import com.jsoniter.spi.JsoniterSpi;
 import junit.framework.TestCase;
 

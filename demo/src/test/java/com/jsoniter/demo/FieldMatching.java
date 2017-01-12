@@ -1,7 +1,7 @@
 package com.jsoniter.demo;
 
 import com.jsoniter.DecodingMode;
-import com.jsoniter.JsonException;
+import com.jsoniter.spi.JsonException;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.annotation.JsonProperty;
 import com.jsoniter.annotation.JsonObject;

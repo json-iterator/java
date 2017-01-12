@@ -2,6 +2,7 @@ package com.jsoniter;
 
 import com.jsoniter.annotation.JsoniterAnnotationSupport;
 import com.jsoniter.any.Any;
+import com.jsoniter.spi.JsonException;
 import com.jsoniter.spi.TypeLiteral;
 
 import java.io.Closeable;

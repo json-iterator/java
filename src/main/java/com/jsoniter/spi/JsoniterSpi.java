@@ -1,7 +1,5 @@
 package com.jsoniter.spi;
 
-import com.jsoniter.JsonException;
-
 import java.lang.reflect.*;
 import java.util.*;
 

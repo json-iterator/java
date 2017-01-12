@@ -4,7 +4,6 @@ import com.jsoniter.spi.*;
 
 import java.lang.reflect.Type;
 import java.util.*;
-import java.util.zip.CRC32;
 
 class CodegenImplObject {
 
@@ -217,7 +216,7 @@ class CodegenImplObject {
             }
         }
         if (desc.onMissingProperties == null || !desc.ctor.parameters.isEmpty()) {
-            append(lines, "throw new com.jsoniter.JsonException(\"missing required properties: \" + missingFields);");
+            append(lines, "throw new com.jsoniter.spi.JsonException(\"missing required properties: \" + missingFields);");
         } else {
             if (desc.onMissingProperties.field != null) {
                 append(lines, String.format("obj.%s = missingFields;", desc.onMissingProperties.field.getName()));
@@ -230,7 +229,7 @@ class CodegenImplObject {
     private static void appendOnUnknownField(StringBuilder lines, ClassDescriptor desc) {
         if (desc.asExtraForUnknownProperties) {
             if (desc.onExtraProperties == null) {
-                append(lines, "throw new com.jsoniter.JsonException('extra property: ' + field.toString());".replace('\'', '"'));
+                append(lines, "throw new com.jsoniter.spi.JsonException('extra property: ' + field.toString());".replace('\'', '"'));
             } else {
                 append(lines, "if (extra == null) { extra = new java.util.HashMap(); }");
                 append(lines, "extra.put(field.toString(), iter.readAny());");
@@ -292,7 +291,7 @@ class CodegenImplObject {
                 Binding field = (Binding) entry.getValue();
                 if (field.asExtraWhenPresent) {
                     append(lines, String.format(
-                            "throw new com.jsoniter.JsonException('extra property: %s');".replace('\'', '"'),
+                            "throw new com.jsoniter.spi.JsonException('extra property: %s');".replace('\'', '"'),
                             field.name));
                 } else if (field.shouldSkip) {
                     append(lines, "iter.skip();");

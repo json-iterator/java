@@ -1,6 +1,6 @@
 package com.jsoniter.annotation;
 
-import com.jsoniter.JsonException;
+import com.jsoniter.spi.JsonException;
 import com.jsoniter.spi.*;
 
 import java.lang.annotation.Annotation;

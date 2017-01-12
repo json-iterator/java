@@ -1,6 +1,7 @@
 package com.jsoniter;
 
 import com.jsoniter.any.Any;
+import com.jsoniter.spi.JsonException;
 import junit.framework.TestCase;
 import org.junit.experimental.categories.Category;
 
@@ -9,7 +10,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 
 public class TestReadAny extends TestCase {
 

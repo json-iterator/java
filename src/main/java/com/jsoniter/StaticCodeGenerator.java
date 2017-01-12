@@ -3,6 +3,7 @@ package com.jsoniter;
 import com.jsoniter.output.EncodingMode;
 import com.jsoniter.output.JsonStream;
 import com.jsoniter.spi.CodegenConfig;
+import com.jsoniter.spi.JsonException;
 
 import java.io.File;
 

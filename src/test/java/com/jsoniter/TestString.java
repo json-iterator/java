@@ -1,11 +1,10 @@
 package com.jsoniter;
 
+import com.jsoniter.spi.JsonException;
 import junit.framework.TestCase;
 import org.junit.experimental.categories.Category;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 
 public class TestString extends TestCase {

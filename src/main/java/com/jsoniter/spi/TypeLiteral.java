@@ -1,6 +1,5 @@
 package com.jsoniter.spi;
 
-import com.jsoniter.JsonException;
 import com.jsoniter.any.Any;
 
 import java.lang.reflect.GenericArrayType;

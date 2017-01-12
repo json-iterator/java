@@ -1,6 +1,7 @@
 package com.jsoniter;
 
 import com.jsoniter.spi.Decoder;
+import com.jsoniter.spi.JsonException;
 import com.jsoniter.spi.TypeLiteral;
 
 import java.io.IOException;

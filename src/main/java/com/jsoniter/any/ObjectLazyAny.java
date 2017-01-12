@@ -1,6 +1,7 @@
 package com.jsoniter.any;
 
 import com.jsoniter.*;
+import com.jsoniter.spi.JsonException;
 
 import java.io.IOException;
 import java.util.HashMap;
