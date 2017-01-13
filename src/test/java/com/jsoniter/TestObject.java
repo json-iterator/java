@@ -10,6 +10,7 @@ import com.jsoniter.spi.JsoniterSpi;
 import junit.framework.TestCase;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.Map;
 
 public class TestObject extends TestCase {
@@ -177,5 +178,24 @@ public class TestObject extends TestCase {
         JsoniterAnnotationSupport.enable();
         TestObject6 obj = JsonIterator.deserialize("{\"field1\":[]}", TestObject6.class);
         assertNull(obj.field1);
+    }
+
+    public void test_iterator() {
+        Any any = JsonIterator.deserialize("{\"field1\":1,\"field2\":2,\"field3\":3}");
+        Any.EntryIterator iter = any.entries();
+        assertTrue(iter.next());
+        assertEquals("field1", iter.key());
+        assertEquals(1, iter.value().toInt());
+        iter = any.entries();
+        assertTrue(iter.next());
+        assertEquals("field1", iter.key());
+        assertEquals(1, iter.value().toInt());
+        assertTrue(iter.next());
+        assertEquals("field2", iter.key());
+        assertEquals(2, iter.value().toInt());
+        assertTrue(iter.next());
+        assertEquals("field3", iter.key());
+        assertEquals(3, iter.value().toInt());
+        assertFalse(iter.next());
     }
 }

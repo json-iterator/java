@@ -5,6 +5,7 @@ import com.jsoniter.spi.JsonException;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -58,8 +59,6 @@ class ObjectLazyAny extends LazyAny {
             return null;
         } catch (ClassCastException e) {
             return null;
-        } catch (IOException e) {
-            throw new JsonException(e);
         }
     }
 
@@ -68,15 +67,11 @@ class ObjectLazyAny extends LazyAny {
         if (idx == keys.length) {
             return this;
         }
-        try {
-            Any child = fillCache(keys[idx]);
-            if (child == null) {
-                return null;
-            }
-            return child.get(keys, idx+1);
-        } catch (IOException e) {
-            throw new JsonException(e);
+        Any child = fillCache(keys[idx]);
+        if (child == null) {
+            return null;
         }
+        return child.get(keys, idx+1);
     }
 
     @Override
@@ -84,68 +79,66 @@ class ObjectLazyAny extends LazyAny {
         if (idx == keys.length) {
             return this;
         }
-        try {
-            Any result = fillCache(keys[idx]);
-            if (result == null) {
-                throw reportPathNotFound(keys, idx);
-            }
-            return result.require(keys, idx + 1);
-        } catch (IOException e) {
-            throw new JsonException(e);
+        Any result = fillCache(keys[idx]);
+        if (result == null) {
+            throw reportPathNotFound(keys, idx);
         }
+        return result.require(keys, idx + 1);
     }
 
-    private Any fillCache(Object target) throws IOException {
+    private Any fillCache(Object target) {
         if (lastParsedPos == tail) {
             return cache.get(target);
         }
-        if (cache != null) {
-            Any value = cache.get(target);
-            if (value != null) {
-                return value;
-            }
-        }
-        JsonIterator iter = JsonIterator.tlsIter.get();
-        iter.reset(data, lastParsedPos, tail);
         if (cache == null) {
             cache = new HashMap<Object, Any>(4);
         }
-        if (lastParsedPos == head) {
-            if (!CodegenAccess.readObjectStart(iter)) {
-                lastParsedPos = tail;
-                return null;
-            }
-            String field = CodegenAccess.readObjectFieldAsString(iter);
-            Any value = iter.readAny();
-            cache.put(field, value);
-            if (field.hashCode() == target.hashCode() && field.equals(target)) {
-                lastParsedPos = CodegenAccess.head(iter);
-                return value;
-            }
+        Any value = cache.get(target);
+        if (value != null) {
+            return value;
         }
-        while (CodegenAccess.nextToken(iter) == ',') {
-            String field = CodegenAccess.readObjectFieldAsString(iter);
-            Any value = iter.readAny();
-            cache.put(field, value);
-            if (field.hashCode() == target.hashCode() && field.equals(target)) {
-                lastParsedPos = CodegenAccess.head(iter);
-                return value;
+        try {
+            JsonIterator iter = JsonIterator.tlsIter.get();
+            iter.reset(data, lastParsedPos, tail);
+            if (lastParsedPos == head) {
+                if (!CodegenAccess.readObjectStart(iter)) {
+                    lastParsedPos = tail;
+                    return null;
+                }
+                String field = CodegenAccess.readObjectFieldAsString(iter);
+                value = iter.readAny();
+                cache.put(field, value);
+                if (field.hashCode() == target.hashCode() && field.equals(target)) {
+                    lastParsedPos = CodegenAccess.head(iter);
+                    return value;
+                }
             }
+            while (CodegenAccess.nextToken(iter) == ',') {
+                String field = CodegenAccess.readObjectFieldAsString(iter);
+                value = iter.readAny();
+                cache.put(field, value);
+                if (field.hashCode() == target.hashCode() && field.equals(target)) {
+                    lastParsedPos = CodegenAccess.head(iter);
+                    return value;
+                }
+            }
+            lastParsedPos = tail;
+            return null;
+        } catch (IOException e) {
+            throw new JsonException(e);
         }
-        lastParsedPos = tail;
-        return null;
     }
 
     private void fillCache() {
         if (lastParsedPos == tail) {
             return;
         }
+        if (cache == null) {
+            cache = new HashMap<Object, Any>(4);
+        }
         try {
             JsonIterator iter = JsonIterator.tlsIter.get();
             iter.reset(data, lastParsedPos, tail);
-            if (cache == null) {
-                cache = new HashMap<Object, Any>(4);
-            }
             if (!CodegenAccess.readObjectStart(iter)) {
                 lastParsedPos = tail;
                 return;
@@ -159,6 +152,80 @@ class ObjectLazyAny extends LazyAny {
             lastParsedPos = tail;
         } catch (IOException e) {
             throw new JsonException(e);
+        }
+    }
+
+    @Override
+    public EntryIterator entries() {
+        return new LazyIterator();
+    }
+
+    private class LazyIterator implements EntryIterator {
+
+        private Iterator<Map.Entry<Object, Any>> mapIter;
+        private String key;
+        private Any value;
+
+        public LazyIterator() {
+            if (cache == null) {
+                cache = new HashMap<Object, Any>();
+            }
+            mapIter = cache.entrySet().iterator();
+            try {
+                if (lastParsedPos == head) {
+                    JsonIterator iter = JsonIterator.tlsIter.get();
+                    iter.reset(data, lastParsedPos, tail);
+                    if (!CodegenAccess.readObjectStart(iter)) {
+                        lastParsedPos = tail;
+                    } else {
+                        lastParsedPos = CodegenAccess.head(iter);
+                    }
+                }
+            } catch (IOException e) {
+                throw new JsonException(e);
+            }
+        }
+
+        @Override
+        public boolean next() {
+            if (lastParsedPos == tail) {
+                return false;
+            }
+            if (mapIter != null) {
+                if (mapIter.hasNext()) {
+                    Map.Entry<Object, Any> entry = mapIter.next();
+                    key = (String) entry.getKey();
+                    value = entry.getValue();
+                    return true;
+                } else {
+                    mapIter = null;
+                }
+            }
+            try {
+                JsonIterator iter = JsonIterator.tlsIter.get();
+                iter.reset(data, lastParsedPos, tail);
+                key = CodegenAccess.readObjectFieldAsString(iter);
+                value = iter.readAny();
+                cache.put(key, value);
+                if (CodegenAccess.nextToken(iter) == ',') {
+                    lastParsedPos = CodegenAccess.head(iter);
+                } else {
+                    lastParsedPos = tail;
+                }
+            } catch (IOException e) {
+                throw new JsonException(e);
+            }
+            return true;
+        }
+
+        @Override
+        public String key() {
+            return key;
+        }
+
+        @Override
+        public Any value() {
+            return value;
         }
     }
 }

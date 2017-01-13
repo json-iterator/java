@@ -41,7 +41,29 @@ public abstract class Any implements Iterable<Any> {
         JsonStream.registerNativeEncoder(ObjectAny.class, anyEncoder);
     }
 
+    public interface EntryIterator {
+        boolean next();
+        String key();
+        Any value();
+    }
+
     protected final static Set<String> EMPTY_KEYS = Collections.unmodifiableSet(new HashSet<String>());
+    protected final static EntryIterator EMPTY_ENTRIES_ITERATOR = new EntryIterator() {
+        @Override
+        public boolean next() {
+            return false;
+        }
+
+        @Override
+        public String key() {
+            throw new NoSuchElementException();
+        }
+
+        @Override
+        public Any value() {
+            throw new NoSuchElementException();
+        }
+    };
     protected final static Iterator<Any> EMPTY_ITERATOR = new Iterator<Any>() {
         @Override
         public void remove() {
@@ -55,7 +77,7 @@ public abstract class Any implements Iterable<Any> {
 
         @Override
         public Any next() {
-            throw new UnsupportedOperationException();
+            throw new NoSuchElementException();
         }
     };
 
@@ -201,13 +223,15 @@ public abstract class Any implements Iterable<Any> {
     }
 
     public Set<String> keys() {
-        return LazyAny.EMPTY_KEYS;
+        return EMPTY_KEYS;
     }
 
     @Override
     public Iterator<Any> iterator() {
-        return LazyAny.EMPTY_ITERATOR;
+        return EMPTY_ITERATOR;
     }
+
+    public EntryIterator entries() { return EMPTY_ENTRIES_ITERATOR; }
 
     public Any get(int index) {
         return null;

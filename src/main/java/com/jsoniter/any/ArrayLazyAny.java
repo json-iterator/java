@@ -48,7 +48,7 @@ class ArrayLazyAny extends LazyAny {
         if (lastParsedPos == tail) {
             return cache.iterator();
         } else {
-            return new LazyIterator(new JsonIterator());
+            return new LazyIterator();
         }
     }
 
@@ -89,10 +89,25 @@ class ArrayLazyAny extends LazyAny {
         if (lastParsedPos == tail) {
             return;
         }
-        LazyIterator iter = new LazyIterator(JsonIterator.tlsIter.get());
-        while (iter.hasNext()) {
-            // cache will be filled in the process
-            iter.next();
+        if (cache == null) {
+            cache = new ArrayList<Any>(4);
+        }
+        try {
+            JsonIterator iter = JsonIterator.tlsIter.get();
+            if (lastParsedPos == head) {
+                iter.reset(data, lastParsedPos, tail);
+                if (!CodegenAccess.readArrayStart(iter)) {
+                    lastParsedPos = tail;
+                    return;
+                }
+                cache.add(iter.readAny());
+            }
+            while (CodegenAccess.nextToken(iter) == ',') {
+                cache.add(iter.readAny());
+            }
+            lastParsedPos = tail;
+        } catch (IOException e) {
+            throw new JsonException(e);
         }
     }
 
@@ -100,51 +115,67 @@ class ArrayLazyAny extends LazyAny {
         if (lastParsedPos == tail) {
             return cache.get(target);
         }
-        int i = 0;
-        LazyIterator iter = new LazyIterator(JsonIterator.tlsIter.get());
-        while (iter.hasNext()) {
-            Any element = iter.next();
-            if (i == target) {
-                return element;
-            }
-            i++;
+        if (cache == null) {
+            cache = new ArrayList<Any>(4);
         }
-        throw new IndexOutOfBoundsException();
+        int i = cache.size();
+        if (target < i) {
+            return cache.get(i);
+        }
+        try {
+            JsonIterator iter = JsonIterator.tlsIter.get();
+            if (lastParsedPos == head) {
+                iter.reset(data, lastParsedPos, tail);
+                if (!CodegenAccess.readArrayStart(iter)) {
+                    lastParsedPos = tail;
+                    return null;
+                }
+                Any element = iter.readAny();
+                cache.add(element);
+                if (target == 0) {
+                    lastParsedPos = CodegenAccess.head(iter);
+                    return element;
+                }
+            }
+            while (CodegenAccess.nextToken(iter) == ',') {
+                Any element = iter.readAny();
+                cache.add(element);
+                if (i++ == target) {
+                    lastParsedPos = CodegenAccess.head(iter);
+                    return element;
+                }
+            }
+            lastParsedPos = tail;
+        } catch (IOException e) {
+            throw new JsonException(e);
+        }
+        return null;
     }
 
     private class LazyIterator implements Iterator<Any> {
 
-        private JsonIterator jsonIter;
         private final int cacheSize;
         private int cachePos;
 
-        public LazyIterator(JsonIterator jsonIter) {
+        public LazyIterator() {
             try {
-                if (jsonIter != null) {
-                    this.jsonIter = jsonIter;
-                    this.jsonIter.reset(data, lastParsedPos, tail);
-                }
                 if (cache == null) {
                     cache = new ArrayList<Any>(4);
                 }
                 if (lastParsedPos == head) {
-                    readHead(jsonIter);
+                    JsonIterator iter = JsonIterator.tlsIter.get();
+                    iter.reset(data, lastParsedPos, tail);
+                    if (!CodegenAccess.readArrayStart(iter)) {
+                        lastParsedPos = tail;
+                    } else {
+                        lastParsedPos = CodegenAccess.head(iter);
+                    }
                 }
             } catch (IOException e) {
                 throw new JsonException(e);
             }
             cacheSize = cache.size();
             cachePos = 0;
-        }
-
-        private void readHead(JsonIterator jsonIter) throws IOException {
-            if (jsonIter == null) {
-                jsonIter = JsonIterator.tlsIter.get();
-                jsonIter.reset(data, lastParsedPos, tail);
-            }
-            if (!CodegenAccess.readArrayStart(jsonIter)) {
-                lastParsedPos = tail;
-            }
         }
 
         @Override
@@ -170,11 +201,8 @@ class ArrayLazyAny extends LazyAny {
             if (cachePos != cacheSize) {
                 return cache.get(cachePos++);
             }
-            JsonIterator iter = jsonIter;
-            if (iter == null) {
-                iter = JsonIterator.tlsIter.get();
-                iter.reset(data, lastParsedPos, tail);
-            }
+            JsonIterator iter = JsonIterator.tlsIter.get();
+            iter.reset(data, lastParsedPos, tail);
             Any element = iter.readAny();
             cache.add(element);
             if (CodegenAccess.nextToken(iter) == ',') {
