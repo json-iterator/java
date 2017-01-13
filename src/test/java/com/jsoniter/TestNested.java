@@ -44,4 +44,19 @@ public class TestNested extends TestCase {
         result = any.get('*', 1);
         assertEquals("{\"field1\":2,\"field2\":4}", result.toString());
     }
+
+    public void test_get_all_with_some_invalid_path() throws IOException {
+        Any any = JsonIterator.deserialize(" [ { \"bar\": 1 }, {\"foo\": 3} ]");
+        Any result = any.get('*', "bar");
+        assertEquals("[ 1]", result.toString());
+        any = Any.wrapAnyList(any.asList()); // make it not lazy
+        result = any.get('*', "bar");
+        assertEquals("[ 1]", result.toString());
+        any = JsonIterator.deserialize("{\"field1\":[1,2],\"field2\":[3]}");
+        result = any.get('*', 1);
+        assertEquals("{\"field1\":2}", result.toString());
+        any = Any.wrapAnyMap(any.asMap()); // make it not lazy
+        result = any.get('*', 1);
+        assertEquals("{\"field1\":2}", result.toString());
+    }
 }

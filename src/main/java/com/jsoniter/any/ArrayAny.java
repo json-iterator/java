@@ -70,7 +70,10 @@ class ArrayAny extends Any {
         if (isWildcard(key)) {
             ArrayList<Any> result = new ArrayList<Any>();
             for (Any element : val) {
-                result.add(element.get(keys, idx + 1));
+                Any mapped = element.get(keys, idx + 1);
+                if (mapped.valueType() != ValueType.INVALID) {
+                    result.add(mapped);
+                }
             }
             return Any.wrapAnyList(result);
         }

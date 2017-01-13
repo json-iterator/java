@@ -76,7 +76,10 @@ class ArrayLazyAny extends LazyAny {
             fillCache();
             ArrayList<Any> result = new ArrayList<Any>();
             for (Any element : cache) {
-                result.add(element.get(keys, idx+1));
+                Any mapped = element.get(keys, idx + 1);
+                if (mapped.valueType() != ValueType.INVALID) {
+                    result.add(mapped);
+                }
             }
             return Any.wrapAnyList(result);
         }

@@ -12,18 +12,18 @@ class NotFoundAny extends Any {
     private final JsonException exception;
 
     public NotFoundAny(Object[] keys, int idx, Object obj) {
-        this.exception = new JsonException(String.format("Value not found: failed to get path %s, because #%s %s not found in %s",
+        this.exception = new JsonException(String.format("Value not found: failed to get path %s, because #%s section of the path ( %s ) not found in %s",
                 Arrays.toString(keys), idx, keys[idx], obj));
     }
 
     public NotFoundAny(int index, Object obj) {
-        this.exception = new JsonException(String.format("Value not found: failed to get index %s, because %s not found in %s",
-                index, index, obj));
+        this.exception = new JsonException(String.format("Value not found: failed to get index %s from %s",
+                index, obj));
     }
 
     public NotFoundAny(Object key, Object obj) {
-        this.exception = new JsonException(String.format("Value not found: failed to get key %s, because %s not found in %s",
-                key, key, obj));
+        this.exception = new JsonException(String.format("Value not found: failed to get key %s from %s",
+                key, obj));
     }
 
     @Override

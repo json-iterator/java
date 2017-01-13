@@ -70,7 +70,10 @@ class ObjectAny extends Any {
         if (isWildcard(key)) {
             HashMap<String, Any> result = new HashMap<String, Any>();
             for (Map.Entry<String, Any> entry : val.entrySet()) {
-                result.put(entry.getKey(), entry.getValue().get(keys, idx + 1));
+                Any mapped = entry.getValue().get(keys, idx + 1);
+                if (mapped.valueType() != ValueType.INVALID) {
+                    result.put(entry.getKey(), mapped);
+                }
             }
             return Any.wrapAnyMap(result);
         }

@@ -73,7 +73,10 @@ class ObjectLazyAny extends LazyAny {
             fillCache();
             HashMap<String, Any> result = new HashMap<String, Any>();
             for (Map.Entry<Object, Any> entry : cache.entrySet()) {
-                result.put((String) entry.getKey(), entry.getValue().get(keys, idx+1));
+                Any mapped = entry.getValue().get(keys, idx + 1);
+                if (mapped.valueType() != ValueType.INVALID) {
+                    result.put((String) entry.getKey(), mapped);
+                }
             }
             return Any.wrapAnyMap(result);
         }
