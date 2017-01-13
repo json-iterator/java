@@ -35,7 +35,7 @@ class ArrayAny extends Any {
             return;
         }
         iter.next().writeTo(stream);
-        while(iter.hasNext()) {
+        while (iter.hasNext()) {
             stream.writeMore();
             iter.next().writeTo(stream);
         }
@@ -54,7 +54,11 @@ class ArrayAny extends Any {
 
     @Override
     public Any get(int index) {
-        return val.get(index);
+        try {
+            return val.get(index);
+        } catch (IndexOutOfBoundsException e) {
+            return new NotFoundAny(index, object());
+        }
     }
 
     @Override
@@ -66,25 +70,17 @@ class ArrayAny extends Any {
         if (isWildcard(key)) {
             ArrayList<Any> result = new ArrayList<Any>();
             for (Any element : val) {
-                result.add(element.get(keys, idx+1));
+                result.add(element.get(keys, idx + 1));
             }
             return Any.wrapAnyList(result);
         }
-        return val.get((Integer) key).get(keys, idx+1);
-    }
-
-    @Override
-    public Any require(Object[] keys, int idx) {
-        if (idx == keys.length) {
-            return this;
-        }
-        Any result = null;
         try {
-            result = val.get((Integer) keys[idx]);
+            return val.get((Integer) key).get(keys, idx + 1);
         } catch (IndexOutOfBoundsException e) {
-            reportPathNotFound(keys, idx);
+            return new NotFoundAny(keys, idx, object());
+        } catch (ClassCastException e) {
+            return new NotFoundAny(keys, idx, object());
         }
-        return result.require(keys, idx + 1);
     }
 
     @Override

@@ -9,6 +9,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 
 public class TestReadAny extends TestCase {
@@ -98,10 +99,10 @@ public class TestReadAny extends TestCase {
     public void test_get() throws IOException {
         assertEquals("100.5", JsonIterator.deserialize("100.5").get().toString());
         assertEquals("100.5", JsonIterator.deserialize("[100.5]").get(0).toString());
-        assertNull(JsonIterator.deserialize("null").get(0));
-        assertNull(JsonIterator.deserialize("[]").get(0));
-        assertNull(JsonIterator.deserialize("[]").get("hello"));
-        assertNull(JsonIterator.deserialize("{}").get(0));
+        assertEquals(ValueType.INVALID, JsonIterator.deserialize("null").get(0).valueType());
+        assertEquals(ValueType.INVALID, JsonIterator.deserialize("[]").get(0).valueType());
+        assertEquals(ValueType.INVALID, JsonIterator.deserialize("[]").get("hello").valueType());
+        assertEquals(ValueType.INVALID, JsonIterator.deserialize("{}").get(0).valueType());
     }
 
     public void test_read_long() throws IOException {
@@ -157,14 +158,24 @@ public class TestReadAny extends TestCase {
     }
 
     public void test_require_path() throws IOException {
-        assertNotNull(JsonIterator.deserialize("null").require());
+        assertNotNull(JsonIterator.deserialize("null").get());
         try {
-            JsonIterator.deserialize("[]").require(0);
+            JsonIterator.deserialize("[]").get(0).object();
         } catch (JsonException e) {
             System.out.println(e);
         }
         try {
-            JsonIterator.deserialize("{}").require("hello");
+            Any.wrapAnyList(new ArrayList<Any>()).get(0).object();
+        } catch (JsonException e) {
+            System.out.println(e);
+        }
+        try {
+            JsonIterator.deserialize("{}").get("hello").object();
+        } catch (JsonException e) {
+            System.out.println(e);
+        }
+        try {
+            Any.wrapAnyMap(new HashMap<String, Any>()).get("hello").object();
         } catch (JsonException e) {
             System.out.println(e);
         }

@@ -53,13 +53,11 @@ class ObjectLazyAny extends LazyAny {
 
     @Override
     public Any get(Object key) {
-        try {
-            return fillCache(key);
-        } catch (IndexOutOfBoundsException e) {
-            return null;
-        } catch (ClassCastException e) {
-            return null;
+        Any element = fillCache(key);
+        if (element == null) {
+            return new NotFoundAny(key, object());
         }
+        return element;
     }
 
     @Override
@@ -78,21 +76,9 @@ class ObjectLazyAny extends LazyAny {
         }
         Any child = fillCache(key);
         if (child == null) {
-            return null;
+            return new NotFoundAny(keys, idx, object());
         }
         return child.get(keys, idx+1);
-    }
-
-    @Override
-    public Any require(Object[] keys, int idx) {
-        if (idx == keys.length) {
-            return this;
-        }
-        Any result = fillCache(keys[idx]);
-        if (result == null) {
-            throw reportPathNotFound(keys, idx);
-        }
-        return result.require(keys, idx + 1);
     }
 
     private Any fillCache(Object target) {

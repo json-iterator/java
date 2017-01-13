@@ -53,7 +53,7 @@ public class TestObject extends TestCase {
         iter.reset(iter.buf);
         Any any = iter.readAny();
         assertEquals("hello", any.toString("field1"));
-        assertNull(any.get("field2"));
+        assertEquals(ValueType.INVALID, any.get("field2").valueType());
     }
 
     public void test_two_fields() throws IOException {
@@ -69,7 +69,6 @@ public class TestObject extends TestCase {
         assertEquals("world", simpleObj.field2);
         iter.reset(iter.buf);
         Any any = iter.readAny();
-        any.require("field1");
         assertEquals("hello", any.toString("field1"));
         assertEquals("world", any.toString("field2"));
     }

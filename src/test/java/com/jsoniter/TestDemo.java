@@ -103,25 +103,21 @@ public class TestDemo extends TestCase {
     }
 
     public void test_iterator() throws IOException {
-JsonIterator iter = JsonIterator.parse("{'numbers': ['1', '2', ['3', '4']]}".replace('\'', '"'));
-assertEquals("numbers", iter.readObject());
-assertTrue(iter.readArray());
-assertEquals("1", iter.readString());
-assertTrue(iter.readArray());
-assertEquals("2", iter.readString());
-assertTrue(iter.readArray());
-assertEquals(ValueType.ARRAY, iter.whatIsNext());
-assertTrue(iter.readArray()); // start inner array
-assertEquals(ValueType.STRING, iter.whatIsNext());
-assertEquals("3", iter.readString());
-assertTrue(iter.readArray());
-assertEquals("4", iter.readString());
-assertFalse(iter.readArray()); // end inner array
-assertFalse(iter.readArray()); // end outer array
-assertNull(iter.readObject()); // end object
-        Any any = iter.readAny();
-        for (Any any1 : any) {
-
-        }
+        JsonIterator iter = JsonIterator.parse("{'numbers': ['1', '2', ['3', '4']]}".replace('\'', '"'));
+        assertEquals("numbers", iter.readObject());
+        assertTrue(iter.readArray());
+        assertEquals("1", iter.readString());
+        assertTrue(iter.readArray());
+        assertEquals("2", iter.readString());
+        assertTrue(iter.readArray());
+        assertEquals(ValueType.ARRAY, iter.whatIsNext());
+        assertTrue(iter.readArray()); // start inner array
+        assertEquals(ValueType.STRING, iter.whatIsNext());
+        assertEquals("3", iter.readString());
+        assertTrue(iter.readArray());
+        assertEquals("4", iter.readString());
+        assertFalse(iter.readArray()); // end inner array
+        assertFalse(iter.readArray()); // end outer array
+        assertNull(iter.readObject()); // end object
     }
 }

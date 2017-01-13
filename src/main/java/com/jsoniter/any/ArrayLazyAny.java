@@ -58,9 +58,7 @@ class ArrayLazyAny extends LazyAny {
         try {
             return fillCache(index);
         } catch (IndexOutOfBoundsException e) {
-            return null;
-        } catch (ClassCastException e) {
-            return null;
+            return new NotFoundAny(index, object());
         }
     }
 
@@ -78,21 +76,13 @@ class ArrayLazyAny extends LazyAny {
             }
             return Any.wrapAnyList(result);
         }
-        return fillCache((Integer) key).get(keys, idx + 1);
-    }
-
-    @Override
-    public Any require(Object[] keys, int idx) {
-        if (idx == keys.length) {
-            return this;
-        }
-        Any result = null;
         try {
-            result = fillCache((Integer) keys[idx]);
+            return fillCache((Integer) key).get(keys, idx + 1);
         } catch (IndexOutOfBoundsException e) {
-            reportPathNotFound(keys, idx);
+            return new NotFoundAny(keys, idx, object());
+        } catch (ClassCastException e) {
+            return new NotFoundAny(keys, idx, object());
         }
-        return result.require(keys, idx + 1);
     }
 
     private void fillCache() {
@@ -104,8 +94,8 @@ class ArrayLazyAny extends LazyAny {
         }
         try {
             JsonIterator iter = JsonIterator.tlsIter.get();
+            iter.reset(data, lastParsedPos, tail);
             if (lastParsedPos == head) {
-                iter.reset(data, lastParsedPos, tail);
                 if (!CodegenAccess.readArrayStart(iter)) {
                     lastParsedPos = tail;
                     return;
@@ -134,11 +124,11 @@ class ArrayLazyAny extends LazyAny {
         }
         try {
             JsonIterator iter = JsonIterator.tlsIter.get();
+            iter.reset(data, lastParsedPos, tail);
             if (lastParsedPos == head) {
-                iter.reset(data, lastParsedPos, tail);
                 if (!CodegenAccess.readArrayStart(iter)) {
                     lastParsedPos = tail;
-                    return null;
+                    throw new IndexOutOfBoundsException();
                 }
                 Any element = iter.readAny();
                 cache.add(element);
@@ -160,7 +150,7 @@ class ArrayLazyAny extends LazyAny {
         } catch (IOException e) {
             throw new JsonException(e);
         }
-        return null;
+        throw new IndexOutOfBoundsException();
     }
 
     private class LazyIterator implements Iterator<Any> {

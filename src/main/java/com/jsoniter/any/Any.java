@@ -84,11 +84,7 @@ public abstract class Any implements Iterable<Any> {
     public abstract ValueType valueType();
 
     public <T> T bindTo(T obj, Object... keys) {
-        Any found = get(keys);
-        if (found == null) {
-            return null;
-        }
-        return found.bindTo(obj);
+        return get(keys).bindTo(obj);
     }
 
     public <T> T bindTo(T obj) {
@@ -96,11 +92,7 @@ public abstract class Any implements Iterable<Any> {
     }
 
     public <T> T bindTo(TypeLiteral<T> typeLiteral, T obj, Object... keys) {
-        Any found = get(keys);
-        if (found == null) {
-            return null;
-        }
-        return found.bindTo(typeLiteral, obj);
+        return get(keys).bindTo(typeLiteral, obj);
     }
 
     public <T> T bindTo(TypeLiteral<T> typeLiteral, T obj) {
@@ -108,11 +100,7 @@ public abstract class Any implements Iterable<Any> {
     }
 
     public Object object(Object... keys) {
-        Any found = get(keys);
-        if (found == null) {
-            return null;
-        }
-        return found.object();
+        return get(keys).object();
     }
 
     public abstract Object object();
@@ -126,11 +114,7 @@ public abstract class Any implements Iterable<Any> {
     }
 
     public <T> T as(Class<T> clazz, Object... keys) {
-        Any found = get(keys);
-        if (found == null) {
-            return null;
-        }
-        return found.as(clazz);
+        return get(keys).as(clazz);
     }
 
     public <T> T as(Class<T> clazz) {
@@ -138,11 +122,7 @@ public abstract class Any implements Iterable<Any> {
     }
 
     public <T> T as(TypeLiteral<T> typeLiteral, Object... keys) {
-        Any found = get(keys);
-        if (found == null) {
-            return null;
-        }
-        return found.as(typeLiteral);
+        return get(keys).as(typeLiteral);
     }
 
     public <T> T as(TypeLiteral<T> typeLiteral) {
@@ -151,7 +131,7 @@ public abstract class Any implements Iterable<Any> {
 
     public final boolean toBoolean(Object... keys) {
         Any found = get(keys);
-        if (found == null) {
+        if (found.valueType() == ValueType.INVALID) {
             return false;
         }
         return found.toBoolean();
@@ -163,7 +143,7 @@ public abstract class Any implements Iterable<Any> {
 
     public final int toInt(Object... keys) {
         Any found = get(keys);
-        if (found == null) {
+        if (found.valueType() == ValueType.INVALID) {
             return 0;
         }
         return found.toInt();
@@ -175,7 +155,7 @@ public abstract class Any implements Iterable<Any> {
 
     public final long toLong(Object... keys) {
         Any found = get(keys);
-        if (found == null) {
+        if (found.valueType() == ValueType.INVALID) {
             return 0;
         }
         return found.toLong();
@@ -187,7 +167,7 @@ public abstract class Any implements Iterable<Any> {
 
     public final float toFloat(Object... keys) {
         Any found = get(keys);
-        if (found == null) {
+        if (found.valueType() == ValueType.INVALID) {
             return 0;
         }
         return found.toFloat();
@@ -199,7 +179,7 @@ public abstract class Any implements Iterable<Any> {
 
     public final double toDouble(Object... keys) {
         Any found = get(keys);
-        if (found == null) {
+        if (found.valueType() == ValueType.INVALID) {
             return 0;
         }
         return found.toDouble();
@@ -211,8 +191,8 @@ public abstract class Any implements Iterable<Any> {
 
     public final String toString(Object... keys) {
         Any found = get(keys);
-        if (found == null) {
-            return null;
+        if (found.valueType() == ValueType.INVALID) {
+            return "";
         }
         return found.toString();
     }
@@ -234,39 +214,22 @@ public abstract class Any implements Iterable<Any> {
     public EntryIterator entries() { return EMPTY_ENTRIES_ITERATOR; }
 
     public Any get(int index) {
-        return null;
+        return new NotFoundAny(index, object());
     }
 
     public Any get(Object key) {
-        return null;
+        return new NotFoundAny(key, object());
     }
 
     public final Any get(Object... keys) {
-        try {
-            return get(keys, 0);
-        } catch (IndexOutOfBoundsException e) {
-            return null;
-        } catch (ClassCastException e) {
-            return null;
-        }
+        return get(keys, 0);
     }
 
     public Any get(Object[] keys, int idx) {
         if (idx == keys.length) {
             return this;
         }
-        return null;
-    }
-
-    public final Any require(Object... keys) {
-        return require(keys, 0);
-    }
-
-    public Any require(Object[] keys, int idx) {
-        if (idx == keys.length) {
-            return this;
-        }
-        throw reportPathNotFound(keys, idx);
+        return new NotFoundAny(keys, idx, object());
     }
 
     public Any set(int newVal) {
