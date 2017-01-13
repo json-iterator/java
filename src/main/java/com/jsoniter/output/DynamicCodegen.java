@@ -17,26 +17,17 @@ class DynamicCodegen {
         CtClass ctClass = pool.makeClass(cacheKey);
         ctClass.setInterfaces(new CtClass[]{pool.get(Encoder.class.getName())});
         ctClass.setSuperclass(pool.get(EmptyEncoder.class.getName()));
-        CtMethod staticMethod = CtNewMethod.make(source.toString(), ctClass);
+        String staticCode = source.toString();
+        CtMethod staticMethod = CtNewMethod.make(staticCode, ctClass);
         ctClass.addMethod(staticMethod);
-        StringBuilder lines = new StringBuilder();
-        append(lines, "public void encode(Object obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {");
-        append(lines, "if (obj == null) { stream.writeNull(); return; }");
-        if (source.prelude != null) {
-            append(lines, CodegenResult.bufferToWriteOp(source.prelude));
+        String wrapperCode = source.generateWrapperCode(clazz);
+        if ("true".equals(System.getenv("JSONITER_DEBUG"))) {
+            System.out.println(">>> " + cacheKey);
+            System.out.println(wrapperCode);
+            System.out.println(staticCode);
         }
-        append(lines, String.format("encode_((%s)obj, stream);", clazz.getCanonicalName()));
-        if (source.epilogue != null) {
-            append(lines, CodegenResult.bufferToWriteOp(source.epilogue));
-        }
-        append(lines, "}");
-        CtMethod interfaceMethod = CtNewMethod.make(lines.toString(), ctClass);
+        CtMethod interfaceMethod = CtNewMethod.make(wrapperCode, ctClass);
         ctClass.addMethod(interfaceMethod);
         return (Encoder) ctClass.toClass().newInstance();
-    }
-
-    private static void append(StringBuilder lines, String line) {
-        lines.append(line);
-        lines.append('\n');
     }
 }

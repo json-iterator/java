@@ -106,23 +106,19 @@ class Codegen {
             JsoniterSpi.addNewEncoder(cacheKey, encoder);
             return encoder;
         }
-        try {
-            encoder = (Encoder) Class.forName(cacheKey).newInstance();
-            JsoniterSpi.addNewEncoder(cacheKey, encoder);
-            return encoder;
-        } catch (Exception e) {
-            if (mode == EncodingMode.STATIC_MODE) {
-                throw new JsonException("static gen should provide the encoder we need, but failed to create the encoder", e);
+        if (!isDoingStaticCodegen) {
+            try {
+                encoder = (Encoder) Class.forName(cacheKey).newInstance();
+                JsoniterSpi.addNewEncoder(cacheKey, encoder);
+                return encoder;
+            } catch (Exception e) {
+                if (mode == EncodingMode.STATIC_MODE) {
+                    throw new JsonException("static gen should provide the encoder we need, but failed to create the encoder", e);
+                }
             }
         }
         clazz = chooseAccessibleSuper(clazz);
         CodegenResult source = genSource(cacheKey, clazz, typeArgs);
-        if ("true".equals(System.getenv("JSONITER_DEBUG"))) {
-            System.out.println(">>> " + cacheKey);
-            System.out.println("prelude: " + source.prelude);
-            System.out.println(source);
-            System.out.println("epilogue: " + source.epilogue);
-        }
         try {
             generatedSources.put(cacheKey, source);
             if (isDoingStaticCodegen) {
@@ -157,8 +153,7 @@ class Codegen {
         try {
             OutputStreamWriter writer = new OutputStreamWriter(fileOutputStream);
             try {
-                throw new UnsupportedOperationException();
-//                staticGen(clazz, cacheKey, writer, source);
+                staticGen(clazz, cacheKey, writer, source);
             } finally {
                 writer.close();
             }
@@ -167,15 +162,13 @@ class Codegen {
         }
     }
 
-    private static void staticGen(Class clazz, String cacheKey, OutputStreamWriter writer, String source) throws IOException {
+    private static void staticGen(Class clazz, String cacheKey, OutputStreamWriter writer, CodegenResult source) throws IOException {
         String className = cacheKey.substring(cacheKey.lastIndexOf('.') + 1);
         String packageName = cacheKey.substring(0, cacheKey.lastIndexOf('.'));
         writer.write("package " + packageName + ";\n");
         writer.write("public class " + className + " extends com.jsoniter.spi.EmptyEncoder {\n");
-        writer.write(source);
-        writer.write("public void encode(java.lang.Object obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {\n");
-        writer.write(String.format("encode_((%s)obj, stream);\n", clazz.getCanonicalName()));
-        writer.write("}\n");
+        writer.write(source.generateWrapperCode(clazz));
+        writer.write(source.toString());
         writer.write("}\n");
     }
 

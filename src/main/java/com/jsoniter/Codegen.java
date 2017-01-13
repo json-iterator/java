@@ -66,13 +66,15 @@ class Codegen {
             JsoniterSpi.addNewDecoder(cacheKey, decoder);
             return decoder;
         }
-        try {
-            decoder = (Decoder) Class.forName(cacheKey).newInstance();
-            JsoniterSpi.addNewDecoder(cacheKey, decoder);
-            return decoder;
-        } catch (Exception e) {
-            if (mode == DecodingMode.STATIC_MODE) {
-                throw new JsonException("static gen should provide the decoder we need, but failed to create the decoder", e);
+        if (!isDoingStaticCodegen) {
+            try {
+                decoder = (Decoder) Class.forName(cacheKey).newInstance();
+                JsoniterSpi.addNewDecoder(cacheKey, decoder);
+                return decoder;
+            } catch (Exception e) {
+                if (mode == DecodingMode.STATIC_MODE) {
+                    throw new JsonException("static gen should provide the decoder we need, but failed to create the decoder", e);
+                }
             }
         }
         String source = genSource(clazz, typeArgs);

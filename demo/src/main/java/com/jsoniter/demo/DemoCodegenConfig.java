@@ -2,6 +2,7 @@ package com.jsoniter.demo;
 
 import com.jsoniter.JsonIterator;
 import com.jsoniter.StaticCodeGenerator;
+import com.jsoniter.annotation.JsoniterAnnotationSupport;
 import com.jsoniter.spi.CodegenConfig;
 import com.jsoniter.spi.Decoder;
 import com.jsoniter.spi.JsoniterSpi;
@@ -15,6 +16,7 @@ public class DemoCodegenConfig implements CodegenConfig {
 
     @Override
     public void setup() {
+        JsoniterAnnotationSupport.enable();
         // register custom decoder or extensions before codegen
         // so that we doing codegen, we know in which case, we need to callback
         JsoniterSpi.registerPropertyDecoder(User.class, "score", new Decoder.IntDecoder() {

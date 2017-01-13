@@ -87,4 +87,25 @@ class CodegenResult {
             epilogue = null;
         }
     }
+
+    public String generateWrapperCode(Class clazz) {
+        flushBuffer();
+        StringBuilder lines = new StringBuilder();
+        append(lines, "public void encode(Object obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {");
+        append(lines, "if (obj == null) { stream.writeNull(); return; }");
+        if (prelude != null) {
+            append(lines, CodegenResult.bufferToWriteOp(prelude));
+        }
+        append(lines, String.format("encode_((%s)obj, stream);", clazz.getCanonicalName()));
+        if (epilogue != null) {
+            append(lines, CodegenResult.bufferToWriteOp(epilogue));
+        }
+        append(lines, "}");
+        return lines.toString();
+    }
+
+    private static void append(StringBuilder lines, String line) {
+        lines.append(line);
+        lines.append('\n');
+    }
 }
