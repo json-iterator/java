@@ -130,11 +130,7 @@ public abstract class Any implements Iterable<Any> {
     }
 
     public final boolean toBoolean(Object... keys) {
-        Any found = get(keys);
-        if (found.valueType() == ValueType.INVALID) {
-            return false;
-        }
-        return found.toBoolean();
+        return get(keys).toBoolean();
     }
 
     public boolean toBoolean() {
@@ -142,11 +138,7 @@ public abstract class Any implements Iterable<Any> {
     }
 
     public final int toInt(Object... keys) {
-        Any found = get(keys);
-        if (found.valueType() == ValueType.INVALID) {
-            return 0;
-        }
-        return found.toInt();
+        return get(keys).toInt();
     }
 
     public int toInt() {
@@ -154,11 +146,7 @@ public abstract class Any implements Iterable<Any> {
     }
 
     public final long toLong(Object... keys) {
-        Any found = get(keys);
-        if (found.valueType() == ValueType.INVALID) {
-            return 0;
-        }
-        return found.toLong();
+        return get(keys).toLong();
     }
 
     public long toLong() {
@@ -166,11 +154,7 @@ public abstract class Any implements Iterable<Any> {
     }
 
     public final float toFloat(Object... keys) {
-        Any found = get(keys);
-        if (found.valueType() == ValueType.INVALID) {
-            return 0;
-        }
-        return found.toFloat();
+        return get(keys).toFloat();
     }
 
     public float toFloat() {
@@ -178,11 +162,7 @@ public abstract class Any implements Iterable<Any> {
     }
 
     public final double toDouble(Object... keys) {
-        Any found = get(keys);
-        if (found.valueType() == ValueType.INVALID) {
-            return 0;
-        }
-        return found.toDouble();
+        return get(keys).toDouble();
     }
 
     public double toDouble() {
@@ -190,11 +170,7 @@ public abstract class Any implements Iterable<Any> {
     }
 
     public final String toString(Object... keys) {
-        Any found = get(keys);
-        if (found.valueType() == ValueType.INVALID) {
-            return "";
-        }
-        return found.toString();
+        return get(keys).toString();
     }
 
 

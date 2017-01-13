@@ -55,4 +55,34 @@ class NotFoundAny extends Any {
     public Any get(Object[] keys, int idx) {
         return this;
     }
+
+    @Override
+    public boolean toBoolean() {
+        return false;
+    }
+
+    @Override
+    public int toInt() {
+        return 0;
+    }
+
+    @Override
+    public long toLong() {
+        return 0;
+    }
+
+    @Override
+    public float toFloat() {
+        return 0;
+    }
+
+    @Override
+    public double toDouble() {
+        return 0;
+    }
+
+    @Override
+    public String toString() {
+        return "";
+    }
 }
