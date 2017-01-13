@@ -5,7 +5,7 @@ import junit.framework.TestCase;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
-@org.junit.experimental.categories.Category(Category.StreamingCategory.class)
+@org.junit.experimental.categories.Category(StreamingCategory.class)
 public class TestIO extends TestCase {
 
     public void test_read_byte() throws IOException {

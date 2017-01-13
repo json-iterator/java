@@ -1,8 +1,8 @@
 package com.jsoniter.suite;
 
-import com.jsoniter.Category;
 import com.jsoniter.DecodingMode;
 import com.jsoniter.JsonIterator;
+import com.jsoniter.StreamingCategory;
 import com.jsoniter.output.EncodingMode;
 import com.jsoniter.output.JsonStream;
 import org.junit.BeforeClass;
@@ -12,7 +12,7 @@ import org.junit.runners.Suite;
 
 
 @RunWith(Categories.class)
-@Categories.ExcludeCategory(Category.StreamingCategory.class)
+@Categories.ExcludeCategory(StreamingCategory.class)
 @Suite.SuiteClasses({AllTestCases.class})
 public class NonStreamingTests4Strict {
     @BeforeClass

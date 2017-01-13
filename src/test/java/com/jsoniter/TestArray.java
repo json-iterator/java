@@ -6,9 +6,11 @@ import junit.framework.TestCase;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertFalse;
 
 public class TestArray extends TestCase {
 
@@ -159,5 +161,24 @@ public class TestArray extends TestCase {
     public void test_boolean_array() throws IOException {
         JsonIterator iter = JsonIterator.parse("[true, false, true]");
         assertArrayEquals(new boolean[]{true, false, true}, iter.read(boolean[].class));
+    }
+
+    public void test_iterator() throws IOException {
+        Any any = JsonIterator.deserialize("[1,2,3,4]");
+        Iterator<Any> iter = any.iterator();
+        assertEquals(1, iter.next().toInt());
+        iter = any.iterator();
+        assertEquals(1, iter.next().toInt());
+        assertEquals(2, iter.next().toInt());
+        iter = any.iterator();
+        assertEquals(1, iter.next().toInt());
+        assertEquals(2, iter.next().toInt());
+        assertEquals(3, iter.next().toInt());
+        iter = any.iterator();
+        assertEquals(1, iter.next().toInt());
+        assertEquals(2, iter.next().toInt());
+        assertEquals(3, iter.next().toInt());
+        assertEquals(4, iter.next().toInt());
+        assertFalse(iter.hasNext());
     }
 }
