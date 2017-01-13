@@ -197,4 +197,22 @@ public class TestObject extends TestCase {
         assertEquals(3, iter.value().toInt());
         assertFalse(iter.next());
     }
+
+    public static class PublicSuper {
+        public String field1;
+    }
+
+    private static class PrivateSub extends PublicSuper {
+    }
+
+    public static class TestObject7 {
+        public PrivateSub field1;
+        public void setFieldXXX(PrivateSub obj) {
+        }
+    }
+
+    public void test_private_ref() throws IOException {
+        TestObject7 obj = JsonIterator.deserialize("{}", TestObject7.class);
+        assertNull(obj.field1);
+    }
 }

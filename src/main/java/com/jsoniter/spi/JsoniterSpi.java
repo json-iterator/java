@@ -279,6 +279,9 @@ public class JsoniterSpi {
             if (Modifier.isTransient(field.getModifiers())) {
                 continue;
             }
+            if (!includingPrivate && !Modifier.isPublic(field.getType().getModifiers())) {
+                continue;
+            }
             if (includingPrivate) {
                 field.setAccessible(true);
             }
@@ -316,16 +319,7 @@ public class JsoniterSpi {
 
     private static List<Binding> getSetters(Map<String, Type> lookup, Class clazz, boolean includingPrivate) {
         ArrayList<Binding> setters = new ArrayList<Binding>();
-        List<Method> allMethods = Arrays.asList(clazz.getMethods());
-        if (includingPrivate) {
-            allMethods = new ArrayList<Method>();
-            Class current = clazz;
-            while (current != null) {
-                allMethods.addAll(Arrays.asList(current.getDeclaredMethods()));
-                current = current.getSuperclass();
-            }
-        }
-        for (Method method : allMethods) {
+        for (Method method : getAllMethods(clazz, includingPrivate)) {
             if (Modifier.isStatic(method.getModifiers())) {
                 continue;
             }
@@ -338,6 +332,9 @@ public class JsoniterSpi {
             }
             Type[] paramTypes = method.getGenericParameterTypes();
             if (paramTypes.length != 1) {
+                continue;
+            }
+            if (!includingPrivate && !Modifier.isPublic(method.getParameterTypes()[0].getModifiers())) {
                 continue;
             }
             if (includingPrivate) {
@@ -358,6 +355,19 @@ public class JsoniterSpi {
         return setters;
     }
 
+    private static List<Method> getAllMethods(Class clazz, boolean includingPrivate) {
+        List<Method> allMethods = Arrays.asList(clazz.getMethods());
+        if (includingPrivate) {
+            allMethods = new ArrayList<Method>();
+            Class current = clazz;
+            while (current != null) {
+                allMethods.addAll(Arrays.asList(current.getDeclaredMethods()));
+                current = current.getSuperclass();
+            }
+        }
+        return allMethods;
+    }
+
     private static String translateSetterName(String methodName) {
         if (!methodName.startsWith("set")) {
             return null;
@@ -371,7 +381,7 @@ public class JsoniterSpi {
 
     private static List<Binding> getGetters(Map<String, Type> lookup, Class clazz, boolean includingPrivate) {
         ArrayList<Binding> getters = new ArrayList<Binding>();
-        for (Method method : clazz.getMethods()) {
+        for (Method method : getAllMethods(clazz, includingPrivate)) {
             if (Modifier.isStatic(method.getModifiers())) {
                 continue;
             }

@@ -133,10 +133,9 @@ class Codegen {
             JsoniterSpi.addNewEncoder(cacheKey, encoder);
             return encoder;
         } catch (Exception e) {
-            System.err.println("failed to generate encoder for: " + type + " with " + Arrays.toString(typeArgs) + ", exception: " + e);
-            System.err.println(source);
-            JsoniterSpi.dump();
-            throw new JsonException(e);
+            String msg = "failed to generate encoder for: " + type + " with " + Arrays.toString(typeArgs) + ", exception: " + e;
+            msg = msg + "\n" + source;
+            throw new JsonException(msg, e);
         }
     }
 

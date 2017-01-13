@@ -92,9 +92,9 @@ class Codegen {
             JsoniterSpi.addNewDecoder(cacheKey, decoder);
             return decoder;
         } catch (Exception e) {
-            System.err.println("failed to generate decoder for: " + type + " with " + Arrays.toString(typeArgs) + ", exception: " + e);
-            System.err.println(source);
-            throw new JsonException(e);
+            String msg = "failed to generate decoder for: " + type + " with " + Arrays.toString(typeArgs) + ", exception: " + e;
+            msg = msg + "\n" + source;
+            throw new JsonException(msg, e);
         }
     }
 
