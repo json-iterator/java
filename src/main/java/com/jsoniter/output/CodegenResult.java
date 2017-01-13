@@ -8,6 +8,9 @@ class CodegenResult {
     private StringBuilder buffered = new StringBuilder();
 
     public static String bufferToWriteOp(String buffered) {
+        if (buffered == null) {
+            return "";
+        }
         if (buffered.length() == 1) {
             return String.format("stream.write('%s');", escape(buffered.charAt(0)));
         } else if (buffered.length() == 2) {

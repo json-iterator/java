@@ -1,15 +1,19 @@
 package com.jsoniter.any;
 
 import com.jsoniter.*;
+import com.jsoniter.output.JsonStream;
 import com.jsoniter.spi.JsonException;
+import com.jsoniter.spi.TypeLiteral;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 class ArrayLazyAny extends LazyAny {
 
+    private final static TypeLiteral<List<Any>> typeLiteral = new TypeLiteral<List<Any>>(){};
     private List<Any> cache;
     private int lastParsedPos;
 
@@ -212,6 +216,17 @@ class ArrayLazyAny extends LazyAny {
                 lastParsedPos = tail;
             }
             return element;
+        }
+    }
+
+    @Override
+    public void writeTo(JsonStream stream) throws IOException {
+        if (lastParsedPos == head) {
+            super.writeTo(stream);
+        } else {
+            // there might be modification
+            fillCache();
+            stream.writeVal(typeLiteral, cache);
         }
     }
 }

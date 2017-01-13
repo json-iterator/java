@@ -1,7 +1,9 @@
 package com.jsoniter.any;
 
 import com.jsoniter.*;
+import com.jsoniter.output.JsonStream;
 import com.jsoniter.spi.JsonException;
+import com.jsoniter.spi.TypeLiteral;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -11,6 +13,7 @@ import java.util.Set;
 
 class ObjectLazyAny extends LazyAny {
 
+    private final static TypeLiteral<Map<String, Any>> typeLiteral = new TypeLiteral<Map<String, Any>>(){};
     private Map<Object, Any> cache;
     private int lastParsedPos;
 
@@ -134,14 +137,16 @@ class ObjectLazyAny extends LazyAny {
         try {
             JsonIterator iter = JsonIterator.tlsIter.get();
             iter.reset(data, lastParsedPos, tail);
-            if (!CodegenAccess.readObjectStart(iter)) {
-                lastParsedPos = tail;
-                return;
+            if (lastParsedPos == head) {
+                if (!CodegenAccess.readObjectStart(iter)) {
+                    lastParsedPos = tail;
+                    return;
+                }
+                String field = CodegenAccess.readObjectFieldAsString(iter);
+                cache.put(field, iter.readAny());
             }
-            String field = CodegenAccess.readObjectFieldAsString(iter);
-            cache.put(field, iter.readAny());
             while (CodegenAccess.nextToken(iter) == ',') {
-                field = CodegenAccess.readObjectFieldAsString(iter);
+                String field = CodegenAccess.readObjectFieldAsString(iter);
                 cache.put(field, iter.readAny());
             }
             lastParsedPos = tail;
@@ -221,6 +226,17 @@ class ObjectLazyAny extends LazyAny {
         @Override
         public Any value() {
             return value;
+        }
+    }
+
+    @Override
+    public void writeTo(JsonStream stream) throws IOException {
+        if (lastParsedPos == head) {
+            super.writeTo(stream);
+        } else {
+            // there might be modification
+            fillCache();
+            stream.writeVal(typeLiteral, (Map) cache);
         }
     }
 }

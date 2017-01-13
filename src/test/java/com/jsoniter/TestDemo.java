@@ -4,6 +4,8 @@ import com.jsoniter.annotation.JsonProperty;
 import com.jsoniter.any.Any;
 import com.jsoniter.fuzzy.MaybeEmptyArrayDecoder;
 import com.jsoniter.fuzzy.MaybeStringLongDecoder;
+import com.jsoniter.output.EncodingMode;
+import com.jsoniter.output.JsonStream;
 import com.jsoniter.spi.Decoder;
 import com.jsoniter.spi.EmptyExtension;
 import com.jsoniter.spi.JsoniterSpi;
@@ -13,6 +15,7 @@ import junit.framework.TestCase;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.Date;
+import java.util.List;
 
 public class TestDemo extends TestCase {
     public void test_bind_api() throws IOException {
@@ -119,5 +122,12 @@ public class TestDemo extends TestCase {
         assertFalse(iter.readArray()); // end inner array
         assertFalse(iter.readArray()); // end outer array
         assertNull(iter.readObject()); // end object
+    }
+
+    public void test_lazy() throws IOException {
+        JsonStream.setMode(EncodingMode.DYNAMIC_MODE);
+        Any any = JsonIterator.deserialize("{'numbers': ['1', '2', ['3', '4']]}".replace('\'', '"'));
+        any.get("numbers").asList().add(Any.wrap("hello"));
+        assertEquals("{'numbers':['1', '2', ['3', '4'],'hello']}".replace('\'', '"'), JsonStream.serialize(any));
     }
 }

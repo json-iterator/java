@@ -25,6 +25,7 @@ public abstract class Any implements Iterable<Any> {
                 return (Any) obj;
             }
         };
+        JsonStream.registerNativeEncoder(Any.class, anyEncoder);
         JsonStream.registerNativeEncoder(TrueAny.class, anyEncoder);
         JsonStream.registerNativeEncoder(FalseAny.class, anyEncoder);
         JsonStream.registerNativeEncoder(ArrayLazyAny.class, anyEncoder);
