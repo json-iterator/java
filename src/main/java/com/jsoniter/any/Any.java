@@ -258,11 +258,6 @@ public abstract class Any implements Iterable<Any> {
 
     public abstract void writeTo(JsonStream stream) throws IOException;
 
-    protected JsonException reportPathNotFound(Object[] keys, int idx) {
-        throw new JsonException(String.format("failed to get path %s, because #%s %s not found in %s",
-                Arrays.toString(keys), idx, keys[idx], object()));
-    }
-
     protected JsonException reportUnexpectedType(ValueType toType) {
         throw new JsonException(String.format("can not convert %s to %s", valueType(), toType));
     }
