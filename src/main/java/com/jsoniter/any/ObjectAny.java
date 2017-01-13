@@ -4,6 +4,7 @@ import com.jsoniter.ValueType;
 import com.jsoniter.output.JsonStream;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 class ObjectAny extends Any {
@@ -60,11 +61,19 @@ class ObjectAny extends Any {
         if (idx == keys.length) {
             return this;
         }
-        Any child = val.get(keys[idx]);
+        Object key = keys[idx];
+        if (isWildcard(key)) {
+            HashMap<String, Any> result = new HashMap<String, Any>();
+            for (Map.Entry<String, Any> entry : val.entrySet()) {
+                result.put(entry.getKey(), entry.getValue().get(keys, idx + 1));
+            }
+            return Any.wrapAnyMap(result);
+        }
+        Any child = val.get(key);
         if (child == null) {
             return null;
         }
-        return child.get(keys, idx+1);
+        return child.get(keys, idx + 1);
     }
 
     @Override

@@ -67,7 +67,16 @@ class ObjectLazyAny extends LazyAny {
         if (idx == keys.length) {
             return this;
         }
-        Any child = fillCache(keys[idx]);
+        Object key = keys[idx];
+        if (isWildcard(key)) {
+            fillCache();
+            HashMap<String, Any> result = new HashMap<String, Any>();
+            for (Map.Entry<Object, Any> entry : cache.entrySet()) {
+                result.put((String) entry.getKey(), entry.getValue().get(keys, idx+1));
+            }
+            return Any.wrapAnyMap(result);
+        }
+        Any child = fillCache(key);
         if (child == null) {
             return null;
         }

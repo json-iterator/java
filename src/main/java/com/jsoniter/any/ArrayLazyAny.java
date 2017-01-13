@@ -15,6 +15,7 @@ class ArrayLazyAny extends LazyAny {
 
     public ArrayLazyAny(byte[] data, int head, int tail) {
         super(data, head, tail);
+        lastParsedPos = head;
     }
 
     @Override
@@ -68,7 +69,16 @@ class ArrayLazyAny extends LazyAny {
         if (idx == keys.length) {
             return this;
         }
-        return fillCache((Integer) keys[idx]).get(keys, idx + 1);
+        Object key = keys[idx];
+        if (isWildcard(key)) {
+            fillCache();
+            ArrayList<Any> result = new ArrayList<Any>();
+            for (Any element : cache) {
+                result.add(element.get(keys, idx+1));
+            }
+            return Any.wrapAnyList(result);
+        }
+        return fillCache((Integer) key).get(keys, idx + 1);
     }
 
     @Override
@@ -120,7 +130,7 @@ class ArrayLazyAny extends LazyAny {
         }
         int i = cache.size();
         if (target < i) {
-            return cache.get(i);
+            return cache.get(target);
         }
         try {
             JsonIterator iter = JsonIterator.tlsIter.get();
@@ -136,6 +146,7 @@ class ArrayLazyAny extends LazyAny {
                     lastParsedPos = CodegenAccess.head(iter);
                     return element;
                 }
+                i = 1;
             }
             while (CodegenAccess.nextToken(iter) == ',') {
                 Any element = iter.readAny();

@@ -4,6 +4,7 @@ import com.jsoniter.ValueType;
 import com.jsoniter.output.JsonStream;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -61,7 +62,15 @@ class ArrayAny extends Any {
         if (idx == keys.length) {
             return this;
         }
-        return val.get((Integer) keys[idx]).get(keys, idx+1);
+        Object key = keys[idx];
+        if (isWildcard(key)) {
+            ArrayList<Any> result = new ArrayList<Any>();
+            for (Any element : val) {
+                result.add(element.get(keys, idx+1));
+            }
+            return Any.wrapAnyList(result);
+        }
+        return val.get((Integer) key).get(keys, idx+1);
     }
 
     @Override

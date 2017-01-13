@@ -392,4 +392,11 @@ public abstract class Any implements Iterable<Any> {
     public static Any wrapAnyMap(Map<String, Any> val) {
         return new ObjectAny(val);
     }
+
+    private final static int wildcardHashCode = Character.valueOf('*').hashCode();
+    private final static Character wildcard = '*';
+
+    protected boolean isWildcard(Object key) {
+        return wildcardHashCode == key.hashCode() && wildcard.equals(key);
+    }
 }
