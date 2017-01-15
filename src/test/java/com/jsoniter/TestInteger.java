@@ -16,6 +16,11 @@ public class TestInteger extends TestCase {
         assertEquals(-4321, parseInt("-4321"));
     }
 
+    public void test_max_min_int() throws IOException {
+        assertEquals(Integer.MAX_VALUE, parseInt(Integer.toString(Integer.MAX_VALUE)));
+        assertEquals(Integer.MIN_VALUE, parseInt(Integer.toString(Integer.MIN_VALUE)));
+    }
+
     public void test_large_number() throws IOException {
         try {
             parseInt("123456789123456789");

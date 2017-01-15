@@ -43,8 +43,8 @@ class IterImplNumber {
     private final static int DOT_IN_NUMBER = -3;
     private final static int INVALID_CHAR_FOR_NUMBER = -1;
     private static final int POW10[] = {1, 10, 100, 1000, 10000, 100000, 1000000};
-    private final static long LONG_SAFE_TO_MULTIPLY_10 = (Long.MAX_VALUE / 10) - 10;
-    private final static int INT_SAFE_TO_MULTIPLY_10 = (Integer.MAX_VALUE / 10) - 10;
+    private final static long LONG_SAFE_TO_MULTIPLY_10 = (Long.MAX_VALUE / 10) - 1;
+    private final static int INT_SAFE_TO_MULTIPLY_10 = (Integer.MAX_VALUE / 10) - 1;
 
     static {
         for (int i = 0; i < digits.length; i++) {
@@ -247,34 +247,74 @@ class IterImplNumber {
     public static final int readInt(final JsonIterator iter) throws IOException {
         byte c = IterImpl.nextToken(iter);
         if (c == '-') {
-            return -readUnsignedInt(iter, IterImpl.readByte(iter));
+            return readNegativeInt(iter);
         } else {
-            return readUnsignedInt(iter, c);
+            return readPositiveInt(iter, c);
         }
     }
 
-    public static final int readUnsignedInt(final JsonIterator iter, byte c) throws IOException {
-        int result = intDigits[c];
-        if (result == 0) {
+    public static final int readPositiveInt(final JsonIterator iter, byte c) throws IOException {
+        int value = intDigits[c];
+        if (value == 0) {
             return 0;
         }
-        if (result == INVALID_CHAR_FOR_NUMBER) {
-            throw iter.reportError("readUnsignedInt", "expect 0~9");
+        if (value == INVALID_CHAR_FOR_NUMBER) {
+            throw iter.reportError("readPositiveInt", "expect 0~9");
         }
         for (;;) {
             for (int i = iter.head; i < iter.tail; i++) {
                 int ind = intDigits[iter.buf[i]];
                 if (ind == INVALID_CHAR_FOR_NUMBER) {
                     iter.head = i;
-                    return result;
+                    return value;
                 }
-                if (result > INT_SAFE_TO_MULTIPLY_10) {
-                    throw iter.reportError("readUnsignedInt", "value is too large for int");
+                if (value > INT_SAFE_TO_MULTIPLY_10) {
+                    int value2 = (value << 3) + (value << 1) + ind;
+                    if (value2 < INT_SAFE_TO_MULTIPLY_10 * 10) {
+                        throw iter.reportError("readPositiveInt", "value is too large for int");
+                    } else {
+                        value = value2;
+                        continue;
+                    }
                 }
-                result = (result << 3) + (result << 1) + ind;
+                value = (value << 3) + (value << 1) + ind;
             }
             if (!IterImpl.loadMore(iter)) {
-                return result;
+                return value;
+            }
+        }
+    }
+
+    public static final int readNegativeInt(final JsonIterator iter) throws IOException {
+        byte c = IterImpl.readByte(iter);
+        int ind = intDigits[c];
+        if (ind == 0) {
+            return 0;
+        }
+        if (ind == INVALID_CHAR_FOR_NUMBER) {
+            throw iter.reportError("readNegativeInt", "expect 0~9");
+        }
+        int value = -ind;
+        for (;;) {
+            for (int i = iter.head; i < iter.tail; i++) {
+                ind = intDigits[iter.buf[i]];
+                if (ind == INVALID_CHAR_FOR_NUMBER) {
+                    iter.head = i;
+                    return value;
+                }
+                if (value > INT_SAFE_TO_MULTIPLY_10) {
+                    int value2 = (value << 3) + (value << 1) - ind;
+                    if (value2 < INT_SAFE_TO_MULTIPLY_10 * 10) {
+                        throw iter.reportError("readNegativeInt", "value is too large for int");
+                    } else {
+                        value = value2;
+                        continue;
+                    }
+                }
+                value = (value << 3) + (value << 1) - ind;
+            }
+            if (!IterImpl.loadMore(iter)) {
+                return value;
             }
         }
     }
