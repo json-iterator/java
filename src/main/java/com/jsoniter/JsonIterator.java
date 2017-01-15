@@ -168,7 +168,7 @@ public class JsonIterator implements Closeable {
         if (Short.MIN_VALUE <= v && v <= Short.MAX_VALUE) {
             return (short) v;
         } else {
-            throw new JsonException("short overflow: " + v);
+            throw reportError("readShort", "short overflow: " + v);
         }
     }
 

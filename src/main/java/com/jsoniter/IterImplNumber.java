@@ -33,24 +33,29 @@ package com.jsoniter;
 
 import java.io.IOException;
 
+// TODO: make separate implementation for streaming and non-streaming
 class IterImplNumber {
     
     final static int[] digits = new int[256];
-    final static int[] zeroToNineDigits = new int[256];
-    final static int END_OF_NUMBER = -2;
-    final static int DOT_IN_NUMBER = -3;
-    final static int INVALID_CHAR_FOR_NUMBER = -1;
+    private final static int[] intDigits = new int[256];
+    private final static int[] floatDigits = new int[256];
+    private final static int END_OF_NUMBER = -2;
+    private final static int DOT_IN_NUMBER = -3;
+    private final static int INVALID_CHAR_FOR_NUMBER = -1;
     private static final int POW10[] = {1, 10, 100, 1000, 10000, 100000, 1000000};
-    private final static long SAFE_TO_MULTIPLY_10 = (Long.MAX_VALUE / 10) - 10;
+    private final static long LONG_SAFE_TO_MULTIPLY_10 = (Long.MAX_VALUE / 10) - 10;
+    private final static int INT_SAFE_TO_MULTIPLY_10 = (Integer.MAX_VALUE / 10) - 10;
 
     static {
         for (int i = 0; i < digits.length; i++) {
             digits[i] = INVALID_CHAR_FOR_NUMBER;
-            zeroToNineDigits[i] = INVALID_CHAR_FOR_NUMBER;
+            floatDigits[i] = INVALID_CHAR_FOR_NUMBER;
+            intDigits[i] = INVALID_CHAR_FOR_NUMBER;
         }
         for (int i = '0'; i <= '9'; ++i) {
             digits[i] = (i - '0');
-            zeroToNineDigits[i] = (i - '0');
+            floatDigits[i] = (i - '0');
+            intDigits[i] = (i - '0');
         }
         for (int i = 'a'; i <= 'f'; ++i) {
             digits[i] = ((i - 'a') + 10);
@@ -58,11 +63,11 @@ class IterImplNumber {
         for (int i = 'A'; i <= 'F'; ++i) {
             digits[i] = ((i - 'A') + 10);
         }
-        zeroToNineDigits[','] = END_OF_NUMBER;
-        zeroToNineDigits[']'] = END_OF_NUMBER;
-        zeroToNineDigits['}'] = END_OF_NUMBER;
-        zeroToNineDigits[' '] = END_OF_NUMBER;
-        zeroToNineDigits['.'] = DOT_IN_NUMBER;
+        floatDigits[','] = END_OF_NUMBER;
+        floatDigits[']'] = END_OF_NUMBER;
+        floatDigits['}'] = END_OF_NUMBER;
+        floatDigits[' '] = END_OF_NUMBER;
+        floatDigits['.'] = DOT_IN_NUMBER;
     }
 
     public static final double readDouble(final JsonIterator iter) throws IOException {
@@ -82,7 +87,7 @@ class IterImplNumber {
         non_decimal_loop:
         for (; i < iter.tail; i++) {
             c = iter.buf[i];
-            final int ind = zeroToNineDigits[c];
+            final int ind = floatDigits[c];
             switch (ind) {
                 case INVALID_CHAR_FOR_NUMBER:
                     return readDoubleSlowPath(iter);
@@ -92,7 +97,7 @@ class IterImplNumber {
                 case DOT_IN_NUMBER:
                     break non_decimal_loop;
             }
-            if (value > SAFE_TO_MULTIPLY_10) {
+            if (value > LONG_SAFE_TO_MULTIPLY_10) {
                 return readDoubleSlowPath(iter);
             }
             value = (value << 3) + (value << 1) + ind; // value = value * 10 + ind;
@@ -102,7 +107,7 @@ class IterImplNumber {
             int decimalPlaces = 0;
             for (; i < iter.tail; i++) {
                 c = iter.buf[i];
-                final int ind = zeroToNineDigits[c];
+                final int ind = floatDigits[c];
                 switch (ind) {
                     case END_OF_NUMBER:
                         if (decimalPlaces > 0 && decimalPlaces < POW10.length) {
@@ -116,7 +121,7 @@ class IterImplNumber {
                         return readDoubleSlowPath(iter);
                 }
                 decimalPlaces++;
-                if (value > SAFE_TO_MULTIPLY_10) {
+                if (value > LONG_SAFE_TO_MULTIPLY_10) {
                     return readDoubleSlowPath(iter);
                 }
                 value = (value << 3) + (value << 1) + ind; // value = value * 10 + ind;
@@ -150,7 +155,7 @@ class IterImplNumber {
         non_decimal_loop:
         for (; i < iter.tail; i++) {
             c = iter.buf[i];
-            final int ind = zeroToNineDigits[c];
+            final int ind = floatDigits[c];
             switch (ind) {
                 case INVALID_CHAR_FOR_NUMBER:
                     return readFloatSlowPath(iter);
@@ -160,7 +165,7 @@ class IterImplNumber {
                 case DOT_IN_NUMBER:
                     break non_decimal_loop;
             }
-            if (value > SAFE_TO_MULTIPLY_10) {
+            if (value > LONG_SAFE_TO_MULTIPLY_10) {
                 return readFloatSlowPath(iter);
             }
             value = (value << 3) + (value << 1) + ind; // value = value * 10 + ind;
@@ -170,7 +175,7 @@ class IterImplNumber {
             int decimalPlaces = 0;
             for (; i < iter.tail; i++) {
                 c = iter.buf[i];
-                final int ind = zeroToNineDigits[c];
+                final int ind = floatDigits[c];
                 switch (ind) {
                     case END_OF_NUMBER:
                         if (decimalPlaces > 0 && decimalPlaces < POW10.length) {
@@ -184,7 +189,7 @@ class IterImplNumber {
                         return readFloatSlowPath(iter);
                 }
                 decimalPlaces++;
-                if (value > SAFE_TO_MULTIPLY_10) {
+                if (value > LONG_SAFE_TO_MULTIPLY_10) {
                     return readFloatSlowPath(iter);
                 }
                 value = (value << 3) + (value << 1) + ind; // value = value * 10 + ind;
@@ -239,37 +244,39 @@ class IterImplNumber {
         }
     }
 
-    public static final int readInt(JsonIterator iter) throws IOException {
+    public static final int readInt(final JsonIterator iter) throws IOException {
         byte c = IterImpl.nextToken(iter);
         if (c == '-') {
-            return -readUnsignedInt(iter);
+            return -readUnsignedInt(iter, IterImpl.readByte(iter));
         } else {
-            iter.unreadByte();
-            return readUnsignedInt(iter);
+            return readUnsignedInt(iter, c);
         }
     }
 
-    public static final int readUnsignedInt(JsonIterator iter) throws IOException {
-        // TODO: throw overflow
-        byte c = IterImpl.readByte(iter);
-        int v = digits[c];
-        if (v == 0) {
+    public static final int readUnsignedInt(final JsonIterator iter, byte c) throws IOException {
+        int result = intDigits[c];
+        if (result == 0) {
             return 0;
         }
-        if (v == -1) {
+        if (result == INVALID_CHAR_FOR_NUMBER) {
             throw iter.reportError("readUnsignedInt", "expect 0~9");
         }
-        int result = 0;
-        for (; ; ) {
-            result = result * 10 + v;
-            c = IterImpl.readByte(iter);
-            v = digits[c];
-            if (v == -1) {
-                iter.unreadByte();
-                break;
+        for (;;) {
+            for (int i = iter.head; i < iter.tail; i++) {
+                int ind = intDigits[iter.buf[i]];
+                if (ind == INVALID_CHAR_FOR_NUMBER) {
+                    iter.head = i;
+                    return result;
+                }
+                if (result > INT_SAFE_TO_MULTIPLY_10) {
+                    throw iter.reportError("readUnsignedInt", "value is too large for int");
+                }
+                result = (result << 3) + (result << 1) + ind;
+            }
+            if (!IterImpl.loadMore(iter)) {
+                return result;
             }
         }
-        return result;
     }
 
     public static final long readLong(JsonIterator iter) throws IOException {
