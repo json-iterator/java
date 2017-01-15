@@ -124,10 +124,23 @@ public class TestDemo extends TestCase {
         assertNull(iter.readObject()); // end object
     }
 
-    public void test_lazy() throws IOException {
-        JsonStream.setMode(EncodingMode.DYNAMIC_MODE);
+    public void test_any_is_fun() throws IOException {
         Any any = JsonIterator.deserialize("{'numbers': ['1', '2', ['3', '4']]}".replace('\'', '"'));
         any.get("numbers").asList().add(Any.wrap("hello"));
         assertEquals("{'numbers':['1', '2', ['3', '4'],'hello']}".replace('\'', '"'), JsonStream.serialize(any));
+        any = JsonIterator.deserialize("{'error': 'failed'}".replace('\'', '"'));
+        assertFalse(any.toBoolean("success"));
+        any = JsonIterator.deserialize("{'success': true}".replace('\'', '"'));
+        assertTrue(any.toBoolean("success"));
+        any = JsonIterator.deserialize("{'success': 'false'}".replace('\'', '"'));
+        assertFalse(any.toBoolean("success"));
+        any = JsonIterator.deserialize("[{'score':100}, {'score':102}]".replace('\'', '"'));
+        assertEquals("[100,102]", JsonStream.serialize(any.get('*', "score")));
+        any = JsonIterator.deserialize("[{'score':100}, {'score':[102]}]".replace('\'', '"'));
+        assertEquals("[{},{'score':102}]".replace('\'', '"'), JsonStream.serialize(any.get('*', '*', 0)));
+        any = JsonIterator.deserialize("[{'score':100}, {'score':102}]".replace('\'', '"'));
+        assertEquals(Long.class, any.get(0, "score").object().getClass());
+        any = JsonIterator.deserialize("[{'score':100}, {'score':102}]".replace('\'', '"'));
+        assertEquals(ValueType.INVALID, any.get(0, "score", "number").valueType());
     }
 }

@@ -36,13 +36,20 @@ import java.io.IOException;
 class IterImplNumber {
     
     final static int[] digits = new int[256];
+    final static int[] zeroToNineDigits = new int[256];
+    final static int END_OF_NUMBER = -2;
+    final static int DOT_IN_NUMBER = -3;
+    final static int INVALID_CHAR_FOR_NUMBER = -1;
+    private static final int POW10[] = {1, 10, 100, 1000, 10000, 100000, 1000000};
 
     static {
         for (int i = 0; i < digits.length; i++) {
-            digits[i] = -1;
+            digits[i] = INVALID_CHAR_FOR_NUMBER;
+            zeroToNineDigits[i] = INVALID_CHAR_FOR_NUMBER;
         }
         for (int i = '0'; i <= '9'; ++i) {
             digits[i] = (i - '0');
+            zeroToNineDigits[i] = (i - '0');
         }
         for (int i = 'a'; i <= 'f'; ++i) {
             digits[i] = ((i - 'a') + 10);
@@ -50,6 +57,11 @@ class IterImplNumber {
         for (int i = 'A'; i <= 'F'; ++i) {
             digits[i] = ((i - 'A') + 10);
         }
+        zeroToNineDigits[','] = END_OF_NUMBER;
+        zeroToNineDigits[']'] = END_OF_NUMBER;
+        zeroToNineDigits['}'] = END_OF_NUMBER;
+        zeroToNineDigits[' '] = END_OF_NUMBER;
+        zeroToNineDigits['.'] = DOT_IN_NUMBER;
     }
 
     public static final double readDouble(JsonIterator iter) throws IOException {
@@ -147,84 +159,61 @@ class IterImplNumber {
 
     public static final float readFloat(JsonIterator iter) throws IOException {
         final byte c = IterImpl.nextToken(iter);
-        // when re-read using slowpath, it should include the first byte
-        iter.unreadByte();
         if (c == '-') {
-            // skip '-' by + 1
-            return readNegativeFloat(iter, iter.head + 1);
+            return -readPositiveFloat(iter);
+        } else {
+            iter.unreadByte();
+            return readPositiveFloat(iter);
         }
-        return readPositiveFloat(iter, iter.head);
     }
 
-    private static final float readPositiveFloat(JsonIterator iter, int start) throws IOException {
-        long value = 0;
+    private final static long SAFE_TO_MULTIPLY_10 = (Long.MAX_VALUE / 10) - 10;
+
+    private static final float readPositiveFloat(JsonIterator iter) throws IOException {
+        long value = 0; // without the dot
         byte c = ' ';
-        int i = start;
+        int i = iter.head;
+        non_decimal_loop:
         for (; i < iter.tail; i++) {
             c = iter.buf[i];
-            if (c == ',' || c == '}' || c == ']' || c == ' ') {
-                iter.head = i;
-                return value;
+            final int ind = zeroToNineDigits[c];
+            switch (ind) {
+                case INVALID_CHAR_FOR_NUMBER:
+                    return readFloatSlowPath(iter);
+                case END_OF_NUMBER:
+                    iter.head = i;
+                    return value;
+                case DOT_IN_NUMBER:
+                    break non_decimal_loop;
             }
-            if (c == '.') break;
-            final int ind = digits[c];
-            value = (value << 3) + (value << 1) + ind;
-            if (ind < 0 || ind > 9) {
+            if (value > SAFE_TO_MULTIPLY_10) {
                 return readFloatSlowPath(iter);
             }
+            value = (value << 3) + (value << 1) + ind; // value = value * 10 + ind;
         }
         if (c == '.') {
             i++;
-            long div = 1;
+            int decimalPlaces = 0;
             for (; i < iter.tail; i++) {
                 c = iter.buf[i];
-                if (c == ',' || c == '}' || c == ']' || c == ' ') {
-                    iter.head = i;
-                    return value / (float) div;
+                final int ind = zeroToNineDigits[c];
+                switch (ind) {
+                    case END_OF_NUMBER:
+                        if (decimalPlaces > 0 && decimalPlaces < POW10.length) {
+                            iter.head = i;
+                            return value / (float) POW10[decimalPlaces];
+                        }
+                        // too many decimal places
+                        return readFloatSlowPath(iter);
+                    case INVALID_CHAR_FOR_NUMBER:
+                    case DOT_IN_NUMBER:
+                        return readFloatSlowPath(iter);
                 }
-                final int ind = digits[c];
-                div = (div << 3) + (div << 1);
-                value = (value << 3) + (value << 1) + ind;
-                if (ind < 0 || ind > 9) {
+                decimalPlaces++;
+                if (value > SAFE_TO_MULTIPLY_10) {
                     return readFloatSlowPath(iter);
                 }
-            }
-        }
-        return readFloatSlowPath(iter);
-    }
-
-    private static final float readNegativeFloat(JsonIterator iter, int start) throws IOException {
-        long value = 0;
-        byte c = ' ';
-        int i = start;
-        for (; i < iter.tail; i++) {
-            c = iter.buf[i];
-            if (c == ',' || c == '}' || c == ']' || c == ' ') {
-                iter.head = i;
-                return value;
-            }
-            if (c == '.') break;
-            final int ind = digits[c];
-            value = (value << 3) + (value << 1) - ind;
-            if (ind < 0 || ind > 9) {
-                return readFloatSlowPath(iter);
-            }
-        }
-        if (c == '.') {
-            i++;
-            long div = 1;
-            for (; i < iter.tail; i++) {
-                c = iter.buf[i];
-                if (c == ',' || c == '}' || c == ']' || c == ' ') {
-                    iter.head = i;
-                    return value / (float) div;
-                }
-                final int ind = digits[c];
-                div = (div << 3) + (div << 1);
-                value = (value << 3) + (value << 1) - ind;
-                if (ind < 0 || ind > 9) {
-                    return readFloatSlowPath(iter);
-                }
+                value = (value << 3) + (value << 1) + ind; // value = value * 10 + ind;
             }
         }
         return readFloatSlowPath(iter);
@@ -248,7 +237,6 @@ class IterImplNumber {
             }
             switch (c) {
                 case '-':
-                case '+':
                 case '.':
                 case 'e':
                 case 'E':

@@ -14,7 +14,6 @@ public class JsonStream extends OutputStream {
     public int indentionStep = defaultIndentionStep;
     private int indention = 0;
     private OutputStream out;
-    char[] reusableChars = new char[32];
     private static final byte[] NULL = "null".getBytes();
     private static final byte[] TRUE = "true".getBytes();
     private static final byte[] FALSE = "false".getBytes();
