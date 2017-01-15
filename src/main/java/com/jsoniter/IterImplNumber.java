@@ -41,6 +41,7 @@ class IterImplNumber {
     final static int DOT_IN_NUMBER = -3;
     final static int INVALID_CHAR_FOR_NUMBER = -1;
     private static final int POW10[] = {1, 10, 100, 1000, 10000, 100000, 1000000};
+    private final static long SAFE_TO_MULTIPLY_10 = (Long.MAX_VALUE / 10) - 10;
 
     static {
         for (int i = 0; i < digits.length; i++) {
@@ -64,92 +65,67 @@ class IterImplNumber {
         zeroToNineDigits['.'] = DOT_IN_NUMBER;
     }
 
-    public static final double readDouble(JsonIterator iter) throws IOException {
+    public static final double readDouble(final JsonIterator iter) throws IOException {
         final byte c = IterImpl.nextToken(iter);
-        // when re-read using slowpath, it should include the first byte
-        iter.unreadByte();
         if (c == '-') {
-            // skip '-' by + 1
-            return readNegativeDouble(iter, iter.head + 1);
+            return -readPositiveDouble(iter);
+        } else {
+            iter.unreadByte();
+            return readPositiveDouble(iter);
         }
-        return readPositiveDouble(iter, iter.head);
     }
 
-    private static final double readPositiveDouble(JsonIterator iter, int start) throws IOException {
-        long value = 0;
+    private static final double readPositiveDouble(final JsonIterator iter) throws IOException {
+        long value = 0; // without the dot
         byte c = ' ';
-        int i = start;
+        int i = iter.head;
+        non_decimal_loop:
         for (; i < iter.tail; i++) {
             c = iter.buf[i];
-            if (c == ',' || c == '}' || c == ']' || c == ' ') {
-                iter.head = i;
-                return value;
+            final int ind = zeroToNineDigits[c];
+            switch (ind) {
+                case INVALID_CHAR_FOR_NUMBER:
+                    return readDoubleSlowPath(iter);
+                case END_OF_NUMBER:
+                    iter.head = i;
+                    return value;
+                case DOT_IN_NUMBER:
+                    break non_decimal_loop;
             }
-            if (c == '.') break;
-            final int ind = digits[c];
-            value = (value << 3) + (value << 1) + ind;
-            if (ind < 0 || ind > 9) {
+            if (value > SAFE_TO_MULTIPLY_10) {
                 return readDoubleSlowPath(iter);
             }
+            value = (value << 3) + (value << 1) + ind; // value = value * 10 + ind;
         }
         if (c == '.') {
             i++;
-            long div = 1;
+            int decimalPlaces = 0;
             for (; i < iter.tail; i++) {
                 c = iter.buf[i];
-                if (c == ',' || c == '}' || c == ']' || c == ' ') {
-                    iter.head = i;
-                    return value / (double) div;
+                final int ind = zeroToNineDigits[c];
+                switch (ind) {
+                    case END_OF_NUMBER:
+                        if (decimalPlaces > 0 && decimalPlaces < POW10.length) {
+                            iter.head = i;
+                            return value / (double) POW10[decimalPlaces];
+                        }
+                        // too many decimal places
+                        return readDoubleSlowPath(iter);
+                    case INVALID_CHAR_FOR_NUMBER:
+                    case DOT_IN_NUMBER:
+                        return readDoubleSlowPath(iter);
                 }
-                final int ind = digits[c];
-                div = (div << 3) + (div << 1);
-                value = (value << 3) + (value << 1) + ind;
-                if (ind < 0 || ind > 9) {
+                decimalPlaces++;
+                if (value > SAFE_TO_MULTIPLY_10) {
                     return readDoubleSlowPath(iter);
                 }
+                value = (value << 3) + (value << 1) + ind; // value = value * 10 + ind;
             }
         }
         return readDoubleSlowPath(iter);
     }
 
-    private static final double readNegativeDouble(JsonIterator iter, int start) throws IOException {
-        long value = 0;
-        byte c = ' ';
-        int i = start;
-        for (; i < iter.tail; i++) {
-            c = iter.buf[i];
-            if (c == ',' || c == '}' || c == ']' || c == ' ') {
-                iter.head = i;
-                return value;
-            }
-            if (c == '.') break;
-            final int ind = digits[c];
-            value = (value << 3) + (value << 1) - ind;
-            if (ind < 0 || ind > 9) {
-                return readDoubleSlowPath(iter);
-            }
-        }
-        if (c == '.') {
-            i++;
-            long div = 1;
-            for (; i < iter.tail; i++) {
-                c = iter.buf[i];
-                if (c == ',' || c == '}' || c == ']' || c == ' ') {
-                    iter.head = i;
-                    return value / (double) div;
-                }
-                final int ind = digits[c];
-                div = (div << 3) + (div << 1);
-                value = (value << 3) + (value << 1) - ind;
-                if (ind < 0 || ind > 9) {
-                    return readDoubleSlowPath(iter);
-                }
-            }
-        }
-        return readDoubleSlowPath(iter);
-    }
-
-    public static final double readDoubleSlowPath(JsonIterator iter) throws IOException {
+    public static final double readDoubleSlowPath(final JsonIterator iter) throws IOException {
         try {
             return Double.valueOf(readNumber(iter));
         } catch (NumberFormatException e) {
@@ -157,7 +133,7 @@ class IterImplNumber {
         }
     }
 
-    public static final float readFloat(JsonIterator iter) throws IOException {
+    public static final float readFloat(final JsonIterator iter) throws IOException {
         final byte c = IterImpl.nextToken(iter);
         if (c == '-') {
             return -readPositiveFloat(iter);
@@ -167,9 +143,7 @@ class IterImplNumber {
         }
     }
 
-    private final static long SAFE_TO_MULTIPLY_10 = (Long.MAX_VALUE / 10) - 10;
-
-    private static final float readPositiveFloat(JsonIterator iter) throws IOException {
+    private static final float readPositiveFloat(final JsonIterator iter) throws IOException {
         long value = 0; // without the dot
         byte c = ' ';
         int i = iter.head;
@@ -201,7 +175,7 @@ class IterImplNumber {
                     case END_OF_NUMBER:
                         if (decimalPlaces > 0 && decimalPlaces < POW10.length) {
                             iter.head = i;
-                            return value / (float) POW10[decimalPlaces];
+                            return (float) (value / (double) POW10[decimalPlaces]);
                         }
                         // too many decimal places
                         return readFloatSlowPath(iter);
@@ -219,44 +193,48 @@ class IterImplNumber {
         return readFloatSlowPath(iter);
     }
 
-    public static final float readFloatSlowPath(JsonIterator iter) throws IOException {
+    public static final float readFloatSlowPath(final JsonIterator iter) throws IOException {
         try {
             return Float.valueOf(readNumber(iter));
         } catch (NumberFormatException e) {
-            throw iter.reportError("readDoubleSlowPath", e.toString());
+            throw iter.reportError("readFloatSlowPath", e.toString());
         }
     }
 
-    public static final String readNumber(JsonIterator iter) throws IOException {
+    public static final String readNumber(final JsonIterator iter) throws IOException {
         int j = 0;
-        for (byte c = IterImpl.nextToken(iter); ; c = IterImpl.readByte(iter)) {
-            if (j == iter.reusableChars.length) {
-                char[] newBuf = new char[iter.reusableChars.length * 2];
-                System.arraycopy(iter.reusableChars, 0, newBuf, 0, iter.reusableChars.length);
-                iter.reusableChars = newBuf;
+        for (;;) {
+            for (int i = iter.head; i < iter.tail; i++) {
+                if (j == iter.reusableChars.length) {
+                    char[] newBuf = new char[iter.reusableChars.length * 2];
+                    System.arraycopy(iter.reusableChars, 0, newBuf, 0, iter.reusableChars.length);
+                    iter.reusableChars = newBuf;
+                }
+                byte c = iter.buf[i];
+                switch (c) {
+                    case '-':
+                    case '.':
+                    case 'e':
+                    case 'E':
+                    case '0':
+                    case '1':
+                    case '2':
+                    case '3':
+                    case '4':
+                    case '5':
+                    case '6':
+                    case '7':
+                    case '8':
+                    case '9':
+                        iter.reusableChars[j++] = (char) c;
+                        break;
+                    default:
+                        iter.head = i;
+                        return new String(iter.reusableChars, 0, j);
+                }
             }
-            switch (c) {
-                case '-':
-                case '.':
-                case 'e':
-                case 'E':
-                case '0':
-                case '1':
-                case '2':
-                case '3':
-                case '4':
-                case '5':
-                case '6':
-                case '7':
-                case '8':
-                case '9':
-                    iter.reusableChars[j++] = (char) c;
-                    break;
-                case 0:
-                    return new String(iter.reusableChars, 0, j);
-                default:
-                    iter.unreadByte();
-                    return new String(iter.reusableChars, 0, j);
+            if (!IterImpl.loadMore(iter)) {
+                return new String(iter.reusableChars, 0, j);
             }
         }
     }

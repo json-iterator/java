@@ -220,4 +220,8 @@ class IterImpl {
     public static void skipFixedBytes(JsonIterator iter, int n) throws IOException {
         iter.head += n;
     }
+
+    public final static boolean loadMore(JsonIterator iter) throws IOException {
+        return false;
+    }
 }

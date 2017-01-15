@@ -247,8 +247,7 @@ class IterImplForStreaming {
         }
     }
 
-
-    final static boolean loadMore(JsonIterator iter) throws IOException {
+    public final static boolean loadMore(JsonIterator iter) throws IOException {
         if (iter.in == null) {
             return false;
         }
