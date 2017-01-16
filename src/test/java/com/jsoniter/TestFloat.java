@@ -19,7 +19,7 @@ public class TestFloat extends TestCase {
         assertEquals(-12.3d, parseDouble("-12.3,"));
     }
 
-    public void test_too_large() throws IOException {
+    public void test_decimal_places() throws IOException {
         assertEquals(Long.MAX_VALUE, parseFloat("9223372036854775807,"), 0.01f);
         assertEquals(Long.MAX_VALUE, parseDouble("9223372036854775807,"), 0.01f);
         assertEquals(9923372036854775807f, parseFloat("9923372036854775807,"), 0.01f);
@@ -36,7 +36,7 @@ public class TestFloat extends TestCase {
     public void test_streaming() throws IOException {
         isStreaming = true;
         test_positive_negative();
-        test_too_large();
+        test_decimal_places();
     }
 
     private float parseFloat(String input) throws IOException {
