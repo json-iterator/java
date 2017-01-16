@@ -36,7 +36,6 @@ import java.io.IOException;
 // TODO: make separate implementation for streaming and non-streaming
 class IterImplNumber {
 
-    final static int[] digits = new int[256];
     private final static int[] intDigits = new int[256];
     private final static int[] floatDigits = new int[256];
     private final static int END_OF_NUMBER = -2;
@@ -45,21 +44,13 @@ class IterImplNumber {
     private static final int POW10[] = {1, 10, 100, 1000, 10000, 100000, 1000000};
 
     static {
-        for (int i = 0; i < digits.length; i++) {
-            digits[i] = INVALID_CHAR_FOR_NUMBER;
+        for (int i = 0; i < floatDigits.length; i++) {
             floatDigits[i] = INVALID_CHAR_FOR_NUMBER;
             intDigits[i] = INVALID_CHAR_FOR_NUMBER;
         }
         for (int i = '0'; i <= '9'; ++i) {
-            digits[i] = (i - '0');
             floatDigits[i] = (i - '0');
             intDigits[i] = (i - '0');
-        }
-        for (int i = 'a'; i <= 'f'; ++i) {
-            digits[i] = ((i - 'a') + 10);
-        }
-        for (int i = 'A'; i <= 'F'; ++i) {
-            digits[i] = ((i - 'A') + 10);
         }
         floatDigits[','] = END_OF_NUMBER;
         floatDigits[']'] = END_OF_NUMBER;
@@ -330,32 +321,5 @@ class IterImplNumber {
                 return value;
             }
         }
-    }
-
-    public static final char readU4(JsonIterator iter) throws IOException {
-        int v = digits[IterImpl.readByte(iter)];
-        if (v == -1) {
-            throw iter.reportError("readU4", "bad unicode");
-        }
-        char b = (char) v;
-        v = digits[IterImpl.readByte(iter)];
-        if (v == -1) {
-            throw iter.reportError("readU4", "bad unicode");
-        }
-        b = (char) (b << 4);
-        b += v;
-        v = digits[IterImpl.readByte(iter)];
-        if (v == -1) {
-            throw iter.reportError("readU4", "bad unicode");
-        }
-        b = (char) (b << 4);
-        b += v;
-        v = digits[IterImpl.readByte(iter)];
-        if (v == -1) {
-            throw iter.reportError("readU4", "bad unicode");
-        }
-        b = (char) (b << 4);
-        b += v;
-        return b;
     }
 }

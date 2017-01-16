@@ -224,4 +224,81 @@ class IterImpl {
     public final static boolean loadMore(JsonIterator iter) throws IOException {
         return false;
     }
+
+    public final static String readStringSlowPath(JsonIterator iter, int j) throws IOException {
+        try {
+            for (int i = iter.head; i < iter.tail; ) {
+                int bc = iter.buf[i++];
+                if (bc == '"') {
+                    return new String(iter.reusableChars, 0, j);
+                }
+                if (bc == '\\') {
+                    bc = iter.buf[i++];
+                    switch (bc) {
+                        case 'b':
+                            bc = '\b';
+                            break;
+                        case 't':
+                            bc = '\t';
+                            break;
+                        case 'n':
+                            bc = '\n';
+                            break;
+                        case 'f':
+                            bc = '\f';
+                            break;
+                        case 'r':
+                            bc = '\r';
+                            break;
+                        case '"':
+                        case '/':
+                        case '\\':
+                            break;
+                        case 'u':
+                            bc = (IterImplString.translateHex(iter.buf[i++]) << 12) +
+                                    (IterImplString.translateHex(iter.buf[i++]) << 8) +
+                                    (IterImplString.translateHex(iter.buf[i++]) << 4) +
+                                    IterImplString.translateHex(iter.buf[i++]);
+                            break;
+
+                        default:
+                            throw iter.reportError("readStringSlowPath", "invalid escape character: " + bc);
+                    }
+                } else if ((bc & 0x80) != 0) {
+                    final int u2 = iter.buf[i++];
+                    if ((bc & 0xE0) == 0xC0) {
+                        bc = ((bc & 0x1F) << 6) + (u2 & 0x3F);
+                    } else {
+                        final int u3 = iter.buf[i++];
+                        if ((bc & 0xF0) == 0xE0) {
+                            bc = ((bc & 0x0F) << 12) + ((u2 & 0x3F) << 6) + (u3 & 0x3F);
+                        } else {
+                            final int u4 = iter.buf[i++];
+                            if ((bc & 0xF8) == 0xF0) {
+                                bc = ((bc & 0x07) << 18) + ((u2 & 0x3F) << 12) + ((u3 & 0x3F) << 6) + (u4 & 0x3F);
+                            } else {
+                                throw iter.reportError("readStringSlowPath", "invalid unicode character");
+                            }
+
+                            if (bc >= 0x10000) {
+                                // check if valid unicode
+                                if (bc >= 0x110000)
+                                    throw iter.reportError("readStringSlowPath", "invalid unicode character");
+
+                                // split surrogates
+                                final int sup = bc - 0x10000;
+                                iter.reusableChars[j++] = (char) ((sup >>> 10) + 0xd800);
+                                iter.reusableChars[j++] = (char) ((sup & 0x3ff) + 0xdc00);
+                                continue;
+                            }
+                        }
+                    }
+                }
+                iter.reusableChars[j++] = (char) bc;
+            }
+            throw iter.reportError("readStringSlowPath", "incomplete string");
+        } catch (IndexOutOfBoundsException e) {
+            throw iter.reportError("readString", "incomplete string");
+        }
+    }
 }
