@@ -17,8 +17,8 @@ public class TestString extends TestCase {
         assertEquals("hello", iter.readString());
         assertEquals("world", iter.readString());
         iter = JsonIterator.parse("'hello''world'".replace('\'', '"'));
-        assertEquals("hello", iter.readString());
-        assertEquals("world", iter.readString());
+        assertEquals("hello", iter.readStringAsSlice().toString());
+        assertEquals("world", iter.readStringAsSlice().toString());
     }
 
     public void test_ascii_string_with_escape() throws IOException {
@@ -55,6 +55,9 @@ public class TestString extends TestCase {
         JsonIterator iter = JsonIterator.parse(new ByteArrayInputStream("'hello''world'".replace('\'', '"').getBytes()), 2);
         assertEquals("hello", iter.readString());
         assertEquals("world", iter.readString());
+        iter = JsonIterator.parse(new ByteArrayInputStream("'hello''world'".replace('\'', '"').getBytes()), 2);
+        assertEquals("hello", iter.readStringAsSlice().toString());
+        assertEquals("world", iter.readStringAsSlice().toString());
     }
 
     @org.junit.experimental.categories.Category(StreamingCategory.class)

@@ -195,6 +195,9 @@ class IterImplForStreaming {
 
     // read the bytes between " "
     final static Slice readSlice(JsonIterator iter) throws IOException {
+        if (IterImpl.nextToken(iter) != '"') {
+            throw iter.reportError("readSlice", "expect \" for string");
+        }
         int end = IterImplString.findSliceEnd(iter);
         if (end != -1) {
             // reuse current buffer

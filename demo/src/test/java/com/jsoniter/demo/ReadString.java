@@ -34,7 +34,7 @@ public class ReadString {
     @Setup(Level.Trial)
     public void benchSetup(BenchmarkParams params) {
         jsonIterator = new JsonIterator();
-        input = "\"hello wo\\trld\"".getBytes();
+        input = "\"hello world\"".getBytes();
     }
 
     @Benchmark
