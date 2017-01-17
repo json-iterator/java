@@ -141,26 +141,25 @@ public class JsonIterator implements Closeable {
 
     public final boolean readNull() throws IOException {
         byte c = IterImpl.nextToken(this);
-        if (c == 'n') {
-            IterImpl.skipUntilBreak(this);
-            return true;
+        if (c != 'n') {
+            unreadByte();
+            return false;
         }
-        unreadByte();
-        return false;
+        IterImpl.skipFixedBytes(this, 3); // null
+        return true;
     }
 
     public final boolean readBoolean() throws IOException {
         byte c = IterImpl.nextToken(this);
-        switch (c) {
-            case 't':
-                IterImpl.skipFixedBytes(this, 3); // true
-                return true;
-            case 'f':
-                IterImpl.skipFixedBytes(this, 4); // false
-                return false;
-            default:
-                throw reportError("readBoolean", "expect t or f, found: " + c);
+        if ('t' == c) {
+            IterImpl.skipFixedBytes(this, 3); // true
+            return true;
         }
+        if ('f' == c) {
+            IterImpl.skipFixedBytes(this, 4); // false
+            return false;
+        }
+        throw reportError("readBoolean", "expect t or f, found: " + c);
     }
 
     public final short readShort() throws IOException {
