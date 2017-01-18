@@ -10,6 +10,8 @@ import com.jsoniter.spi.JsoniterSpi;
 import junit.framework.TestCase;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -71,6 +73,17 @@ public class TestObject extends TestCase {
         Any any = iter.readAny();
         assertEquals("hello", any.toString("field1"));
         assertEquals("world", any.toString("field2"));
+        iter.reset(iter.buf);
+        final ArrayList<String> fields = new ArrayList<String>();
+        iter.readObjectCB(new JsonIterator.ReadObjectCallback() {
+            @Override
+            public boolean handle(JsonIterator iter, String field) throws IOException {
+                fields.add(field);
+                iter.skip();
+                return true;
+            }
+        });
+        assertEquals(Arrays.asList("field1", "field2"), fields);
     }
 
     public void test_read_null() throws IOException {
