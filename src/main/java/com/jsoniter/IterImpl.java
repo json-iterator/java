@@ -198,13 +198,13 @@ class IterImpl {
                     return Any.lazyLong(iter.buf, start, iter.head);
                 }
             case 't':
-                skipUntilBreak(iter);
+                skipFixedBytes(iter, 3);
                 return Any.wrap(true);
             case 'f':
-                skipUntilBreak(iter);
+                skipFixedBytes(iter, 4);
                 return Any.wrap(false);
             case 'n':
-                skipUntilBreak(iter);
+                skipFixedBytes(iter, 3);
                 return Any.wrap((Object) null);
             case '[':
                 skipArray(iter);

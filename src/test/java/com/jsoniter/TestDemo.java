@@ -142,5 +142,13 @@ public class TestDemo extends TestCase {
         assertEquals(Long.class, any.get(0, "score").object().getClass());
         any = JsonIterator.deserialize("[{'score':100}, {'score':102}]".replace('\'', '"'));
         assertEquals(ValueType.INVALID, any.get(0, "score", "number").valueType());
+        any = JsonIterator.deserialize("[{'score':100}, {'score':102}]".replace('\'', '"'));
+        for (Any record : any) {
+            Any.EntryIterator entries = record.entries();
+            while (entries.next()) {
+                System.out.println(entries.key());
+                System.out.println(entries.value());
+            }
+        }
     }
 }

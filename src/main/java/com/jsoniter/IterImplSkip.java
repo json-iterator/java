@@ -33,10 +33,14 @@ class IterImplSkip {
             case '7':
             case '8':
             case '9':
-            case 't':
-            case 'f':
-            case 'n':
                 IterImpl.skipUntilBreak(iter);
+                return;
+            case 't':
+            case 'n':
+                IterImpl.skipFixedBytes(iter, 3); // true or null
+                return;
+            case 'f':
+                IterImpl.skipFixedBytes(iter, 4); // false
                 return;
             case '[':
                 IterImpl.skipArray(iter);

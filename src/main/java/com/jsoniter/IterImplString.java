@@ -69,7 +69,7 @@ class IterImplString {
             return IterImpl.readStringSlowPath(iter, j);
         }
         if (c == 'n') {
-            IterImpl.skipUntilBreak(iter);
+            IterImpl.skipFixedBytes(iter, 3);
             return null;
         }
         throw iter.reportError("readString", "expect n or \"");

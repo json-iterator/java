@@ -336,15 +336,15 @@ class IterImplForStreaming {
                     return Any.lazyLong(copied, 0, copied.length);
                 }
             case 't':
-                skipUntilBreak(iter);
+                skipFixedBytes(iter, 3);
                 iter.skipStartedAt = -1;
                 return Any.wrap(true);
             case 'f':
-                skipUntilBreak(iter);
+                skipFixedBytes(iter, 4);
                 iter.skipStartedAt = -1;
                 return Any.wrap(false);
             case 'n':
-                skipUntilBreak(iter);
+                skipFixedBytes(iter, 3);
                 iter.skipStartedAt = -1;
                 return Any.wrap((Object) null);
             case '[':

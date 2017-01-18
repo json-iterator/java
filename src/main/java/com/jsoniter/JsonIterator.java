@@ -213,7 +213,7 @@ public class JsonIterator implements Closeable {
         byte c = IterImpl.nextToken(this);
         switch (c) {
             case 'n':
-                IterImpl.skipUntilBreak(this);
+                IterImpl.skipFixedBytes(this, 3);
                 return null;
             case '{':
                 c = IterImpl.nextToken(this);
@@ -279,7 +279,7 @@ public class JsonIterator implements Closeable {
             case NUMBER:
                 return readDouble();
             case NULL:
-                IterImpl.skipUntilBreak(this);
+                IterImpl.skipFixedBytes(this, 3);
                 return null;
             case BOOLEAN:
                 return readBoolean();
