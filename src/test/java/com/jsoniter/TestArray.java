@@ -5,6 +5,7 @@ import com.jsoniter.spi.TypeLiteral;
 import junit.framework.TestCase;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -51,6 +52,16 @@ public class TestArray extends TestCase {
         assertEquals(1, iter.read(Any[].class)[0].toInt());
         iter.reset(iter.buf);
         assertEquals(1, iter.readAny().toInt(0));
+        iter.reset(iter.buf);
+        final List<Integer> values = new ArrayList<Integer>();
+        iter.readArrayCB(new JsonIterator.ReadArrayCallback() {
+            @Override
+            public boolean handle(JsonIterator iter) throws IOException {
+                values.add(iter.readInt());
+                return true;
+            }
+        });
+        assertEquals(Arrays.asList(1), values);
     }
 
     public void test_two_elements() throws IOException {

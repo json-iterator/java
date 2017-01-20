@@ -2,7 +2,7 @@ package com.jsoniter;
 
 import java.io.IOException;
 
-public class IterImplObject {
+class IterImplObject {
 
     public static final String readObject(JsonIterator iter) throws IOException {
         byte c = IterImpl.nextToken(iter);
@@ -37,7 +37,7 @@ public class IterImplObject {
         }
     }
 
-    public static final void readObjectCB(JsonIterator iter, JsonIterator.ReadObjectCallback cb) throws IOException {
+    public static final boolean readObjectCB(JsonIterator iter, JsonIterator.ReadObjectCallback cb) throws IOException {
         byte c = IterImpl.nextToken(iter);
         if ('{' == c) {
             c = IterImpl.nextToken(iter);
@@ -48,7 +48,7 @@ public class IterImplObject {
                     throw iter.reportError("readObject", "expect :");
                 }
                 if (!cb.handle(iter, field)) {
-                    return;
+                    return false;
                 }
                 while (IterImpl.nextToken(iter) == ',') {
                     field = iter.readString();
@@ -56,19 +56,19 @@ public class IterImplObject {
                         throw iter.reportError("readObject", "expect :");
                     }
                     if (!cb.handle(iter, field)) {
-                        return;
+                        return false;
                     }
                 }
-                return;
+                return true;
             }
             if ('}' == c) {
-                return;
+                return true;
             }
             throw iter.reportError("readObjectCB", "expect \" after {");
         }
         if ('n' == c) {
             IterImpl.skipFixedBytes(iter, 3);
-            return;
+            return true;
         }
         throw iter.reportError("readObjectCB", "expect { or n");
     }

@@ -180,25 +180,15 @@ public class JsonIterator implements Closeable {
     }
 
     public final boolean readArray() throws IOException {
-        byte c = IterImpl.nextToken(this);
-        switch (c) {
-            case '[':
-                c = IterImpl.nextToken(this);
-                if (c == ']') {
-                    return false;
-                } else {
-                    unreadByte();
-                    return true;
-                }
-            case ']':
-                return false;
-            case ',':
-                return true;
-            case 'n':
-                return false;
-            default:
-                throw reportError("readArray", "expect [ or , or n or ], but found: " + (char) c);
-        }
+        return IterImplArray.readArray(this);
+    }
+
+    public static interface ReadArrayCallback {
+        boolean handle(JsonIterator iter) throws IOException;
+    }
+
+    public final boolean readArrayCB(ReadArrayCallback callback) throws IOException {
+        return IterImplArray.readArrayCB(this, callback);
     }
 
     public final String readString() throws IOException {
