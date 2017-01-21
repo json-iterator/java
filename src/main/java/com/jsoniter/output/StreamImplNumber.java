@@ -219,11 +219,15 @@ class StreamImplNumber {
             stream.write('-');
             val = -val;
         }
+        if (val > 0x4ffffff) {
+            stream.writeRaw(Float.toString(val));
+            return;
+        }
         int precision = 6;
         int exp = 1000000; // 6
-        long lval = (long)val;
-        stream.writeVal(lval);
-        long fval = (long)((val - lval) * exp);
+        long lval = (long)(val * exp + 0.5);
+        stream.writeVal(lval / exp);
+        long fval = lval % exp;
         if (fval == 0) {
             return;
         }
@@ -245,11 +249,15 @@ class StreamImplNumber {
             val = -val;
             stream.write('-');
         }
+        if (val > 0x4ffffff) {
+            stream.writeRaw(Double.toString(val));
+            return;
+        }
         int precision = 6;
         int exp = 1000000; // 6
-        long lval = (long)val;
-        stream.writeVal(lval);
-        long fval = (long)((val - lval) * exp);
+        long lval = (long)(val * exp + 0.5);
+        stream.writeVal(lval / exp);
+        long fval = lval % exp;
         if (fval == 0) {
             return;
         }

@@ -115,15 +115,21 @@ public class TestNative extends TestCase {
     }
 
     public void test_big_float() throws IOException {
-        stream.writeVal(83886082f);
+        stream.writeVal((float)0x4ffffff);
         stream.close();
         assertEquals("83886080", baos.toString());
     }
 
     public void test_double() throws IOException {
-        stream.writeVal(0.00001d);
+        stream.writeVal(1.001d);
         stream.close();
-        assertEquals("0.00001", baos.toString());
+        assertEquals("1.001", baos.toString());
+    }
+
+    public void test_large_double() throws IOException {
+        stream.writeVal(Double.MAX_VALUE);
+        stream.close();
+        assertEquals("1.7976931348623157E308", baos.toString());
     }
 
     public void test_boolean() throws IOException {
