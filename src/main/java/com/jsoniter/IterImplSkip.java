@@ -4,7 +4,7 @@ import java.io.IOException;
 
 class IterImplSkip {
 
-    static final boolean[] breaks = new boolean[256];
+    static final boolean[] breaks = new boolean[127];
 
     static {
         breaks[' '] = true;

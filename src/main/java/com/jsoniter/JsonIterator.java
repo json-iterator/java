@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class JsonIterator implements Closeable {
@@ -184,11 +185,11 @@ public class JsonIterator implements Closeable {
     }
 
     public static interface ReadArrayCallback {
-        boolean handle(JsonIterator iter) throws IOException;
+        boolean handle(JsonIterator iter, Object attachment) throws IOException;
     }
 
-    public final boolean readArrayCB(ReadArrayCallback callback) throws IOException {
-        return IterImplArray.readArrayCB(this, callback);
+    public final boolean readArrayCB(ReadArrayCallback callback, Object attachment) throws IOException {
+        return IterImplArray.readArrayCB(this, callback, attachment);
     }
 
     public final String readString() throws IOException {
@@ -204,11 +205,11 @@ public class JsonIterator implements Closeable {
     }
 
     public static interface ReadObjectCallback {
-        boolean handle(JsonIterator iter, String field) throws IOException;
+        boolean handle(JsonIterator iter, String field, Object attachment) throws IOException;
     }
 
-    public final void readObjectCB(ReadObjectCallback cb) throws IOException {
-        IterImplObject.readObjectCB(this, cb);
+    public final void readObjectCB(ReadObjectCallback cb, Object attachment) throws IOException {
+        IterImplObject.readObjectCB(this, cb, attachment);
     }
 
     public final float readFloat() throws IOException {
@@ -239,6 +240,24 @@ public class JsonIterator implements Closeable {
         return IterImpl.readAny(this);
     }
 
+    private final static ReadArrayCallback fillArray = new ReadArrayCallback() {
+        @Override
+        public boolean handle(JsonIterator iter, Object attachment) throws IOException {
+            List list = (List) attachment;
+            list.add(iter.read());
+            return true;
+        }
+    };
+
+    private final static ReadObjectCallback fillObject = new ReadObjectCallback() {
+        @Override
+        public boolean handle(JsonIterator iter, String field, Object attachment) throws IOException {
+            Map map = (Map) attachment;
+            map.put(field, iter.read());
+            return true;
+        }
+    };
+
     public final Object read() throws IOException {
         ValueType valueType = whatIsNext();
         switch (valueType) {
@@ -247,21 +266,17 @@ public class JsonIterator implements Closeable {
             case NUMBER:
                 return readDouble();
             case NULL:
-                IterImpl.skipFixedBytes(this, 3);
+                IterImpl.skipFixedBytes(this, 4);
                 return null;
             case BOOLEAN:
                 return readBoolean();
             case ARRAY:
-                ArrayList list = new ArrayList();
-                while (readArray()) {
-                    list.add(read());
-                }
+                ArrayList list = new ArrayList(4);
+                readArrayCB(fillArray, list);
                 return list;
             case OBJECT:
-                Map map = new HashMap();
-                for (String field = readObject(); field != null; field = readObject()) {
-                    map.put(field, read());
-                }
+                Map map = new HashMap(4);
+                readObjectCB(fillObject, map);
                 return map;
             default:
                 throw reportError("read", "unexpected value type: " + valueType);

@@ -56,6 +56,8 @@ public class TestObject extends TestCase {
         Any any = iter.readAny();
         assertEquals("hello", any.toString("field1"));
         assertEquals(ValueType.INVALID, any.get("field2").valueType());
+        iter.reset(iter.buf);
+        assertEquals("hello", ((Map)iter.read()).get("field1"));
     }
 
     public void test_two_fields() throws IOException {
@@ -77,12 +79,12 @@ public class TestObject extends TestCase {
         final ArrayList<String> fields = new ArrayList<String>();
         iter.readObjectCB(new JsonIterator.ReadObjectCallback() {
             @Override
-            public boolean handle(JsonIterator iter, String field) throws IOException {
+            public boolean handle(JsonIterator iter, String field, Object attachment) throws IOException {
                 fields.add(field);
                 iter.skip();
                 return true;
             }
-        });
+        }, null);
         assertEquals(Arrays.asList("field1", "field2"), fields);
     }
 

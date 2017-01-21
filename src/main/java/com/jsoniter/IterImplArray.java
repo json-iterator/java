@@ -25,17 +25,17 @@ class IterImplArray {
         }
     }
 
-    public static final boolean readArrayCB(final JsonIterator iter, JsonIterator.ReadArrayCallback callback) throws IOException {
+    public static final boolean readArrayCB(final JsonIterator iter, final JsonIterator.ReadArrayCallback callback, Object attachment) throws IOException {
         byte c = IterImpl.nextToken(iter);
         if (c == '[') {
             c = IterImpl.nextToken(iter);
             if (c != ']') {
                 iter.unreadByte();
-                if (!callback.handle(iter)) {
+                if (!callback.handle(iter, attachment)) {
                     return false;
                 }
                 while (IterImpl.nextToken(iter) == ',') {
-                    if (!callback.handle(iter)) {
+                    if (!callback.handle(iter, attachment)) {
                         return false;
                     }
                 }

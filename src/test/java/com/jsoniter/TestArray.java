@@ -56,11 +56,11 @@ public class TestArray extends TestCase {
         final List<Integer> values = new ArrayList<Integer>();
         iter.readArrayCB(new JsonIterator.ReadArrayCallback() {
             @Override
-            public boolean handle(JsonIterator iter) throws IOException {
+            public boolean handle(JsonIterator iter, Object attachment) throws IOException {
                 values.add(iter.readInt());
                 return true;
             }
-        });
+        }, null);
         assertEquals(Arrays.asList(1), values);
     }
 
@@ -84,6 +84,8 @@ public class TestArray extends TestCase {
         assertEquals(1, iter.read(Any[].class)[0].toInt());
         iter.reset(iter.buf);
         assertEquals(1, iter.readAny().toInt(0));
+        iter = JsonIterator.parse(" [ 1 , null, 2 ] ");
+        assertEquals(Arrays.asList(1.0D, null, 2.0D), iter.read());
     }
 
     public void test_three_elements() throws IOException {
