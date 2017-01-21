@@ -81,45 +81,34 @@ class StreamImplString {
         for (; i < valLen; i++) {
             int c = val.charAt(i);
             if (c > 125) {
-                stream.write('\\');
-                stream.write('u');
+                stream.write('\\', 'u');
                 byte b4 = (byte) (c & 0xf);
                 byte b3 = (byte) (c >> 4 & 0xf);
                 byte b2 = (byte) (c >> 8 & 0xf);
                 byte b1 = (byte) (c >> 12 & 0xf);
-                stream.write(ITOA[b1]);
-                stream.write(ITOA[b2]);
-                stream.write(ITOA[b3]);
-                stream.write(ITOA[b4]);
+                stream.write(ITOA[b1], ITOA[b2], ITOA[b3], ITOA[b4]);
             } else {
                 switch (c) {
                     case '"':
-                        stream.write('\\');
-                        stream.write('"');
+                        stream.write('\\', '"');
                         break;
                     case '\\':
-                        stream.write('\\');
-                        stream.write('\\');
+                        stream.write('\\', '\\');
                         break;
                     case '\b':
-                        stream.write('\\');
-                        stream.write('b');
+                        stream.write('\\', 'b');
                         break;
                     case '\f':
-                        stream.write('\\');
-                        stream.write('f');
+                        stream.write('\\', 'f');
                         break;
                     case '\n':
-                        stream.write('\\');
-                        stream.write('n');
+                        stream.write('\\', 'n');
                         break;
                     case '\r':
-                        stream.write('\\');
-                        stream.write('r');
+                        stream.write('\\', 'r');
                         break;
                     case '\t':
-                        stream.write('\\');
-                        stream.write('t');
+                        stream.write('\\', 't');
                         break;
                     default:
                         stream.write(c);
