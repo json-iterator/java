@@ -1,7 +1,10 @@
 package com.jsoniter;
 
+import com.jsoniter.spi.JsonException;
 import junit.framework.TestCase;
+import org.junit.experimental.categories.Category;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 public class TestSkip extends TestCase {
@@ -22,6 +25,27 @@ public class TestSkip extends TestCase {
         assertTrue(iter.readArray());
         assertEquals(2, iter.readInt());
         assertFalse(iter.readArray());
+    }
+
+    @Category(StreamingCategory.class)
+    public void test_skip_string_streaming() throws IOException {
+        JsonIterator iter = JsonIterator.parse(new ByteArrayInputStream("\"hello".getBytes()), 2);
+        try {
+            iter.skip();
+            fail();
+        } catch (JsonException e) {
+        }
+        iter = JsonIterator.parse(new ByteArrayInputStream("\"hello\"".getBytes()), 2);
+        iter.skip();
+        iter = JsonIterator.parse(new ByteArrayInputStream("\"hello\"1".getBytes()), 2);
+        iter.skip();
+        assertEquals(1, iter.readInt());
+        iter = JsonIterator.parse(new ByteArrayInputStream("\"h\\\"ello\"1".getBytes()), 3);
+        iter.skip();
+        assertEquals(1, iter.readInt());
+        iter = JsonIterator.parse(new ByteArrayInputStream("\"\\\\\"1".getBytes()), 3);
+        iter.skip();
+        assertEquals(1, iter.readInt());
     }
 
     public void test_skip_object() throws IOException {

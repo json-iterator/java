@@ -125,7 +125,10 @@ class IterImplForStreaming {
             if (end == -1) {
                 int j = iter.tail - 1;
                 boolean escaped = true;
+                // can not just look the last byte is \
+                // because it could be \\ or \\\
                 for (; ; ) {
+                    // walk backward until head
                     if (j < iter.head || iter.buf[j] != '\\') {
                         // even number of backslashes
                         // either end of buffer, or " found
@@ -142,10 +145,10 @@ class IterImplForStreaming {
 
                 }
                 if (!loadMore(iter)) {
-                    return;
+                    throw iter.reportError("skipString", "incomplete string");
                 }
                 if (escaped) {
-                    iter.head = 1; // skip the first char as last char readAny is \
+                    iter.head = 1; // skip the first char as last char is \
                 }
             } else {
                 iter.head = end;

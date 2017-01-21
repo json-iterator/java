@@ -34,8 +34,7 @@ class IterImplArray {
                 if (!callback.handle(iter)) {
                     return false;
                 }
-                c = IterImpl.nextToken(iter);
-                while (c == ',') {
+                while (IterImpl.nextToken(iter) == ',') {
                     if (!callback.handle(iter)) {
                         return false;
                     }
