@@ -12,13 +12,16 @@ class CodegenResult {
             return "";
         }
         if (buffered.length() == 1) {
-            return String.format("stream.write('%s');", escape(buffered.charAt(0)));
+            return String.format("stream.write((byte)'%s');", escape(buffered.charAt(0)));
         } else if (buffered.length() == 2) {
-            return String.format("stream.write('%s', '%s');",
+            return String.format("stream.write((byte)'%s', (byte)'%s');",
                     escape(buffered.charAt(0)), escape(buffered.charAt(1)));
         } else if (buffered.length() == 3) {
-            return String.format("stream.write('%s', '%s', '%s');",
+            return String.format("stream.write((byte)'%s', (byte)'%s', (byte)'%s');",
                     escape(buffered.charAt(0)), escape(buffered.charAt(1)), escape(buffered.charAt(2)));
+        } else if (buffered.length() == 4) {
+            return String.format("stream.write((byte)'%s', (byte)'%s', (byte)'%s', (byte)'%s');",
+                    escape(buffered.charAt(0)), escape(buffered.charAt(1)), escape(buffered.charAt(2)), escape(buffered.charAt(3)));
         } else {
             StringBuilder escaped = new StringBuilder();
             for (int i = 0; i < buffered.length(); i++) {

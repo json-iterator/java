@@ -145,7 +145,7 @@ abstract class Base64 {
             int i = ((sArr[eLen] & 0xff) << 10) | (left == 2 ? ((sArr[sLen - 1] & 0xff) << 2) : 0);
 
             // Set last four chars
-            stream.write(BA[i >> 12], BA[(i >>> 6) & 0x3f], left == 2 ? BA[i & 0x3f] : (byte)'=', '=');
+            stream.write(BA[i >> 12], BA[(i >>> 6) & 0x3f], left == 2 ? BA[i & 0x3f] : (byte)'=', (byte)'=');
         }
 
         return dLen;

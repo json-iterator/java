@@ -14,7 +14,7 @@ public class TestObject extends TestCase {
 
     static {
         JsoniterAnnotationSupport.enable();
-        JsonStream.setMode(EncodingMode.DYNAMIC_MODE);
+//        JsonStream.setMode(EncodingMode.DYNAMIC_MODE);
     }
 
     private ByteArrayOutputStream baos;
@@ -232,21 +232,5 @@ public class TestObject extends TestCase {
         obj = new TestObject11();
         obj.field3 = "hello";
         assertEquals("{\"field3\":\"hello\"}", JsonStream.serialize(obj));
-    }
-
-    public static class User {
-        @JsonProperty(nullable = false)
-        public String firstName;
-        @JsonProperty(nullable = false)
-        public String lastName;
-        public int score;
-    }
-
-    public void test() throws IOException {
-        JsoniterAnnotationSupport.enable();
-        User user = new User();
-        user.firstName = "a";
-        user.lastName = "b";
-        assertEquals("", JsonStream.serialize(user));
     }
 }

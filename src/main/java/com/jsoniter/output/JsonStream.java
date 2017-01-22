@@ -14,9 +14,6 @@ public class JsonStream extends OutputStream {
     public int indentionStep = defaultIndentionStep;
     private int indention = 0;
     private OutputStream out;
-    private static final byte[] NULL = "null".getBytes();
-    private static final byte[] TRUE = "true".getBytes();
-    private static final byte[] FALSE = "false".getBytes();
     byte buf[];
     int count;
 
@@ -40,31 +37,54 @@ public class JsonStream extends OutputStream {
         buf[count++] = (byte) b;
     }
 
-    public final void write(int b1, int b2) throws IOException {
+    public final void write(byte b1, byte b2) throws IOException {
         if (count >= buf.length - 1) {
             flushBuffer();
         }
-        buf[count++] = (byte) b1;
-        buf[count++] = (byte) b2;
+        buf[count++] = b1;
+        buf[count++] = b2;
     }
 
-    public final void write(int b1, int b2, int b3) throws IOException {
+    public final void write(byte b1, byte b2, byte b3) throws IOException {
         if (count >= buf.length - 2) {
             flushBuffer();
         }
-        buf[count++] = (byte) b1;
-        buf[count++] = (byte) b2;
-        buf[count++] = (byte) b3;
+        buf[count++] = b1;
+        buf[count++] = b2;
+        buf[count++] = b3;
     }
 
-    public final void write(int b1, int b2, int b3, int b4) throws IOException {
+    public final void write(byte b1, byte b2, byte b3, byte b4) throws IOException {
         if (count >= buf.length - 3) {
             flushBuffer();
         }
-        buf[count++] = (byte) b1;
-        buf[count++] = (byte) b2;
-        buf[count++] = (byte) b3;
-        buf[count++] = (byte) b4;
+        buf[count++] = b1;
+        buf[count++] = b2;
+        buf[count++] = b3;
+        buf[count++] = b4;
+    }
+
+    public final void write(byte b1, byte b2, byte b3, byte b4, byte b5) throws IOException {
+        if (count >= buf.length - 4) {
+            flushBuffer();
+        }
+        buf[count++] = b1;
+        buf[count++] = b2;
+        buf[count++] = b3;
+        buf[count++] = b4;
+        buf[count++] = b5;
+    }
+
+    public final void write(byte b1, byte b2, byte b3, byte b4, byte b5, byte b6) throws IOException {
+        if (count >= buf.length - 5) {
+            flushBuffer();
+        }
+        buf[count++] = b1;
+        buf[count++] = b2;
+        buf[count++] = b3;
+        buf[count++] = b4;
+        buf[count++] = b5;
+        buf[count++] = b6;
     }
 
     public final void write(byte b[], int off, int len) throws IOException {
@@ -117,7 +137,7 @@ public class JsonStream extends OutputStream {
 
     public final void writeRaw(String val, int remaining) throws IOException {
         int i = 0;
-        for(;;) {
+        for (; ; ) {
             int available = buf.length - count;
             if (available < remaining) {
                 remaining -= available;
@@ -156,11 +176,11 @@ public class JsonStream extends OutputStream {
     }
 
     public final void writeTrue() throws IOException {
-        write(TRUE);
+        write((byte) 't', (byte) 'r', (byte) 'u', (byte) 'e');
     }
 
     public final void writeFalse() throws IOException {
-        write(FALSE);
+        write((byte) 'f', (byte) 'a', (byte) 'l', (byte) 's', (byte) 'e');
     }
 
     public final void writeVal(Short val) throws IOException {
@@ -230,17 +250,15 @@ public class JsonStream extends OutputStream {
     }
 
     public final void writeNull() throws IOException {
-        write(NULL, 0, NULL.length);
+        write((byte) 'n', (byte) 'u', (byte) 'l', (byte) 'l');
     }
 
     public final void writeEmptyObject() throws IOException {
-        write('{');
-        write('}');
+        write((byte) '{', (byte) '}');
     }
 
     public final void writeEmptyArray() throws IOException {
-        write('[');
-        write(']');
+        write((byte) '[', (byte) ']');
     }
 
     public final void writeArrayStart() throws IOException {

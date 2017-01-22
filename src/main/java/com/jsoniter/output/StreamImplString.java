@@ -81,34 +81,33 @@ class StreamImplString {
         for (; i < valLen; i++) {
             int c = val.charAt(i);
             if (c > 125) {
-                stream.write('\\', 'u');
                 byte b4 = (byte) (c & 0xf);
                 byte b3 = (byte) (c >> 4 & 0xf);
                 byte b2 = (byte) (c >> 8 & 0xf);
                 byte b1 = (byte) (c >> 12 & 0xf);
-                stream.write(ITOA[b1], ITOA[b2], ITOA[b3], ITOA[b4]);
+                stream.write((byte)'\\', (byte)'u', ITOA[b1], ITOA[b2], ITOA[b3], ITOA[b4]);
             } else {
                 switch (c) {
                     case '"':
-                        stream.write('\\', '"');
+                        stream.write((byte)'\\', (byte)'"');
                         break;
                     case '\\':
-                        stream.write('\\', '\\');
+                        stream.write((byte)'\\', (byte)'\\');
                         break;
                     case '\b':
-                        stream.write('\\', 'b');
+                        stream.write((byte)'\\', (byte)'b');
                         break;
                     case '\f':
-                        stream.write('\\', 'f');
+                        stream.write((byte)'\\', (byte)'f');
                         break;
                     case '\n':
-                        stream.write('\\', 'n');
+                        stream.write((byte)'\\', (byte)'n');
                         break;
                     case '\r':
-                        stream.write('\\', 'r');
+                        stream.write((byte)'\\', (byte)'r');
                         break;
                     case '\t':
-                        stream.write('\\', 't');
+                        stream.write((byte)'\\', (byte)'t');
                         break;
                     default:
                         stream.write(c);
