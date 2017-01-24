@@ -7,6 +7,8 @@ import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
 import com.jsoniter.DecodingMode;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.spi.TypeLiteral;
+import com.squareup.moshi.JsonAdapter;
+import com.squareup.moshi.Moshi;
 import org.junit.Test;
 import org.openjdk.jmh.Main;
 import org.openjdk.jmh.annotations.*;
@@ -29,6 +31,7 @@ public class ModelTest {
     private TypeLiteral<Model> modelTypeLiteral; // this is thread-safe can reused
     private ObjectMapper jackson;
     private TypeReference<Model> modelTypeReference;
+    private JsonAdapter<Model> moshiAdapter;
 
     @Setup(Level.Trial)
     public void benchSetup(BenchmarkParams params) {
@@ -43,6 +46,8 @@ public class ModelTest {
         jackson.registerModule(new AfterburnerModule());
         modelTypeReference = new TypeReference<Model>() {
         };
+        Moshi moshi = new Moshi.Builder().build();
+        moshiAdapter = moshi.adapter(Model.class);
     }
 
     public static void main(String[] args) throws IOException, RunnerException {
@@ -60,6 +65,7 @@ public class ModelTest {
         benchSetup(null);
         iter.reset(inputBytes);
         System.out.println(iter.read(modelTypeLiteral).name);
+        System.out.println(moshiAdapter.fromJson(input).name);
     }
 
 //    public static void main(String[] args) throws Exception {
@@ -90,12 +96,17 @@ public class ModelTest {
         bh.consume(JsonIterator.deserialize(inputBytes, Model.class));
     }
 
-    @Benchmark
+//    @Benchmark
     public void fastjson(Blackhole bh) throws IOException {
         // this is not a exactly fair comparison,
         // as string => object is not
         // bytes => object
         bh.consume(JSON.parseObject(input, Model.class));
+    }
+
+    @Benchmark
+    public void moshi(Blackhole bh) throws IOException {
+        bh.consume(moshiAdapter.fromJson(input));
     }
 
 //    @Benchmark

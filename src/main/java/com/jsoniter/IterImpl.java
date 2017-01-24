@@ -181,22 +181,6 @@ class IterImpl {
             case '"':
                 skipString(iter);
                 return Any.lazyString(iter.buf, start, iter.head);
-            case '-':
-            case '0':
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-            case '7':
-            case '8':
-            case '9':
-                if (skipNumber(iter)) {
-                    return Any.lazyDouble(iter.buf, start, iter.head);
-                } else {
-                    return Any.lazyLong(iter.buf, start, iter.head);
-                }
             case 't':
                 skipFixedBytes(iter, 3);
                 return Any.wrap(true);
@@ -213,7 +197,11 @@ class IterImpl {
                 skipObject(iter);
                 return Any.lazyObject(iter.buf, start, iter.head);
             default:
-                throw iter.reportError("IterImplSkip", "do not know how to skip: " + c);
+                if (skipNumber(iter)) {
+                    return Any.lazyDouble(iter.buf, start, iter.head);
+                } else {
+                    return Any.lazyLong(iter.buf, start, iter.head);
+                }
         }
     }
 

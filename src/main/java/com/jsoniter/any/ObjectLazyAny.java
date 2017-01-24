@@ -163,6 +163,8 @@ class ObjectLazyAny extends LazyAny {
         return new LazyIterator();
     }
 
+
+    // TODO: lastParsedPos can not share with underlying Any, as it might be changed during iteration
     private class LazyIterator implements EntryIterator {
 
         private Iterator<Map.Entry<Object, Any>> mapIter;

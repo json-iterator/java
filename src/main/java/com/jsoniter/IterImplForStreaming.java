@@ -320,24 +320,6 @@ class IterImplForStreaming {
                 skipString(iter);
                 byte[] copied = copySkippedBytes(iter);
                 return Any.lazyString(copied, 0, copied.length);
-            case '-':
-            case '0':
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-            case '7':
-            case '8':
-            case '9':
-                if (skipNumber(iter)) {
-                    copied = copySkippedBytes(iter);
-                    return Any.lazyDouble(copied, 0, copied.length);
-                } else {
-                    copied = copySkippedBytes(iter);
-                    return Any.lazyLong(copied, 0, copied.length);
-                }
             case 't':
                 skipFixedBytes(iter, 3);
                 iter.skipStartedAt = -1;
@@ -359,7 +341,13 @@ class IterImplForStreaming {
                 copied = copySkippedBytes(iter);
                 return Any.lazyObject(copied, 0, copied.length);
             default:
-                throw iter.reportError("IterImplSkip", "do not know how to skip: " + c);
+                if (skipNumber(iter)) {
+                    copied = copySkippedBytes(iter);
+                    return Any.lazyDouble(copied, 0, copied.length);
+                } else {
+                    copied = copySkippedBytes(iter);
+                    return Any.lazyLong(copied, 0, copied.length);
+                }
         }
     }
 
