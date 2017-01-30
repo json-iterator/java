@@ -95,7 +95,7 @@ class ObjectAny extends Any {
                     result.put(entry.getKey(), mapped);
                 }
             }
-            return Any.wrapAnyMap(result);
+            return Any.rewrap(result);
         }
         Any element = val.get(key);
         if (element == null) {

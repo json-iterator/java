@@ -75,7 +75,7 @@ class ArrayAny extends Any {
                     result.add(mapped);
                 }
             }
-            return Any.wrapAnyList(result);
+            return Any.rewrap(result);
         }
         try {
             return val.get((Integer) key).get(keys, idx + 1);

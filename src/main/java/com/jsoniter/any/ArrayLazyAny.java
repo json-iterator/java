@@ -100,7 +100,7 @@ class ArrayLazyAny extends LazyAny {
                     result.add(mapped);
                 }
             }
-            return Any.wrapAnyList(result);
+            return Any.rewrap(result);
         }
         try {
             return fillCacheUntil((Integer) key).get(keys, idx + 1);

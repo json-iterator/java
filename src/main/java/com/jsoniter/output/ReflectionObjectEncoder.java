@@ -36,24 +36,24 @@ class ReflectionObjectEncoder implements Encoder {
 
     @Override
     public Any wrap(Object obj) {
-        HashMap<String, Any> copied = new HashMap<String, Any>();
+        HashMap<String, Object> copied = new HashMap<String, Object>();
         try {
             for (Binding field : desc.fields) {
                 Object val = field.field.get(obj);
                 for (String toName : field.toNames) {
-                    copied.put(toName, JsonStream.wrap(val));
+                    copied.put(toName, val);
                 }
             }
             for (Binding getter : desc.getters) {
                 Object val = getter.method.invoke(obj);
                 for (String toName : getter.toNames) {
-                    copied.put(toName, JsonStream.wrap(val));
+                    copied.put(toName, val);
                 }
             }
         } catch (Exception e) {
             throw new JsonException(e);
         }
-        return Any.wrapAnyMap(copied);
+        return Any.wrap(copied);
     }
 
     private void enocde_(Object obj, JsonStream stream) throws Exception {

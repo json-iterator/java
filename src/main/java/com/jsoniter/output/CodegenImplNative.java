@@ -232,7 +232,7 @@ class CodegenImplNative {
             @Override
             public Any wrap(Object obj) {
                 if (obj != null && obj.getClass() == Object.class) {
-                    return Any.wrapAnyMap(new HashMap<String, Any>());
+                    return Any.rewrap(new HashMap<String, Any>());
                 }
                 return JsonStream.wrap(obj);
             }

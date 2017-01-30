@@ -45,10 +45,6 @@ class ReflectionMapEncoder implements Encoder {
     @Override
     public Any wrap(Object obj) {
         Map<String, Object> map = (Map<String, Object>) obj;
-        Map<String, Any> copied = new HashMap<String, Any>();
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
-            copied.put(entry.getKey(), JsonStream.wrap(entry.getValue()));
-        }
-        return Any.wrapAnyMap(copied);
+        return Any.wrap(map);
     }
 }

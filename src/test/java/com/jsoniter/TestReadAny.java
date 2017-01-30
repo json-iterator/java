@@ -165,7 +165,7 @@ public class TestReadAny extends TestCase {
             System.out.println(e);
         }
         try {
-            Any.wrapAnyList(new ArrayList<Any>()).get(0).object();
+            Any.rewrap(new ArrayList<Any>()).get(0).object();
         } catch (JsonException e) {
             System.out.println(e);
         }
@@ -175,7 +175,7 @@ public class TestReadAny extends TestCase {
             System.out.println(e);
         }
         try {
-            Any.wrapAnyMap(new HashMap<String, Any>()).get("hello").object();
+            Any.rewrap(new HashMap<String, Any>()).get("hello").object();
         } catch (JsonException e) {
             System.out.println(e);
         }

@@ -98,7 +98,7 @@ class ObjectLazyAny extends LazyAny {
                     result.put(entry.getKey(), mapped);
                 }
             }
-            return Any.wrapAnyMap(result);
+            return Any.rewrap(result);
         }
         Any child = fillCacheUntil(key);
         if (child == null) {

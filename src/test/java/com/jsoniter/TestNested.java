@@ -1,6 +1,5 @@
 package com.jsoniter;
 
-import com.jsoniter.annotation.JsonIgnore;
 import com.jsoniter.any.Any;
 import junit.framework.TestCase;
 import org.junit.Assert;
@@ -31,7 +30,7 @@ public class TestNested extends TestCase {
         Any any = JsonIterator.deserialize(" [ { \"bar\": 1 }, {\"bar\": 3} ]");
         Any result = any.get('*', "bar");
         assertEquals("[ 1, 3]", result.toString());
-        any = Any.wrapAnyList(any.asList()); // make it not lazy
+        any = Any.rewrap(any.asList()); // make it not lazy
         result = any.get('*', "bar");
         assertEquals("[ 1, 3]", result.toString());
     }
@@ -40,7 +39,7 @@ public class TestNested extends TestCase {
         Any any = JsonIterator.deserialize("{\"field1\":[1,2],\"field2\":[3,4]}");
         Any result = any.get('*', 1);
         assertEquals("{\"field1\":2,\"field2\":4}", result.toString());
-        any = Any.wrapAnyMap(any.asMap()); // make it not lazy
+        any = Any.rewrap(any.asMap()); // make it not lazy
         result = any.get('*', 1);
         assertEquals("{\"field1\":2,\"field2\":4}", result.toString());
     }
@@ -49,13 +48,13 @@ public class TestNested extends TestCase {
         Any any = JsonIterator.deserialize(" [ { \"bar\": 1 }, {\"foo\": 3} ]");
         Any result = any.get('*', "bar");
         assertEquals("[ 1]", result.toString());
-        any = Any.wrapAnyList(any.asList()); // make it not lazy
+        any = Any.rewrap(any.asList()); // make it not lazy
         result = any.get('*', "bar");
         assertEquals("[ 1]", result.toString());
         any = JsonIterator.deserialize("{\"field1\":[1,2],\"field2\":[3]}");
         result = any.get('*', 1);
         assertEquals("{\"field1\":2}", result.toString());
-        any = Any.wrapAnyMap(any.asMap()); // make it not lazy
+        any = Any.rewrap(any.asMap()); // make it not lazy
         result = any.get('*', 1);
         assertEquals("{\"field1\":2}", result.toString());
     }

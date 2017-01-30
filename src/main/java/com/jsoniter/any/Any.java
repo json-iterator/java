@@ -43,6 +43,7 @@ public abstract class Any implements Iterable<Any> {
         JsonStream.registerNativeEncoder(ObjectAny.class, anyEncoder);
         JsonStream.registerNativeEncoder(ListWrapperAny.class, anyEncoder);
         JsonStream.registerNativeEncoder(ArrayWrapperAny.class, anyEncoder);
+        JsonStream.registerNativeEncoder(MapWrapperAny.class, anyEncoder);
     }
 
     public static Any wrapArray(Object val) {
@@ -321,11 +322,11 @@ public abstract class Any implements Iterable<Any> {
         return NullAny.INSTANCE;
     }
 
-    public static Any wrapAnyList(List<Any> val) {
+    public static Any rewrap(List<Any> val) {
         return new ArrayAny(val);
     }
 
-    public static Any wrapAnyMap(Map<String, Any> val) {
+    public static Any rewrap(Map<String, Any> val) {
         return new ObjectAny(val);
     }
 
