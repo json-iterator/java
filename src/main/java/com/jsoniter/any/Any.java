@@ -42,6 +42,11 @@ public abstract class Any implements Iterable<Any> {
         JsonStream.registerNativeEncoder(ArrayAny.class, anyEncoder);
         JsonStream.registerNativeEncoder(ObjectAny.class, anyEncoder);
         JsonStream.registerNativeEncoder(ListWrapperAny.class, anyEncoder);
+        JsonStream.registerNativeEncoder(ArrayWrapperAny.class, anyEncoder);
+    }
+
+    public static Any wrapArray(Object val) {
+        return new ArrayWrapperAny(val);
     }
 
     public interface EntryIterator {

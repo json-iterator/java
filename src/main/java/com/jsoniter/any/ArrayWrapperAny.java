@@ -4,16 +4,17 @@ import com.jsoniter.ValueType;
 import com.jsoniter.output.JsonStream;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-class ListWrapperAny extends Any {
+class ArrayWrapperAny extends Any {
 
-    private final List val;
+    private final Object val;
     private List<Any> cache;
 
-    public ListWrapperAny(List val) {
+    public ArrayWrapperAny(Object val) {
         this.val = val;
     }
 
@@ -30,7 +31,7 @@ class ListWrapperAny extends Any {
 
     @Override
     public boolean toBoolean() {
-        return !val.isEmpty();
+        return size() != 0;
     }
 
     @Override
@@ -75,7 +76,7 @@ class ListWrapperAny extends Any {
 
     @Override
     public int size() {
-        return val.size();
+        return Array.getLength(val);
     }
 
     @Override
@@ -114,19 +115,6 @@ class ListWrapperAny extends Any {
         return new WrapperIterator();
     }
 
-    private void fillCache() {
-        if (cache == null) {
-            cache = new ArrayList<Any>();
-        }
-        if (cache.size() == val.size()) {
-            return;
-        }
-        for (int i = cache.size(); i < val.size(); i++) {
-            Any element = Any.wrap(val.get(i));
-            cache.add(element);
-        }
-    }
-
     private Any fillCacheUntil(int index) {
         if (cache == null) {
             cache = new ArrayList<Any>();
@@ -134,8 +122,8 @@ class ListWrapperAny extends Any {
         if (index < cache.size()) {
             return cache.get(index);
         }
-        for (int i = cache.size(); i < val.size(); i++) {
-            Any element = Any.wrap(val.get(i));
+        for (int i = cache.size(); i < size(); i++) {
+            Any element = Any.wrap(Array.get(val, i));
             cache.add(element);
             if (index == i) {
                 return element;
@@ -144,13 +132,32 @@ class ListWrapperAny extends Any {
         return new NotFoundAny(index, val);
     }
 
+    private void fillCache() {
+        if (cache == null) {
+            cache = new ArrayList<Any>();
+        }
+        int size = size();
+        if (cache.size() == size) {
+            return;
+        }
+        for (int i = cache.size(); i < size; i++) {
+            Any element = Any.wrap(Array.get(val, i));
+            cache.add(element);
+        }
+    }
+
     private class WrapperIterator implements Iterator<Any> {
 
         private int index;
+        private final int size;
+
+        private WrapperIterator() {
+            size = size();
+        }
 
         @Override
         public boolean hasNext() {
-            return index < val.size();
+            return index < size;
         }
 
         @Override
@@ -159,7 +166,7 @@ class ListWrapperAny extends Any {
                 cache = new ArrayList<Any>();
             }
             if (index == cache.size()) {
-                cache.add(Any.wrap(val.get(index)));
+                cache.add(Any.wrap(Array.get(val, index)));
             }
             return cache.get(index++);
         }

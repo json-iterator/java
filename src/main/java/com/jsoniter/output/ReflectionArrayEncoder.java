@@ -7,7 +7,6 @@ import com.jsoniter.spi.TypeLiteral;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
 
 class ReflectionArrayEncoder implements Encoder {
 
@@ -39,11 +38,6 @@ class ReflectionArrayEncoder implements Encoder {
 
     @Override
     public Any wrap(Object obj) {
-        int len = Array.getLength(obj);
-        ArrayList<Any> copied = new ArrayList<Any>(len);
-        for (int i = 0; i < len; i++) {
-            copied.add(JsonStream.wrap(Array.get(obj, i)));
-        }
-        return Any.wrapAnyList(copied);
+        return Any.wrapArray(obj);
     }
 }

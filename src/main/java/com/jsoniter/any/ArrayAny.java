@@ -98,21 +98,21 @@ class ArrayAny extends Any {
 
     @Override
     public int toInt() {
-        return val.isEmpty() ? 0 : 1;
+        return val.size();
     }
 
     @Override
     public long toLong() {
-        return val.isEmpty() ? 0 : 1;
+        return val.size();
     }
 
     @Override
     public float toFloat() {
-        return val.isEmpty() ? 0 : 1;
+        return val.size();
     }
 
     @Override
     public double toDouble() {
-        return val.isEmpty() ? 0 : 1;
+        return val.size();
     }
 }

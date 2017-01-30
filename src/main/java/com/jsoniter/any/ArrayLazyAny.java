@@ -43,34 +43,22 @@ class ArrayLazyAny extends LazyAny {
 
     @Override
     public int toInt() {
-        if (cache == null) {
-            iterator().next();
-        }
-        return cache.isEmpty() ? 0 : 1;
+        return size();
     }
 
     @Override
     public long toLong() {
-        if (cache == null) {
-            iterator().next();
-        }
-        return cache.isEmpty() ? 0 : 1;
+        return size();
     }
 
     @Override
     public float toFloat() {
-        if (cache == null) {
-            iterator().next();
-        }
-        return cache.isEmpty() ? 0 : 1;
+        return size();
     }
 
     @Override
     public double toDouble() {
-        if (cache == null) {
-            iterator().next();
-        }
-        return cache.isEmpty() ? 0 : 1;
+        return size();
     }
 
     @Override
