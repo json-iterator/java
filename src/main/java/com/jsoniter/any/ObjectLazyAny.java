@@ -14,7 +14,7 @@ import java.util.Set;
 class ObjectLazyAny extends LazyAny {
 
     private final static TypeLiteral<Map<String, Any>> typeLiteral = new TypeLiteral<Map<String, Any>>(){};
-    private Map<Object, Any> cache;
+    private Map<String, Any> cache;
     private int lastParsedPos;
 
     public ObjectLazyAny(byte[] data, int head, int tail) {
@@ -92,10 +92,10 @@ class ObjectLazyAny extends LazyAny {
         if (isWildcard(key)) {
             fillCache();
             HashMap<String, Any> result = new HashMap<String, Any>();
-            for (Map.Entry<Object, Any> entry : cache.entrySet()) {
+            for (Map.Entry<String, Any> entry : cache.entrySet()) {
                 Any mapped = entry.getValue().get(keys, idx + 1);
                 if (mapped.valueType() != ValueType.INVALID) {
-                    result.put((String) entry.getKey(), mapped);
+                    result.put(entry.getKey(), mapped);
                 }
             }
             return Any.wrapAnyMap(result);
@@ -112,7 +112,7 @@ class ObjectLazyAny extends LazyAny {
             return cache.get(target);
         }
         if (cache == null) {
-            cache = new HashMap<Object, Any>(4);
+            cache = new HashMap<String, Any>(4);
         }
         Any value = cache.get(target);
         if (value != null) {
@@ -155,7 +155,7 @@ class ObjectLazyAny extends LazyAny {
             return;
         }
         if (cache == null) {
-            cache = new HashMap<Object, Any>(4);
+            cache = new HashMap<String, Any>(4);
         }
         try {
             JsonIterator iter = JsonIterator.tlsIter.get();
@@ -187,13 +187,13 @@ class ObjectLazyAny extends LazyAny {
     // TODO: lastParsedPos can not share with underlying Any, as it might be changed during iteration
     private class LazyIterator implements EntryIterator {
 
-        private Iterator<Map.Entry<Object, Any>> mapIter;
+        private Iterator<Map.Entry<String, Any>> mapIter;
         private String key;
         private Any value;
 
         public LazyIterator() {
             if (cache == null) {
-                cache = new HashMap<Object, Any>();
+                cache = new HashMap<String, Any>();
             }
             mapIter = cache.entrySet().iterator();
             try {
@@ -218,7 +218,7 @@ class ObjectLazyAny extends LazyAny {
             }
             if (mapIter != null) {
                 if (mapIter.hasNext()) {
-                    Map.Entry<Object, Any> entry = mapIter.next();
+                    Map.Entry<String, Any> entry = mapIter.next();
                     key = (String) entry.getKey();
                     value = entry.getValue();
                     return true;

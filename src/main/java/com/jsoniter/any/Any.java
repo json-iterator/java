@@ -310,11 +310,7 @@ public abstract class Any implements Iterable<Any> {
         if (val == null) {
             return NullAny.INSTANCE;
         }
-        HashMap<String, Any> copied = new HashMap<String, Any>(val.size());
-        for (Map.Entry<String, T> entry : val.entrySet()) {
-            copied.put(entry.getKey(), wrap(entry.getValue()));
-        }
-        return new ObjectAny(copied);
+        return new MapWrapperAny(val);
     }
 
     public static Any wrap(Object val) {
