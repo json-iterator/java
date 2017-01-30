@@ -4,6 +4,7 @@ import com.jsoniter.spi.Encoder;
 
 import java.lang.reflect.Type;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 public class ReflectionEncoderFactory {
@@ -11,6 +12,9 @@ public class ReflectionEncoderFactory {
     public static Encoder create(Class clazz, Type... typeArgs) {
         if (clazz.isArray()) {
             return new ReflectionArrayEncoder(clazz, typeArgs);
+        }
+        if (List.class.isAssignableFrom(clazz)) {
+            return new ReflectionListEncoder(clazz, typeArgs);
         }
         if (Collection.class.isAssignableFrom(clazz)) {
             return new ReflectionCollectionEncoder(clazz, typeArgs);

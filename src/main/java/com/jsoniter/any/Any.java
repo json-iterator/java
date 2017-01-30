@@ -299,6 +299,13 @@ public abstract class Any implements Iterable<Any> {
         return new ListWrapperAny(new ArrayList(val));
     }
 
+    public static <T> Any wrap(List<T> val) {
+        if (val == null) {
+            return NullAny.INSTANCE;
+        }
+        return new ListWrapperAny(val);
+    }
+
     public static <T> Any wrap(Map<String, T> val) {
         if (val == null) {
             return NullAny.INSTANCE;
