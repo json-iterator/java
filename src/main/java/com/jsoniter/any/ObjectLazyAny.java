@@ -184,7 +184,6 @@ class ObjectLazyAny extends LazyAny {
     }
 
 
-    // TODO: lastParsedPos can not share with underlying Any, as it might be changed during iteration
     private class LazyIterator implements EntryIterator {
 
         private Iterator<Map.Entry<String, Any>> mapIter;
@@ -195,7 +194,7 @@ class ObjectLazyAny extends LazyAny {
             if (cache == null) {
                 cache = new HashMap<String, Any>();
             }
-            mapIter = cache.entrySet().iterator();
+            mapIter = new HashMap<String, Any>(cache).entrySet().iterator();
             try {
                 if (lastParsedPos == head) {
                     JsonIterator iter = JsonIterator.tlsIter.get();
@@ -219,7 +218,7 @@ class ObjectLazyAny extends LazyAny {
             if (mapIter != null) {
                 if (mapIter.hasNext()) {
                     Map.Entry<String, Any> entry = mapIter.next();
-                    key = (String) entry.getKey();
+                    key = entry.getKey();
                     value = entry.getValue();
                     return true;
                 } else {
