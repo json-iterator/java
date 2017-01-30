@@ -43,6 +43,38 @@ class ObjectLazyAny extends LazyAny {
     }
 
     @Override
+    public int toInt() {
+        if (cache == null) {
+            entries().next();
+        }
+        return cache.isEmpty() ? 0 : 1;
+    }
+
+    @Override
+    public long toLong() {
+        if (cache == null) {
+            entries().next();
+        }
+        return cache.isEmpty() ? 0 : 1;
+    }
+
+    @Override
+    public float toFloat() {
+        if (cache == null) {
+            entries().next();
+        }
+        return cache.isEmpty() ? 0 : 1;
+    }
+
+    @Override
+    public double toDouble() {
+        if (cache == null) {
+            entries().next();
+        }
+        return cache.isEmpty() ? 0 : 1;
+    }
+
+    @Override
     public int size() {
         fillCache();
         return cache.size();
@@ -56,7 +88,7 @@ class ObjectLazyAny extends LazyAny {
 
     @Override
     public Any get(Object key) {
-        Any element = fillCache(key);
+        Any element = fillCacheUntil(key);
         if (element == null) {
             return new NotFoundAny(key, object());
         }
@@ -80,14 +112,14 @@ class ObjectLazyAny extends LazyAny {
             }
             return Any.wrapAnyMap(result);
         }
-        Any child = fillCache(key);
+        Any child = fillCacheUntil(key);
         if (child == null) {
             return new NotFoundAny(keys, idx, object());
         }
         return child.get(keys, idx+1);
     }
 
-    private Any fillCache(Object target) {
+    private Any fillCacheUntil(Object target) {
         if (lastParsedPos == tail) {
             return cache.get(target);
         }
@@ -242,6 +274,16 @@ class ObjectLazyAny extends LazyAny {
             // there might be modification
             fillCache();
             stream.writeVal(typeLiteral, (Map) cache);
+        }
+    }
+
+    @Override
+    public String toString() {
+        if (lastParsedPos == head) {
+            return super.toString();
+        } else {
+            fillCache();
+            return JsonStream.serialize(cache);
         }
     }
 }

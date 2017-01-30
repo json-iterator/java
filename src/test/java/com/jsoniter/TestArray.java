@@ -11,7 +11,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertFalse;
 
 public class TestArray extends TestCase {
 
@@ -193,5 +192,11 @@ public class TestArray extends TestCase {
         assertEquals(3, iter.next().toInt());
         assertEquals(4, iter.next().toInt());
         assertFalse(iter.hasNext());
+    }
+
+    public void test_array_lazy_any_to_string() {
+        Any any = JsonIterator.deserialize("[1,2,3]");
+        any.asList().add(Any.wrap(4));
+        assertEquals("[1,2,3,4]", any.toString());
     }
 }

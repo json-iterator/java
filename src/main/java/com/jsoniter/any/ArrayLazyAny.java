@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 class ArrayLazyAny extends LazyAny {
 
@@ -43,6 +42,38 @@ class ArrayLazyAny extends LazyAny {
     }
 
     @Override
+    public int toInt() {
+        if (cache == null) {
+            iterator().next();
+        }
+        return cache.isEmpty() ? 0 : 1;
+    }
+
+    @Override
+    public long toLong() {
+        if (cache == null) {
+            iterator().next();
+        }
+        return cache.isEmpty() ? 0 : 1;
+    }
+
+    @Override
+    public float toFloat() {
+        if (cache == null) {
+            iterator().next();
+        }
+        return cache.isEmpty() ? 0 : 1;
+    }
+
+    @Override
+    public double toDouble() {
+        if (cache == null) {
+            iterator().next();
+        }
+        return cache.isEmpty() ? 0 : 1;
+    }
+
+    @Override
     public int size() {
         fillCache();
         return cache.size();
@@ -60,7 +91,7 @@ class ArrayLazyAny extends LazyAny {
     @Override
     public Any get(int index) {
         try {
-            return fillCache(index);
+            return fillCacheUntil(index);
         } catch (IndexOutOfBoundsException e) {
             return new NotFoundAny(index, object());
         }
@@ -84,7 +115,7 @@ class ArrayLazyAny extends LazyAny {
             return Any.wrapAnyList(result);
         }
         try {
-            return fillCache((Integer) key).get(keys, idx + 1);
+            return fillCacheUntil((Integer) key).get(keys, idx + 1);
         } catch (IndexOutOfBoundsException e) {
             return new NotFoundAny(keys, idx, object());
         } catch (ClassCastException e) {
@@ -118,7 +149,7 @@ class ArrayLazyAny extends LazyAny {
         }
     }
 
-    private Any fillCache(int target) {
+    private Any fillCacheUntil(int target) {
         if (lastParsedPos == tail) {
             return cache.get(target);
         }
@@ -230,6 +261,16 @@ class ArrayLazyAny extends LazyAny {
             // there might be modification
             fillCache();
             stream.writeVal(typeLiteral, cache);
+        }
+    }
+
+    @Override
+    public String toString() {
+        if (lastParsedPos == head) {
+            return super.toString();
+        } else {
+            fillCache();
+            return JsonStream.serialize(cache);
         }
     }
 }

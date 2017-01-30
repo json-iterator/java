@@ -230,4 +230,10 @@ public class TestObject extends TestCase {
         TestObject7 obj = JsonIterator.deserialize("{}", TestObject7.class);
         assertNull(obj.field1);
     }
+
+    public void test_object_lazy_any_to_string() {
+        Any any = JsonIterator.deserialize("{\"field1\":1,\"field2\":2,\"field3\":3}");
+        any.asMap().put("field4", Any.wrap(4));
+        assertEquals("{\"field1\":1,\"field3\":3,\"field2\":2,\"field4\":4}", any.toString());
+    }
 }

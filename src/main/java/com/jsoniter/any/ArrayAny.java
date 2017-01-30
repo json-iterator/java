@@ -95,4 +95,24 @@ class ArrayAny extends Any {
     public boolean toBoolean() {
         return !val.isEmpty();
     }
+
+    @Override
+    public int toInt() {
+        return val.isEmpty() ? 0 : 1;
+    }
+
+    @Override
+    public long toLong() {
+        return val.isEmpty() ? 0 : 1;
+    }
+
+    @Override
+    public float toFloat() {
+        return val.isEmpty() ? 0 : 1;
+    }
+
+    @Override
+    public double toDouble() {
+        return val.isEmpty() ? 0 : 1;
+    }
 }

@@ -34,17 +34,21 @@ public abstract class Any implements Iterable<Any> {
         JsonStream.registerNativeEncoder(IntAny.class, anyEncoder);
         JsonStream.registerNativeEncoder(LongAny.class, anyEncoder);
         JsonStream.registerNativeEncoder(NullAny.class, anyEncoder);
+        JsonStream.registerNativeEncoder(LongLazyAny.class, anyEncoder);
         JsonStream.registerNativeEncoder(DoubleLazyAny.class, anyEncoder);
         JsonStream.registerNativeEncoder(ObjectLazyAny.class, anyEncoder);
         JsonStream.registerNativeEncoder(StringAny.class, anyEncoder);
         JsonStream.registerNativeEncoder(StringLazyAny.class, anyEncoder);
         JsonStream.registerNativeEncoder(ArrayAny.class, anyEncoder);
         JsonStream.registerNativeEncoder(ObjectAny.class, anyEncoder);
+        JsonStream.registerNativeEncoder(ListWrapperAny.class, anyEncoder);
     }
 
     public interface EntryIterator {
         boolean next();
+
         String key();
+
         Any value();
     }
 
@@ -134,46 +138,37 @@ public abstract class Any implements Iterable<Any> {
         return get(keys).toBoolean();
     }
 
-    public boolean toBoolean() {
-        throw reportUnexpectedType(ValueType.BOOLEAN);
-    }
+    public abstract boolean toBoolean();
 
     public final int toInt(Object... keys) {
         return get(keys).toInt();
     }
 
-    public int toInt() {
-        throw reportUnexpectedType(ValueType.NUMBER);
-    }
+    public abstract int toInt();
 
     public final long toLong(Object... keys) {
         return get(keys).toLong();
     }
 
-    public long toLong() {
-        throw reportUnexpectedType(ValueType.NUMBER);
-    }
+    public abstract long toLong();
 
     public final float toFloat(Object... keys) {
         return get(keys).toFloat();
     }
 
-    public float toFloat() {
-        throw reportUnexpectedType(ValueType.NUMBER);
-    }
+    public abstract float toFloat();
 
     public final double toDouble(Object... keys) {
         return get(keys).toDouble();
     }
 
-    public double toDouble() {
-        throw reportUnexpectedType(ValueType.NUMBER);
-    }
+    public abstract double toDouble();
 
     public final String toString(Object... keys) {
         return get(keys).toString();
     }
 
+    public abstract String toString();
 
     public int size() {
         return 0;
@@ -188,7 +183,9 @@ public abstract class Any implements Iterable<Any> {
         return EMPTY_ITERATOR;
     }
 
-    public EntryIterator entries() { return EMPTY_ENTRIES_ITERATOR; }
+    public EntryIterator entries() {
+        return EMPTY_ENTRIES_ITERATOR;
+    }
 
     public Any get(int index) {
         return new NotFoundAny(index, object());
@@ -294,11 +291,7 @@ public abstract class Any implements Iterable<Any> {
         if (val == null) {
             return NullAny.INSTANCE;
         }
-        ArrayList<Any> copied = new ArrayList<Any>(val.size());
-        for (T element : val) {
-            copied.add(wrap(element));
-        }
-        return new ArrayAny(copied);
+        return new ListWrapperAny(new ArrayList(val));
     }
 
     public static <T> Any wrap(Map<String, T> val) {

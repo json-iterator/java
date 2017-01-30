@@ -48,6 +48,26 @@ class ObjectAny extends Any {
     }
 
     @Override
+    public int toInt() {
+        return val.isEmpty() ? 0 : 1;
+    }
+
+    @Override
+    public long toLong() {
+        return val.isEmpty() ? 0 : 1;
+    }
+
+    @Override
+    public float toFloat() {
+        return val.isEmpty() ? 0 : 1;
+    }
+
+    @Override
+    public double toDouble() {
+        return val.isEmpty() ? 0 : 1;
+    }
+
+    @Override
     public String toString() {
         return JsonStream.serialize(this);
     }
