@@ -432,12 +432,27 @@ class IterImplForStreaming {
 
                             // split surrogates
                             final int sup = bc - 0x10000;
+                            if (iter.reusableChars.length == j) {
+                                char[] newBuf = new char[iter.reusableChars.length * 2];
+                                System.arraycopy(iter.reusableChars, 0, newBuf, 0, iter.reusableChars.length);
+                                iter.reusableChars = newBuf;
+                            }
                             iter.reusableChars[j++] = (char) ((sup >>> 10) + 0xd800);
+                            if (iter.reusableChars.length == j) {
+                                char[] newBuf = new char[iter.reusableChars.length * 2];
+                                System.arraycopy(iter.reusableChars, 0, newBuf, 0, iter.reusableChars.length);
+                                iter.reusableChars = newBuf;
+                            }
                             iter.reusableChars[j++] = (char) ((sup & 0x3ff) + 0xdc00);
                             continue;
                         }
                     }
                 }
+            }
+            if (iter.reusableChars.length == j) {
+                char[] newBuf = new char[iter.reusableChars.length * 2];
+                System.arraycopy(iter.reusableChars, 0, newBuf, 0, iter.reusableChars.length);
+                iter.reusableChars = newBuf;
             }
             iter.reusableChars[j++] = (char) bc;
         }

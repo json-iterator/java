@@ -2,6 +2,7 @@ package com.jsoniter;
 
 import com.jsoniter.spi.JsonException;
 import junit.framework.TestCase;
+import org.junit.experimental.categories.Category;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -92,5 +93,16 @@ public class TestString extends TestCase {
             fail();
         } catch (JsonException e) {
         }
+    }
+
+    public void test_long_string() throws IOException {
+        JsonIterator iter = JsonIterator.parse("\"[\\\"LL\\\",\\\"MM\\\\\\/LW\\\",\\\"JY\\\",\\\"S\\\",\\\"C\\\",\\\"IN\\\",\\\"ME \\\\\\/ LE\\\"]\"");
+        assertEquals("[\"LL\",\"MM\\/LW\",\"JY\",\"S\",\"C\",\"IN\",\"ME \\/ LE\"]", iter.readString());
+    }
+
+    @Category(StreamingCategory.class)
+    public void test_long_string_in_streaming() throws IOException {
+        JsonIterator iter = JsonIterator.parse(new ByteArrayInputStream("\"[\\\"LL\\\",\\\"MM\\\\\\/LW\\\",\\\"JY\\\",\\\"S\\\",\\\"C\\\",\\\"IN\\\",\\\"ME \\\\\\/ LE\\\"]\"".getBytes()), 2);
+        assertEquals("[\"LL\",\"MM\\/LW\",\"JY\",\"S\",\"C\",\"IN\",\"ME \\/ LE\"]", iter.readString());
     }
 }

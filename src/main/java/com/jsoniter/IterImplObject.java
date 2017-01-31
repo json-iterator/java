@@ -33,7 +33,7 @@ class IterImplObject {
             case '}':
                 return null; // end of object
             default:
-                throw iter.reportError("readObject", "expect { or , or } or n");
+                throw iter.reportError("readObject", "expect { or , or } or n, but found: " + (char)c);
         }
     }
 
