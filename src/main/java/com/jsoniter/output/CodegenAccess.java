@@ -1,6 +1,7 @@
 package com.jsoniter.output;
 
 import com.jsoniter.*;
+import com.jsoniter.any.Any;
 import com.jsoniter.spi.Encoder;
 import com.jsoniter.spi.JsoniterSpi;
 import com.jsoniter.spi.TypeLiteral;
@@ -58,5 +59,14 @@ public class CodegenAccess {
 
     public static void staticGenEncoders(TypeLiteral[] typeLiterals) {
         Codegen.staticGenEncoders(typeLiterals);
+    }
+
+    public static Any wrap(Object val) {
+        if (val == null) {
+            return Any.wrapNull();
+        }
+        Class<?> clazz = val.getClass();
+        String cacheKey = TypeLiteral.create(clazz).getEncoderCacheKey();
+        return Codegen.getReflectionEncoder(cacheKey, clazz).wrap(val);
     }
 }

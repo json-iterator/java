@@ -1,5 +1,6 @@
 package com.jsoniter.any;
 
+import com.jsoniter.output.CodegenAccess;
 import com.jsoniter.spi.JsonException;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.ValueType;
@@ -315,7 +316,7 @@ public abstract class Any implements Iterable<Any> {
     }
 
     public static Any wrap(Object val) {
-        return JsonStream.wrap(val);
+        return CodegenAccess.wrap(val);
     }
 
     public static Any wrapNull() {

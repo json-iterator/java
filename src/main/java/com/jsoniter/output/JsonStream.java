@@ -375,15 +375,6 @@ public class JsonStream extends OutputStream {
         Codegen.setMode(mode);
     }
 
-    public static Any wrap(Object val) {
-        if (val == null) {
-            return Any.wrapNull();
-        }
-        Class<?> clazz = val.getClass();
-        String cacheKey = TypeLiteral.create(clazz).getEncoderCacheKey();
-        return Codegen.getReflectionEncoder(cacheKey, clazz).wrap(val);
-    }
-
     public static void registerNativeEncoder(Class clazz, Encoder encoder) {
         CodegenImplNative.NATIVE_ENCODERS.put(clazz, encoder);
     }

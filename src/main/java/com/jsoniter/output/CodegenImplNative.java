@@ -234,7 +234,7 @@ class CodegenImplNative {
                 if (obj != null && obj.getClass() == Object.class) {
                     return Any.rewrap(new HashMap<String, Any>());
                 }
-                return JsonStream.wrap(obj);
+                return CodegenAccess.wrap(obj);
             }
         });
 
