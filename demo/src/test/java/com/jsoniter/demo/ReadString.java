@@ -1,6 +1,8 @@
 package com.jsoniter.demo;
 
 
+import com.dslplatform.json.CustomJsonReader;
+import com.dslplatform.json.JsonReader;
 import com.jsoniter.JsonIterator;
 import org.junit.Test;
 import org.openjdk.jmh.Main;
@@ -16,6 +18,7 @@ public class ReadString {
 
     private JsonIterator jsonIterator;
     private byte[] input;
+    private CustomJsonReader customJsonReader;
 
     public static void main(String[] args) throws Exception {
         Main.main(new String[]{
@@ -34,12 +37,20 @@ public class ReadString {
     @Setup(Level.Trial)
     public void benchSetup(BenchmarkParams params) {
         jsonIterator = new JsonIterator();
-        input = "\"hello world\"".getBytes();
+        input = "\"hello world hello world\"".getBytes();
+        customJsonReader = new CustomJsonReader(input);
     }
 
     @Benchmark
     public void jsoniter(Blackhole bh) throws IOException {
         jsonIterator.reset(input);
         bh.consume(jsonIterator.readString());
+    }
+
+    @Benchmark
+    public void dsljson(Blackhole bh) throws IOException {
+        customJsonReader.reset();
+        customJsonReader.read();
+        bh.consume(customJsonReader.readString());
     }
 }

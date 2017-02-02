@@ -221,9 +221,9 @@ class Codegen {
         }
         ClassDescriptor desc = JsoniterSpi.getDecodingClassDescriptor(clazz, false);
         if (shouldUseStrictMode(desc)) {
-            return CodegenImplObject.genObjectUsingStrict(clazz, desc);
+            return CodegenImplObjectStrict.genObjectUsingStrict(clazz, desc);
         } else {
-            return CodegenImplObject.genObjectUsingHash(clazz, desc);
+            return CodegenImplObjectHash.genObjectUsingHash(clazz, desc);
         }
     }
 

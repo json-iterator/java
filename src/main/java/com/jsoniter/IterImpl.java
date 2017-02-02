@@ -7,23 +7,24 @@ import java.io.IOException;
 class IterImpl {
 
     public static final int readObjectFieldAsHash(JsonIterator iter) throws IOException {
-        if (nextToken(iter) != '"') {
-            throw iter.reportError("readObjectFieldAsHash", "expect \"");
-        }
-        long hash = 0x811c9dc5;
-        for (int i = iter.head; i < iter.tail; i++) {
-            byte c = iter.buf[i];
-            if (c == '"') {
-                iter.head = i + 1;
-                if (nextToken(iter) != ':') {
-                    throw iter.reportError("readObjectFieldAsHash", "expect :");
+        byte c = nextToken(iter);
+        if (c == '"') {
+            long hash = 0x811c9dc5;
+            for (int i = iter.head; i < iter.tail; i++) {
+                c = iter.buf[i];
+                if (c == '"') {
+                    iter.head = i + 1;
+                    if (nextToken(iter) != ':') {
+                        throw iter.reportError("readObjectFieldAsHash", "expect :");
+                    }
+                    return (int) hash;
                 }
-                return (int) hash;
+                hash ^= c;
+                hash *= 0x1000193;
             }
-            hash ^= c;
-            hash *= 0x1000193;
+            throw iter.reportError("readObjectFieldAsHash", "unmatched quote");
         }
-        throw iter.reportError("readObjectFieldAsHash", "unmatched quote");
+        throw iter.reportError("readObjectFieldAsHash", "expect \"");
     }
 
     public static final Slice readObjectFieldAsSlice(JsonIterator iter) throws IOException {

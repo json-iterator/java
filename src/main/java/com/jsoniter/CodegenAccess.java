@@ -188,4 +188,12 @@ public class CodegenAccess {
     public static void unreadByte(JsonIterator iter) throws IOException {
         iter.unreadByte();
     }
+
+    public static int calcHash(String str) {
+        return CodegenImplObjectHash.calcHash(str);
+    }
+
+    public static void skipFixedBytes(JsonIterator iter, int n) throws IOException {
+        IterImpl.skipFixedBytes(iter, n);
+    }
 }

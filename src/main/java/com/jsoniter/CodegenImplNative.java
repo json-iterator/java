@@ -1,8 +1,7 @@
 package com.jsoniter;
 
 import com.jsoniter.any.Any;
-import com.jsoniter.spi.JsonException;
-import com.jsoniter.spi.TypeLiteral;
+import com.jsoniter.spi.*;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -90,5 +89,65 @@ class CodegenImplNative {
         } else {
             throw new JsonException("unsupported type: " + fieldType);
         }
+    }
+
+    static String genField(Binding field) {
+        String fieldCacheKey = field.decoderCacheKey();
+        // the field decoder might be registered directly
+        Decoder decoder = JsoniterSpi.getDecoder(fieldCacheKey);
+        Type fieldType = field.valueType;
+        if (decoder == null) {
+            return String.format("(%s)%s", getTypeName(fieldType), genReadOp(fieldType));
+        }
+        if (fieldType == boolean.class) {
+            if (!(decoder instanceof Decoder.BooleanDecoder)) {
+                throw new JsonException("decoder for field " + field + "must implement Decoder.BooleanDecoder");
+            }
+            return String.format("com.jsoniter.CodegenAccess.readBoolean(\"%s\", iter)", fieldCacheKey);
+        }
+        if (fieldType == byte.class) {
+            if (!(decoder instanceof Decoder.ShortDecoder)) {
+                throw new JsonException("decoder for field " + field + "must implement Decoder.ShortDecoder");
+            }
+            return String.format("com.jsoniter.CodegenAccess.readShort(\"%s\", iter)", fieldCacheKey);
+        }
+        if (fieldType == short.class) {
+            if (!(decoder instanceof Decoder.ShortDecoder)) {
+                throw new JsonException("decoder for field " + field + "must implement Decoder.ShortDecoder");
+            }
+            return String.format("com.jsoniter.CodegenAccess.readShort(\"%s\", iter)", fieldCacheKey);
+        }
+        if (fieldType == char.class) {
+            if (!(decoder instanceof Decoder.IntDecoder)) {
+                throw new JsonException("decoder for field " + field + "must implement Decoder.IntDecoder");
+            }
+            return String.format("com.jsoniter.CodegenAccess.readInt(\"%s\", iter)", fieldCacheKey);
+        }
+        if (fieldType == int.class) {
+            if (!(decoder instanceof Decoder.IntDecoder)) {
+                throw new JsonException("decoder for field " + field + "must implement Decoder.IntDecoder");
+            }
+            return String.format("com.jsoniter.CodegenAccess.readInt(\"%s\", iter)", fieldCacheKey);
+        }
+        if (fieldType == long.class) {
+            if (!(decoder instanceof Decoder.LongDecoder)) {
+                throw new JsonException("decoder for field " + field + "must implement Decoder.LongDecoder");
+            }
+            return String.format("com.jsoniter.CodegenAccess.readLong(\"%s\", iter)", fieldCacheKey);
+        }
+        if (fieldType == float.class) {
+            if (!(decoder instanceof Decoder.FloatDecoder)) {
+                throw new JsonException("decoder for field " + field + "must implement Decoder.FloatDecoder");
+            }
+            return String.format("com.jsoniter.CodegenAccess.readFloat(\"%s\", iter)", fieldCacheKey);
+        }
+        if (fieldType == double.class) {
+            if (!(decoder instanceof Decoder.DoubleDecoder)) {
+                throw new JsonException("decoder for field " + field + "must implement Decoder.DoubleDecoder");
+            }
+            return String.format("com.jsoniter.CodegenAccess.readDouble(\"%s\", iter)", fieldCacheKey);
+        }
+        return String.format("(%s)com.jsoniter.CodegenAccess.read(\"%s\", iter);",
+                getTypeName(fieldType), fieldCacheKey);
     }
 }

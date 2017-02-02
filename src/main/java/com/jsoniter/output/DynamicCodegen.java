@@ -1,16 +1,18 @@
 package com.jsoniter.output;
 
+import com.jsoniter.spi.Decoder;
 import com.jsoniter.spi.EmptyEncoder;
 import com.jsoniter.spi.Encoder;
 import com.sun.org.apache.xml.internal.utils.StringBufferPool;
-import javassist.ClassPool;
-import javassist.CtClass;
-import javassist.CtMethod;
-import javassist.CtNewMethod;
+import javassist.*;
 
 class DynamicCodegen {
 
     static ClassPool pool = ClassPool.getDefault();
+
+    static {
+        pool.insertClassPath(new ClassClassPath(Encoder.class));
+    }
 
     public static Encoder gen(Class clazz, String cacheKey, CodegenResult source) throws Exception {
         source.flushBuffer();

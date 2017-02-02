@@ -118,6 +118,7 @@ public class TestObject extends TestCase {
 
     public static class TestObject7 {
         private int[] field1;
+
         @JsonProperty(omitNull = false)
         public int[] getField1() {
             return field1;
@@ -222,6 +223,7 @@ public class TestObject extends TestCase {
     }
 
     public void test_omit_null() {
+//        JsonStream.setMode(EncodingMode.DYNAMIC_MODE);
         assertEquals("{}", JsonStream.serialize(new TestObject11()));
         TestObject11 obj = new TestObject11();
         obj.field1 = "hello";

@@ -56,46 +56,24 @@ class IterImplString {
         byte c = IterImpl.nextToken(iter);
         if (c == '"') {
             // try fast path first
-            int j = 0;
-            fast_loop:
-            for (; ; ) {
-                // copy ascii to buffer
-                int i = iter.head;
-                for (; i < iter.tail && j < iter.reusableChars.length; i++, j++) {
-                    c = iter.buf[i];
-                    if (c == '"') {
-                        iter.head = i + 1;
-                        return new String(iter.reusableChars, 0, j);
-                    }
-                    // If we encounter a backslash, which is a beginning of an escape sequence
-                    // or a high bit was set - indicating an UTF-8 encoded multibyte character,
-                    // there is no chance that we can decode the string without instantiating
-                    // a temporary buffer, so quit this loop
-                    if ((c ^ '\\') < 1) {
-                        iter.head = i;
-                        break fast_loop;
-                    }
-                    iter.reusableChars[j] = (char) c;
+            int i = iter.head;
+            for (; i < iter.tail; i++) {
+                c = iter.buf[i];
+                if (c == '"') {
+                    String str = new String(iter.buf, 0, iter.head, i - iter.head);
+                    iter.head = i + 1;
+                    return str;
                 }
-                if (i == iter.tail) {
-                    if (IterImpl.loadMore(iter)) {
-                        i = iter.head;
-                        continue;
-                    } else {
-                        throw iter.reportError("readString", "incomplete string");
-                    }
-                }
-                iter.head = i;
-                // resize to copy more
-                if (j == iter.reusableChars.length) {
-                    char[] newBuf = new char[iter.reusableChars.length * 2];
-                    System.arraycopy(iter.reusableChars, 0, newBuf, 0, iter.reusableChars.length);
-                    iter.reusableChars = newBuf;
-                } else {
+                // If we encounter a backslash, which is a beginning of an escape sequence
+                // or a high bit was set - indicating an UTF-8 encoded multibyte character,
+                // there is no chance that we can decode the string without instantiating
+                // a temporary buffer, so quit this loop
+                if ((c ^ '\\') < 1) {
                     break;
                 }
             }
-            return IterImpl.readStringSlowPath(iter, j);
+            // TODO: copy from iter.head to i into reusableChars
+            return IterImpl.readStringSlowPath(iter, 0);
         }
         if (c == 'n') {
             IterImpl.skipFixedBytes(iter, 3);

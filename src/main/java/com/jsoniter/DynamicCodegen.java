@@ -1,14 +1,15 @@
 package com.jsoniter;
 
 import com.jsoniter.spi.Decoder;
-import javassist.ClassPool;
-import javassist.CtClass;
-import javassist.CtMethod;
-import javassist.CtNewMethod;
+import javassist.*;
 
 class DynamicCodegen {
 
     static ClassPool pool = ClassPool.getDefault();
+
+    static {
+        pool.insertClassPath(new ClassClassPath(Decoder.class));
+    }
 
     public static Decoder gen(String cacheKey, String source) throws Exception {
         Decoder decoder;
