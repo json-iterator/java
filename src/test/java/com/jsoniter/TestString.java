@@ -89,7 +89,7 @@ public class TestString extends TestCase {
 
     public void test_incomplete_string() throws IOException {
         try {
-            JsonIterator.parse("\"abc").read();
+            JsonIterator.deserialize("\"abc", String.class);
             fail();
         } catch (JsonException e) {
         }

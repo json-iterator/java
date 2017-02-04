@@ -4,6 +4,9 @@ import com.jsoniter.spi.*;
 
 import java.util.*;
 
+import static com.jsoniter.CodegenImplObjectHash.appendVarDef;
+import static com.jsoniter.CodegenImplObjectHash.appendWrappers;
+
 class CodegenImplObjectStrict {
 
     final static Map<String, String> DEFAULT_VALUES = new HashMap<String, String>() {{
@@ -36,52 +39,53 @@ class CodegenImplObjectStrict {
          * 8. apply multi param wrappers
          */
         // === if null, return null
-        CodegenImplObjectHash.append(lines, "if (iter.readNull()) { com.jsoniter.CodegenAccess.resetExistingObject(iter); return null; }");
+        append(lines, "java.lang.Object existingObj = com.jsoniter.CodegenAccess.resetExistingObject(iter);");
+        append(lines, "if (iter.readNull()) { return null; }");
         // === if input is empty obj, return empty obj
         if (hasRequiredBinding) {
-            CodegenImplObjectHash.append(lines, "long tracker = 0;");
+            append(lines, "long tracker = 0;");
         }
         if (desc.ctor.parameters.isEmpty()) {
-            CodegenImplObjectHash.append(lines, "{{clazz}} obj = {{newInst}};");
-            CodegenImplObjectHash.append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) {");
+            append(lines, "{{clazz}} obj = {{newInst}};");
+            append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) {");
             if (hasRequiredBinding) {
                 appendMissingRequiredProperties(lines, desc);
             }
-            CodegenImplObjectHash.append(lines, "return obj;");
-            CodegenImplObjectHash.append(lines, "}");
+            append(lines, "return obj;");
+            append(lines, "}");
             // because obj can be created without binding
             // so that fields and setters can be bind to obj directly without temp var
         } else {
             for (Binding parameter : desc.ctor.parameters) {
-                CodegenImplObjectHash.appendVarDef(lines, parameter);
+                appendVarDef(lines, parameter);
             }
-            CodegenImplObjectHash.append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) {");
+            append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) {");
             if (hasRequiredBinding) {
                 appendMissingRequiredProperties(lines, desc);
             } else {
-                CodegenImplObjectHash.append(lines, "return {{newInst}};");
+                append(lines, "return {{newInst}};");
             }
-            CodegenImplObjectHash.append(lines, "}");
+            append(lines, "}");
             for (Binding field : desc.fields) {
-                CodegenImplObjectHash.appendVarDef(lines, field);
+                appendVarDef(lines, field);
             }
             for (Binding setter : desc.setters) {
-                CodegenImplObjectHash.appendVarDef(lines, setter);
+                appendVarDef(lines, setter);
             }
         }
         for (WrapperDescriptor wrapper : desc.wrappers) {
             for (Binding param : wrapper.parameters) {
-                CodegenImplObjectHash.appendVarDef(lines, param);
+                appendVarDef(lines, param);
             }
         }
         // === bind first field
         if (desc.onExtraProperties != null) {
-            CodegenImplObjectHash.append(lines, "java.util.Map extra = null;");
+            append(lines, "java.util.Map extra = null;");
         }
-        CodegenImplObjectHash.append(lines, "com.jsoniter.Slice field = com.jsoniter.CodegenAccess.readObjectFieldAsSlice(iter);");
-        CodegenImplObjectHash.append(lines, "boolean once = true;");
-        CodegenImplObjectHash.append(lines, "while (once) {");
-        CodegenImplObjectHash.append(lines, "once = false;");
+        append(lines, "com.jsoniter.Slice field = com.jsoniter.CodegenAccess.readObjectFieldAsSlice(iter);");
+        append(lines, "boolean once = true;");
+        append(lines, "while (once) {");
+        append(lines, "once = false;");
         String rendered = renderTriTree(trieTree);
         if (desc.ctor.parameters.isEmpty()) {
             // if not field or setter, the value will set to temp variable
@@ -93,41 +97,41 @@ class CodegenImplObjectStrict {
             }
         }
         if (hasAnythingToBindFrom(allBindings)) {
-            CodegenImplObjectHash.append(lines, "switch (field.len()) {");
-            CodegenImplObjectHash.append(lines, rendered);
-            CodegenImplObjectHash.append(lines, "}"); // end of switch
+            append(lines, "switch (field.len()) {");
+            append(lines, rendered);
+            append(lines, "}"); // end of switch
         }
         appendOnUnknownField(lines, desc);
-        CodegenImplObjectHash.append(lines, "}"); // end of while
+        append(lines, "}"); // end of while
         // === bind all fields
-        CodegenImplObjectHash.append(lines, "while (com.jsoniter.CodegenAccess.nextToken(iter) == ',') {");
-        CodegenImplObjectHash.append(lines, "field = com.jsoniter.CodegenAccess.readObjectFieldAsSlice(iter);");
+        append(lines, "while (com.jsoniter.CodegenAccess.nextToken(iter) == ',') {");
+        append(lines, "field = com.jsoniter.CodegenAccess.readObjectFieldAsSlice(iter);");
         if (hasAnythingToBindFrom(allBindings)) {
-            CodegenImplObjectHash.append(lines, "switch (field.len()) {");
-            CodegenImplObjectHash.append(lines, rendered);
-            CodegenImplObjectHash.append(lines, "}"); // end of switch
+            append(lines, "switch (field.len()) {");
+            append(lines, rendered);
+            append(lines, "}"); // end of switch
         }
         appendOnUnknownField(lines, desc);
-        CodegenImplObjectHash.append(lines, "}"); // end of while
+        append(lines, "}"); // end of while
         if (hasRequiredBinding) {
-            CodegenImplObjectHash.append(lines, "if (tracker != " + expectedTracker + "L) {");
+            append(lines, "if (tracker != " + expectedTracker + "L) {");
             appendMissingRequiredProperties(lines, desc);
-            CodegenImplObjectHash.append(lines, "}");
+            append(lines, "}");
         }
         if (desc.onExtraProperties != null) {
             appendSetExtraProperteis(lines, desc);
         }
         if (!desc.ctor.parameters.isEmpty()) {
-            CodegenImplObjectHash.append(lines, String.format("%s obj = {{newInst}};", CodegenImplNative.getTypeName(clazz)));
+            append(lines, String.format("%s obj = {{newInst}};", CodegenImplNative.getTypeName(clazz)));
             for (Binding field : desc.fields) {
-                CodegenImplObjectHash.append(lines, String.format("obj.%s = _%s_;", field.field.getName(), field.name));
+                append(lines, String.format("obj.%s = _%s_;", field.field.getName(), field.name));
             }
             for (Binding setter : desc.setters) {
-                CodegenImplObjectHash.append(lines, String.format("obj.%s(_%s_);", setter.method.getName(), setter.name));
+                append(lines, String.format("obj.%s(_%s_);", setter.method.getName(), setter.name));
             }
         }
-        CodegenImplObjectHash.appendWrappers(desc.wrappers, lines);
-        CodegenImplObjectHash.append(lines, "return obj;");
+        appendWrappers(desc.wrappers, lines);
+        append(lines, "return obj;");
         return lines.toString()
                 .replace("{{clazz}}", clazz.getCanonicalName())
                 .replace("{{newInst}}", CodegenImplObjectHash.genNewInstCode(clazz, desc.ctor));
@@ -137,9 +141,9 @@ class CodegenImplObjectStrict {
         Binding onExtraProperties = desc.onExtraProperties;
         if (ParameterizedTypeImpl.isSameClass(onExtraProperties.valueType, Map.class)) {
             if (onExtraProperties.field != null) {
-                CodegenImplObjectHash.append(lines, String.format("obj.%s = extra;", onExtraProperties.field.getName()));
+                append(lines, String.format("obj.%s = extra;", onExtraProperties.field.getName()));
             } else {
-                CodegenImplObjectHash.append(lines, String.format("obj.%s(extra);", onExtraProperties.method.getName()));
+                append(lines, String.format("obj.%s(extra);", onExtraProperties.method.getName()));
             }
             return;
         }
@@ -206,21 +210,21 @@ class CodegenImplObjectStrict {
     }
 
     private static void appendMissingRequiredProperties(StringBuilder lines, ClassDescriptor desc) {
-        CodegenImplObjectHash.append(lines, "java.util.List missingFields = new java.util.ArrayList();");
+        append(lines, "java.util.List missingFields = new java.util.ArrayList();");
         for (Binding binding : desc.allDecoderBindings()) {
             if (binding.asMissingWhenNotPresent) {
                 long mask = binding.mask;
-                CodegenImplObjectHash.append(lines, String.format("com.jsoniter.CodegenAccess.addMissingField(missingFields, tracker, %sL, \"%s\");",
+                append(lines, String.format("com.jsoniter.CodegenAccess.addMissingField(missingFields, tracker, %sL, \"%s\");",
                         mask, binding.name));
             }
         }
         if (desc.onMissingProperties == null || !desc.ctor.parameters.isEmpty()) {
-            CodegenImplObjectHash.append(lines, "throw new com.jsoniter.spi.JsonException(\"missing required properties: \" + missingFields);");
+            append(lines, "throw new com.jsoniter.spi.JsonException(\"missing required properties: \" + missingFields);");
         } else {
             if (desc.onMissingProperties.field != null) {
-                CodegenImplObjectHash.append(lines, String.format("obj.%s = missingFields;", desc.onMissingProperties.field.getName()));
+                append(lines, String.format("obj.%s = missingFields;", desc.onMissingProperties.field.getName()));
             } else {
-                CodegenImplObjectHash.append(lines, String.format("obj.%s(missingFields);", desc.onMissingProperties.method.getName()));
+                append(lines, String.format("obj.%s(missingFields);", desc.onMissingProperties.method.getName()));
             }
         }
     }
@@ -228,13 +232,13 @@ class CodegenImplObjectStrict {
     private static void appendOnUnknownField(StringBuilder lines, ClassDescriptor desc) {
         if (desc.asExtraForUnknownProperties) {
             if (desc.onExtraProperties == null) {
-                CodegenImplObjectHash.append(lines, "throw new com.jsoniter.spi.JsonException('extra property: ' + field.toString());".replace('\'', '"'));
+                append(lines, "throw new com.jsoniter.spi.JsonException('extra property: ' + field.toString());".replace('\'', '"'));
             } else {
-                CodegenImplObjectHash.append(lines, "if (extra == null) { extra = new java.util.HashMap(); }");
-                CodegenImplObjectHash.append(lines, "extra.put(field.toString(), iter.readAny());");
+                append(lines, "if (extra == null) { extra = new java.util.HashMap(); }");
+                append(lines, "extra.put(field.toString(), iter.readAny());");
             }
         } else {
-            CodegenImplObjectHash.append(lines, "iter.skip();");
+            append(lines, "iter.skip();");
         }
     }
 
@@ -267,10 +271,10 @@ class CodegenImplObjectStrict {
         StringBuilder switchBody = new StringBuilder();
         for (Map.Entry<Integer, Object> entry : trieTree.entrySet()) {
             Integer len = entry.getKey();
-            CodegenImplObjectHash.append(switchBody, "case " + len + ": ");
+            append(switchBody, "case " + len + ": ");
             Map<Byte, Object> current = (Map<Byte, Object>) entry.getValue();
             addFieldDispatch(switchBody, len, 0, current, new ArrayList<Byte>());
-            CodegenImplObjectHash.append(switchBody, "break;");
+            append(switchBody, "break;");
         }
         return switchBody.toString();
     }
@@ -280,29 +284,29 @@ class CodegenImplObjectStrict {
         for (Map.Entry<Byte, Object> entry : current.entrySet()) {
             Byte b = entry.getKey();
             if (i == len - 1) {
-                CodegenImplObjectHash.append(lines, "if (");
+                append(lines, "if (");
                 for (int j = 0; j < bytesToCompare.size(); j++) {
                     Byte a = bytesToCompare.get(j);
-                    CodegenImplObjectHash.append(lines, String.format("field.at(%d)==%s && ", i - bytesToCompare.size() + j, a));
+                    append(lines, String.format("field.at(%d)==%s && ", i - bytesToCompare.size() + j, a));
                 }
-                CodegenImplObjectHash.append(lines, String.format("field.at(%d)==%s", i, b));
-                CodegenImplObjectHash.append(lines, ") {");
+                append(lines, String.format("field.at(%d)==%s", i, b));
+                append(lines, ") {");
                 Binding field = (Binding) entry.getValue();
                 if (field.asExtraWhenPresent) {
-                    CodegenImplObjectHash.append(lines, String.format(
+                    append(lines, String.format(
                             "throw new com.jsoniter.spi.JsonException('extra property: %s');".replace('\'', '"'),
                             field.name));
                 } else if (field.shouldSkip) {
-                    CodegenImplObjectHash.append(lines, "iter.skip();");
-                    CodegenImplObjectHash.append(lines, "continue;");
+                    append(lines, "iter.skip();");
+                    append(lines, "continue;");
                 } else {
-                    CodegenImplObjectHash.append(lines, String.format("_%s_ = %s;", field.name, CodegenImplNative.genField(field)));
+                    append(lines, String.format("_%s_ = %s;", field.name, CodegenImplNative.genField(field)));
                     if (field.asMissingWhenNotPresent) {
-                        CodegenImplObjectHash.append(lines, "tracker = tracker | " + field.mask + "L;");
+                        append(lines, "tracker = tracker | " + field.mask + "L;");
                     }
-                    CodegenImplObjectHash.append(lines, "continue;");
+                    append(lines, "continue;");
                 }
-                CodegenImplObjectHash.append(lines, "}");
+                append(lines, "}");
                 continue;
             }
             Map<Byte, Object> next = (Map<Byte, Object>) entry.getValue();
@@ -312,26 +316,31 @@ class CodegenImplObjectStrict {
                 addFieldDispatch(lines, len, i + 1, next, nextBytesToCompare);
                 continue;
             }
-            CodegenImplObjectHash.append(lines, "if (");
+            append(lines, "if (");
             for (int j = 0; j < bytesToCompare.size(); j++) {
                 Byte a = bytesToCompare.get(j);
-                CodegenImplObjectHash.append(lines, String.format("field.at(%d)==%s && ", i - bytesToCompare.size() + j, a));
+                append(lines, String.format("field.at(%d)==%s && ", i - bytesToCompare.size() + j, a));
             }
-            CodegenImplObjectHash.append(lines, String.format("field.at(%d)==%s", i, b));
-            CodegenImplObjectHash.append(lines, ") {");
+            append(lines, String.format("field.at(%d)==%s", i, b));
+            append(lines, ") {");
             addFieldDispatch(lines, len, i + 1, next, new ArrayList<Byte>());
-            CodegenImplObjectHash.append(lines, "}");
+            append(lines, "}");
         }
     }
 
     public static String genObjectUsingSkip(Class clazz, ConstructorDescriptor ctor) {
         StringBuilder lines = new StringBuilder();
-        CodegenImplObjectHash.append(lines, "if (iter.readNull()) { return null; }");
-        CodegenImplObjectHash.append(lines, "{{clazz}} obj = {{newInst}};");
-        CodegenImplObjectHash.append(lines, "iter.skip();");
-        CodegenImplObjectHash.append(lines, "return obj;");
+        append(lines, "if (iter.readNull()) { return null; }");
+        append(lines, "{{clazz}} obj = {{newInst}};");
+        append(lines, "iter.skip();");
+        append(lines, "return obj;");
         return lines.toString()
                 .replace("{{clazz}}", clazz.getCanonicalName())
                 .replace("{{newInst}}", CodegenImplObjectHash.genNewInstCode(clazz, ctor));
+    }
+    
+    static void append(StringBuilder lines, String str) {
+        lines.append(str);
+        lines.append("\n");
     }
 }

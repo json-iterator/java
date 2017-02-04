@@ -127,7 +127,11 @@ public class JsonIterator implements Closeable {
         if (peekStart < 0) {
             peekStart = 0;
         }
-        String peek = new String(buf, peekStart, head - peekStart);
+        int peekSize = head - peekStart;
+        if (head > tail) {
+            peekSize = tail - peekStart;
+        }
+        String peek = new String(buf, peekStart, peekSize);
         throw new JsonException(op + ": " + msg + ", head: " + head + ", peek: " + peek + ", buf: " + new String(buf));
     }
 
@@ -237,7 +241,11 @@ public class JsonIterator implements Closeable {
     }
 
     public final Any readAny() throws IOException {
-        return IterImpl.readAny(this);
+        try {
+            return IterImpl.readAny(this);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            throw reportError("read", "premature end");
+        }
     }
 
     private final static ReadArrayCallback fillArray = new ReadArrayCallback() {
@@ -259,27 +267,31 @@ public class JsonIterator implements Closeable {
     };
 
     public final Object read() throws IOException {
-        ValueType valueType = whatIsNext();
-        switch (valueType) {
-            case STRING:
-                return readString();
-            case NUMBER:
-                return readDouble();
-            case NULL:
-                IterImpl.skipFixedBytes(this, 4);
-                return null;
-            case BOOLEAN:
-                return readBoolean();
-            case ARRAY:
-                ArrayList list = new ArrayList(4);
-                readArrayCB(fillArray, list);
-                return list;
-            case OBJECT:
-                Map map = new HashMap(4);
-                readObjectCB(fillObject, map);
-                return map;
-            default:
-                throw reportError("read", "unexpected value type: " + valueType);
+        try {
+            ValueType valueType = whatIsNext();
+            switch (valueType) {
+                case STRING:
+                    return readString();
+                case NUMBER:
+                    return readDouble();
+                case NULL:
+                    IterImpl.skipFixedBytes(this, 4);
+                    return null;
+                case BOOLEAN:
+                    return readBoolean();
+                case ARRAY:
+                    ArrayList list = new ArrayList(4);
+                    readArrayCB(fillArray, list);
+                    return list;
+                case OBJECT:
+                    Map map = new HashMap(4);
+                    readObjectCB(fillObject, map);
+                    return map;
+                default:
+                    throw reportError("read", "unexpected value type: " + valueType);
+            }
+        } catch (ArrayIndexOutOfBoundsException e) {
+            throw reportError("read", "premature end");
         }
     }
 
@@ -287,37 +299,53 @@ public class JsonIterator implements Closeable {
      * try to bind to existing object, returned object might not the same instance
      *
      * @param existingObject the object instance to reuse
-     * @param <T> object type
+     * @param <T>            object type
      * @return data binding result, might not be the same object
      * @throws IOException if I/O went wrong
      */
     public final <T> T read(T existingObject) throws IOException {
-        this.existingObject = existingObject;
-        Class<?> clazz = existingObject.getClass();
-        return (T) Codegen.getDecoder(TypeLiteral.create(clazz).getDecoderCacheKey(), clazz).decode(this);
+        try {
+            this.existingObject = existingObject;
+            Class<?> clazz = existingObject.getClass();
+            return (T) Codegen.getDecoder(TypeLiteral.create(clazz).getDecoderCacheKey(), clazz).decode(this);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            throw reportError("read", "premature end");
+        }
     }
 
     /**
      * try to bind to existing object, returned object might not the same instance
      *
-     * @param typeLiteral the type object
+     * @param typeLiteral    the type object
      * @param existingObject the object instance to reuse
-     * @param <T> object type
+     * @param <T>            object type
      * @return data binding result, might not be the same object
      * @throws IOException if I/O went wrong
      */
     public final <T> T read(TypeLiteral<T> typeLiteral, T existingObject) throws IOException {
-        this.existingObject = existingObject;
-        return (T) Codegen.getDecoder(typeLiteral.getDecoderCacheKey(), typeLiteral.getType()).decode(this);
+        try {
+            this.existingObject = existingObject;
+            return (T) Codegen.getDecoder(typeLiteral.getDecoderCacheKey(), typeLiteral.getType()).decode(this);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            throw reportError("read", "premature end");
+        }
     }
 
     public final <T> T read(Class<T> clazz) throws IOException {
-        return (T) Codegen.getDecoder(TypeLiteral.create(clazz).getDecoderCacheKey(), clazz).decode(this);
+        try {
+            return (T) Codegen.getDecoder(TypeLiteral.create(clazz).getDecoderCacheKey(), clazz).decode(this);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            throw reportError("read", "premature end");
+        }
     }
 
     public final <T> T read(TypeLiteral<T> typeLiteral) throws IOException {
-        String cacheKey = typeLiteral.getDecoderCacheKey();
-        return (T) Codegen.getDecoder(cacheKey, typeLiteral.getType()).decode(this);
+        try {
+            String cacheKey = typeLiteral.getDecoderCacheKey();
+            return (T) Codegen.getDecoder(cacheKey, typeLiteral.getType()).decode(this);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            throw reportError("read", "premature end");
+        }
     }
 
     public ValueType whatIsNext() throws IOException {
@@ -347,6 +375,8 @@ public class JsonIterator implements Closeable {
                 throw iter.reportError("deserialize", "trailing garbage found");
             }
             return val;
+        } catch (ArrayIndexOutOfBoundsException e) {
+            throw iter.reportError("deserialize", "premature end");
         } catch (IOException e) {
             throw new JsonException(e);
         }
@@ -361,6 +391,8 @@ public class JsonIterator implements Closeable {
                 throw iter.reportError("deserialize", "trailing garbage found");
             }
             return val;
+        } catch (ArrayIndexOutOfBoundsException e) {
+            throw iter.reportError("deserialize", "premature end");
         } catch (IOException e) {
             throw new JsonException(e);
         }
@@ -375,6 +407,8 @@ public class JsonIterator implements Closeable {
                 throw iter.reportError("deserialize", "trailing garbage found");
             }
             return val;
+        } catch (ArrayIndexOutOfBoundsException e) {
+            throw iter.reportError("deserialize", "premature end");
         } catch (IOException e) {
             throw new JsonException(e);
         }
@@ -389,6 +423,8 @@ public class JsonIterator implements Closeable {
                 throw iter.reportError("deserialize", "trailing garbage found");
             }
             return val;
+        } catch (ArrayIndexOutOfBoundsException e) {
+            throw iter.reportError("deserialize", "premature end");
         } catch (IOException e) {
             throw new JsonException(e);
         }
@@ -407,6 +443,8 @@ public class JsonIterator implements Closeable {
                 throw iter.reportError("deserialize", "trailing garbage found");
             }
             return val;
+        } catch (ArrayIndexOutOfBoundsException e) {
+            throw iter.reportError("deserialize", "premature end");
         } catch (IOException e) {
             throw new JsonException(e);
         }

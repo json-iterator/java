@@ -6,7 +6,6 @@ import java.util.*;
 class CodegenImplArray {
 
     final static Set<Class> WITH_CAPACITY_COLLECTION_CLASSES = new HashSet<Class>() {{
-        // TODO: optimize array list using set()
         add(ArrayList.class);
         add(HashSet.class);
         add(Vector.class);
@@ -89,7 +88,7 @@ class CodegenImplArray {
     private static String genCollectionWithCapacity(Class clazz, Type compType) {
         StringBuilder lines = new StringBuilder();
         append(lines, "{{clazz}} col = ({{clazz}})com.jsoniter.CodegenAccess.resetExistingObject(iter);");
-        append(lines, "if (iter.readNull()) { return null; }");
+        append(lines, "if (iter.readNull()) { com.jsoniter.CodegenAccess.resetExistingObject(iter); return null; }");
         append(lines, "if (!com.jsoniter.CodegenAccess.readArrayStart(iter)) {");
         append(lines, "return col == null ? new {{clazz}}(0): ({{clazz}})com.jsoniter.CodegenAccess.reuseCollection(col);");
         append(lines, "}");
@@ -131,7 +130,7 @@ class CodegenImplArray {
 
     private static String genCollectionWithoutCapacity(Class clazz, Type compType) {
         StringBuilder lines = new StringBuilder();
-        append(lines, "if (iter.readNull()) { return null; }");
+        append(lines, "if (iter.readNull()) { com.jsoniter.CodegenAccess.resetExistingObject(iter); return null; }");
         append(lines, "{{clazz}} col = ({{clazz}})com.jsoniter.CodegenAccess.resetExistingObject(iter);");
         append(lines, "if (!com.jsoniter.CodegenAccess.readArrayStart(iter)) {");
         append(lines, "return col == null ? new {{clazz}}(): ({{clazz}})com.jsoniter.CodegenAccess.reuseCollection(col);");

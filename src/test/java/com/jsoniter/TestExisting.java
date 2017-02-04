@@ -24,9 +24,10 @@ public class TestExisting extends TestCase {
         TestObj1 testObj = new TestObj1();
         testObj.field2 = "world";
         JsonIterator iter = JsonIterator.parse("{ 'field1' : 'hello' }".replace('\'', '"'));
+        TestObj1 oldObj = testObj;
         testObj = iter.read(testObj);
         assertEquals("hello", testObj.field1);
-        assertEquals("world", testObj.field2);
+        assertEquals(System.identityHashCode(oldObj), System.identityHashCode(testObj));
     }
 
     public static class TestObj2 {
@@ -39,10 +40,11 @@ public class TestExisting extends TestCase {
         testObj.field4 = new TestObj1();
         testObj.field4.field1 = "world";
         JsonIterator iter = JsonIterator.parse("{ 'field3' : 'hello', 'field4': {'field2': 'hello'} }".replace('\'', '"'));
+        TestObj2 oldObj = testObj;
         testObj = iter.read(testObj);
         assertEquals("hello", testObj.field3);
         assertEquals("hello", testObj.field4.field2);
-        assertEquals("world", testObj.field4.field1);
+        assertEquals(System.identityHashCode(oldObj), System.identityHashCode(testObj));
     }
 
     public void test_reuse_list() throws IOException {
