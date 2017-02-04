@@ -339,10 +339,11 @@ public class JsonIterator implements Closeable {
 
     public static final <T> T deserialize(String input, Class<T> clazz) {
         JsonIterator iter = tlsIter.get();
-        iter.reset(input.getBytes());
+        byte[] bytes = input.getBytes();
+        iter.reset(bytes);
         try {
             T val = iter.read(clazz);
-            if (IterImpl.nextToken(iter) != 0) {
+            if (iter.head != bytes.length) {
                 throw iter.reportError("deserialize", "trailing garbage found");
             }
             return val;
@@ -402,7 +403,7 @@ public class JsonIterator implements Closeable {
         iter.reset(input);
         try {
             Any val = iter.readAny();
-            if (IterImpl.nextToken(iter) != 0) {
+            if (iter.head != input.length) {
                 throw iter.reportError("deserialize", "trailing garbage found");
             }
             return val;

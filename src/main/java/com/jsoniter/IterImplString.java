@@ -53,33 +53,57 @@ class IterImplString {
     }
 
     public static final String readString(JsonIterator iter) throws IOException {
-        byte c = IterImpl.nextToken(iter);
-        if (c == '"') {
-            // try fast path first
-            int i = iter.head;
-            for (; i < iter.tail; i++) {
-                c = iter.buf[i];
-                if (c == '"') {
-                    String str = new String(iter.buf, 0, iter.head, i - iter.head);
-                    iter.head = i + 1;
-                    return str;
-                }
-                // If we encounter a backslash, which is a beginning of an escape sequence
-                // or a high bit was set - indicating an UTF-8 encoded multibyte character,
-                // there is no chance that we can decode the string without instantiating
-                // a temporary buffer, so quit this loop
-                if ((c ^ '\\') < 1) {
-                    break;
-                }
+        byte c = IterImpl.readByte(iter);
+        if (c != '"') {
+            if (readStringIsNull(iter, c)) {
+                return null;
             }
-            // TODO: copy from iter.head to i into reusableChars
-            return IterImpl.readStringSlowPath(iter, 0);
         }
+        int j = parse(iter);
+        return new String(iter.reusableChars, 0, j);
+    }
+
+    private static int parse(JsonIterator iter) throws IOException {
+        byte c;// try fast path first
+        int i = iter.head;
+        // this code will trigger jvm hotspot pattern matching to highly optimized assembly
+        int bound = iter.reusableChars.length;
+        bound = IterImpl.updateStringCopyBound(iter, bound);
+        for(int j = 0; j < bound; j++) {
+            c = iter.buf[i++];
+            if (c == '"') {
+                iter.head = i;
+                return j;
+            }
+            // If we encounter a backslash, which is a beginning of an escape sequence
+            // or a high bit was set - indicating an UTF-8 encoded multibyte character,
+            // there is no chance that we can decode the string without instantiating
+            // a temporary buffer, so quit this loop
+            if ((c ^ '\\') < 1) {
+                break;
+            }
+            iter.reusableChars[j] = (char) c;
+        }
+        int alreadyCopied = 0;
+        if (i > iter.head) {
+            alreadyCopied = i - iter.head - 1;
+            iter.head = i - 1;
+        }
+        return IterImpl.readStringSlowPath(iter, alreadyCopied);
+    }
+
+    private static boolean readStringIsNull(JsonIterator iter, byte c) throws IOException {
         if (c == 'n') {
             IterImpl.skipFixedBytes(iter, 3);
-            return null;
+            return true;
+        } else {
+            c = IterImpl.nextToken(iter);
+            if (c == 'n') {
+                IterImpl.skipFixedBytes(iter, 3);
+                return true;
+            }
         }
-        throw iter.reportError("readString", "expect n or \"");
+        return false;
     }
 
     public static int translateHex(final byte b) {

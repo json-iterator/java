@@ -7,24 +7,28 @@ import java.io.IOException;
 class IterImpl {
 
     public static final int readObjectFieldAsHash(JsonIterator iter) throws IOException {
-        byte c = nextToken(iter);
-        if (c == '"') {
-            long hash = 0x811c9dc5;
-            for (int i = iter.head; i < iter.tail; i++) {
-                c = iter.buf[i];
-                if (c == '"') {
-                    iter.head = i + 1;
-                    if (nextToken(iter) != ':') {
-                        throw iter.reportError("readObjectFieldAsHash", "expect :");
-                    }
-                    return (int) hash;
-                }
-                hash ^= c;
-                hash *= 0x1000193;
+        if (readByte(iter) != '"') {
+            if (nextToken(iter) != '"') {
+                throw iter.reportError("readObjectFieldAsHash", "expect \"");
             }
-            throw iter.reportError("readObjectFieldAsHash", "unmatched quote");
         }
-        throw iter.reportError("readObjectFieldAsHash", "expect \"");
+        long hash = 0x811c9dc5;
+        int i = iter.head;
+        for (; i < iter.tail; i++) {
+            byte c = iter.buf[i];
+            if (c == '"') {
+                break;
+            }
+            hash ^= c;
+            hash *= 0x1000193;
+        }
+        iter.head = i + 1;
+        if (readByte(iter) != ':') {
+            if (nextToken(iter) != ':') {
+                throw iter.reportError("readObjectFieldAsHash", "expect :");
+            }
+        }
+        return (int) hash;
     }
 
     public static final Slice readObjectFieldAsSlice(JsonIterator iter) throws IOException {
@@ -142,36 +146,24 @@ class IterImpl {
         }
     }
 
-    final static byte nextToken(JsonIterator iter) throws IOException {
+    final static byte nextToken(final JsonIterator iter) throws IOException {
         int i = iter.head;
-        try {
-            for (; ; ) {
-                byte c = iter.buf[i++];
-                switch (c) {
-                    case ' ':
-                    case '\n':
-                    case '\r':
-                    case '\t':
-                        continue;
-                    default:
-                        if (i > iter.tail) {
-                            iter.head = iter.tail;
-                            return 0;
-                        }
-                        iter.head = i;
-                        return c;
-                }
+        for (; ; ) {
+            byte c = iter.buf[i++];
+            switch (c) {
+                case ' ':
+                case '\n':
+                case '\r':
+                case '\t':
+                    continue;
+                default:
+                    iter.head = i;
+                    return c;
             }
-        } catch (IndexOutOfBoundsException e) {
-            iter.head = iter.tail;
-            return 0;
         }
     }
 
     final static byte readByte(JsonIterator iter) throws IOException {
-        if (iter.head == iter.tail) {
-            return 0;
-        }
         return iter.buf[iter.head++];
     }
 
@@ -214,13 +206,13 @@ class IterImpl {
         return false;
     }
 
-    public final static String readStringSlowPath(JsonIterator iter, int j) throws IOException {
+    public final static int readStringSlowPath(JsonIterator iter, int j) throws IOException {
         try {
             for (int i = iter.head; i < iter.tail; ) {
                 int bc = iter.buf[i++];
                 if (bc == '"') {
                     iter.head = i;
-                    return new String(iter.reusableChars, 0, j);
+                    return j;
                 }
                 if (bc == '\\') {
                     bc = iter.buf[i++];
@@ -305,5 +297,9 @@ class IterImpl {
         } catch (IndexOutOfBoundsException e) {
             throw iter.reportError("readString", "incomplete string");
         }
+    }
+
+    public static int updateStringCopyBound(final JsonIterator iter, final int bound) {
+        return bound;
     }
 }

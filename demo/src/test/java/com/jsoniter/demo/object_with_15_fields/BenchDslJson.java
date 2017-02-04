@@ -1,8 +1,8 @@
-package com.jsoniter.demo.object_with_3_fields;
+package com.jsoniter.demo.object_with_15_fields;
 
 import com.dslplatform.json.CustomJsonReader;
+import com.dslplatform.json.ExternalSerialization;
 import com.dslplatform.json.JsonWriter;
-import json.ExternalSerialization;
 import org.openjdk.jmh.Main;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.BenchmarkParams;
@@ -14,8 +14,8 @@ import java.io.IOException;
 
 /*
 Benchmark            Mode  Cnt         Score        Error  Units
-BenchDslJson.deser  thrpt    5  12998146.415 ± 263643.489  ops/s (2.57x)
-BenchDslJson.ser    thrpt    5  14818311.699 ±  86445.839  ops/s (2.23x)
+BenchDslJson.deser  thrpt    5  22328042.432 ± 311925.080  ops/s (3.67x)
+BenchDslJson.ser    thrpt    5  17639416.242 ± 136738.841  ops/s (2.17x)
  */
 @State(Scope.Thread)
 public class BenchDslJson {
@@ -56,7 +56,7 @@ public class BenchDslJson {
 
     public static void main(String[] args) throws IOException, RunnerException {
         Main.main(new String[]{
-                "object_with_3_fields.BenchDslJson",
+                "object_with_15_fields.BenchDslJson",
                 "-i", "5",
                 "-wi", "5",
                 "-f", "1",

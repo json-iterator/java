@@ -86,11 +86,11 @@
             <artifactId>slf4j-api</artifactId>
             <version>1.7.22</version>
         </dependency>
-        <!--<dependency>-->
-            <!--<groupId>com.dslplatform</groupId>-->
-            <!--<artifactId>dsl-json-processor</artifactId>-->
-            <!--<version>1.4.1</version>-->
-        <!--</dependency>-->
+        <dependency>
+            <groupId>com.dslplatform</groupId>
+            <artifactId>dsl-json-processor</artifactId>
+            <version>1.4.1</version>
+        </dependency>
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>

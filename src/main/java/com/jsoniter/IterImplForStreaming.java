@@ -36,9 +36,6 @@ class IterImplForStreaming {
     }
 
     public static final Slice readObjectFieldAsSlice(JsonIterator iter) throws IOException {
-        if (nextToken(iter) != '"') {
-            throw iter.reportError("readObjectFieldAsSlice", "expect \"");
-        }
         Slice field = readSlice(iter);
         boolean notCopied = field != null;
         if (CodegenAccess.skipWhitespacesWithoutLoadMore(iter)) {
@@ -365,17 +362,29 @@ class IterImplForStreaming {
         if (iter.head >= iter.tail) {
             int more = iter.head - iter.tail;
             if (!loadMore(iter)) {
+                if (more == 0) {
+                    iter.head = iter.tail;
+                    return;
+                }
                 throw iter.reportError("skipFixedBytes", "unexpected end");
             }
             iter.head += more;
         }
     }
 
-    public final static String readStringSlowPath(JsonIterator iter, int j) throws IOException {
+    public static int updateStringCopyBound(final JsonIterator iter, final int bound) {
+        if (bound > iter.tail - iter.head) {
+            return iter.tail - iter.head;
+        } else {
+            return bound;
+        }
+    }
+
+    public final static int readStringSlowPath(JsonIterator iter, int j) throws IOException {
         for (;;) {
             int bc = readByte(iter);
             if (bc == '"') {
-                return new String(iter.reusableChars, 0, j);
+                return j;
             }
             if (bc == '\\') {
                 bc = readByte(iter);

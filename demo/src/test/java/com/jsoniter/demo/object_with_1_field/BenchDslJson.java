@@ -2,7 +2,6 @@ package com.jsoniter.demo.object_with_1_field;
 
 import com.dslplatform.json.CustomJsonReader;
 import com.dslplatform.json.JsonWriter;
-import json.ExternalSerialization;
 import org.openjdk.jmh.Main;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.BenchmarkParams;
@@ -39,7 +38,7 @@ public class BenchDslJson {
     public void ser(Blackhole bh) throws IOException {
         jsonWriter.reset();
         byteArrayOutputStream.reset();
-        ExternalSerialization.serialize(testObject, jsonWriter, false);
+//        ExternalSerialization.serialize(testObject, jsonWriter, false);
         jsonWriter.toStream(byteArrayOutputStream);
         bh.consume(byteArrayOutputStream);
     }
@@ -50,7 +49,7 @@ public class BenchDslJson {
         reader.read();
         reader.getNextToken();
         TestObject obj = new TestObject();
-        ExternalSerialization.deserialize(obj, reader);
+//        ExternalSerialization.deserialize(obj, reader);
         bh.consume(obj);
     }
 

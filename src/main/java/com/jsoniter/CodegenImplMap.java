@@ -15,12 +15,10 @@ class CodegenImplMap {
         append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) {");
         append(lines, "return map;");
         append(lines, "}");
+        append(lines, "do {");
         append(lines, "String field = com.jsoniter.CodegenAccess.readObjectFieldAsString(iter);");
         append(lines, "map.put(field, {{op}});");
-        append(lines, "while (com.jsoniter.CodegenAccess.nextToken(iter) == ',') {");
-        append(lines, "field = com.jsoniter.CodegenAccess.readObjectFieldAsString(iter);");
-        append(lines, "map.put(field, {{op}});");
-        append(lines, "}");
+        append(lines, "} while (com.jsoniter.CodegenAccess.nextToken(iter) == ',');");
         append(lines, "return map;");
         return lines.toString().replace("{{clazz}}", clazz.getName()).replace("{{op}}", CodegenImplNative.genReadOp(valueType));
     }

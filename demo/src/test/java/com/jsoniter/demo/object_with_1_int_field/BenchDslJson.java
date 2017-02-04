@@ -38,7 +38,7 @@ public class BenchDslJson {
     public void ser(Blackhole bh) throws IOException {
         jsonWriter.reset();
         byteArrayOutputStream.reset();
-        ExternalSerialization.serialize(testObject, jsonWriter, false);
+//        ExternalSerialization.serialize(testObject, jsonWriter, false);
         jsonWriter.toStream(byteArrayOutputStream);
         bh.consume(byteArrayOutputStream);
     }
@@ -49,7 +49,7 @@ public class BenchDslJson {
         reader.read();
         reader.getNextToken();
         TestObject obj = new TestObject();
-        ExternalSerialization.deserialize(obj, reader);
+//        ExternalSerialization.deserialize(obj, reader);
         bh.consume(obj);
     }
 

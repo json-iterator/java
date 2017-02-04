@@ -37,6 +37,27 @@ public class CodegenAccess {
         iter.existingObject = obj;
     }
 
+    public final static boolean nextTokenIsComma(final JsonIterator iter) throws IOException {
+        byte c = readByte(iter);
+        if (c == ',') {
+            return true;
+        }
+        return nextTokenIsCommaSlowPath(iter, c);
+    }
+
+    private static boolean nextTokenIsCommaSlowPath(JsonIterator iter, byte c) throws IOException {
+        switch (c) {
+            case ' ':
+            case '\n':
+            case '\r':
+            case '\t':
+                break;
+            default:
+                return false;
+        }
+        return nextToken(iter) == ',';
+    }
+
     public static byte nextToken(JsonIterator iter) throws IOException {
         return IterImpl.nextToken(iter);
     }
@@ -187,6 +208,10 @@ public class CodegenAccess {
 
     public static void unreadByte(JsonIterator iter) throws IOException {
         iter.unreadByte();
+    }
+
+    public static byte readByte(JsonIterator iter) throws IOException {
+        return IterImpl.readByte(iter);
     }
 
     public static int calcHash(String str) {

@@ -22,7 +22,7 @@ public class TestAnnotation extends TestCase {
     }
 
     public static class TestObject1 {
-        @JsonProperty("field-1")
+        @JsonProperty(from = {"field-1"})
         public int field1;
 
         @JsonIgnore

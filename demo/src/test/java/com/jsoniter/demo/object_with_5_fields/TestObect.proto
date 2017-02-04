@@ -1,0 +1,8 @@
+syntax = "proto3";
+message TestObject {
+  string field1 = 1;
+  string field2 = 2;
+  string field3 = 3;
+  string field4 = 4;
+  string field5 = 5;
+}

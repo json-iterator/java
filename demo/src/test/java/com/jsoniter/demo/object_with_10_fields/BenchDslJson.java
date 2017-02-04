@@ -1,8 +1,8 @@
-package com.jsoniter.demo.object_with_2_fields;
+package com.jsoniter.demo.object_with_10_fields;
 
 import com.dslplatform.json.CustomJsonReader;
+import com.dslplatform.json.ExternalSerialization;
 import com.dslplatform.json.JsonWriter;
-import json.ExternalSerialization;
 import org.openjdk.jmh.Main;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.BenchmarkParams;
@@ -49,14 +49,14 @@ public class BenchDslJson {
         reader.reset();
         reader.read();
         reader.getNextToken();
-        com.jsoniter.demo.object_with_1_field.TestObject obj = new com.jsoniter.demo.object_with_1_field.TestObject();
+        TestObject obj = new TestObject();
         ExternalSerialization.deserialize(obj, reader);
         bh.consume(obj);
     }
 
     public static void main(String[] args) throws IOException, RunnerException {
         Main.main(new String[]{
-                "object_with_2_fields.BenchDslJson",
+                "object_with_10_fields.BenchDslJson",
                 "-i", "5",
                 "-wi", "5",
                 "-f", "1",

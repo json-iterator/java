@@ -1,4 +1,4 @@
-package com.jsoniter.demo.object_with_2_fields;
+package com.jsoniter.demo.object_with_15_fields;
 
 import com.jsoniter.DecodingMode;
 import com.jsoniter.JsonIterator;
@@ -15,9 +15,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 /*
-Benchmark             Mode  Cnt         Score         Error  Units
-BenchJsoniter.deser  thrpt    5  17744297.574 ±  606662.249  ops/s (2.91x)
-BenchJsoniter.ser    thrpt    5  22101008.162 ± 1020495.007  ops/s (2.71x)
+Benchmark             Mode  Cnt        Score        Error  Units
+BenchJsoniter.deser  thrpt    5  3168123.269 ± 467680.688  ops/s
+BenchJsoniter.ser    thrpt    5  8903974.466 ± 500114.000  ops/s
  */
 @State(Scope.Thread)
 public class BenchJsoniter {
@@ -57,7 +57,7 @@ public class BenchJsoniter {
 
     public static void main(String[] args) throws IOException, RunnerException {
         Main.main(new String[]{
-                "object_with_2_fields.BenchJsoniter",
+                "object_with_15_fields.BenchJsoniter",
                 "-i", "5",
                 "-wi", "5",
                 "-f", "1",

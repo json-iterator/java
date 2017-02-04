@@ -10,26 +10,49 @@ public class CodegenImplObjectHash {
     public static String genObjectUsingHash(Class clazz, ClassDescriptor desc) {
         StringBuilder lines = new StringBuilder();
         // === if null, return null
-        append(lines, "if (iter.readNull()) { ");
-        append(lines, "com.jsoniter.CodegenAccess.resetExistingObject(iter); return null; }");
+        append(lines, "byte nextToken = com.jsoniter.CodegenAccess.readByte(iter);");
+        append(lines, "if (nextToken != '{') {");
+        append(lines, "if (nextToken == 'n') {");
+        append(lines, "com.jsoniter.CodegenAccess.skipFixedBytes(iter, 3);");
+        append(lines, "com.jsoniter.CodegenAccess.resetExistingObject(iter); return null;");
+        append(lines, "} else {");
+        append(lines, "nextToken = com.jsoniter.CodegenAccess.nextToken(iter);");
+        append(lines, "if (nextToken == 'n') {");
+        append(lines, "com.jsoniter.CodegenAccess.skipFixedBytes(iter, 3);");
+        append(lines, "com.jsoniter.CodegenAccess.resetExistingObject(iter); return null;");
+        append(lines, "}");
+        append(lines, "} // end of if null");
+        append(lines, "} // end of if {");
         // === if empty, return empty
-        if (desc.ctor.parameters.isEmpty()) {
-            // has default ctor
-            append(lines, "{{clazz}} obj = {{newInst}};");
-            append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) { return obj; }");
-        } else {
-            append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) { return {{newInst}}; }");
-            // ctor requires binding
-            for (Binding parameter : desc.ctor.parameters) {
-                appendVarDef(lines, parameter);
-            }
-            for (Binding field : desc.fields) {
-                appendVarDef(lines, field);
-            }
-            for (Binding setter : desc.setters) {
-                appendVarDef(lines, setter);
-            }
+//        if (desc.ctor.parameters.isEmpty()) {
+//            // has default ctor
+//            append(lines, "{{clazz}} obj = {{newInst}};");
+//            append(lines, "if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) { return obj; }");
+//        } else {
+        // ctor requires binding
+        for (Binding parameter : desc.ctor.parameters) {
+            appendVarDef(lines, parameter);
         }
+        append(lines, "nextToken = com.jsoniter.CodegenAccess.readByte(iter);");
+        append(lines, "if (nextToken != '\"') {");
+        append(lines, "if (nextToken == '}') {");
+        append(lines, "return {{newInst}};");
+        append(lines, "} else {");
+        append(lines, "nextToken = com.jsoniter.CodegenAccess.nextToken(iter);");
+        append(lines, "if (nextToken == '}') {");
+        append(lines, "return {{newInst}};");
+        append(lines, "} else {");
+        append(lines, "com.jsoniter.CodegenAccess.unreadByte(iter);");
+        append(lines, "}");
+        append(lines, "} // end of if end");
+        append(lines, "} else { com.jsoniter.CodegenAccess.unreadByte(iter); }// end of if not quote");
+        for (Binding field : desc.fields) {
+            appendVarDef(lines, field);
+        }
+        for (Binding setter : desc.setters) {
+            appendVarDef(lines, setter);
+        }
+//        }
         for (WrapperDescriptor setter : desc.wrappers) {
             for (Binding param : setter.parameters) {
                 appendVarDef(lines, param);
@@ -72,8 +95,8 @@ public class CodegenImplObjectHash {
         }
         append(lines, "}");
         append(lines, "iter.skip();");
-        append(lines, "} while (com.jsoniter.CodegenAccess.nextToken(iter) == ',');");
-        if (!desc.ctor.parameters.isEmpty()) {
+        append(lines, "} while (com.jsoniter.CodegenAccess.nextTokenIsComma(iter));");
+//        if (!desc.ctor.parameters.isEmpty()) {
             append(lines, CodegenImplNative.getTypeName(clazz) + " obj = {{newInst}};");
             for (Binding field : desc.fields) {
                 append(lines, String.format("obj.%s = _%s_;", field.field.getName(), field.name));
@@ -81,7 +104,7 @@ public class CodegenImplObjectHash {
             for (Binding setter : desc.setters) {
                 append(lines, String.format("obj.%s(_%s_);", setter.method.getName(), setter.name));
             }
-        }
+//        }
         appendWrappers(desc.wrappers, lines);
         append(lines, "return obj;");
         return lines.toString()
@@ -99,18 +122,18 @@ public class CodegenImplObjectHash {
     }
 
     private static void appendBindingSet(StringBuilder lines, ClassDescriptor desc, Binding binding) {
-        if (desc.ctor.parameters.isEmpty() && (desc.fields.contains(binding) || desc.setters.contains(binding))) {
-            if (binding.valueCanReuse) {
-                append(lines, String.format("com.jsoniter.CodegenAccess.setExistingObject(iter, obj.%s);", binding.field.getName()));
-            }
-            if (binding.field != null) {
-                append(lines, String.format("obj.%s = %s;", binding.field.getName(), CodegenImplNative.genField(binding)));
-            } else {
-                append(lines, String.format("obj.%s(%s);", binding.method.getName(), CodegenImplNative.genField(binding)));
-            }
-        } else {
+//        if (desc.ctor.parameters.isEmpty() && (desc.fields.contains(binding) || desc.setters.contains(binding))) {
+//            if (binding.valueCanReuse) {
+//                append(lines, String.format("com.jsoniter.CodegenAccess.setExistingObject(iter, obj.%s);", binding.field.getName()));
+//            }
+//            if (binding.field != null) {
+//                append(lines, String.format("obj.%s = %s;", binding.field.getName(), CodegenImplNative.genField(binding)));
+//            } else {
+//                append(lines, String.format("obj.%s(%s);", binding.method.getName(), CodegenImplNative.genField(binding)));
+//            }
+//        } else {
             append(lines, String.format("_%s_ = %s;", binding.name, CodegenImplNative.genField(binding)));
-        }
+//        }
     }
 
     static void appendWrappers(List<WrapperDescriptor> wrappers, StringBuilder lines) {

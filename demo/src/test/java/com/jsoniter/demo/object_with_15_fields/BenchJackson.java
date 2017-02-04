@@ -1,4 +1,4 @@
-package com.jsoniter.demo.object_with_3_fields;
+package com.jsoniter.demo.object_with_15_fields;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,8 +14,8 @@ import java.io.IOException;
 
 /*
 Benchmark            Mode  Cnt        Score        Error  Units
-BenchJackson.deser  thrpt    5  5067488.256 ± 535443.101  ops/s
-BenchJackson.ser    thrpt    5  6637650.811 ± 363323.450  ops/s
+BenchJackson.deser  thrpt    5  1554344.234 ± 341967.936  ops/s
+BenchJackson.ser    thrpt    5  2399893.422 ± 199116.685  ops/s
  */
 @State(Scope.Thread)
 public class BenchJackson {
@@ -52,7 +52,7 @@ public class BenchJackson {
 
     public static void main(String[] args) throws IOException, RunnerException {
         Main.main(new String[]{
-                "object_with_3_fields.BenchJackson",
+                "object_with_15_fields.BenchJackson",
                 "-i", "5",
                 "-wi", "5",
                 "-f", "1",
