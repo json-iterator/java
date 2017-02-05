@@ -38,6 +38,15 @@ class StreamImplString {
     private static final byte[] ITOA = new byte[]{
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
             'a', 'b', 'c', 'd', 'e', 'f'};
+    private static final boolean[] CAN_DIRECT_WRITE = new boolean[128];
+
+    static {
+        for (int i = 0; i < CAN_DIRECT_WRITE.length; i++) {
+            if (i > 31 && i < 126 && i != '"' && i != '\\') {
+                CAN_DIRECT_WRITE[i] = true;
+            }
+        }
+    }
 
     public static final void writeString(final JsonStream stream, final String val) throws IOException {
         int i = 0;
@@ -58,9 +67,13 @@ class StreamImplString {
         // write string, the fast path, without utf8 and escape support
         for (; i < toWriteLen; i++) {
             char c = val.charAt(i);
-            if (c > 31 && c != '"' && c != '\\' && c < 126) {
-                stream.buf[n++] = (byte) c;
-            } else {
+            try {
+                if (CAN_DIRECT_WRITE[c]) {
+                    stream.buf[n++] = (byte) c;
+                } else {
+                    break;
+                }
+            } catch (ArrayIndexOutOfBoundsException e) {
                 break;
             }
         }
@@ -116,29 +129,29 @@ class StreamImplString {
                 byte b3 = (byte) (c >> 4 & 0xf);
                 byte b2 = (byte) (c >> 8 & 0xf);
                 byte b1 = (byte) (c >> 12 & 0xf);
-                stream.write((byte)'\\', (byte)'u', ITOA[b1], ITOA[b2], ITOA[b3], ITOA[b4]);
+                stream.write((byte) '\\', (byte) 'u', ITOA[b1], ITOA[b2], ITOA[b3], ITOA[b4]);
             } else {
                 switch (c) {
                     case '"':
-                        stream.write((byte)'\\', (byte)'"');
+                        stream.write((byte) '\\', (byte) '"');
                         break;
                     case '\\':
-                        stream.write((byte)'\\', (byte)'\\');
+                        stream.write((byte) '\\', (byte) '\\');
                         break;
                     case '\b':
-                        stream.write((byte)'\\', (byte)'b');
+                        stream.write((byte) '\\', (byte) 'b');
                         break;
                     case '\f':
-                        stream.write((byte)'\\', (byte)'f');
+                        stream.write((byte) '\\', (byte) 'f');
                         break;
                     case '\n':
-                        stream.write((byte)'\\', (byte)'n');
+                        stream.write((byte) '\\', (byte) 'n');
                         break;
                     case '\r':
-                        stream.write((byte)'\\', (byte)'r');
+                        stream.write((byte) '\\', (byte) 'r');
                         break;
                     case '\t':
-                        stream.write((byte)'\\', (byte)'t');
+                        stream.write((byte) '\\', (byte) 't');
                         break;
                     default:
                         stream.write(c);

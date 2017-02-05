@@ -36,8 +36,8 @@ import java.io.IOException;
 // TODO: make separate implementation for streaming and non-streaming
 class IterImplNumber {
 
-    private final static int[] intDigits = new int[256];
-    private final static int[] floatDigits = new int[256];
+    private final static int[] intDigits = new int[127];
+    private final static int[] floatDigits = new int[127];
     private final static int END_OF_NUMBER = -2;
     private final static int DOT_IN_NUMBER = -3;
     private final static int INVALID_CHAR_FOR_NUMBER = -1;
@@ -88,11 +88,12 @@ class IterImplNumber {
                     return value;
                 case DOT_IN_NUMBER:
                     break non_decimal_loop;
-            }
-            value = (value << 3) + (value << 1) + ind; // value = value * 10 + ind;
-            if (value < 0) {
-                // overflow
-                return readDoubleSlowPath(iter);
+                default:
+                    value = (value << 3) + (value << 1) + ind; // value = value * 10 + ind;
+                    if (value < 0) {
+                        // overflow
+                        return readDoubleSlowPath(iter);
+                    }
             }
         }
         if (c == '.') {
@@ -112,12 +113,13 @@ class IterImplNumber {
                     case INVALID_CHAR_FOR_NUMBER:
                     case DOT_IN_NUMBER:
                         return readDoubleSlowPath(iter);
-                }
-                decimalPlaces++;
-                value = (value << 3) + (value << 1) + ind; // value = value * 10 + ind;
-                if (value < 0) {
-                    // overflow
-                    return readDoubleSlowPath(iter);
+                    default:
+                        decimalPlaces++;
+                        value = (value << 3) + (value << 1) + ind; // value = value * 10 + ind;
+                        if (value < 0) {
+                            // overflow
+                            return readDoubleSlowPath(iter);
+                        }
                 }
             }
         }
@@ -257,10 +259,58 @@ class IterImplNumber {
         if (ind == INVALID_CHAR_FOR_NUMBER) {
             throw iter.reportError("readPositiveInt", "expect 0~9");
         }
-        int value = ind;
+        if (iter.tail - iter.head < 8) {
+            return readIntSlowPath(iter, ind);
+        }
+        int i = iter.head;
+        int ind2 = intDigits[iter.buf[i]];
+        if (ind2 == INVALID_CHAR_FOR_NUMBER) {
+            iter.head = i;
+            return ind;
+        }
+        int ind3 = intDigits[iter.buf[++i]];
+        if (ind3 == INVALID_CHAR_FOR_NUMBER) {
+            iter.head = i;
+            return ind * 10 + ind2;
+        }
+        int ind4 = intDigits[iter.buf[++i]];
+        if (ind4 == INVALID_CHAR_FOR_NUMBER) {
+            iter.head = i;
+            return ind * 100 + ind2 * 10 + ind3;
+        }
+        int ind5 = intDigits[iter.buf[++i]];
+        if (ind5 == INVALID_CHAR_FOR_NUMBER) {
+            iter.head = i;
+            return ind * 1000 + ind2 * 100 + ind3 * 10 + ind4;
+        }
+        int ind6 = intDigits[iter.buf[++i]];
+        if (ind6 == INVALID_CHAR_FOR_NUMBER) {
+            iter.head = i;
+            return ind * 10000 + ind2 * 1000 + ind3 * 100 + ind4 * 10 + ind5;
+        }
+        int ind7 = intDigits[iter.buf[++i]];
+        if (ind7 == INVALID_CHAR_FOR_NUMBER) {
+            iter.head = i;
+            return ind * 100000 + ind2 * 10000 + ind3 * 1000 + ind4 * 100 + ind5 * 10 + ind6;
+        }
+        int ind8 = intDigits[iter.buf[++i]];
+        if (ind8 == INVALID_CHAR_FOR_NUMBER) {
+            iter.head = i;
+            return ind * 1000000 + ind2 * 100000 + ind3 * 10000 + ind4 * 1000 + ind5 * 100 + ind6 * 10 + ind7;
+        }
+        int ind9 = intDigits[iter.buf[++i]];
+        int val = ind * 10000000 + ind2 * 1000000 + ind3 * 100000 + ind4 * 10000 + ind5 * 1000 + ind6 * 100 + ind7 * 10 + ind8;
+        iter.head = i;
+        if (ind9 == INVALID_CHAR_FOR_NUMBER) {
+            return val;
+        }
+        return readIntSlowPath(iter, val);
+    }
+
+    private static int readIntSlowPath(JsonIterator iter, int value) throws IOException {
         for (; ; ) {
             for (int i = iter.head; i < iter.tail; i++) {
-                ind = intDigits[iter.buf[i]];
+                int ind = intDigits[iter.buf[i]];
                 if (ind == INVALID_CHAR_FOR_NUMBER) {
                     iter.head = i;
                     return value;
