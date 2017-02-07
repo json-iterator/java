@@ -1,6 +1,7 @@
 package com.jsoniter;
 
 import com.jsoniter.any.Any;
+import com.jsoniter.spi.JsonException;
 
 import java.io.IOException;
 
@@ -301,5 +302,143 @@ class IterImpl {
 
     public static int updateStringCopyBound(final JsonIterator iter, final int bound) {
         return bound;
+    }
+
+    static final int readPositiveInt(final JsonIterator iter, byte c) throws IOException {
+        int ind = IterImplNumber.intDigits[c];
+        if (ind == 0) {
+            return 0;
+        }
+        if (ind == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
+            throw iter.reportError("readPositiveInt", "expect 0~9");
+        }
+        int i = iter.head;
+        int ind2 = IterImplNumber.intDigits[iter.buf[i]];
+        if (ind2 == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
+            iter.head = i;
+            return ind;
+        }
+        int ind3 = IterImplNumber.intDigits[iter.buf[++i]];
+        if (ind3 == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
+            iter.head = i;
+            return ind * 10 + ind2;
+        }
+        int ind4 = IterImplNumber.intDigits[iter.buf[++i]];
+        if (ind4 == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
+            iter.head = i;
+            return ind * 100 + ind2 * 10 + ind3;
+        }
+        int ind5 = IterImplNumber.intDigits[iter.buf[++i]];
+        if (ind5 == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
+            iter.head = i;
+            return ind * 1000 + ind2 * 100 + ind3 * 10 + ind4;
+        }
+        int ind6 = IterImplNumber.intDigits[iter.buf[++i]];
+        if (ind6 == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
+            iter.head = i;
+            return ind * 10000 + ind2 * 1000 + ind3 * 100 + ind4 * 10 + ind5;
+        }
+        int ind7 = IterImplNumber.intDigits[iter.buf[++i]];
+        if (ind7 == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
+            iter.head = i;
+            return ind * 100000 + ind2 * 10000 + ind3 * 1000 + ind4 * 100 + ind5 * 10 + ind6;
+        }
+        int ind8 = IterImplNumber.intDigits[iter.buf[++i]];
+        if (ind8 == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
+            iter.head = i;
+            return ind * 1000000 + ind2 * 100000 + ind3 * 10000 + ind4 * 1000 + ind5 * 100 + ind6 * 10 + ind7;
+        }
+        int ind9 = IterImplNumber.intDigits[iter.buf[++i]];
+        int val = ind * 10000000 + ind2 * 1000000 + ind3 * 100000 + ind4 * 10000 + ind5 * 1000 + ind6 * 100 + ind7 * 10 + ind8;
+        iter.head = i;
+        if (ind9 == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
+            return val;
+        }
+        return IterImplForStreaming.readIntSlowPath(iter, val);
+    }
+
+    static final long readPositiveLong(final JsonIterator iter, byte c) throws IOException {
+        long ind = IterImplNumber.intDigits[c];
+        if (ind == 0) {
+            return 0;
+        }
+        if (ind == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
+            throw iter.reportError("readPositiveLong", "expect 0~9");
+        }
+        int i = iter.head;
+        int ind2 = IterImplNumber.intDigits[iter.buf[i]];
+        if (ind2 == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
+            iter.head = i;
+            return ind;
+        }
+        int ind3 = IterImplNumber.intDigits[iter.buf[++i]];
+        if (ind3 == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
+            iter.head = i;
+            return ind * 10 + ind2;
+        }
+        int ind4 = IterImplNumber.intDigits[iter.buf[++i]];
+        if (ind4 == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
+            iter.head = i;
+            return ind * 100 + ind2 * 10 + ind3;
+        }
+        int ind5 = IterImplNumber.intDigits[iter.buf[++i]];
+        if (ind5 == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
+            iter.head = i;
+            return ind * 1000 + ind2 * 100 + ind3 * 10 + ind4;
+        }
+        int ind6 = IterImplNumber.intDigits[iter.buf[++i]];
+        if (ind6 == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
+            iter.head = i;
+            return ind * 10000 + ind2 * 1000 + ind3 * 100 + ind4 * 10 + ind5;
+        }
+        int ind7 = IterImplNumber.intDigits[iter.buf[++i]];
+        if (ind7 == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
+            iter.head = i;
+            return ind * 100000 + ind2 * 10000 + ind3 * 1000 + ind4 * 100 + ind5 * 10 + ind6;
+        }
+        int ind8 = IterImplNumber.intDigits[iter.buf[++i]];
+        if (ind8 == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
+            iter.head = i;
+            return ind * 1000000 + ind2 * 100000 + ind3 * 10000 + ind4 * 1000 + ind5 * 100 + ind6 * 10 + ind7;
+        }
+        int ind9 = IterImplNumber.intDigits[iter.buf[++i]];
+        long val = ind * 10000000 + ind2 * 1000000 + ind3 * 100000 + ind4 * 10000 + ind5 * 1000 + ind6 * 100 + ind7 * 10 + ind8;
+        iter.head = i;
+        if (ind9 == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
+            return val;
+        }
+        return IterImplForStreaming.readLongSlowPath(iter, val);
+    }
+
+    static final double readPositiveDouble(final JsonIterator iter) throws IOException {
+        int oldHead = iter.head;
+        try {
+            long value = IterImplNumber.readLong(iter); // without the dot
+            byte c = iter.buf[iter.head];
+            if (c == '.') {
+                iter.head++;
+                int start = iter.head;
+                c = iter.buf[iter.head++];
+                long decimalPart = readPositiveLong(iter, c);
+                int decimalPlaces = iter.head - start;
+                if (decimalPlaces > 0 && decimalPlaces < IterImplNumber.POW10.length && (iter.head - oldHead) < 10) {
+                    value = value * IterImplNumber.POW10[decimalPlaces] + decimalPart;
+                    return value / (double) IterImplNumber.POW10[decimalPlaces];
+                } else {
+                    iter.head = oldHead;
+                    return IterImplForStreaming.readDoubleSlowPath(iter);
+                }
+            } else {
+                if (iter.head < iter.tail && iter.buf[iter.head] == 'e') {
+                    iter.head = oldHead;
+                    return IterImplForStreaming.readDoubleSlowPath(iter);
+                } else {
+                    return value;
+                }
+            }
+        } catch (JsonException e) {
+            iter.head = oldHead;
+            return IterImplForStreaming.readDoubleSlowPath(iter);
+        }
     }
 }

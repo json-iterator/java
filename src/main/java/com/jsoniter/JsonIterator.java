@@ -229,7 +229,7 @@ public class JsonIterator implements Closeable {
         if (whatIsNext() != ValueType.NUMBER) {
             throw reportError("readBigDecimal", "not number");
         }
-        return new BigDecimal(IterImplNumber.readNumber(this));
+        return new BigDecimal(IterImplForStreaming.readNumber(this));
     }
 
     public final BigInteger readBigInteger() throws IOException {
@@ -237,7 +237,7 @@ public class JsonIterator implements Closeable {
         if (whatIsNext() != ValueType.NUMBER) {
             throw reportError("readBigDecimal", "not number");
         }
-        return new BigInteger(IterImplNumber.readNumber(this));
+        return new BigInteger(IterImplForStreaming.readNumber(this));
     }
 
     public final Any readAny() throws IOException {

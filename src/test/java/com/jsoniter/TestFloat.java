@@ -19,6 +19,11 @@ public class TestFloat extends TestCase {
         assertEquals(-12.3d, parseDouble("-12.3,"));
     }
 
+    public void test_ieee_754() throws IOException {
+        assertEquals(0.00123f, parseFloat("123e-5,"));
+        assertEquals(0.00123d, parseDouble("123e-5,"));
+    }
+
     public void test_decimal_places() throws IOException {
         assertEquals(Long.MAX_VALUE, parseFloat("9223372036854775807,"), 0.01f);
         assertEquals(Long.MAX_VALUE, parseDouble("9223372036854775807,"), 0.01f);
