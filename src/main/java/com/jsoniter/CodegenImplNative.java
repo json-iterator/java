@@ -196,19 +196,22 @@ class CodegenImplNative {
             // if cache key is for field, and there is no field decoder specified
             // update cache key for normal type
             cacheKey = TypeLiteral.create(valueType).getDecoderCacheKey();
-            if (valueType instanceof Class) {
-                Class clazz = (Class) valueType;
-                String nativeRead = NATIVE_READS.get(clazz.getCanonicalName());
-                if (nativeRead != null) {
-                    return nativeRead;
+            decoder = JsoniterSpi.getDecoder(cacheKey);
+            if (decoder == null) {
+                if (valueType instanceof Class) {
+                    Class clazz = (Class) valueType;
+                    String nativeRead = NATIVE_READS.get(clazz.getCanonicalName());
+                    if (nativeRead != null) {
+                        return nativeRead;
+                    }
                 }
-            }
-            Codegen.getDecoder(cacheKey, valueType);
-            if (Codegen.canStaticAccess(cacheKey)) {
-                return String.format("%s.decode_(iter)", cacheKey);
-            } else {
-                // can not use static "decode_" method to access, go through codegen cache
-                return String.format("com.jsoniter.CodegenAccess.read(\"%s\", iter)", cacheKey);
+                Codegen.getDecoder(cacheKey, valueType);
+                if (Codegen.canStaticAccess(cacheKey)) {
+                    return String.format("%s.decode_(iter)", cacheKey);
+                } else {
+                    // can not use static "decode_" method to access, go through codegen cache
+                    return String.format("com.jsoniter.CodegenAccess.read(\"%s\", iter)", cacheKey);
+                }
             }
         }
         if (valueType == boolean.class) {

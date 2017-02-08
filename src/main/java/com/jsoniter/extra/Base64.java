@@ -1,5 +1,7 @@
 package com.jsoniter.extra;
 
+import com.jsoniter.JsonIterator;
+import com.jsoniter.Slice;
 import com.jsoniter.output.JsonStream;
 
 import java.io.IOException;
@@ -75,8 +77,8 @@ import java.util.Arrays;
 
 abstract class Base64 {
     private static final char[] CA = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".toCharArray();
-    private static final byte[] BA;
-    private static final int[] IA = new int[256];
+    static final byte[] BA;
+    static final int[] IA = new int[256];
     static {
         Arrays.fill(IA, -1);
         for (int i = 0, iS = CA.length; i < iS; i++) {
@@ -151,33 +153,43 @@ abstract class Base64 {
         return dLen;
     }
 
-//    static int encodeToBytes(long sArr, JsonStream stream) throws IOException {
-//        final int sLen = 8;
-//
-//        final int eLen = (sLen / 3) * 3;              // Length of even 24-bits.
-//        final int dLen = ((sLen - 1) / 3 + 1) << 2;   // Returned character count
-//
-//        // Encode even 24-bits
-//        for (int s = 0; s < eLen;) {
-//            // Copy next three bytes into lower 24 bits of int, paying attension to sign.
-//            int i = (sArr[s++] & 0xff) << 16 | (sArr[s++] & 0xff) << 8 | (sArr[s++] & 0xff);
-//
-//            // Encode the int into four chars
-//            stream.write(BA[(i >>> 18) & 0x3f], BA[(i >>> 12) & 0x3f], BA[(i >>> 6) & 0x3f], BA[i & 0x3f]);
-//        }
-//
-//        // Pad and encode last bits if source isn't even 24 bits.
-//        int left = sLen - eLen; // 0 - 2.
-//        if (left > 0) {
-//            // Prepare the int
-//            int i = ((sArr[eLen] & 0xff) << 10) | (left == 2 ? ((sArr[sLen - 1] & 0xff) << 2) : 0);
-//
-//            // Set last four chars
-//            stream.write(BA[i >> 12], BA[(i >>> 6) & 0x3f], left == 2 ? BA[i & 0x3f] : (byte)'=', (byte)'=');
-//        }
-//
-//        return dLen;
-//    }
+    static void encodeLongBits(long bits, JsonStream stream) throws IOException {
+        int i = (int) bits;
+        byte b1 = BA[(i >>> 18) & 0x3f];
+        byte b2 = BA[(i >>> 12) & 0x3f];
+        byte b3 = BA[(i >>> 6) & 0x3f];
+        byte b4 = BA[i & 0x3f];
+        stream.write((byte)'"', b1, b2, b3, b4);
+        bits = bits >>> 24;
+        i = (int) bits;
+        b1 = BA[(i >>> 18) & 0x3f];
+        b2 = BA[(i >>> 12) & 0x3f];
+        b3 = BA[(i >>> 6) & 0x3f];
+        b4 = BA[i & 0x3f];
+        stream.write(b1, b2, b3, b4);
+        bits = (bits >>> 24) << 2;
+        i = (int) bits;
+        b1 = BA[i >> 12];
+        b2 = BA[(i >>> 6) & 0x3f];
+        b3 = BA[i & 0x3f];
+        stream.write(b1, b2, b3, (byte)'"');
+    }
+
+    static long decodeLongBits(JsonIterator iter) throws IOException {
+        Slice slice = iter.readStringAsSlice();
+        if (slice.len() != 11) {
+            throw iter.reportError("decodeLongBits", "must be 11 bytes for long bits encoded double");
+        }
+        byte[] encoded = slice.data();
+        int sIx = slice.head();
+        long i = IA[encoded[sIx++]] << 18 | IA[encoded[sIx++]] << 12 | IA[encoded[sIx++]] << 6 | IA[encoded[sIx++]];
+        long bits = i;
+        i = IA[encoded[sIx++]] << 18 | IA[encoded[sIx++]] << 12 | IA[encoded[sIx++]] << 6 | IA[encoded[sIx++]];
+        bits = i << 24 | bits;
+        i =  IA[encoded[sIx++]] << 12 | IA[encoded[sIx++]] << 6 | IA[encoded[sIx]];
+        bits = i << 46 | bits;
+        return bits;
+    }
 
     static int findEnd(final byte[] sArr, final int start) {
         for (int i = start; i < sArr.length; i++)

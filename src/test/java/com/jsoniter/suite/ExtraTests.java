@@ -1,9 +1,6 @@
 package com.jsoniter.suite;
 
-import com.jsoniter.extra.TestBase64;
-import com.jsoniter.extra.TestJdkDatetime;
-import com.jsoniter.extra.TestNamingStrategy;
-import com.jsoniter.extra.TestPreciseFloat;
+import com.jsoniter.extra.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
