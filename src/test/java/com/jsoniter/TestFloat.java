@@ -19,6 +19,11 @@ public class TestFloat extends TestCase {
         assertEquals(-12.3d, parseDouble("-12.3,"));
     }
 
+    public void test_long_double() throws IOException {
+        double d = JsonIterator.deserialize("4593560419846153055", double.class);
+        assertEquals(4593560419846153055d, d, 0.1);
+    }
+
     public void test_ieee_754() throws IOException {
         assertEquals(0.00123f, parseFloat("123e-5,"));
         assertEquals(0.00123d, parseDouble("123e-5,"));

@@ -488,6 +488,7 @@ class IterImplForStreaming {
                 }
             }
             if (!IterImpl.loadMore(iter)) {
+                iter.head = iter.tail;
                 return value;
             }
         }
@@ -514,6 +515,7 @@ class IterImplForStreaming {
                 }
             }
             if (!IterImpl.loadMore(iter)) {
+                iter.head = iter.tail;
                 return value;
             }
         }
@@ -560,6 +562,7 @@ class IterImplForStreaming {
                 }
             }
             if (!IterImpl.loadMore(iter)) {
+                iter.head = iter.tail;
                 return new String(iter.reusableChars, 0, j);
             }
         }

@@ -16,11 +16,6 @@ public class TestCustomizeType extends TestCase {
     }
 
     static {
-//        JsonIterator.setMode(DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_STRICTLY);
-//        JsonIterator.setMode(DecodingMode.REFLECTION_MODE);
-    }
-
-    public void test_direct() throws IOException {
         JsoniterSpi.registerTypeDecoder(MyDate.class, new Decoder() {
             @Override
             public Object decode(final JsonIterator iter) throws IOException {
@@ -29,6 +24,11 @@ public class TestCustomizeType extends TestCase {
                 }};
             }
         });
+//        JsonIterator.setMode(DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_STRICTLY);
+//        JsonIterator.setMode(DecodingMode.REFLECTION_MODE);
+    }
+
+    public void test_direct() throws IOException {
         JsonIterator iter = JsonIterator.parse("1481365190000");
         MyDate date = iter.read(MyDate.class);
         assertEquals(1481365190000L, date.date.getTime());

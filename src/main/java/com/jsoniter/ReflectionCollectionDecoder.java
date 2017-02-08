@@ -10,8 +10,8 @@ import java.lang.reflect.Type;
 import java.util.Collection;
 
 class ReflectionCollectionDecoder implements Decoder {
-    private final TypeLiteral compTypeLiteral;
     private final Constructor ctor;
+    private final Decoder compTypeDecoder;
 
     public ReflectionCollectionDecoder(Class clazz, Type[] typeArgs) {
         try {
@@ -19,7 +19,7 @@ class ReflectionCollectionDecoder implements Decoder {
         } catch (NoSuchMethodException e) {
             throw new JsonException(e);
         }
-        compTypeLiteral = TypeLiteral.create(typeArgs[0]);
+        compTypeDecoder = Codegen.getDecoder(TypeLiteral.create(typeArgs[0]).getDecoderCacheKey(), typeArgs[0]);
     }
 
     @Override
@@ -42,7 +42,7 @@ class ReflectionCollectionDecoder implements Decoder {
             col.clear();
         }
         while (iter.readArray()) {
-            col.add(CodegenAccess.read(iter, compTypeLiteral));
+            col.add(compTypeDecoder.decode(iter));
         }
         return col;
     }

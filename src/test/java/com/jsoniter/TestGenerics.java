@@ -56,7 +56,6 @@ public class TestGenerics extends TestCase {
         JsonIterator iter = JsonIterator.parse("[[1,2],[3,4]]");
         List<List<Integer>> listOfList = iter.read(new TypeLiteral<List<List<Integer>>>() {
         });
-        System.out.println(listOfList);
         assertEquals(Integer.valueOf(4), listOfList.get(1).get(1));
     }
 

@@ -13,11 +13,21 @@ public class TestInteger extends TestCase {
 
     public void test_positive_negative_int() throws IOException {
         assertEquals(4321, parseInt("4321"));
+        assertEquals(54321, parseInt("54321"));
+        assertEquals(654321, parseInt("654321"));
+        assertEquals(7654321, parseInt("7654321"));
+        assertEquals(87654321, parseInt("87654321"));
+        assertEquals(987654321, parseInt("987654321"));
         assertEquals(-4321, parseInt("-4321"));
     }
 
     public void test_positive_negative_long() throws IOException {
         assertEquals(4321L, parseLong("4321"));
+        assertEquals(54321L, parseLong("54321"));
+        assertEquals(654321L, parseLong("654321"));
+        assertEquals(7654321L, parseLong("7654321"));
+        assertEquals(87654321L, parseLong("87654321"));
+        assertEquals(987654321L, parseLong("987654321"));
         assertEquals(-4321L, parseLong("-4321"));
     }
 

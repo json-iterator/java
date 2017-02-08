@@ -61,6 +61,10 @@ class Codegen {
         } else {
             clazz = (Class) type;
         }
+        decoder = CodegenImplNative.NATIVE_DECODERS.get(clazz);
+        if (decoder != null) {
+            return decoder;
+        }
         if (mode == DecodingMode.REFLECTION_MODE) {
             decoder = ReflectionDecoderFactory.create(clazz, typeArgs);
             JsoniterSpi.addNewDecoder(cacheKey, decoder);
@@ -204,9 +208,6 @@ class Codegen {
     }
 
     private static String genSource(Class clazz, Type[] typeArgs) {
-        if (CodegenImplNative.NATIVE_READS.containsKey(clazz.getName())) {
-            return CodegenImplNative.genNative(clazz.getName());
-        }
         if (clazz.isArray()) {
             return CodegenImplArray.genArray(clazz);
         }

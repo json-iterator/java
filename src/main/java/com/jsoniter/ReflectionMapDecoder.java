@@ -12,7 +12,7 @@ import java.util.Map;
 class ReflectionMapDecoder implements Decoder {
 
     private final Constructor ctor;
-    private final TypeLiteral valueTypeLiteral;
+    private final Decoder valueTypeDecoder;
 
     public ReflectionMapDecoder(Class clazz, Type[] typeArgs) {
         try {
@@ -20,7 +20,8 @@ class ReflectionMapDecoder implements Decoder {
         } catch (NoSuchMethodException e) {
             throw new JsonException(e);
         }
-        valueTypeLiteral = TypeLiteral.create(typeArgs[1]);
+        TypeLiteral valueTypeLiteral = TypeLiteral.create(typeArgs[1]);
+        valueTypeDecoder = Codegen.getDecoder(valueTypeLiteral.getDecoderCacheKey(), typeArgs[0]);
     }
 
     @Override
@@ -43,12 +44,10 @@ class ReflectionMapDecoder implements Decoder {
         if (!CodegenAccess.readObjectStart(iter)) {
             return map;
         }
-        String field = CodegenAccess.readObjectFieldAsString(iter);
-        map.put(field, CodegenAccess.read(iter, valueTypeLiteral));
-        while (CodegenAccess.nextToken(iter) == ',') {
-            field = CodegenAccess.readObjectFieldAsString(iter);
-            map.put(field, CodegenAccess.read(iter, valueTypeLiteral));
-        }
+        do {
+            String field = CodegenAccess.readObjectFieldAsString(iter);
+            map.put(field, valueTypeDecoder.decode(iter));
+        } while(CodegenAccess.nextToken(iter) == ',');
         return map;
     }
 }

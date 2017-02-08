@@ -62,44 +62,6 @@ public class CodegenAccess {
         return IterImpl.nextToken(iter);
     }
 
-    public static final <T> T read(JsonIterator iter, TypeLiteral<T> typeLiteral) throws IOException {
-        TypeLiteral.NativeType nativeType = typeLiteral.getNativeType();
-        if (nativeType != null) {
-            switch (nativeType) {
-                case FLOAT:
-                    return (T) Float.valueOf(iter.readFloat());
-                case DOUBLE:
-                    return (T) Double.valueOf(iter.readDouble());
-                case BOOLEAN:
-                    return (T) Boolean.valueOf(iter.readBoolean());
-                case BYTE:
-                    return (T) Byte.valueOf((byte) iter.readShort());
-                case SHORT:
-                    return (T) Short.valueOf(iter.readShort());
-                case INT:
-                    return (T) Integer.valueOf(iter.readInt());
-                case CHAR:
-                    return (T) Character.valueOf((char) iter.readInt());
-                case LONG:
-                    return (T) Long.valueOf(iter.readLong());
-                case BIG_DECIMAL:
-                    return (T) iter.readBigDecimal();
-                case BIG_INTEGER:
-                    return (T) iter.readBigInteger();
-                case STRING:
-                    return (T) iter.readString();
-                case OBJECT:
-                    return (T) iter.read();
-                case ANY:
-                    return (T) iter.readAny();
-                default:
-                    throw new JsonException("unsupported native type: " + nativeType);
-            }
-        } else {
-            return (T) Codegen.getDecoder(typeLiteral.getDecoderCacheKey(), typeLiteral.getType()).decode(iter);
-        }
-    }
-
     public static final boolean readBoolean(String cacheKey, JsonIterator iter) throws IOException {
         return ((Decoder.BooleanDecoder) JsoniterSpi.getDecoder(cacheKey)).decodeBoolean(iter);
     }

@@ -3,6 +3,7 @@ package com.jsoniter;
 import com.jsoniter.any.Any;
 import com.jsoniter.spi.*;
 
+import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
@@ -34,48 +35,138 @@ class CodegenImplNative {
         put(Object.class.getName(), "iter.read()");
         put(Any.class.getName(), "iter.readAny()");
     }};
-
-    public static String genNative(String nativeReadKey) {
-        if ("boolean".equals(nativeReadKey)) {
-            nativeReadKey = Boolean.class.getName();
-        } else if ("byte".equals(nativeReadKey)) {
-            nativeReadKey = Byte.class.getName();
-        } else if ("char".equals(nativeReadKey)) {
-            nativeReadKey = Character.class.getName();
-        } else if ("short".equals(nativeReadKey)) {
-            nativeReadKey = Short.class.getName();
-        } else if ("int".equals(nativeReadKey)) {
-            nativeReadKey = Integer.class.getName();
-        } else if ("long".equals(nativeReadKey)) {
-            nativeReadKey = Long.class.getName();
-        } else if ("float".equals(nativeReadKey)) {
-            nativeReadKey = Float.class.getName();
-        } else if ("double".equals(nativeReadKey)) {
-            nativeReadKey = Double.class.getName();
-        }
-        String op = NATIVE_READS.get(nativeReadKey);
-        if (op == null) {
-            throw new JsonException("do not know how to read: " + nativeReadKey);
-        }
-        return "return " + op + ";";
-    }
+    final static Map<Class, Decoder> NATIVE_DECODERS = new HashMap<Class, Decoder>() {{
+        put(float.class, new Decoder() {
+            @Override
+            public Object decode(JsonIterator iter) throws IOException {
+                return iter.readFloat();
+            }
+        });
+        put(Float.class, new Decoder() {
+            @Override
+            public Object decode(JsonIterator iter) throws IOException {
+                return iter.readFloat();
+            }
+        });
+        put(double.class, new Decoder() {
+            @Override
+            public Object decode(JsonIterator iter) throws IOException {
+                return iter.readDouble();
+            }
+        });
+        put(Double.class, new Decoder() {
+            @Override
+            public Object decode(JsonIterator iter) throws IOException {
+                return iter.readDouble();
+            }
+        });
+        put(boolean.class, new Decoder() {
+            @Override
+            public Object decode(JsonIterator iter) throws IOException {
+                return iter.readBoolean();
+            }
+        });
+        put(Boolean.class, new Decoder() {
+            @Override
+            public Object decode(JsonIterator iter) throws IOException {
+                return iter.readBoolean();
+            }
+        });
+        put(byte.class, new Decoder() {
+            @Override
+            public Object decode(JsonIterator iter) throws IOException {
+                return iter.readShort();
+            }
+        });
+        put(Byte.class, new Decoder() {
+            @Override
+            public Object decode(JsonIterator iter) throws IOException {
+                return iter.readShort();
+            }
+        });
+        put(short.class, new Decoder() {
+            @Override
+            public Object decode(JsonIterator iter) throws IOException {
+                return iter.readShort();
+            }
+        });
+        put(Short.class, new Decoder() {
+            @Override
+            public Object decode(JsonIterator iter) throws IOException {
+                return iter.readShort();
+            }
+        });
+        put(int.class, new Decoder() {
+            @Override
+            public Object decode(JsonIterator iter) throws IOException {
+                return iter.readInt();
+            }
+        });
+        put(Integer.class, new Decoder() {
+            @Override
+            public Object decode(JsonIterator iter) throws IOException {
+                return iter.readInt();
+            }
+        });
+        put(char.class, new Decoder() {
+            @Override
+            public Object decode(JsonIterator iter) throws IOException {
+                return iter.readInt();
+            }
+        });
+        put(Character.class, new Decoder() {
+            @Override
+            public Object decode(JsonIterator iter) throws IOException {
+                return iter.readInt();
+            }
+        });
+        put(long.class, new Decoder() {
+            @Override
+            public Object decode(JsonIterator iter) throws IOException {
+                return iter.readLong();
+            }
+        });
+        put(Long.class, new Decoder() {
+            @Override
+            public Object decode(JsonIterator iter) throws IOException {
+                return iter.readLong();
+            }
+        });
+        put(BigDecimal.class, new Decoder() {
+            @Override
+            public Object decode(JsonIterator iter) throws IOException {
+                return iter.readBigDecimal();
+            }
+        });
+        put(BigInteger.class, new Decoder() {
+            @Override
+            public Object decode(JsonIterator iter) throws IOException {
+                return iter.readBigInteger();
+            }
+        });
+        put(String.class, new Decoder() {
+            @Override
+            public Object decode(JsonIterator iter) throws IOException {
+                return iter.readString();
+            }
+        });
+        put(Object.class, new Decoder() {
+            @Override
+            public Object decode(JsonIterator iter) throws IOException {
+                return iter.read();
+            }
+        });
+        put(Any.class, new Decoder() {
+            @Override
+            public Object decode(JsonIterator iter) throws IOException {
+                return iter.readAny();
+            }
+        });
+    }};
 
     public static String genReadOp(Type type) {
-        if (type instanceof Class) {
-            Class clazz = (Class) type;
-            String nativeRead = NATIVE_READS.get(clazz.getCanonicalName());
-            if (nativeRead != null) {
-                return nativeRead;
-            }
-        }
         String cacheKey = TypeLiteral.create(type).getDecoderCacheKey();
-        Codegen.getDecoder(cacheKey, type);// set the decoder to cache
-        if (Codegen.canStaticAccess(cacheKey)) {
-            return String.format("%s.decode_(iter)", cacheKey);
-        } else {
-            // can not use static "decode_" method to access, go through codegen cache
-            return String.format("com.jsoniter.CodegenAccess.read(\"%s\", iter)", cacheKey);
-        }
+        return String.format("(%s)%s", getTypeName(type), genReadOp(cacheKey, type));
     }
 
     public static String getTypeName(Type fieldType) {
@@ -93,61 +184,81 @@ class CodegenImplNative {
 
     static String genField(Binding field) {
         String fieldCacheKey = field.decoderCacheKey();
-        // the field decoder might be registered directly
-        Decoder decoder = JsoniterSpi.getDecoder(fieldCacheKey);
         Type fieldType = field.valueType;
+        return String.format("(%s)%s", getTypeName(fieldType), genReadOp(fieldCacheKey, fieldType));
+
+    }
+
+    private static String genReadOp(String cacheKey, Type valueType) {
+        // the field decoder might be registered directly
+        Decoder decoder = JsoniterSpi.getDecoder(cacheKey);
         if (decoder == null) {
-            return String.format("(%s)%s", getTypeName(fieldType), genReadOp(fieldType));
+            // if cache key is for field, and there is no field decoder specified
+            // update cache key for normal type
+            cacheKey = TypeLiteral.create(valueType).getDecoderCacheKey();
+            if (valueType instanceof Class) {
+                Class clazz = (Class) valueType;
+                String nativeRead = NATIVE_READS.get(clazz.getCanonicalName());
+                if (nativeRead != null) {
+                    return nativeRead;
+                }
+            }
+            Codegen.getDecoder(cacheKey, valueType);
+            if (Codegen.canStaticAccess(cacheKey)) {
+                return String.format("%s.decode_(iter)", cacheKey);
+            } else {
+                // can not use static "decode_" method to access, go through codegen cache
+                return String.format("com.jsoniter.CodegenAccess.read(\"%s\", iter)", cacheKey);
+            }
         }
-        if (fieldType == boolean.class) {
+        if (valueType == boolean.class) {
             if (!(decoder instanceof Decoder.BooleanDecoder)) {
-                throw new JsonException("decoder for field " + field + "must implement Decoder.BooleanDecoder");
+                throw new JsonException("decoder for " + cacheKey + "must implement Decoder.BooleanDecoder");
             }
-            return String.format("com.jsoniter.CodegenAccess.readBoolean(\"%s\", iter)", fieldCacheKey);
+            return String.format("com.jsoniter.CodegenAccess.readBoolean(\"%s\", iter)", cacheKey);
         }
-        if (fieldType == byte.class) {
+        if (valueType == byte.class) {
             if (!(decoder instanceof Decoder.ShortDecoder)) {
-                throw new JsonException("decoder for field " + field + "must implement Decoder.ShortDecoder");
+                throw new JsonException("decoder for " + cacheKey + "must implement Decoder.ShortDecoder");
             }
-            return String.format("com.jsoniter.CodegenAccess.readShort(\"%s\", iter)", fieldCacheKey);
+            return String.format("com.jsoniter.CodegenAccess.readShort(\"%s\", iter)", cacheKey);
         }
-        if (fieldType == short.class) {
+        if (valueType == short.class) {
             if (!(decoder instanceof Decoder.ShortDecoder)) {
-                throw new JsonException("decoder for field " + field + "must implement Decoder.ShortDecoder");
+                throw new JsonException("decoder for " + cacheKey + "must implement Decoder.ShortDecoder");
             }
-            return String.format("com.jsoniter.CodegenAccess.readShort(\"%s\", iter)", fieldCacheKey);
+            return String.format("com.jsoniter.CodegenAccess.readShort(\"%s\", iter)", cacheKey);
         }
-        if (fieldType == char.class) {
+        if (valueType == char.class) {
             if (!(decoder instanceof Decoder.IntDecoder)) {
-                throw new JsonException("decoder for field " + field + "must implement Decoder.IntDecoder");
+                throw new JsonException("decoder for " + cacheKey + "must implement Decoder.IntDecoder");
             }
-            return String.format("com.jsoniter.CodegenAccess.readInt(\"%s\", iter)", fieldCacheKey);
+            return String.format("com.jsoniter.CodegenAccess.readInt(\"%s\", iter)", cacheKey);
         }
-        if (fieldType == int.class) {
+        if (valueType == int.class) {
             if (!(decoder instanceof Decoder.IntDecoder)) {
-                throw new JsonException("decoder for field " + field + "must implement Decoder.IntDecoder");
+                throw new JsonException("decoder for " + cacheKey + "must implement Decoder.IntDecoder");
             }
-            return String.format("com.jsoniter.CodegenAccess.readInt(\"%s\", iter)", fieldCacheKey);
+            return String.format("com.jsoniter.CodegenAccess.readInt(\"%s\", iter)", cacheKey);
         }
-        if (fieldType == long.class) {
+        if (valueType == long.class) {
             if (!(decoder instanceof Decoder.LongDecoder)) {
-                throw new JsonException("decoder for field " + field + "must implement Decoder.LongDecoder");
+                throw new JsonException("decoder for " + cacheKey + "must implement Decoder.LongDecoder");
             }
-            return String.format("com.jsoniter.CodegenAccess.readLong(\"%s\", iter)", fieldCacheKey);
+            return String.format("com.jsoniter.CodegenAccess.readLong(\"%s\", iter)", cacheKey);
         }
-        if (fieldType == float.class) {
+        if (valueType == float.class) {
             if (!(decoder instanceof Decoder.FloatDecoder)) {
-                throw new JsonException("decoder for field " + field + "must implement Decoder.FloatDecoder");
+                throw new JsonException("decoder for " + cacheKey + "must implement Decoder.FloatDecoder");
             }
-            return String.format("com.jsoniter.CodegenAccess.readFloat(\"%s\", iter)", fieldCacheKey);
+            return String.format("com.jsoniter.CodegenAccess.readFloat(\"%s\", iter)", cacheKey);
         }
-        if (fieldType == double.class) {
+        if (valueType == double.class) {
             if (!(decoder instanceof Decoder.DoubleDecoder)) {
-                throw new JsonException("decoder for field " + field + "must implement Decoder.DoubleDecoder");
+                throw new JsonException("decoder for " + cacheKey + "must implement Decoder.DoubleDecoder");
             }
-            return String.format("com.jsoniter.CodegenAccess.readDouble(\"%s\", iter)", fieldCacheKey);
+            return String.format("com.jsoniter.CodegenAccess.readDouble(\"%s\", iter)", cacheKey);
         }
-        return String.format("(%s)com.jsoniter.CodegenAccess.read(\"%s\", iter);",
-                getTypeName(fieldType), fieldCacheKey);
+        return String.format("com.jsoniter.CodegenAccess.read(\"%s\", iter)", cacheKey);
     }
 }

@@ -75,8 +75,11 @@ class ReflectionObjectDecoder {
             };
         }
         if (binding.decoder == null) {
-            // the field decoder might be registered directly
+            // field decoder might be special customized
             binding.decoder = JsoniterSpi.getDecoder(binding.decoderCacheKey());
+        }
+        if (binding.decoder == null) {
+            binding.decoder = Codegen.getDecoder(binding.valueTypeLiteral.getDecoderCacheKey(), binding.valueType);
         }
         binding.idx = tempIdx;
         for (String fromName : binding.fromNames) {
@@ -341,11 +344,7 @@ class ReflectionObjectDecoder {
 
     private Object decodeBinding(JsonIterator iter, Binding binding) throws Exception {
         Object value;
-        if (binding.decoder == null) {
-            value = CodegenAccess.read(iter, binding.valueTypeLiteral);
-        } else {
-            value = binding.decoder.decode(iter);
-        }
+        value = binding.decoder.decode(iter);
         return value;
     }
 
