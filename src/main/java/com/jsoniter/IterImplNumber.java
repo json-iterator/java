@@ -93,7 +93,7 @@ class IterImplNumber {
     public static final long readLong(JsonIterator iter) throws IOException {
         byte c = IterImpl.nextToken(iter);
         if (c == '-') {
-            return -IterImpl.readPositiveLong(iter, IterImpl.readByte(iter));
+            return -IterImpl.readPositiveLong(iter,IterImpl.readByte(iter));
         } else {
             return IterImpl.readPositiveLong(iter, c);
         }
