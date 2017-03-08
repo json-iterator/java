@@ -151,4 +151,15 @@ public class TestDemo extends TestCase {
             }
         }
     }
+
+    public static class TestObject {
+        public String body;
+        public int commentCount;
+    }
+
+    public void test_utf8() {
+        String input = "{\"body\":\"یبل تیبلتیبمسش یبمک سشیمب سشیکمب تشسکمیبنمسیتبمسشتیب منشستمتبیملتیبملتیبمتلیمبلت یبلتیبل ینبنن اسی باسیش نباسشینباشسینبشسنتیب شسنیاب نشسیابنسشتیابنتسشیابنسشیابنسیشابنسشیاب نسشیاب سشیب سشیبن ت سینبسیبنسیشاب نسیاب سیاب نسیتبا سینا سیا بسیاب نستیشاب نستیبسی\",\"commentCount\":0,\"doILike\":false,\"doISuggest\":false,\"likeCount\":1,\"rowId\":\"58bf6ed1c8015f0bd4422c70\",\"specialLabel\":0,\"submitDate\":\"2017-03-08T02:39:13.568Z\",\"suggestCount\":0,\"title\":\"تست می باشد.\",\"type\":1,\"url\":[\"images/cell/490661220.jpg\"],\"username\":\"mahdihp\"}";
+        TestObject obj = JsonIterator.deserialize(input, TestObject.class);
+        assertEquals(0, obj.commentCount);
+    }
 }
