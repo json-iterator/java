@@ -1,9 +1,11 @@
 package com.jsoniter.any;
 
+import com.jsoniter.JsonIterator;
 import junit.framework.TestCase;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 
 public class TestArray extends TestCase {
     public void test_size() {
@@ -50,5 +52,13 @@ public class TestArray extends TestCase {
         Any any = Any.wrap(new long[]{1, 2, 3});
         any.asList().add(Any.wrap(4));
         assertEquals("[1,2,3,4]", any.toString());
+    }
+
+    public void test_fill_partial_then_iterate() {
+        Any obj = JsonIterator.deserialize("[1,2,3]");
+        assertEquals(1, obj.get(0).toInt());
+        Iterator<Any> iter = obj.iterator();
+        assertEquals(1, iter.next().toInt());
+        assertEquals(2, iter.next().toInt());
     }
 }

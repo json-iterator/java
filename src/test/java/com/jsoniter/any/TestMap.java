@@ -1,8 +1,8 @@
 package com.jsoniter.any;
 
+import com.jsoniter.JsonIterator;
 import junit.framework.TestCase;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 

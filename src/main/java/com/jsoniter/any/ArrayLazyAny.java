@@ -12,7 +12,8 @@ import java.util.List;
 
 class ArrayLazyAny extends LazyAny {
 
-    private final static TypeLiteral<List<Any>> typeLiteral = new TypeLiteral<List<Any>>(){};
+    private final static TypeLiteral<List<Any>> typeLiteral = new TypeLiteral<List<Any>>() {
+    };
     private List<Any> cache;
     private int lastParsedPos;
 
@@ -181,28 +182,12 @@ class ArrayLazyAny extends LazyAny {
 
     private class LazyIterator implements Iterator<Any> {
 
-        private final int cacheSize;
-        private int cachePos;
+        private Any next;
+        private int index;
 
         public LazyIterator() {
-            try {
-                if (cache == null) {
-                    cache = new ArrayList<Any>(4);
-                }
-                if (lastParsedPos == head) {
-                    JsonIterator iter = JsonIterator.tlsIter.get();
-                    iter.reset(data, lastParsedPos, tail);
-                    if (!CodegenAccess.readArrayStart(iter)) {
-                        lastParsedPos = tail;
-                    } else {
-                        lastParsedPos = CodegenAccess.head(iter);
-                    }
-                }
-            } catch (IOException e) {
-                throw new JsonException(e);
-            }
-            cacheSize = cache.size();
-            cachePos = 0;
+            index = 0;
+            next = fillCacheUntil(index);
         }
 
         @Override
@@ -212,32 +197,15 @@ class ArrayLazyAny extends LazyAny {
 
         @Override
         public boolean hasNext() {
-            return cachePos != cacheSize || lastParsedPos != tail;
+            return next != null;
         }
 
         @Override
         public Any next() {
-            try {
-                return next_();
-            } catch (IOException e) {
-                throw new JsonException(e);
-            }
-        }
-
-        private Any next_() throws IOException {
-            if (cachePos != cacheSize) {
-                return cache.get(cachePos++);
-            }
-            JsonIterator iter = JsonIterator.tlsIter.get();
-            iter.reset(data, lastParsedPos, tail);
-            Any element = iter.readAny();
-            cache.add(element);
-            if (CodegenAccess.nextToken(iter) == ',') {
-                lastParsedPos = CodegenAccess.head(iter);
-            } else {
-                lastParsedPos = tail;
-            }
-            return element;
+            Any current = next;
+            index++;
+            next = fillCacheUntil(index);
+            return current;
         }
     }
 
