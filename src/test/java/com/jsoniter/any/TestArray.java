@@ -60,5 +60,7 @@ public class TestArray extends TestCase {
         Iterator<Any> iter = obj.iterator();
         assertEquals(1, iter.next().toInt());
         assertEquals(2, iter.next().toInt());
+        assertEquals(3, iter.next().toInt());
+        assertFalse(iter.hasNext());
     }
 }

@@ -202,9 +202,16 @@ class ArrayLazyAny extends LazyAny {
 
         @Override
         public Any next() {
+            if (next == null) {
+                throw new IndexOutOfBoundsException();
+            }
             Any current = next;
-            index++;
-            next = fillCacheUntil(index);
+            try {
+                index++;
+                next = fillCacheUntil(index);
+            } catch (IndexOutOfBoundsException e){
+                next = null;
+            }
             return current;
         }
     }
