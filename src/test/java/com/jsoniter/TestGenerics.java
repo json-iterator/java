@@ -52,6 +52,13 @@ public class TestGenerics extends TestCase {
         assertEquals("world", val.get("hello"));
     }
 
+    public void test_integer_map() throws IOException {
+        JsonIterator iter = JsonIterator.parse("{'hello': 1}".replace('\'', '"'));
+        Map<String, Integer> val = iter.read(new TypeLiteral<Map<String, Integer>>() {
+        });
+        assertEquals(Integer.valueOf(1), val.get("hello"));
+    }
+
     public void test_list_of_list() throws Exception {
         JsonIterator iter = JsonIterator.parse("[[1,2],[3,4]]");
         List<List<Integer>> listOfList = iter.read(new TypeLiteral<List<List<Integer>>>() {

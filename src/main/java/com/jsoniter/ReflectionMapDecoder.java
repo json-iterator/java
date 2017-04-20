@@ -21,7 +21,7 @@ class ReflectionMapDecoder implements Decoder {
             throw new JsonException(e);
         }
         TypeLiteral valueTypeLiteral = TypeLiteral.create(typeArgs[1]);
-        valueTypeDecoder = Codegen.getDecoder(valueTypeLiteral.getDecoderCacheKey(), typeArgs[0]);
+        valueTypeDecoder = Codegen.getDecoder(valueTypeLiteral.getDecoderCacheKey(), typeArgs[1]);
     }
 
     @Override
