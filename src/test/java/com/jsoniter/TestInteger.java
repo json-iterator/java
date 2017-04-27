@@ -22,6 +22,8 @@ public class TestInteger extends TestCase {
     }
 
     public void test_positive_negative_long() throws IOException {
+        assertEquals(0L, parseLong("0"));
+        assertEquals(1L, parseLong("01"));
         assertEquals(4321L, parseLong("4321"));
         assertEquals(54321L, parseLong("54321"));
         assertEquals(654321L, parseLong("654321"));

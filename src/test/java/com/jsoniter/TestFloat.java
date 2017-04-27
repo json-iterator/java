@@ -13,7 +13,9 @@ public class TestFloat extends TestCase {
     public void test_positive_negative() throws IOException {
         // positive
         assertEquals(12.3f, parseFloat("12.3,"));
+        assertEquals(729212.0233f, parseFloat("729212.0233,"));
         assertEquals(12.3d, parseDouble("12.3,"));
+        assertEquals(729212.0233d, parseDouble("729212.0233,"));
         // negative
         assertEquals(-12.3f, parseFloat("-12.3,"));
         assertEquals(-12.3d, parseDouble("-12.3,"));

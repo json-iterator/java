@@ -372,6 +372,9 @@ public class JsonIterator implements Closeable {
         try {
             T val = iter.read(clazz);
             if (iter.head != bytes.length) {
+                System.out.println(iter.head);
+                System.out.println(new String(bytes));
+                System.out.println(new String(bytes).substring(75));
                 throw iter.reportError("deserialize", "trailing garbage found");
             }
             return val;

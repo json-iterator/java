@@ -361,9 +361,6 @@ class IterImpl {
 
     static final long readPositiveLong(final JsonIterator iter, byte c) throws IOException {
         long ind = IterImplNumber.intDigits[c];
-        if (ind == 0) {
-            return 0;
-        }
         if (ind == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
             throw iter.reportError("readPositiveLong", "expect 0~9");
         }
