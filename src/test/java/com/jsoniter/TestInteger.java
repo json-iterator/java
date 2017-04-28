@@ -11,6 +11,11 @@ public class TestInteger extends TestCase {
 
     private boolean isStreaming;
 
+    public void test_char() throws IOException {
+        Character c = JsonIterator.deserialize("50", Character.class);
+        assertEquals(50, (int)c);
+    }
+
     public void test_positive_negative_int() throws IOException {
         assertEquals(4321, parseInt("4321"));
         assertEquals(54321, parseInt("54321"));

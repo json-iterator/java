@@ -111,13 +111,13 @@ class CodegenImplNative {
         put(char.class, new Decoder() {
             @Override
             public Object decode(JsonIterator iter) throws IOException {
-                return iter.readInt();
+                return (char)iter.readInt();
             }
         });
         put(Character.class, new Decoder() {
             @Override
             public Object decode(JsonIterator iter) throws IOException {
-                return iter.readInt();
+                return (char)iter.readInt();
             }
         });
         put(long.class, new Decoder() {
