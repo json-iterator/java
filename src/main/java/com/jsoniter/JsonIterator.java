@@ -366,47 +366,20 @@ public class JsonIterator implements Closeable {
     };
 
     public static final <T> T deserialize(String input, Class<T> clazz) {
-        JsonIterator iter = tlsIter.get();
-        byte[] bytes = input.getBytes();
-        iter.reset(bytes);
-        try {
-            T val = iter.read(clazz);
-            if (iter.head != bytes.length) {
-                System.out.println(iter.head);
-                System.out.println(new String(bytes));
-                System.out.println(new String(bytes).substring(75));
-                throw iter.reportError("deserialize", "trailing garbage found");
-            }
-            return val;
-        } catch (ArrayIndexOutOfBoundsException e) {
-            throw iter.reportError("deserialize", "premature end");
-        } catch (IOException e) {
-            throw new JsonException(e);
-        }
+        return deserialize(input.getBytes(), clazz);
     }
 
     public static final <T> T deserialize(String input, TypeLiteral<T> typeLiteral) {
-        JsonIterator iter = tlsIter.get();
-        iter.reset(input.getBytes());
-        try {
-            T val = iter.read(typeLiteral);
-            if (IterImpl.nextToken(iter) != 0) {
-                throw iter.reportError("deserialize", "trailing garbage found");
-            }
-            return val;
-        } catch (ArrayIndexOutOfBoundsException e) {
-            throw iter.reportError("deserialize", "premature end");
-        } catch (IOException e) {
-            throw new JsonException(e);
-        }
+        return deserialize(input.getBytes(), typeLiteral);
     }
 
     public static final <T> T deserialize(byte[] input, Class<T> clazz) {
+        int lastNotSpacePos = findLastNotSpacePos(input);
         JsonIterator iter = tlsIter.get();
-        iter.reset(input);
+        iter.reset(input, 0, lastNotSpacePos);
         try {
             T val = iter.read(clazz);
-            if (IterImpl.nextToken(iter) != 0) {
+            if (iter.head != lastNotSpacePos) {
                 throw iter.reportError("deserialize", "trailing garbage found");
             }
             return val;
@@ -418,11 +391,12 @@ public class JsonIterator implements Closeable {
     }
 
     public static final <T> T deserialize(byte[] input, TypeLiteral<T> typeLiteral) {
+        int lastNotSpacePos = findLastNotSpacePos(input);
         JsonIterator iter = tlsIter.get();
-        iter.reset(input);
+        iter.reset(input, 0, lastNotSpacePos);
         try {
             T val = iter.read(typeLiteral);
-            if (IterImpl.nextToken(iter) != 0) {
+            if (iter.head != lastNotSpacePos) {
                 throw iter.reportError("deserialize", "trailing garbage found");
             }
             return val;
@@ -438,11 +412,12 @@ public class JsonIterator implements Closeable {
     }
 
     public static final Any deserialize(byte[] input) {
+        int lastNotSpacePos = findLastNotSpacePos(input);
         JsonIterator iter = tlsIter.get();
-        iter.reset(input);
+        iter.reset(input, 0, lastNotSpacePos);
         try {
             Any val = iter.readAny();
-            if (iter.head != input.length) {
+            if (iter.head != lastNotSpacePos) {
                 throw iter.reportError("deserialize", "trailing garbage found");
             }
             return val;
@@ -451,6 +426,16 @@ public class JsonIterator implements Closeable {
         } catch (IOException e) {
             throw new JsonException(e);
         }
+    }
+
+    private static int findLastNotSpacePos(byte[] input) {
+        for(int i = input.length - 1; i >= 0; i--) {
+            byte c = input[i];
+            if (c != ' ' && c != '\t' && c != '\n' && c != '\r') {
+                return i + 1;
+            }
+        }
+        return 0;
     }
 
     public static void setMode(DecodingMode mode) {

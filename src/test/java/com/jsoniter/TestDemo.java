@@ -166,4 +166,9 @@ public class TestDemo extends TestCase {
         TestObject obj = JsonIterator.deserialize(input, TestObject.class);
         assertEquals(0, obj.commentCount);
     }
+
+    public void test_deserialize() {
+        String str = "{\"port\":13110}  ";
+        JsonIterator.deserialize(str.getBytes(), HashMap.class);
+    }
 }
