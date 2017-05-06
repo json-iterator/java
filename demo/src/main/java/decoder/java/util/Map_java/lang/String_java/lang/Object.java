@@ -6,12 +6,10 @@ if (map == null) { map = new java.util.HashMap(); }
 if (!com.jsoniter.CodegenAccess.readObjectStart(iter)) {
 return map;
 }
+do {
 String field = com.jsoniter.CodegenAccess.readObjectFieldAsString(iter);
-map.put(field, iter.read());
-while (com.jsoniter.CodegenAccess.nextToken(iter) == ',') {
-field = com.jsoniter.CodegenAccess.readObjectFieldAsString(iter);
-map.put(field, iter.read());
-}
+map.put(field, (java.lang.Object)iter.read());
+} while (com.jsoniter.CodegenAccess.nextToken(iter) == ',');
 return map;
 }public java.lang.Object decode(com.jsoniter.JsonIterator iter) throws java.io.IOException {
 return decode_(iter);
