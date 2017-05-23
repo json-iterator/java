@@ -238,21 +238,30 @@ public class JsoniterSpi {
     private static void encodingDeduplicate(ClassDescriptor desc) {
         HashMap<String, Binding> byName = new HashMap<String, Binding>();
         for (Binding field : desc.fields) {
-            if (byName.containsKey(field.name)) {
-                throw new JsonException("field name conflict: " + field.name);
+            for (String toName : field.toNames) {
+                if (byName.containsKey(toName)) {
+                    throw new JsonException("field encode to same name: " + toName);
+                }
+                byName.put(toName, field);
             }
-            byName.put(field.name, field);
         }
-        for (Binding getter : desc.getters) {
-            Binding existing = byName.get(getter.name);
-            if (existing == null) {
-                byName.put(getter.name, getter);
-                continue;
+
+        for (Binding getter : new ArrayList<Binding>(desc.getters)) {
+            for (String toName : getter.toNames) {
+                Binding existing = byName.get(toName);
+                if (existing == null) {
+                    byName.put(toName, getter);
+                    continue;
+                }
+                if (desc.fields.remove(existing)) {
+                    continue;
+                }
+                if (existing.method != null && existing.method.getName().equals(getter.method.getName())) {
+                    desc.getters.remove(getter);
+                    continue;
+                }
+                throw new JsonException("field encode to same name: " + toName);
             }
-            if (desc.fields.remove(existing)) {
-                continue;
-            }
-            throw new JsonException("getter name conflict: " + getter.name);
         }
     }
 
@@ -295,6 +304,7 @@ public class JsoniterSpi {
         try {
             Binding binding = new Binding(clazz, lookup, field.getGenericType());
             binding.fromNames = new String[]{field.getName()};
+            binding.toNames = new String[]{field.getName()};
             binding.name = field.getName();
             binding.annotations = field.getAnnotations();
             binding.field = field;

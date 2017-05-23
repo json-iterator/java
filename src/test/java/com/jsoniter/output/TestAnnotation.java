@@ -92,4 +92,21 @@ public class TestAnnotation extends TestCase {
         stream.close();
         assertEquals("{\"hello\":\"world\"}", baos.toString());
     }
+
+    public interface TestObject6Interface<A> {
+        A getHello();
+    }
+
+    public static class TestObject6 implements TestObject6Interface<Integer> {
+        public Integer getHello() {
+            return 0;
+        }
+    }
+
+    public void test_inherited_getter_is_not_duplicate() throws IOException {
+        TestObject6 obj = new TestObject6();
+        stream.writeVal(obj);
+        stream.close();
+        assertEquals("{\"hello\":0}", baos.toString());
+    }
 }

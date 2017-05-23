@@ -19,7 +19,9 @@ public class NamingStrategySupport {
             @Override
             public void updateClassDescriptor(ClassDescriptor desc) {
                 for (Binding binding : desc.allBindings()) {
-                    binding.name = namingStrategy.translate(binding.name);
+                    String translated = namingStrategy.translate(binding.name);
+                    binding.toNames = new String[]{translated};
+                    binding.fromNames = new String[]{translated};
                 }
             }
         });
