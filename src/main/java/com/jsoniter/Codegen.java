@@ -65,6 +65,7 @@ class Codegen {
         if (decoder != null) {
             return decoder;
         }
+        addPlaceholderDecoderToSupportRecursiveStructure(cacheKey);
         if (mode == DecodingMode.REFLECTION_MODE) {
             decoder = ReflectionDecoderFactory.create(clazz, typeArgs);
             JsoniterSpi.addNewDecoder(cacheKey, decoder);
@@ -102,6 +103,15 @@ class Codegen {
             msg = msg + "\n" + source;
             throw new JsonException(msg, e);
         }
+    }
+
+    private static void addPlaceholderDecoderToSupportRecursiveStructure(final String cacheKey) {
+        JsoniterSpi.addNewDecoder(cacheKey, new Decoder() {
+            @Override
+            public Object decode(JsonIterator iter) throws IOException {
+                return JsoniterSpi.getDecoder(cacheKey).decode(iter);
+            }
+        });
     }
 
     public static boolean canStaticAccess(String cacheKey) {

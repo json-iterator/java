@@ -1,6 +1,10 @@
 package com.jsoniter;
 
+import com.jsoniter.annotation.JsonProperty;
+import com.jsoniter.annotation.JsoniterAnnotationSupport;
 import com.jsoniter.any.Any;
+import com.jsoniter.output.EncodingMode;
+import com.jsoniter.output.JsonStream;
 import junit.framework.TestCase;
 import org.junit.Assert;
 
@@ -57,5 +61,16 @@ public class TestNested extends TestCase {
         any = Any.rewrap(any.asMap()); // make it not lazy
         result = any.get('*', 1);
         assertEquals("{\"field1\":2}", result.toString());
+    }
+
+    public static class TestObject3 {
+        public com.jsoniter.output.TestNested.TestObject3 reference;
+    }
+
+    public void test_recursive_class() {
+        // recursive reference will not be supported
+        // however recursive structure is supported
+        com.jsoniter.output.TestNested.TestObject3 obj = new com.jsoniter.output.TestNested.TestObject3();
+        assertNull(JsonIterator.deserialize("{\"reference\":null}", TestObject3.class).reference);
     }
 }

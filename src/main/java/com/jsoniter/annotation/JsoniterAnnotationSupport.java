@@ -31,12 +31,16 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
             for (String fieldName : jsonObject.unknownPropertiesWhitelist()) {
                 Binding binding = new Binding(desc.clazz, desc.lookup, Object.class);
                 binding.name = fieldName;
+                binding.fromNames = new String[]{binding.name};
+                binding.toNames = new String[0];
                 binding.shouldSkip = true;
                 desc.fields.add(binding);
             }
             for (String fieldName : jsonObject.unknownPropertiesBlacklist()) {
                 Binding binding = new Binding(desc.clazz, desc.lookup, Object.class);
                 binding.name = fieldName;
+                binding.fromNames = new String[]{binding.name};
+                binding.toNames = new String[0];
                 binding.asExtraWhenPresent = true;
                 desc.fields.add(binding);
             }
@@ -88,6 +92,8 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
                 if (binding.name == null || binding.name.length() == 0) {
                     binding.name = paramNames[i];
                 }
+                binding.fromNames = new String[]{binding.name};
+                binding.toNames = new String[]{binding.name};
                 binding.annotations = paramAnnotations;
                 setter.parameters.add(binding);
             }
@@ -136,6 +142,8 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
                 if (binding.name == null || binding.name.length() == 0) {
                     binding.name = paramNames[i];
                 }
+                binding.fromNames = new String[]{binding.name};
+                binding.toNames = new String[]{binding.name};
                 binding.annotations = paramAnnotations;
                 desc.ctor.parameters.add(binding);
             }
@@ -163,6 +171,8 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
                 if (binding.name == null || binding.name.length() == 0) {
                     binding.name = paramNames[i];
                 }
+                binding.fromNames = new String[]{binding.name};
+                binding.toNames = new String[]{binding.name};
                 binding.annotations = paramAnnotations;
                 desc.ctor.parameters.add(binding);
             }

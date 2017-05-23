@@ -93,6 +93,7 @@ class Codegen {
             JsoniterSpi.addNewEncoder(cacheKey, encoder);
             return encoder;
         }
+        addPlaceholderEncoderToSupportRecursiveStructure(cacheKey);
         Type[] typeArgs = new Type[0];
         Class clazz;
         if (type instanceof ParameterizedType) {
@@ -118,7 +119,6 @@ class Codegen {
                 }
             }
         }
-        addPlaceholderEncoderToSupportRecursiveStructure(cacheKey);
         clazz = chooseAccessibleSuper(clazz);
         CodegenResult source = genSource(cacheKey, clazz, typeArgs);
         try {

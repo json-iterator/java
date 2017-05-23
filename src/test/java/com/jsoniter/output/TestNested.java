@@ -99,7 +99,6 @@ public class TestNested extends TestCase {
         // however recursive structure is supported
         JsoniterAnnotationSupport.enable();
         TestObject3 obj = new TestObject3();
-        JsonStream.setMode(EncodingMode.DYNAMIC_MODE);
         assertEquals("{\"reference\":null}", JsonStream.serialize(obj));
     }
 }
