@@ -1,8 +1,8 @@
 package com.jsoniter.output;
 
-import com.jsoniter.spi.JsonException;
 import com.jsoniter.any.Any;
 import com.jsoniter.spi.Encoder;
+import com.jsoniter.spi.JsonException;
 import com.jsoniter.spi.TypeLiteral;
 
 import java.io.IOException;

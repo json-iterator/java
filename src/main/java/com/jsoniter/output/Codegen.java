@@ -1,5 +1,6 @@
 package com.jsoniter.output;
 
+import com.jsoniter.any.Any;
 import com.jsoniter.spi.JsonException;
 import com.jsoniter.spi.Encoder;
 import com.jsoniter.spi.Extension;
@@ -74,7 +75,7 @@ class Codegen {
         return gen(cacheKey, type);
     }
 
-    private static synchronized Encoder gen(String cacheKey, Type type) {
+    private static synchronized Encoder gen(final String cacheKey, Type type) {
         Encoder encoder = JsoniterSpi.getEncoder(cacheKey);
         if (encoder != null) {
             return encoder;
@@ -117,6 +118,7 @@ class Codegen {
                 }
             }
         }
+        addPlaceholderEncoderToSupportRecursiveStructure(cacheKey);
         clazz = chooseAccessibleSuper(clazz);
         CodegenResult source = genSource(cacheKey, clazz, typeArgs);
         try {
@@ -133,6 +135,20 @@ class Codegen {
             msg = msg + "\n" + source;
             throw new JsonException(msg, e);
         }
+    }
+
+    private static void addPlaceholderEncoderToSupportRecursiveStructure(final String cacheKey) {
+        JsoniterSpi.addNewEncoder(cacheKey, new Encoder() {
+            @Override
+            public void encode(Object obj, JsonStream stream) throws IOException {
+                JsoniterSpi.getEncoder(cacheKey).encode(obj, stream);
+            }
+
+            @Override
+            public Any wrap(Object obj) {
+                return JsoniterSpi.getEncoder(cacheKey).wrap(obj);
+            }
+        });
     }
 
     private static Class chooseAccessibleSuper(Class clazz) {

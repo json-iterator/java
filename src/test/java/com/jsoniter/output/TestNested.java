@@ -1,5 +1,7 @@
 package com.jsoniter.output;
 
+import com.jsoniter.annotation.JsonProperty;
+import com.jsoniter.annotation.JsoniterAnnotationSupport;
 import com.jsoniter.spi.TypeLiteral;
 import junit.framework.TestCase;
 
@@ -85,5 +87,19 @@ public class TestNested extends TestCase {
                 "    \"field2\":\"2\"\n" +
                 "  }\n" +
                 "}".replace('\'', '"'), baos.toString());
+    }
+
+    public static class TestObject3 {
+        @JsonProperty(omitNull = false)
+        public TestObject3 reference;
+    }
+
+    public void test_recursive_class() {
+        // recursive reference will not be supported
+        // however recursive structure is supported
+        JsoniterAnnotationSupport.enable();
+        TestObject3 obj = new TestObject3();
+        JsonStream.setMode(EncodingMode.DYNAMIC_MODE);
+        assertEquals("{\"reference\":null}", JsonStream.serialize(obj));
     }
 }
