@@ -45,6 +45,9 @@ public class DemoCodegenConfig implements CodegenConfig {
     }
 
     public static void main(String[] args) throws Exception {
-        StaticCodeGenerator.main(new String[]{DemoCodegenConfig.class.getCanonicalName()});
+        StaticCodeGenerator.main(new String[]{
+                DemoCodegenConfig.class.getCanonicalName()
+            ,"/tmp"
+        });
     }
 }

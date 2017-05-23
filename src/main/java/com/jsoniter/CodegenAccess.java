@@ -1,9 +1,6 @@
 package com.jsoniter;
 
-import com.jsoniter.spi.Decoder;
-import com.jsoniter.spi.JsonException;
-import com.jsoniter.spi.JsoniterSpi;
-import com.jsoniter.spi.TypeLiteral;
+import com.jsoniter.spi.*;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -160,8 +157,8 @@ public class CodegenAccess {
         return true;
     }
 
-    public static void staticGenDecoders(TypeLiteral[] typeLiterals) {
-        Codegen.staticGenDecoders(typeLiterals);
+    public static void staticGenDecoders(TypeLiteral[] typeLiterals, StaticCodegenTarget staticCodegenTarget) {
+        Codegen.staticGenDecoders(typeLiterals, staticCodegenTarget);
     }
 
     public static int head(JsonIterator iter) {

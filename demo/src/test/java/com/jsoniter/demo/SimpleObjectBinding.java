@@ -155,18 +155,18 @@ public class SimpleObjectBinding {
     private TestObject withIterator() throws IOException {
         iter.reset(input);
         TestObject obj = new TestObject();
-        for (String field = iter.readObject(); field != null; field = iter.readObject()) {
-            switch (field) {
-                case "field1":
-                    obj.field1 = iter.readInt();
-                    continue;
-                case "field2":
-                    obj.field2 = iter.readInt();
-                    continue;
-                default:
-                    iter.skip();
-            }
-        }
+//        for (String field = iter.readObject(); field != null; field = iter.readObject()) {
+//            switch (field) {
+//                case "field1":
+//                    obj.field1 = iter.readInt();
+//                    continue;
+//                case "field2":
+//                    obj.field2 = iter.readInt();
+//                    continue;
+//                default:
+//                    iter.skip();
+//            }
+//        }
         return obj;
     }
 

@@ -1,11 +1,7 @@
 package com.jsoniter.output;
 
 import com.jsoniter.any.Any;
-import com.jsoniter.spi.JsonException;
-import com.jsoniter.spi.Encoder;
-import com.jsoniter.spi.Extension;
-import com.jsoniter.spi.JsoniterSpi;
-import com.jsoniter.spi.TypeLiteral;
+import com.jsoniter.spi.*;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -19,7 +15,7 @@ import java.util.*;
 class Codegen {
 
     static EncodingMode mode = EncodingMode.REFLECTION_MODE;
-    static boolean isDoingStaticCodegen;
+    static StaticCodegenTarget isDoingStaticCodegen;
     // only read/write when generating code with synchronized protection
     private final static Map<String, CodegenResult> generatedSources = new HashMap<String, CodegenResult>();
     private volatile static Map<String, Encoder> reflectionEncoders = new HashMap<String, Encoder>();
@@ -108,7 +104,7 @@ class Codegen {
             JsoniterSpi.addNewEncoder(cacheKey, encoder);
             return encoder;
         }
-        if (!isDoingStaticCodegen) {
+        if (isDoingStaticCodegen == null) {
             try {
                 encoder = (Encoder) Class.forName(cacheKey).newInstance();
                 JsoniterSpi.addNewEncoder(cacheKey, encoder);
@@ -123,10 +119,10 @@ class Codegen {
         CodegenResult source = genSource(cacheKey, clazz, typeArgs);
         try {
             generatedSources.put(cacheKey, source);
-            if (isDoingStaticCodegen) {
-                staticGen(clazz, cacheKey, source);
-            } else {
+            if (isDoingStaticCodegen == null) {
                 encoder = DynamicCodegen.gen(clazz, cacheKey, source);
+            } else {
+                staticGen(clazz, cacheKey, source);
             }
             JsoniterSpi.addNewEncoder(cacheKey, encoder);
             return encoder;
@@ -165,7 +161,7 @@ class Codegen {
     private static void staticGen(Class clazz, String cacheKey, CodegenResult source) throws IOException {
         createDir(cacheKey);
         String fileName = cacheKey.replace('.', '/') + ".java";
-        FileOutputStream fileOutputStream = new FileOutputStream(fileName);
+        FileOutputStream fileOutputStream = new FileOutputStream(new File(isDoingStaticCodegen.outputDir, fileName));
         try {
             OutputStreamWriter writer = new OutputStreamWriter(fileOutputStream);
             try {
@@ -190,7 +186,7 @@ class Codegen {
 
     private static void createDir(String cacheKey) {
         String[] parts = cacheKey.split("\\.");
-        File parent = new File(".");
+        File parent = new File(isDoingStaticCodegen.outputDir);
         for (int i = 0; i < parts.length - 1; i++) {
             String part = parts[i];
             File current = new File(parent, part);
@@ -215,8 +211,8 @@ class Codegen {
         return CodegenImplObject.genObject(clazz);
     }
 
-    public static void staticGenEncoders(TypeLiteral[] typeLiterals) {
-        isDoingStaticCodegen = true;
+    public static void staticGenEncoders(TypeLiteral[] typeLiterals, StaticCodegenTarget staticCodegenTarget) {
+        isDoingStaticCodegen = staticCodegenTarget;
         for (TypeLiteral typeLiteral : typeLiterals) {
             gen(typeLiteral.getEncoderCacheKey(), typeLiteral.getType());
         }

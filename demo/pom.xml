@@ -4,7 +4,7 @@
     <groupId>com.jsoniter</groupId>
     <version>0.9.8-SNAPSHOT</version>
     <artifactId>jsoniter-demo</artifactId>
-    <name>json iterator</name>
+    <name>json iterator demo</name>
     <description>jsoniter (json-iterator) is fast and flexible JSON parser available in Java and Go</description>
     <url>http://jsoniter.com</url>
     <packaging>jar</packaging>
@@ -49,7 +49,7 @@
         <dependency>
             <groupId>com.jsoniter</groupId>
             <artifactId>jsoniter</artifactId>
-            <version>0.9.10</version>
+            <version>0.9.11</version>
         </dependency>
         <dependency>
             <groupId>org.openjdk.jmh</groupId>
@@ -86,11 +86,11 @@
             <artifactId>slf4j-api</artifactId>
             <version>1.7.22</version>
         </dependency>
-        <dependency>
-            <groupId>com.dslplatform</groupId>
-            <artifactId>dsl-json-processor</artifactId>
-            <version>1.4.1</version>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>com.dslplatform</groupId>-->
+            <!--<artifactId>dsl-json-processor</artifactId>-->
+            <!--<version>1.4.1</version>-->
+        <!--</dependency>-->
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
@@ -115,8 +115,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.6.0</version>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <source>1.6</source>
+                    <target>1.6</target>
                     <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>

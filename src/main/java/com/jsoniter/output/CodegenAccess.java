@@ -4,6 +4,7 @@ import com.jsoniter.*;
 import com.jsoniter.any.Any;
 import com.jsoniter.spi.Encoder;
 import com.jsoniter.spi.JsoniterSpi;
+import com.jsoniter.spi.StaticCodegenTarget;
 import com.jsoniter.spi.TypeLiteral;
 
 import java.io.IOException;
@@ -57,8 +58,8 @@ public class CodegenAccess {
         StreamImplString.writeStringWithoutQuote(stream, obj);
     }
 
-    public static void staticGenEncoders(TypeLiteral[] typeLiterals) {
-        Codegen.staticGenEncoders(typeLiterals);
+    public static void staticGenEncoders(TypeLiteral[] typeLiterals, StaticCodegenTarget staticCodegenTarget) {
+        Codegen.staticGenEncoders(typeLiterals, staticCodegenTarget);
     }
 
     public static Any wrap(Object val) {

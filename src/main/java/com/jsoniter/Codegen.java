@@ -14,7 +14,7 @@ class Codegen {
 
     // only read/write when generating code with synchronized protection
     private final static Set<String> generatedClassNames = new HashSet<String>();
-    static boolean isDoingStaticCodegen = false;
+    static StaticCodegenTarget isDoingStaticCodegen = null;
     static DecodingMode mode = DecodingMode.REFLECTION_MODE;
     static {
         String envMode = System.getenv("JSONITER_DECODING_MODE");
@@ -71,7 +71,7 @@ class Codegen {
             JsoniterSpi.addNewDecoder(cacheKey, decoder);
             return decoder;
         }
-        if (!isDoingStaticCodegen) {
+        if (isDoingStaticCodegen == null) {
             try {
                 decoder = (Decoder) Class.forName(cacheKey).newInstance();
                 JsoniterSpi.addNewDecoder(cacheKey, decoder);
@@ -91,10 +91,10 @@ class Codegen {
         }
         try {
             generatedClassNames.add(cacheKey);
-            if (isDoingStaticCodegen) {
-                staticGen(cacheKey, source);
-            } else {
+            if (isDoingStaticCodegen == null) {
                 decoder = DynamicCodegen.gen(cacheKey, source);
+            } else {
+                staticGen(cacheKey, source);
             }
             JsoniterSpi.addNewDecoder(cacheKey, decoder);
             return decoder;
@@ -181,7 +181,7 @@ class Codegen {
     private static void staticGen(String cacheKey, String source) throws IOException {
         createDir(cacheKey);
         String fileName = cacheKey.replace('.', '/') + ".java";
-        FileOutputStream fileOutputStream = new FileOutputStream(fileName);
+        FileOutputStream fileOutputStream = new FileOutputStream(new File(isDoingStaticCodegen.outputDir, fileName));
         try {
             OutputStreamWriter writer = new OutputStreamWriter(fileOutputStream);
             try {
@@ -208,7 +208,7 @@ class Codegen {
 
     private static void createDir(String cacheKey) {
         String[] parts = cacheKey.split("\\.");
-        File parent = new File(".");
+        File parent = new File(isDoingStaticCodegen.outputDir);
         for (int i = 0; i < parts.length - 1; i++) {
             String part = parts[i];
             File current = new File(parent, part);
@@ -259,8 +259,8 @@ class Codegen {
         return false;
     }
 
-    public static void staticGenDecoders(TypeLiteral[] typeLiterals) {
-        isDoingStaticCodegen = true;
+    public static void staticGenDecoders(TypeLiteral[] typeLiterals, StaticCodegenTarget staticCodegenTarget) {
+        isDoingStaticCodegen = staticCodegenTarget;
         for (TypeLiteral typeLiteral : typeLiterals) {
             gen(typeLiteral.getDecoderCacheKey(), typeLiteral.getType());
         }
