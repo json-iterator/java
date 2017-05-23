@@ -187,27 +187,57 @@ public class JsoniterSpi {
     private static void decodingDeduplicate(ClassDescriptor desc) {
         HashMap<String, Binding> byName = new HashMap<String, Binding>();
         for (Binding field : desc.fields) {
-            if (byName.containsKey(field.name)) {
-                throw new JsonException("field name conflict: " + field.name);
+            for (String fromName : field.fromNames) {
+                if (byName.containsKey(fromName)) {
+                    throw new JsonException("field decode from same name: " + fromName);
+                }
+                byName.put(fromName, field);
             }
-            byName.put(field.name, field);
         }
-        for (Binding setter : desc.setters) {
-            Binding existing = byName.get(setter.name);
-            if (existing == null) {
-                byName.put(setter.name, setter);
-                continue;
+        ArrayList<Binding> iteratingSetters = new ArrayList<Binding>(desc.setters);
+        Collections.reverse(iteratingSetters);
+        for (Binding setter : iteratingSetters) {
+            for (String fromName : setter.fromNames) {
+                Binding existing = byName.get(fromName);
+                if (existing == null) {
+                    byName.put(fromName, setter);
+                    continue;
+                }
+                if (desc.fields.remove(existing)) {
+                    continue;
+                }
+                if (existing.method != null && existing.method.getName().equals(setter.method.getName())) {
+                    // inherited interface setter
+                    // iterate in reverse order, so that the setter from child class will be kept
+                    desc.setters.remove(existing);
+                    continue;
+                }
+                throw new JsonException("setter decode from same name: " + fromName);
             }
-            if (desc.fields.remove(existing)) {
-                continue;
-            }
-            throw new JsonException("setter name conflict: " + setter.name);
         }
         for (WrapperDescriptor wrapper : desc.wrappers) {
             for (Binding param : wrapper.parameters) {
-                Binding existing = byName.get(param.name);
+                for (String fromName : param.fromNames) {
+                    Binding existing = byName.get(fromName);
+                    if (existing == null) {
+                        byName.put(fromName, param);
+                        continue;
+                    }
+                    if (desc.fields.remove(existing)) {
+                        continue;
+                    }
+                    if (desc.setters.remove(existing)) {
+                        continue;
+                    }
+                    throw new JsonException("wrapper parameter decode from same name: " + fromName);
+                }
+            }
+        }
+        for (Binding param : desc.ctor.parameters) {
+            for (String fromName : param.fromNames) {
+                Binding existing = byName.get(fromName);
                 if (existing == null) {
-                    byName.put(param.name, param);
+                    byName.put(fromName, param);
                     continue;
                 }
                 if (desc.fields.remove(existing)) {
@@ -216,22 +246,8 @@ public class JsoniterSpi {
                 if (desc.setters.remove(existing)) {
                     continue;
                 }
-                throw new JsonException("wrapper parameter name conflict: " + param.name);
+                throw new JsonException("ctor parameter decode from same name: " + fromName);
             }
-        }
-        for (Binding param : desc.ctor.parameters) {
-            Binding existing = byName.get(param.name);
-            if (existing == null) {
-                byName.put(param.name, param);
-                continue;
-            }
-            if (desc.fields.remove(existing)) {
-                continue;
-            }
-            if (desc.setters.remove(existing)) {
-                continue;
-            }
-            throw new JsonException("ctor parameter name conflict: " + param.name);
         }
     }
 
@@ -257,6 +273,7 @@ public class JsoniterSpi {
                     continue;
                 }
                 if (existing.method != null && existing.method.getName().equals(getter.method.getName())) {
+                    // inherited interface getter
                     desc.getters.remove(getter);
                     continue;
                 }

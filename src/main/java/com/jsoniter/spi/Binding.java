@@ -106,12 +106,14 @@ public class Binding {
         Binding binding = (Binding) o;
 
         if (clazz != null ? !clazz.equals(binding.clazz) : binding.clazz != null) return false;
+        if (method != null ? !method.equals(binding.method) : binding.method != null) return false;
         return name != null ? name.equals(binding.name) : binding.name == null;
     }
 
     @Override
     public int hashCode() {
         int result = clazz != null ? clazz.hashCode() : 0;
+        result = 31 * result + (method != null ? method.hashCode() : 0);
         result = 31 * result + (name != null ? name.hashCode() : 0);
         return result;
     }

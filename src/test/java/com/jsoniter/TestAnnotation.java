@@ -270,4 +270,25 @@ public class TestAnnotation extends TestCase {
         JsonIterator iter = JsonIterator.parse("{}");
         assertNotNull(iter.read(TestObject17.class));
     }
+
+    public interface TestObject18Interface<A> {
+        void setHello(A val);
+    }
+
+    public static class TestObject18 implements TestObject18Interface<Integer> {
+
+        public int _val;
+
+        @Override
+        public void setHello(Integer val) {
+            _val = val;
+        }
+    }
+
+    public void test_inherited_setter_is_not_duplicate() throws IOException {
+        JsonIterator iter = JsonIterator.parse("{\"hello\":1}");
+        TestObject18 obj = iter.read(TestObject18.class);
+        assertNotNull(obj);
+        assertEquals(1, obj._val);
+    }
 }
