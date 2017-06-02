@@ -52,7 +52,6 @@ public class JsonIterator implements Closeable {
         valueTypes['n'] = ValueType.NULL;
         valueTypes['['] = ValueType.ARRAY;
         valueTypes['{'] = ValueType.OBJECT;
-        MapKeyDecoders.registerNativeMapKeyDecoders();
     }
 
     private JsonIterator(InputStream in, byte[] buf, int head, int tail) {

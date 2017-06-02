@@ -6,14 +6,6 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 
 class MapKeyDecoders {
-    public static void registerNativeMapKeyDecoders() {
-        JsoniterSpi.registerMapKeyDecoder(String.class, new MapKeyDecoder() {
-            @Override
-            public Object decode(Slice mapKey) {
-                return mapKey.toString();
-            }
-        });
-    }
 
     public static MapKeyDecoder register(Type mapKeyType) {
         TypeLiteral typeLiteral = TypeLiteral.create(mapKeyType);
