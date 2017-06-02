@@ -10,7 +10,6 @@ class CodegenImplMap {
 
     public static String genMap(Class clazz, Type[] typeArgs) {
         Type keyType = typeArgs[0];
-        MapKeyDecoders.register(keyType);
         Type valueType = typeArgs[1];
         StringBuilder lines = new StringBuilder();
         append(lines, "{{clazz}} map = ({{clazz}})com.jsoniter.CodegenAccess.resetExistingObject(iter);");
