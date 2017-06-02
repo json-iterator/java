@@ -1,15 +1,13 @@
 package com.jsoniter.output;
 
-import com.jsoniter.spi.JsonException;
+import com.jsoniter.spi.*;
 import com.jsoniter.any.Any;
-import com.jsoniter.spi.Binding;
-import com.jsoniter.spi.ClassDescriptor;
-import com.jsoniter.spi.Encoder;
-import com.jsoniter.spi.JsoniterSpi;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 class ReflectionObjectEncoder implements Encoder {
 
@@ -99,13 +97,26 @@ class ReflectionObjectEncoder implements Encoder {
                 }
             }
         }
-        for (Method unwrapper : desc.unWrappers) {
-            if (notFirst) {
-                stream.writeMore();
+        for (UnwrapperDescriptor unwrapper : desc.unwrappers) {
+            if (unwrapper.isMap) {
+                Map<Object, Object> map = (Map<Object, Object>) unwrapper.method.invoke(obj);
+                for (Map.Entry<Object, Object> entry : map.entrySet()) {
+                    if (notFirst) {
+                        stream.writeMore();
+                    } else {
+                        notFirst = true;
+                    }
+                    stream.writeObjectField(entry.getKey().toString());
+                    stream.writeVal(unwrapper.mapValueTypeLiteral, entry.getValue());
+                }
             } else {
-                notFirst = true;
+                if (notFirst) {
+                    stream.writeMore();
+                } else {
+                    notFirst = true;
+                }
+                unwrapper.method.invoke(obj, stream);
             }
-            unwrapper.invoke(obj, stream);
         }
         stream.writeObjectEnd();
     }

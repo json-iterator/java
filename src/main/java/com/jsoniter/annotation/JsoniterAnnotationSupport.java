@@ -66,7 +66,7 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
             if (method.getAnnotation(JsonUnwrapper.class) == null) {
                 continue;
             }
-            desc.unWrappers.add(method);
+            desc.unwrappers.add(new UnwrapperDescriptor(method));
         }
     }
 
@@ -183,6 +183,12 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
         for (Binding binding : desc.allBindings()) {
             JsonIgnore jsonIgnore = getJsonIgnore(binding.annotations);
             if (jsonIgnore != null && jsonIgnore.value()) {
+                binding.fromNames = new String[0];
+                binding.toNames = new String[0];
+            }
+            // map JsonUnwrapper is not getter
+            JsonUnwrapper jsonUnwrapper = getAnnotation(binding.annotations, JsonUnwrapper.class);
+            if (jsonUnwrapper != null) {
                 binding.fromNames = new String[0];
                 binding.toNames = new String[0];
             }

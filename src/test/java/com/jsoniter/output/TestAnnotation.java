@@ -9,6 +9,8 @@ import junit.framework.TestCase;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class TestAnnotation extends TestCase {
     static {
@@ -108,5 +110,21 @@ public class TestAnnotation extends TestCase {
         stream.writeVal(obj);
         stream.close();
         assertEquals("{\"hello\":0}", baos.toString());
+    }
+
+    public static class TestObject7 {
+        @JsonUnwrapper
+        public Map<Integer, Object> getProperties() {
+            HashMap<Integer, Object> properties = new HashMap<Integer, Object>();
+            properties.put(100, "hello");
+            return properties;
+        }
+    }
+
+    public void test_unwrapper_with_map() throws IOException {
+        TestObject7 obj = new TestObject7();
+        stream.writeVal(obj);
+        stream.close();
+        assertEquals("{\"100\":\"hello\"}", baos.toString());
     }
 }

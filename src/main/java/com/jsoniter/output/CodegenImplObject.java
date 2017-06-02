@@ -1,6 +1,5 @@
 package com.jsoniter.output;
 
-import com.jsoniter.*;
 import com.jsoniter.CodegenAccess;
 import com.jsoniter.spi.*;
 
@@ -34,9 +33,22 @@ class CodegenImplObject {
             for (String toName : toNames) {
                 notFirst = genField(ctx, bindings.get(toName), toName, notFirst);
             }
-            for (Method unwrapper : desc.unWrappers) {
-                notFirst = appendComma(ctx, notFirst);
-                ctx.append(String.format("obj.%s(stream);", unwrapper.getName()));
+            for (UnwrapperDescriptor unwrapper : desc.unwrappers) {
+                if (unwrapper.isMap) {
+                    ctx.append(String.format("java.util.Map map = (java.util.Map)obj.%s();", unwrapper.method.getName()));
+                    ctx.append("java.util.Iterator iter = map.entrySet().iterator();");
+                    ctx.append("while(iter.hasNext()) {");
+                    ctx.append("java.util.Map.Entry entry = (java.util.Map.Entry)iter.next();");
+                    notFirst = appendComma(ctx, notFirst);
+                    ctx.append("stream.writeObjectField(entry.getKey().toString());");
+                    ctx.append("if (entry.getValue() == null) { stream.writeNull(); } else {");
+                    CodegenImplNative.genWriteOp(ctx, "entry.getValue()", unwrapper.mapValueTypeLiteral.getType(), true);
+                    ctx.append("}");
+                    ctx.append("}");
+                } else {
+                    notFirst = appendComma(ctx, notFirst);
+                    ctx.append(String.format("obj.%s(stream);", unwrapper.method.getName()));
+                }
             }
             ctx.buffer('}');
         } else {
@@ -48,7 +60,7 @@ class CodegenImplObject {
 
 
     private static boolean hasFieldOutput(ClassDescriptor desc) {
-        if (!desc.unWrappers.isEmpty()) {
+        if (!desc.unwrappers.isEmpty()) {
             return true;
         }
         for (Binding binding : desc.allEncoderBindings()) {
