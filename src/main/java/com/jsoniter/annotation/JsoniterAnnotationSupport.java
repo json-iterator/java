@@ -63,7 +63,7 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
             if (Modifier.isStatic(method.getModifiers())) {
                 continue;
             }
-            if (method.getAnnotation(JsonUnwrapper.class) == null) {
+            if (getJsonUnwrapper(method.getAnnotations()) == null) {
                 continue;
             }
             desc.unwrappers.add(new UnwrapperDescriptor(method));
@@ -187,7 +187,7 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
                 binding.toNames = new String[0];
             }
             // map JsonUnwrapper is not getter
-            JsonUnwrapper jsonUnwrapper = getAnnotation(binding.annotations, JsonUnwrapper.class);
+            JsonUnwrapper jsonUnwrapper = getJsonUnwrapper(binding.annotations);
             if (jsonUnwrapper != null) {
                 binding.fromNames = new String[0];
                 binding.toNames = new String[0];
@@ -245,6 +245,10 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
             binding.valueType = ParameterizedTypeImpl.useImpl(binding.valueType, jsonProperty.implementation());
             binding.valueTypeLiteral = TypeLiteral.create(binding.valueType);
         }
+    }
+
+    protected JsonUnwrapper getJsonUnwrapper(Annotation[] annotations) {
+        return getAnnotation(annotations, JsonUnwrapper.class);
     }
 
     protected JsonCreator getJsonCreator(Annotation[] annotations) {

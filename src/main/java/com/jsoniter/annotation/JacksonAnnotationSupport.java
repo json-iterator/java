@@ -1,5 +1,6 @@
 package com.jsoniter.annotation;
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.jsoniter.spi.Decoder;
 import com.jsoniter.spi.Encoder;
 import com.jsoniter.spi.JsoniterSpi;
@@ -120,6 +121,24 @@ public class JacksonAnnotationSupport extends JsoniterAnnotationSupport {
             @Override
             public Class<? extends Annotation> annotationType() {
                 return JsonCreator.class;
+            }
+        };
+    }
+
+    @Override
+    protected JsonUnwrapper getJsonUnwrapper(Annotation[] annotations) {
+        JsonUnwrapper jsoniterObj = super.getJsonUnwrapper(annotations);
+        if (jsoniterObj != null) {
+            return jsoniterObj;
+        }
+        JsonAnyGetter jacksonObj = getAnnotation(annotations, JsonAnyGetter.class);
+        if (jacksonObj == null) {
+            return null;
+        }
+        return new JsonUnwrapper(){
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return JsonUnwrapper.class;
             }
         };
     }
