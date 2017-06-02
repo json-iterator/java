@@ -1,5 +1,6 @@
 package com.jsoniter;
 
+import com.jsoniter.spi.Slice;
 import junit.framework.TestCase;
 
 import java.util.HashMap;

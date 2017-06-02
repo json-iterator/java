@@ -141,6 +141,12 @@ public class CodegenAccess {
         return IterImpl.readSlice(iter);
     }
 
+    public static final Object readMapKey(String cacheKey, JsonIterator iter) throws IOException {
+        Slice mapKey = readObjectFieldAsSlice(iter);
+        MapKeyDecoder mapKeyDecoder = JsoniterSpi.getMapKeyDecoder(cacheKey);
+        return mapKeyDecoder.decode(mapKey);
+    }
+
     final static boolean skipWhitespacesWithoutLoadMore(JsonIterator iter) throws IOException {
         for (int i = iter.head; i < iter.tail; i++) {
             byte c = iter.buf[i];

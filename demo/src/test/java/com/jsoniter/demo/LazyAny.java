@@ -2,7 +2,7 @@ package com.jsoniter.demo;
 
 import com.jsoniter.any.Any;
 import com.jsoniter.JsonIterator;
-import com.jsoniter.Slice;
+import com.jsoniter.spi.Slice;
 import com.jsoniter.output.JsonStream;
 import org.junit.Test;
 import org.openjdk.jmh.Main;
@@ -12,8 +12,6 @@ import org.openjdk.jmh.infra.Blackhole;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 

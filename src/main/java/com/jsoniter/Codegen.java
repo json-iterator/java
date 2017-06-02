@@ -160,11 +160,11 @@ class Codegen {
                         "can not bind to generic collection without argument types, " +
                                 "try syntax like TypeLiteral<Map<String, String>>{}");
             }
-            if (keyType != String.class) {
-                throw new IllegalArgumentException("map key must be String");
-            }
             if (clazz == Map.class) {
                 clazz = implClazz == null ? HashMap.class : implClazz;
+            }
+            if (keyType == Object.class) {
+                keyType = String.class;
             }
             return new ParameterizedTypeImpl(new Type[]{keyType, valueType}, null, clazz);
         }

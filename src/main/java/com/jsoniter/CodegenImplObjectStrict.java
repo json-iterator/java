@@ -82,7 +82,7 @@ class CodegenImplObjectStrict {
         if (desc.onExtraProperties != null) {
             append(lines, "java.util.Map extra = null;");
         }
-        append(lines, "com.jsoniter.Slice field = com.jsoniter.CodegenAccess.readObjectFieldAsSlice(iter);");
+        append(lines, "com.jsoniter.spi.Slice field = com.jsoniter.CodegenAccess.readObjectFieldAsSlice(iter);");
         append(lines, "boolean once = true;");
         append(lines, "while (once) {");
         append(lines, "once = false;");

@@ -1,6 +1,7 @@
 package com.jsoniter;
 
 import com.jsoniter.spi.Decoder;
+import com.jsoniter.spi.Slice;
 
 import java.io.IOException;
 import java.util.HashMap;

@@ -1,8 +1,6 @@
 package com.jsoniter;
 
-import com.jsoniter.spi.Decoder;
-import com.jsoniter.spi.JsonException;
-import com.jsoniter.spi.TypeLiteral;
+import com.jsoniter.spi.*;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -13,6 +11,8 @@ class ReflectionMapDecoder implements Decoder {
 
     private final Constructor ctor;
     private final Decoder valueTypeDecoder;
+    private final MapKeyDecoder mapKeyDecoder;
+    private final Type keyType;
 
     public ReflectionMapDecoder(Class clazz, Type[] typeArgs) {
         try {
@@ -20,6 +20,8 @@ class ReflectionMapDecoder implements Decoder {
         } catch (NoSuchMethodException e) {
             throw new JsonException(e);
         }
+        keyType = typeArgs[0];
+        mapKeyDecoder = MapKeyDecoders.register(keyType);
         TypeLiteral valueTypeLiteral = TypeLiteral.create(typeArgs[1]);
         valueTypeDecoder = Codegen.getDecoder(valueTypeLiteral.getDecoderCacheKey(), typeArgs[1]);
     }
@@ -45,9 +47,17 @@ class ReflectionMapDecoder implements Decoder {
             return map;
         }
         do {
-            String field = CodegenAccess.readObjectFieldAsString(iter);
-            map.put(field, valueTypeDecoder.decode(iter));
+            Object decodedMapKey = readMapKey(iter);
+            map.put(decodedMapKey, valueTypeDecoder.decode(iter));
         } while(CodegenAccess.nextToken(iter) == ',');
         return map;
+    }
+
+    private Object readMapKey(JsonIterator iter) throws IOException {
+        if (keyType == String.class) {
+            return CodegenAccess.readObjectFieldAsString(iter);
+        }
+        Slice mapKey = CodegenAccess.readObjectFieldAsSlice(iter);
+        return mapKeyDecoder.decode(mapKey);
     }
 }

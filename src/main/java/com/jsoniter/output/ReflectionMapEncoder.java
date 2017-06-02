@@ -27,16 +27,16 @@ class ReflectionMapEncoder implements Encoder {
             stream.writeNull();
             return;
         }
-        Map<String, Object> map = (Map<String, Object>) obj;
+        Map<Object, Object> map = (Map<Object, Object>) obj;
         stream.writeObjectStart();
         boolean notFirst = false;
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
+        for (Map.Entry<Object, Object> entry : map.entrySet()) {
             if (notFirst) {
                 stream.writeMore();
             } else {
                 notFirst = true;
             }
-            stream.writeObjectField(entry.getKey());
+            stream.writeObjectField(entry.getKey().toString());
             stream.writeVal(valueTypeLiteral, entry.getValue());
         }
         stream.writeObjectEnd();

@@ -50,4 +50,12 @@ public class TestMap extends TestCase {
         stream.close();
         assertEquals("{\"hello\":null}", baos.toString());
     }
+
+    public void test_integer_key() throws IOException {
+        HashMap<Integer, Object> obj = new HashMap<Integer, Object>();
+        obj.put(100, null);
+        stream.writeVal(new TypeLiteral<Map<Integer, Object>>(){}, obj);
+        stream.close();
+        assertEquals("{\"100\":null}", baos.toString());
+    }
 }

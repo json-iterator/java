@@ -7,6 +7,7 @@ public class JsoniterSpi {
 
     static List<Extension> extensions = new ArrayList<Extension>();
     static Map<Class, Class> typeImpls = new HashMap<Class, Class>();
+    static volatile Map<String, MapKeyDecoder> mapKeyDecoders = new HashMap<String, MapKeyDecoder>();
     static volatile Map<String, Encoder> encoders = new HashMap<String, Encoder>();
     static volatile Map<String, Decoder> decoders = new HashMap<String, Decoder>();
     static volatile Map<Class, Extension> objectFactories = new HashMap<Class, Extension>();
@@ -17,6 +18,20 @@ public class JsoniterSpi {
 
     public static List<Extension> getExtensions() {
         return Collections.unmodifiableList(extensions);
+    }
+
+    public static void registerMapKeyDecoder(Type mapKeyType, MapKeyDecoder mapKeyDecoder) {
+        addNewMapDecoder(TypeLiteral.create(mapKeyType).getDecoderCacheKey(), mapKeyDecoder);
+    }
+
+    public synchronized static void addNewMapDecoder(String cacheKey, MapKeyDecoder mapKeyDecoder) {
+        HashMap<String, MapKeyDecoder> newCache = new HashMap<String, MapKeyDecoder>(mapKeyDecoders);
+        newCache.put(cacheKey, mapKeyDecoder);
+        mapKeyDecoders = newCache;
+    }
+
+    public static MapKeyDecoder getMapKeyDecoder(String cacheKey) {
+        return mapKeyDecoders.get(cacheKey);
     }
 
     public static void registerTypeImplementation(Class superClazz, Class implClazz) {

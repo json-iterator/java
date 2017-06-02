@@ -21,9 +21,6 @@ class CodegenImplMap {
                     "can not bind to generic collection without argument types, " +
                             "try syntax like TypeLiteral<Map<String, String>>{}");
         }
-        if (keyType != String.class) {
-            throw new IllegalArgumentException("map key must be String");
-        }
         CodegenResult ctx = new CodegenResult();
         ctx.append("public static void encode_(java.lang.Object obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {");
         ctx.append("if (obj == null) { stream.writeNull(); return; }");
@@ -32,7 +29,7 @@ class CodegenImplMap {
         ctx.append("if(!iter.hasNext()) { return; }");
         ctx.append("java.util.Map.Entry entry = (java.util.Map.Entry)iter.next();");
         ctx.buffer('{');
-        ctx.append("stream.writeVal((String)entry.getKey());");
+        ctx.append("stream.writeVal(entry.getKey().toString());");
         ctx.buffer(':');
         if (isCollectionValueNullable) {
             ctx.append("if (entry.getValue() == null) { stream.writeNull(); } else {");

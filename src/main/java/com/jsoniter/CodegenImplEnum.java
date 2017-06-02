@@ -6,7 +6,7 @@ class CodegenImplEnum {
     public static String genEnum(Class clazz) {
         StringBuilder lines = new StringBuilder();
         append(lines, "if (iter.readNull()) { return null; }");
-        append(lines, "com.jsoniter.Slice field = com.jsoniter.CodegenAccess.readSlice(iter);");
+        append(lines, "com.jsoniter.spi.Slice field = com.jsoniter.CodegenAccess.readSlice(iter);");
         append(lines, "switch (field.len()) {");
         append(lines, renderTriTree(buildTriTree(Arrays.asList(clazz.getEnumConstants()))));
         append(lines, "}"); // end of switch

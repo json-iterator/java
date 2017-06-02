@@ -2,7 +2,7 @@ package com.jsoniter.extra;
 
 import com.jsoniter.CodegenAccess;
 import com.jsoniter.JsonIterator;
-import com.jsoniter.Slice;
+import com.jsoniter.spi.Slice;
 import com.jsoniter.any.Any;
 import com.jsoniter.output.JsonStream;
 import com.jsoniter.spi.Decoder;
