@@ -21,6 +21,14 @@ public class TestObject extends TestCase {
 //        JsonIterator.setMode(DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_STRICTLY);
     }
 
+    public void setUp() {
+        JsoniterAnnotationSupport.enable();
+    }
+
+    public void tearDown() {
+        JsoniterAnnotationSupport.disable();
+    }
+
     public static class EmptyClass {
     }
 
@@ -191,7 +199,6 @@ public class TestObject extends TestCase {
     }
 
     public void test_maybe_empty_array_field() {
-        JsoniterAnnotationSupport.enable();
         TestObject6 obj = JsonIterator.deserialize("{\"field1\":[]}", TestObject6.class);
         assertNull(obj.field1);
     }

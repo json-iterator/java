@@ -13,7 +13,13 @@ public class JsoniterSpi {
     static volatile Map<Class, Extension> objectFactories = new HashMap<Class, Extension>();
 
     public static void registerExtension(Extension extension) {
-        extensions.add(extension);
+        if (!extensions.contains(extension)) {
+            extensions.add(extension);
+        }
+    }
+
+    public static boolean deregisterExtension(Extension extension) {
+        return extensions.remove(extension);
     }
 
     public static List<Extension> getExtensions() {

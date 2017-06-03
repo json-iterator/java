@@ -13,7 +13,6 @@ import java.util.*;
 public class TestObject extends TestCase {
 
     static {
-        JsoniterAnnotationSupport.enable();
 //        JsonStream.setMode(EncodingMode.DYNAMIC_MODE);
     }
 
@@ -21,8 +20,13 @@ public class TestObject extends TestCase {
     private JsonStream stream;
 
     public void setUp() {
+        JsoniterAnnotationSupport.enable();
         baos = new ByteArrayOutputStream();
         stream = new JsonStream(baos, 4096);
+    }
+
+    public void tearDown() {
+        JsoniterAnnotationSupport.disable();
     }
 
     public static class TestObject1 {
@@ -126,7 +130,6 @@ public class TestObject extends TestCase {
     }
 
     public void test_array_field_is_null_via_getter() throws IOException {
-        JsoniterAnnotationSupport.enable();
         TestObject7 obj = new TestObject7();
         stream.writeVal(obj);
         stream.close();
@@ -139,7 +142,6 @@ public class TestObject extends TestCase {
     }
 
     public void test_not_nullable() {
-        JsoniterAnnotationSupport.enable();
         TestObject8 obj = new TestObject8();
         obj.field1 = new String[]{"hello"};
         assertEquals("{\"field1\":[\"hello\"]}", JsonStream.serialize(obj));

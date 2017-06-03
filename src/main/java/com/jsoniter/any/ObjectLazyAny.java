@@ -119,7 +119,7 @@ class ObjectLazyAny extends LazyAny {
             return value;
         }
         try {
-            JsonIterator iter = JsonIterator.tlsIter.get();
+            JsonIterator iter = tlsIter.get();
             iter.reset(data, lastParsedPos, tail);
             if (lastParsedPos == head) {
                 if (!CodegenAccess.readObjectStart(iter)) {
@@ -158,7 +158,7 @@ class ObjectLazyAny extends LazyAny {
             cache = new HashMap<String, Any>(4);
         }
         try {
-            JsonIterator iter = JsonIterator.tlsIter.get();
+            JsonIterator iter = tlsIter.get();
             iter.reset(data, lastParsedPos, tail);
             if (lastParsedPos == head) {
                 if (!CodegenAccess.readObjectStart(iter)) {
@@ -197,7 +197,7 @@ class ObjectLazyAny extends LazyAny {
             mapIter = new HashMap<String, Any>(cache).entrySet().iterator();
             try {
                 if (lastParsedPos == head) {
-                    JsonIterator iter = JsonIterator.tlsIter.get();
+                    JsonIterator iter = tlsIter.get();
                     iter.reset(data, lastParsedPos, tail);
                     if (!CodegenAccess.readObjectStart(iter)) {
                         lastParsedPos = tail;
@@ -226,7 +226,7 @@ class ObjectLazyAny extends LazyAny {
                 }
             }
             try {
-                JsonIterator iter = JsonIterator.tlsIter.get();
+                JsonIterator iter = tlsIter.get();
                 iter.reset(data, lastParsedPos, tail);
                 key = CodegenAccess.readObjectFieldAsString(iter);
                 value = iter.readAny();

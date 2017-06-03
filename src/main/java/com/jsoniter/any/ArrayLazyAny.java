@@ -120,7 +120,7 @@ class ArrayLazyAny extends LazyAny {
             cache = new ArrayList<Any>(4);
         }
         try {
-            JsonIterator iter = JsonIterator.tlsIter.get();
+            JsonIterator iter = tlsIter.get();
             iter.reset(data, lastParsedPos, tail);
             if (lastParsedPos == head) {
                 if (!CodegenAccess.readArrayStart(iter)) {
@@ -150,7 +150,7 @@ class ArrayLazyAny extends LazyAny {
             return cache.get(target);
         }
         try {
-            JsonIterator iter = JsonIterator.tlsIter.get();
+            JsonIterator iter = tlsIter.get();
             iter.reset(data, lastParsedPos, tail);
             if (lastParsedPos == head) {
                 if (!CodegenAccess.readArrayStart(iter)) {

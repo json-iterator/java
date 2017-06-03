@@ -14,7 +14,6 @@ import java.util.Map;
 
 public class TestAnnotation extends TestCase {
     static {
-        JsoniterAnnotationSupport.enable();
 //        JsonStream.setMode(EncodingMode.DYNAMIC_MODE);
     }
 
@@ -22,8 +21,13 @@ public class TestAnnotation extends TestCase {
     private JsonStream stream;
 
     public void setUp() {
+        JsoniterAnnotationSupport.enable();
         baos = new ByteArrayOutputStream();
         stream = new JsonStream(baos, 4096);
+    }
+
+    public void tearDown() {
+        JsoniterAnnotationSupport.disable();
     }
 
     public static class TestObject1 {

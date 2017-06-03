@@ -18,8 +18,13 @@ public class TestNested extends TestCase {
     private JsonStream stream;
 
     public void setUp() {
+        JsoniterAnnotationSupport.enable();
         baos = new ByteArrayOutputStream();
         stream = new JsonStream(baos, 4096);
+    }
+
+    public void tearDown() {
+        JsoniterAnnotationSupport.disable();
     }
 
     public static class TestObject1 {
@@ -97,7 +102,6 @@ public class TestNested extends TestCase {
     public void test_recursive_class() {
         // recursive reference will not be supported
         // however recursive structure is supported
-        JsoniterAnnotationSupport.enable();
         TestObject3 obj = new TestObject3();
         assertEquals("{\"reference\":null}", JsonStream.serialize(obj));
     }

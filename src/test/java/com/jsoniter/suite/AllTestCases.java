@@ -4,7 +4,6 @@ import com.jsoniter.*;
 import com.jsoniter.any.TestList;
 import com.jsoniter.output.TestAny;
 import com.jsoniter.output.TestCustomizeField;
-import com.jsoniter.output.TestJackson;
 import com.jsoniter.output.TestNative;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -26,6 +25,8 @@ import org.junit.runners.Suite;
         com.jsoniter.TestMap.class,
         com.jsoniter.output.TestMap.class,
         TestNative.class, TestNested.class, TestObject.class, TestBoolean.class, TestFloat.class,
-        TestList.class, TestJackson.class})
+        TestList.class,
+        com.jsoniter.output.TestJackson.class,
+        com.jsoniter.TestJackson.class})
 public abstract class AllTestCases {
 }

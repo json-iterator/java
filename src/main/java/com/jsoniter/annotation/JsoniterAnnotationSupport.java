@@ -11,14 +11,14 @@ import java.util.List;
 
 public class JsoniterAnnotationSupport extends EmptyExtension {
 
-    private static boolean enabled = false;
+    private static final JsoniterAnnotationSupport INSTANCE = new JsoniterAnnotationSupport();
 
     public static void enable() {
-        if (enabled) {
-            return;
-        }
-        enabled = true;
-        JsoniterSpi.registerExtension(new JsoniterAnnotationSupport());
+        JsoniterSpi.registerExtension(INSTANCE);
+    }
+
+    public static void disable() {
+        JsoniterSpi.deregisterExtension(INSTANCE);
     }
 
     @Override
@@ -75,7 +75,7 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
             if (Modifier.isStatic(method.getModifiers())) {
                 continue;
             }
-            JsonWrapper jsonWrapper = method.getAnnotation(JsonWrapper.class);
+            JsonWrapper jsonWrapper = getJsonWrapper(method.getAnnotations());
             if (jsonWrapper == null) {
                 continue;
             }
@@ -252,6 +252,10 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
             binding.valueType = ParameterizedTypeImpl.useImpl(binding.valueType, jsonProperty.implementation());
             binding.valueTypeLiteral = TypeLiteral.create(binding.valueType);
         }
+    }
+
+    protected JsonWrapper getJsonWrapper(Annotation[] annotations) {
+        return getAnnotation(annotations, JsonWrapper.class);
     }
 
     protected JsonUnwrapper getJsonUnwrapper(Annotation[] annotations) {

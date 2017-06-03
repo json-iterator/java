@@ -1,6 +1,7 @@
 package com.jsoniter.annotation;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.jsoniter.spi.Decoder;
 import com.jsoniter.spi.Encoder;
 import com.jsoniter.spi.JsoniterSpi;
@@ -9,8 +10,14 @@ import java.lang.annotation.Annotation;
 
 public class JacksonAnnotationSupport extends JsoniterAnnotationSupport {
 
+    private final static JacksonAnnotationSupport INSTANCE = new JacksonAnnotationSupport();
+
     public static void enable() {
-        JsoniterSpi.registerExtension(new JacksonAnnotationSupport());
+        JsoniterSpi.registerExtension(INSTANCE);
+    }
+
+    public static void disable() {
+        JsoniterSpi.deregisterExtension(INSTANCE);
     }
 
     @Override
@@ -139,6 +146,29 @@ public class JacksonAnnotationSupport extends JsoniterAnnotationSupport {
             @Override
             public Class<? extends Annotation> annotationType() {
                 return JsonUnwrapper.class;
+            }
+        };
+    }
+
+    @Override
+    protected JsonWrapper getJsonWrapper(Annotation[] annotations) {
+        JsonWrapper jsoniterObj = super.getJsonWrapper(annotations);
+        if (jsoniterObj != null) {
+            return jsoniterObj;
+        }
+        JsonAnySetter jacksonObj = getAnnotation(annotations, JsonAnySetter.class);
+        if (jacksonObj == null) {
+            return null;
+        }
+        return new JsonWrapper(){
+            @Override
+            public JsonWrapperType value() {
+                return JsonWrapperType.KEY_VALUE;
+            }
+
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return JsonWrapper.class;
             }
         };
     }

@@ -11,9 +11,16 @@ import java.io.IOException;
 public class TestAnnotationJsonWrapper extends TestCase {
 
     static {
-        JsoniterAnnotationSupport.enable();
 //        JsonIterator.setMode(DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_WITH_HASH);
 //        JsonIterator.setMode(DecodingMode.REFLECTION_MODE);
+    }
+
+    public void setUp() {
+        JsoniterAnnotationSupport.enable();
+    }
+
+    public void tearDown() {
+        JsoniterAnnotationSupport.disable();
     }
 
     public static class TestObject1 {
