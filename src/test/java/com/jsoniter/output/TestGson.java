@@ -47,6 +47,11 @@ public class TestGson extends TestCase {
         obj.field1 = "hello";
         String output = gson.toJson(obj);
         assertEquals("{}", output);
+
+        JsoniterSpi.deregisterExtension(gsonCompatibilityMode);
+        gsonCompatibilityMode = new GsonCompatibilityMode.Builder()
+                .excludeFieldsWithoutExposeAnnotation().build();
+        JsoniterSpi.registerExtension(gsonCompatibilityMode);
         output = JsonStream.serialize(obj);
         assertEquals("{}", output);
     }

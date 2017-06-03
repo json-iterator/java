@@ -133,27 +133,27 @@ public class GsonCompatibilityMode extends JsoniterAnnotationSupport {
         if (jsoniterObj != null) {
             return jsoniterObj;
         }
-        final Expose gsonObj = getAnnotation(
-                annotations, Expose.class);
-        if (gsonObj != null) {
-            return new JsonIgnore() {
-                @Override
-                public boolean ignoreDecoding() {
-                    return !gsonObj.deserialize();
-                }
-
-                @Override
-                public boolean ignoreEncoding() {
-                    return !gsonObj.serialize();
-                }
-
-                @Override
-                public Class<? extends Annotation> annotationType() {
-                    return JsonIgnore.class;
-                }
-            };
-        }
         if (builder.excludeFieldsWithoutExposeAnnotation) {
+            final Expose gsonObj = getAnnotation(
+                    annotations, Expose.class);
+            if (gsonObj != null) {
+                return new JsonIgnore() {
+                    @Override
+                    public boolean ignoreDecoding() {
+                        return !gsonObj.deserialize();
+                    }
+
+                    @Override
+                    public boolean ignoreEncoding() {
+                        return !gsonObj.serialize();
+                    }
+
+                    @Override
+                    public Class<? extends Annotation> annotationType() {
+                        return JsonIgnore.class;
+                    }
+                };
+            }
             return new JsonIgnore() {
                 @Override
                 public boolean ignoreDecoding() {
