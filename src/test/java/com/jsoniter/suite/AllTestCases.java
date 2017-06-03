@@ -2,6 +2,7 @@ package com.jsoniter.suite;
 
 import com.jsoniter.*;
 import com.jsoniter.any.TestList;
+import com.jsoniter.output.TestAnnotationJsonUnwrapper;
 import com.jsoniter.output.TestAny;
 import com.jsoniter.output.TestCustomizeField;
 import com.jsoniter.output.TestNative;
@@ -10,7 +11,10 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
+        com.jsoniter.TestAnnotationJsonProperty.class,
+        com.jsoniter.output.TestAnnotationJsonProperty.class,
         TestAnnotationJsonWrapper.class,
+        TestAnnotationJsonUnwrapper.class,
         TestAnnotation.class,
         com.jsoniter.output.TestAnnotation.class,
         TestCustomizeType.class, TestDemo.class,

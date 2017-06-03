@@ -1,9 +1,9 @@
 package com.jsoniter.output;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jsoniter.JsonIterator;
 import com.jsoniter.annotation.JacksonAnnotationSupport;
 import junit.framework.TestCase;
 
@@ -12,8 +12,11 @@ import java.util.Map;
 
 public class TestJackson extends TestCase {
 
+    private ObjectMapper objectMapper;
+
     public void setUp() {
         JacksonAnnotationSupport.enable();
+        objectMapper = new ObjectMapper();
     }
 
     public void tearDown() {
@@ -30,10 +33,23 @@ public class TestJackson extends TestCase {
     }
 
     public void test_JsonAnyGetter() throws JsonProcessingException {
-        ObjectMapper objectMapper = new ObjectMapper();
         String output = objectMapper.writeValueAsString(new TestObject1());
         assertEquals("{\"100\":\"hello\"}", output);
         output = JsonStream.serialize(new TestObject1());
         assertEquals("{\"100\":\"hello\"}", output);
+    }
+
+    public static class TestObject2 {
+        @JsonProperty("field-1")
+        public String field1;
+    }
+
+    public void test_JsonProperty() throws JsonProcessingException {
+        TestObject2 obj = new TestObject2();
+        obj.field1 = "hello";
+        String output = objectMapper.writeValueAsString(obj);
+        assertEquals("{\"field-1\":\"hello\"}", output);
+        output = JsonStream.serialize(obj);
+        assertEquals("{\"field-1\":\"hello\"}", output);
     }
 }

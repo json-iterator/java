@@ -257,7 +257,14 @@ class Codegen {
         if (!desc.keyValueTypeWrappers.isEmpty()) {
             return true;
         }
-        if (allBindings.isEmpty()) {
+        boolean hasBinding = false;
+        for (Binding allBinding : allBindings) {
+            if (allBinding.fromNames.length > 0) {
+                hasBinding = true;
+            }
+        }
+        if (!hasBinding) {
+            // empty object can only be handled by strict mode
             return true;
         }
         return false;

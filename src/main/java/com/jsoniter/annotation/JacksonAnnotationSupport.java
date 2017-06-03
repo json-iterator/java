@@ -63,12 +63,12 @@ public class JacksonAnnotationSupport extends JsoniterAnnotationSupport {
 
             @Override
             public String[] from() {
-                return new String[0];
+                return new String[]{jacksonObj.value()};
             }
 
             @Override
             public String[] to() {
-                return new String[0];
+                return new String[]{jacksonObj.value()};
             }
 
             @Override
