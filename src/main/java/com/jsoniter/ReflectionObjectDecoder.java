@@ -1,8 +1,11 @@
 package com.jsoniter;
 
+import com.jsoniter.annotation.JsonWrapperType;
+import com.jsoniter.any.Any;
 import com.jsoniter.spi.*;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.*;
 
 class ReflectionObjectDecoder {
@@ -45,7 +48,7 @@ class ReflectionObjectDecoder {
         for (Binding setter : desc.setters) {
             addBinding(clazz, setter);
         }
-        for (WrapperDescriptor setter : desc.wrappers) {
+        for (WrapperDescriptor setter : desc.bindingTypeWrappers) {
             for (Binding param : setter.parameters) {
                 addBinding(clazz, param);
             }
@@ -54,7 +57,7 @@ class ReflectionObjectDecoder {
             throw new JsonException("too many required properties to track");
         }
         expectedTracker = Long.MAX_VALUE >> (63 - requiredIdx);
-        if (!desc.ctor.parameters.isEmpty() || !desc.wrappers.isEmpty()) {
+        if (!desc.ctor.parameters.isEmpty() || !desc.bindingTypeWrappers.isEmpty()) {
             tempCount = tempIdx;
             tempCacheKey = "temp@" + clazz.getCanonicalName();
             ctorArgsCacheKey = "ctor@" + clazz.getCanonicalName();
@@ -94,7 +97,7 @@ class ReflectionObjectDecoder {
 
     public Decoder create() {
         if (desc.ctor.parameters.isEmpty()) {
-            if (desc.wrappers.isEmpty()) {
+            if (desc.bindingTypeWrappers.isEmpty()) {
                 return new OnlyField();
             } else {
                 return new WithSetter();
@@ -333,8 +336,20 @@ class ReflectionObjectDecoder {
     }
 
     private void setExtra(Object obj, Map<String, Object> extra) throws Exception {
-        if (desc.onExtraProperties != null) {
-            setToBinding(obj, desc.onExtraProperties, extra);
+        if (desc.asExtraForUnknownProperties) {
+            if (desc.onExtraProperties == null) {
+                for (String fieldName : extra.keySet()) {
+                    throw new JsonException("unknown property: " + fieldName);
+                }
+            } else {
+                setToBinding(obj, desc.onExtraProperties, extra);
+            }
+        }
+        for (Method wrapper : desc.keyValueTypeWrappers) {
+            for (Map.Entry<String, Object> entry : extra.entrySet()) {
+                Any value = (Any) entry.getValue();
+                wrapper.invoke(obj, entry.getKey(), value.object());
+            }
         }
     }
 
@@ -356,15 +371,13 @@ class ReflectionObjectDecoder {
     }
 
     private Map<String, Object> onUnknownProperty(JsonIterator iter, Slice fieldName, Map<String, Object> extra) throws IOException {
-        if (desc.asExtraForUnknownProperties) {
-            if (desc.onExtraProperties == null) {
-                throw new JsonException("unknown property: " + fieldName.toString());
-            } else {
-                if (extra == null) {
-                    extra = new HashMap<String, Object>();
-                }
-                extra.put(fieldName.toString(), iter.readAny());
+        boolean shouldReadValue = desc.asExtraForUnknownProperties || !desc.keyValueTypeWrappers.isEmpty();
+        if (shouldReadValue) {
+            Any value = iter.readAny();
+            if (extra == null) {
+                extra = new HashMap<String, Object>();
             }
+            extra.put(fieldName.toString(), value);
         } else {
             iter.skip();
         }
@@ -383,7 +396,7 @@ class ReflectionObjectDecoder {
     }
 
     private void applyWrappers(Object[] temp, Object obj) throws Exception {
-        for (WrapperDescriptor wrapper : desc.wrappers) {
+        for (WrapperDescriptor wrapper : desc.bindingTypeWrappers) {
             Object[] args = new Object[wrapper.parameters.size()];
             for (int i = 0; i < wrapper.parameters.size(); i++) {
                 args[i] = temp[wrapper.parameters.get(i).idx];

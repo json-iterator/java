@@ -41,7 +41,7 @@ class CodegenImplMap {
         ctx.append("while(iter.hasNext()) {");
         ctx.append("entry = (java.util.Map.Entry)iter.next();");
         ctx.buffer(',');
-        ctx.append("stream.writeObjectField((String)entry.getKey());");
+        ctx.append("stream.writeObjectField(entry.getKey().toString());");
         if (isCollectionValueNullable) {
             ctx.append("if (entry.getValue() == null) { stream.writeNull(); } else {");
             CodegenImplNative.genWriteOp(ctx, "entry.getValue()", valueType, true);

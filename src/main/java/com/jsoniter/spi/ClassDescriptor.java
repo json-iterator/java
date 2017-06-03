@@ -1,5 +1,6 @@
 package com.jsoniter.spi;
 
+import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -14,7 +15,8 @@ public class ClassDescriptor {
     public List<Binding> fields;
     public List<Binding> setters;
     public List<Binding> getters;
-    public List<WrapperDescriptor> wrappers;
+    public List<WrapperDescriptor> bindingTypeWrappers;
+    public List<Method> keyValueTypeWrappers;
     public List<UnwrapperDescriptor> unwrappers;
     public boolean asExtraForUnknownProperties;
     public Binding onMissingProperties;
@@ -32,8 +34,8 @@ public class ClassDescriptor {
         if (ctor != null) {
             bindings.addAll(ctor.parameters);
         }
-        if (wrappers != null) {
-            for (WrapperDescriptor setter : wrappers) {
+        if (bindingTypeWrappers != null) {
+            for (WrapperDescriptor setter : bindingTypeWrappers) {
                 bindings.addAll(setter.parameters);
             }
         }
@@ -47,7 +49,7 @@ public class ClassDescriptor {
         if (ctor != null) {
             bindings.addAll(ctor.parameters);
         }
-        for (WrapperDescriptor setter : wrappers) {
+        for (WrapperDescriptor setter : bindingTypeWrappers) {
             bindings.addAll(setter.parameters);
         }
         return bindings;

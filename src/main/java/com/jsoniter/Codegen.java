@@ -254,6 +254,9 @@ class Codegen {
             // only slice support unknown field tracking
             return true;
         }
+        if (!desc.keyValueTypeWrappers.isEmpty()) {
+            return true;
+        }
         if (allBindings.isEmpty()) {
             return true;
         }

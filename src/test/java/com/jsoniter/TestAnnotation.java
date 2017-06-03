@@ -106,22 +106,6 @@ public class TestAnnotation extends TestCase {
         assertEquals(100, obj.field1);
     }
 
-    public static class TestObject6 {
-
-        private int field1;
-
-        @JsonWrapper
-        public void initialize(@JsonProperty("field1") int field1) {
-            this.field1 = field1;
-        }
-    }
-
-    public void test_multi_param_setter() throws IOException {
-        JsonIterator iter = JsonIterator.parse("{'field1': 100}".replace('\'', '"'));
-        TestObject6 obj = iter.read(TestObject6.class);
-        assertEquals(100, obj.field1);
-    }
-
     public static class TestObject7 {
         @JsonProperty(required = true)
         public int field1;

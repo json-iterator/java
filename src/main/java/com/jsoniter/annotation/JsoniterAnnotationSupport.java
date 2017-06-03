@@ -75,29 +75,36 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
             if (Modifier.isStatic(method.getModifiers())) {
                 continue;
             }
-            if (method.getAnnotation(JsonWrapper.class) == null) {
+            JsonWrapper jsonWrapper = method.getAnnotation(JsonWrapper.class);
+            if (jsonWrapper == null) {
                 continue;
             }
             Annotation[][] annotations = method.getParameterAnnotations();
             String[] paramNames = getParamNames(method, annotations.length);
-            WrapperDescriptor setter = new WrapperDescriptor();
-            setter.method = method;
-            for (int i = 0; i < annotations.length; i++) {
-                Annotation[] paramAnnotations = annotations[i];
-                Binding binding = new Binding(desc.clazz, desc.lookup, method.getGenericParameterTypes()[i]);
-                JsonProperty jsonProperty = getJsonProperty(paramAnnotations);
-                if (jsonProperty != null) {
-                    updateBindingWithJsonProperty(binding, jsonProperty);
+            if (JsonWrapperType.BINDING.equals(jsonWrapper.value())) {
+                WrapperDescriptor wrapper = new WrapperDescriptor();
+                wrapper.method = method;
+                for (int i = 0; i < annotations.length; i++) {
+                    Annotation[] paramAnnotations = annotations[i];
+                    Binding binding = new Binding(desc.clazz, desc.lookup, method.getGenericParameterTypes()[i]);
+                    JsonProperty jsonProperty = getJsonProperty(paramAnnotations);
+                    if (jsonProperty != null) {
+                        updateBindingWithJsonProperty(binding, jsonProperty);
+                    }
+                    if (binding.name == null || binding.name.length() == 0) {
+                        binding.name = paramNames[i];
+                    }
+                    binding.fromNames = new String[]{binding.name};
+                    binding.toNames = new String[]{binding.name};
+                    binding.annotations = paramAnnotations;
+                    wrapper.parameters.add(binding);
                 }
-                if (binding.name == null || binding.name.length() == 0) {
-                    binding.name = paramNames[i];
-                }
-                binding.fromNames = new String[]{binding.name};
-                binding.toNames = new String[]{binding.name};
-                binding.annotations = paramAnnotations;
-                setter.parameters.add(binding);
+                desc.bindingTypeWrappers.add(wrapper);
+            } else if (JsonWrapperType.KEY_VALUE.equals(jsonWrapper.value())) {
+                desc.keyValueTypeWrappers.add(method);
+            } else {
+                throw new JsonException("unknown json wrapper type: " + jsonWrapper.value());
             }
-            desc.wrappers.add(setter);
         }
     }
 

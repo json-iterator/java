@@ -48,7 +48,7 @@ public class CodegenImplObjectHash {
         for (Binding setter : desc.setters) {
             appendVarDef(lines, setter);
         }
-        for (WrapperDescriptor setter : desc.wrappers) {
+        for (WrapperDescriptor setter : desc.bindingTypeWrappers) {
             for (Binding param : setter.parameters) {
                 appendVarDef(lines, param);
             }
@@ -98,7 +98,7 @@ public class CodegenImplObjectHash {
         for (Binding setter : desc.setters) {
             append(lines, String.format("obj.%s(_%s_);", setter.method.getName(), setter.name));
         }
-        appendWrappers(desc.wrappers, lines);
+        appendWrappers(desc.bindingTypeWrappers, lines);
         append(lines, "return obj;");
         return lines.toString()
                 .replace("{{clazz}}", clazz.getCanonicalName())

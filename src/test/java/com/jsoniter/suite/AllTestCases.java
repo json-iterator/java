@@ -11,6 +11,7 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
+        TestAnnotationJsonWrapper.class,
         TestAnnotation.class,
         com.jsoniter.output.TestAnnotation.class,
         TestCustomizeType.class, TestDemo.class,

@@ -125,7 +125,8 @@ public class JsoniterSpi {
         desc.ctor = getCtor(clazz);
         desc.fields = getFields(lookup, clazz, includingPrivate);
         desc.setters = getSetters(lookup, clazz, includingPrivate);
-        desc.wrappers = new ArrayList<WrapperDescriptor>();
+        desc.bindingTypeWrappers = new ArrayList<WrapperDescriptor>();
+        desc.keyValueTypeWrappers = new ArrayList<Method>();
         desc.unwrappers = new ArrayList<UnwrapperDescriptor>();
         for (Extension extension : extensions) {
             extension.updateClassDescriptor(desc);
@@ -148,7 +149,7 @@ public class JsoniterSpi {
             if (desc.ctor.staticFactory != null) {
                 desc.ctor.staticFactory.setAccessible(true);
             }
-            for (WrapperDescriptor setter : desc.wrappers) {
+            for (WrapperDescriptor setter : desc.bindingTypeWrappers) {
                 setter.method.setAccessible(true);
             }
         }
@@ -176,7 +177,8 @@ public class JsoniterSpi {
         desc.lookup = lookup;
         desc.fields = getFields(lookup, clazz, includingPrivate);
         desc.getters = getGetters(lookup, clazz, includingPrivate);
-        desc.wrappers = new ArrayList<WrapperDescriptor>();
+        desc.bindingTypeWrappers = new ArrayList<WrapperDescriptor>();
+        desc.keyValueTypeWrappers = new ArrayList<Method>();
         desc.unwrappers = new ArrayList<UnwrapperDescriptor>();
         for (Extension extension : extensions) {
             extension.updateClassDescriptor(desc);
@@ -230,7 +232,7 @@ public class JsoniterSpi {
                 throw new JsonException("setter decode from same name: " + fromName);
             }
         }
-        for (WrapperDescriptor wrapper : desc.wrappers) {
+        for (WrapperDescriptor wrapper : desc.bindingTypeWrappers) {
             for (Binding param : wrapper.parameters) {
                 for (String fromName : param.fromNames) {
                     Binding existing = byName.get(fromName);
