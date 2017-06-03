@@ -9,9 +9,9 @@ import com.jsoniter.spi.JsoniterSpi;
 
 import java.lang.annotation.Annotation;
 
-public class JacksonAnnotationSupport extends JsoniterAnnotationSupport {
+public class JacksonCompatibilityMode extends JsoniterAnnotationSupport {
 
-    private final static JacksonAnnotationSupport INSTANCE = new JacksonAnnotationSupport();
+    private final static JacksonCompatibilityMode INSTANCE = new JacksonCompatibilityMode();
 
     public static void enable() {
         JsoniterSpi.registerExtension(INSTANCE);

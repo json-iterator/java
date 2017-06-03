@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.jsoniter.extra.JacksonAnnotationSupport;
+import com.jsoniter.extra.JacksonCompatibilityMode;
 import junit.framework.TestCase;
 
 import java.util.HashMap;
@@ -17,12 +17,12 @@ public class TestJackson extends TestCase {
     private ObjectMapper objectMapper;
 
     public void setUp() {
-        JacksonAnnotationSupport.enable();
+        JacksonCompatibilityMode.enable();
         objectMapper = new ObjectMapper();
     }
 
     public void tearDown() {
-        JacksonAnnotationSupport.disable();
+        JacksonCompatibilityMode.disable();
     }
 
     public static class TestObject1 {

@@ -11,9 +11,9 @@ import com.jsoniter.spi.JsoniterSpi;
 
 import java.lang.annotation.Annotation;
 
-public class GsonAnnotationSupport extends JsoniterAnnotationSupport {
+public class GsonCompatibilityMode extends JsoniterAnnotationSupport {
 
-    private final static GsonAnnotationSupport INSTANCE = new GsonAnnotationSupport();
+    private final static GsonCompatibilityMode INSTANCE = new GsonCompatibilityMode();
 
     public static void enable() {
         JsoniterSpi.registerExtension(INSTANCE);

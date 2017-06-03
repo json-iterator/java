@@ -4,17 +4,17 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-import com.jsoniter.extra.GsonAnnotationSupport;
+import com.jsoniter.extra.GsonCompatibilityMode;
 import junit.framework.TestCase;
 
 public class TestGson extends TestCase {
 
     public void setUp() {
-        GsonAnnotationSupport.enable();
+        GsonCompatibilityMode.enable();
     }
 
     public void tearDown() {
-        GsonAnnotationSupport.disable();
+        GsonCompatibilityMode.disable();
     }
 
     public static class TestObject1 {

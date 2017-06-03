@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jsoniter.extra.JacksonAnnotationSupport;
+import com.jsoniter.extra.JacksonCompatibilityMode;
 import junit.framework.TestCase;
 
 import java.io.IOException;
@@ -18,12 +18,12 @@ public class TestJackson extends TestCase {
     private ObjectMapper objectMapper;
 
     public void setUp() {
-        JacksonAnnotationSupport.enable();
+        JacksonCompatibilityMode.enable();
         objectMapper = new ObjectMapper();
     }
 
     public void tearDown() {
-        JacksonAnnotationSupport.disable();
+        JacksonCompatibilityMode.disable();
     }
 
     public static class TestObject1 {
