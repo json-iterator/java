@@ -5,16 +5,20 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.jsoniter.extra.GsonCompatibilityMode;
+import com.jsoniter.spi.JsoniterSpi;
 import junit.framework.TestCase;
 
 public class TestGson extends TestCase {
 
+    private GsonCompatibilityMode gsonCompatibilityMode;
+
     public void setUp() {
-        GsonCompatibilityMode.enable();
+        gsonCompatibilityMode = new GsonCompatibilityMode.Builder().build();
+        JsoniterSpi.registerExtension(gsonCompatibilityMode);
     }
 
     public void tearDown() {
-        GsonCompatibilityMode.disable();
+        JsoniterSpi.deregisterExtension(gsonCompatibilityMode);
     }
 
     public static class TestObject1 {
@@ -58,6 +62,25 @@ public class TestGson extends TestCase {
         TestObject3 obj = new TestObject3();
         String output = gson.toJson(obj);
         assertEquals("{}", output);
+        output = JsonStream.serialize(obj);
+        assertEquals("{}", output);
+    }
+
+    public static class TestObject4 {
+        public String field1;
+    }
+
+    public void test_excludeFieldsWithoutExposeAnnotation() {
+        Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+        TestObject4 obj = new TestObject4();
+        obj.field1 = "hello";
+        String output = gson.toJson(obj);
+        assertEquals("{}", output);
+
+        JsoniterSpi.deregisterExtension(gsonCompatibilityMode);
+        gsonCompatibilityMode = new GsonCompatibilityMode.Builder()
+                .excludeFieldsWithoutExposeAnnotation().build();
+        JsoniterSpi.registerExtension(gsonCompatibilityMode);
         output = JsonStream.serialize(obj);
         assertEquals("{}", output);
     }

@@ -11,7 +11,26 @@ import java.lang.annotation.Annotation;
 
 public class GsonCompatibilityMode extends JsoniterAnnotationSupport {
 
-    private final static GsonCompatibilityMode INSTANCE = new GsonCompatibilityMode();
+    private Builder builder;
+
+    private GsonCompatibilityMode(Builder builder) {
+        this.builder = builder;
+    }
+
+    public static class Builder {
+        private boolean excludeFieldsWithoutExposeAnnotation = false;
+
+        public Builder excludeFieldsWithoutExposeAnnotation() {
+            excludeFieldsWithoutExposeAnnotation = true;
+            return this;
+        }
+
+        public GsonCompatibilityMode build() {
+            return new GsonCompatibilityMode(this);
+        }
+    }
+
+    private final static GsonCompatibilityMode INSTANCE = new GsonCompatibilityMode(new Builder());
 
     public static void enable() {
         JsoniterSpi.registerExtension(INSTANCE);
@@ -116,24 +135,42 @@ public class GsonCompatibilityMode extends JsoniterAnnotationSupport {
         }
         final Expose gsonObj = getAnnotation(
                 annotations, Expose.class);
-        if (gsonObj == null) {
-            return null;
+        if (gsonObj != null) {
+            return new JsonIgnore() {
+                @Override
+                public boolean ignoreDecoding() {
+                    return !gsonObj.deserialize();
+                }
+
+                @Override
+                public boolean ignoreEncoding() {
+                    return !gsonObj.serialize();
+                }
+
+                @Override
+                public Class<? extends Annotation> annotationType() {
+                    return JsonIgnore.class;
+                }
+            };
         }
-        return new JsonIgnore() {
-            @Override
-            public boolean ignoreDecoding() {
-                return !gsonObj.deserialize();
-            }
+        if (builder.excludeFieldsWithoutExposeAnnotation) {
+            return new JsonIgnore() {
+                @Override
+                public boolean ignoreDecoding() {
+                    return true;
+                }
 
-            @Override
-            public boolean ignoreEncoding() {
-                return !gsonObj.serialize();
-            }
+                @Override
+                public boolean ignoreEncoding() {
+                    return true;
+                }
 
-            @Override
-            public Class<? extends Annotation> annotationType() {
-                return JsonIgnore.class;
-            }
-        };
+                @Override
+                public Class<? extends Annotation> annotationType() {
+                    return JsonIgnore.class;
+                }
+            };
+        }
+        return null;
     }
 }
