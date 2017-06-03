@@ -237,4 +237,20 @@ public class TestObject extends TestCase {
         obj.field3 = "hello";
         assertEquals("{\"field3\":\"hello\"}", JsonStream.serialize(obj));
     }
+
+
+    public static class TestObject12 {
+        public int field1;
+
+        public int getField1() {
+            return field1;
+        }
+    }
+
+    public void test_name_conflict() throws IOException {
+        TestObject12 obj = new TestObject12();
+        stream.writeVal(obj);
+        stream.close();
+        assertEquals("{\"field1\":0}", baos.toString());
+    }
 }

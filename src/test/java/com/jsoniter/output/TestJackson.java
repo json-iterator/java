@@ -1,9 +1,11 @@
 package com.jsoniter.output;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.jsoniter.annotation.JacksonAnnotationSupport;
 import junit.framework.TestCase;
 
@@ -51,5 +53,20 @@ public class TestJackson extends TestCase {
         assertEquals("{\"field-1\":\"hello\"}", output);
         output = JsonStream.serialize(obj);
         assertEquals("{\"field-1\":\"hello\"}", output);
+    }
+
+    public static class TestObject3 {
+        @JsonIgnore
+        public String field1;
+    }
+
+    public void test_JsonIgnore() throws JsonProcessingException {
+        objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+        TestObject3 obj = new TestObject3();
+        obj.field1 = "hello";
+        String output = objectMapper.writeValueAsString(obj);
+        assertEquals("{}", output);
+        output = JsonStream.serialize(obj);
+        assertEquals("{}", output);
     }
 }

@@ -1,9 +1,13 @@
 package com.jsoniter;
 
 import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.jsoniter.annotation.JacksonAnnotationSupport;
+import com.jsoniter.output.JsonStream;
 import junit.framework.TestCase;
 
 import java.io.IOException;
@@ -58,5 +62,17 @@ public class TestJackson extends TestCase {
         assertEquals("hello", obj.field1);
         obj = JsonIterator.deserialize("{\"field-1\":\"hello\"}", TestObject2.class);
         assertEquals("hello", obj.field1);
+    }
+
+    public static class TestObject3 {
+        @JsonIgnore
+        public String field1;
+    }
+
+    public void test_JsonIgnore() throws IOException {
+        TestObject3 obj = objectMapper.readValue("{\"field1\":\"hello\"}", TestObject3.class);
+        assertNull(obj.field1);
+        obj = JsonIterator.deserialize("{\"field1\":\"hello\"}", TestObject3.class);
+        assertNull(obj.field1);
     }
 }

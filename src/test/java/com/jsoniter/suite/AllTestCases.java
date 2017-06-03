@@ -11,12 +11,14 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
+        com.jsoniter.TestAnnotationJsonIgnore.class,
+        com.jsoniter.output.TestAnnotationJsonIgnore.class,
         com.jsoniter.TestAnnotationJsonProperty.class,
         com.jsoniter.output.TestAnnotationJsonProperty.class,
         TestAnnotationJsonWrapper.class,
         TestAnnotationJsonUnwrapper.class,
         TestAnnotation.class,
-        com.jsoniter.output.TestAnnotation.class,
+        com.jsoniter.output.TestGenerics.class,
         TestCustomizeType.class, TestDemo.class,
         TestExisting.class, TestGenerics.class, TestGenerics.class, TestIO.class, TestNested.class,
         TestObject.class, TestReadAny.class, TestReflection.class, TestSkip.class, TestSlice.class,
