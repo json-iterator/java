@@ -40,7 +40,7 @@ public class GsonAnnotationSupport extends JsoniterAnnotationSupport {
 
             @Override
             public String[] from() {
-                return new String[0];
+                return new String[]{gsonObj.value()};
             }
 
             @Override
