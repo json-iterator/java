@@ -1,5 +1,6 @@
 package com.jsoniter.annotation;
 
+import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.jsoniter.spi.Decoder;
 import com.jsoniter.spi.Encoder;
@@ -86,6 +87,36 @@ public class GsonAnnotationSupport extends JsoniterAnnotationSupport {
             @Override
             public Class<? extends Annotation> annotationType() {
                 return JsonProperty.class;
+            }
+        };
+    }
+
+    @Override
+    protected JsonIgnore getJsonIgnore(Annotation[] annotations) {
+
+        JsonIgnore jsoniterObj = super.getJsonIgnore(annotations);
+        if (jsoniterObj != null) {
+            return jsoniterObj;
+        }
+        final Expose gsonObj = getAnnotation(
+                annotations, Expose.class);
+        if (gsonObj == null) {
+            return null;
+        }
+        return new JsonIgnore() {
+            @Override
+            public boolean ignoreDecoding() {
+                return !gsonObj.deserialize();
+            }
+
+            @Override
+            public boolean ignoreEncoding() {
+                return !gsonObj.serialize();
+            }
+
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return JsonIgnore.class;
             }
         };
     }

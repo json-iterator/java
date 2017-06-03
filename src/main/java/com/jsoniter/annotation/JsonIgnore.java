@@ -8,5 +8,6 @@ import java.lang.annotation.Target;
 @Target({ElementType.ANNOTATION_TYPE, ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface JsonIgnore {
-    boolean value() default true;
+    boolean ignoreDecoding() default true;
+    boolean ignoreEncoding() default true;
 }

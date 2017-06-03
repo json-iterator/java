@@ -189,9 +189,13 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
     private void updateBindings(ClassDescriptor desc) {
         for (Binding binding : desc.allBindings()) {
             JsonIgnore jsonIgnore = getJsonIgnore(binding.annotations);
-            if (jsonIgnore != null && jsonIgnore.value()) {
-                binding.fromNames = new String[0];
-                binding.toNames = new String[0];
+            if (jsonIgnore != null) {
+                if (jsonIgnore.ignoreDecoding()) {
+                    binding.fromNames = new String[0];
+                }
+                if (jsonIgnore.ignoreEncoding()) {
+                    binding.toNames = new String[0];
+                }
             }
             // map JsonUnwrapper is not getter
             JsonUnwrapper jsonUnwrapper = getJsonUnwrapper(binding.annotations);

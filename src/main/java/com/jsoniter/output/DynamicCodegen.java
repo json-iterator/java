@@ -1,9 +1,7 @@
 package com.jsoniter.output;
 
-import com.jsoniter.spi.Decoder;
 import com.jsoniter.spi.EmptyEncoder;
 import com.jsoniter.spi.Encoder;
-import com.sun.org.apache.xml.internal.utils.StringBufferPool;
 import javassist.*;
 
 class DynamicCodegen {

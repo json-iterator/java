@@ -33,7 +33,12 @@ public class JacksonAnnotationSupport extends JsoniterAnnotationSupport {
         }
         return new JsonIgnore() {
             @Override
-            public boolean value() {
+            public boolean ignoreDecoding() {
+                return jacksonObj.value();
+            }
+
+            @Override
+            public boolean ignoreEncoding() {
                 return jacksonObj.value();
             }
 

@@ -4,18 +4,12 @@ import com.jsoniter.annotation.JsonIgnore;
 import com.jsoniter.annotation.JsoniterAnnotationSupport;
 import junit.framework.TestCase;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 public class TestAnnotationJsonIgnore extends TestCase {
 
-    private ByteArrayOutputStream baos;
-    private JsonStream stream;
-
     public void setUp() {
         JsoniterAnnotationSupport.enable();
-        baos = new ByteArrayOutputStream();
-        stream = new JsonStream(baos, 4096);
     }
 
     public void tearDown() {
@@ -30,8 +24,17 @@ public class TestAnnotationJsonIgnore extends TestCase {
     public void test_ignore() throws IOException {
         TestObject1 obj = new TestObject1();
         obj.field1 = 100;
-        stream.writeVal(obj);
-        stream.close();
-        assertEquals("{}", baos.toString());
+        assertEquals("{}", JsonStream.serialize(obj));
+    }
+
+    public static class TestObject2 {
+        @JsonIgnore(ignoreEncoding = false)
+        public int field1;
+    }
+
+    public void test_ignore_decoding_only() throws IOException {
+        TestObject2 obj = new TestObject2();
+        obj.field1 = 100;
+        assertEquals("{\"field1\":100}", JsonStream.serialize(obj));
     }
 }
