@@ -58,7 +58,7 @@ public class JacksonAnnotationSupport extends JsoniterAnnotationSupport {
         return new JsonProperty() {
             @Override
             public String value() {
-                return jacksonObj.value();
+                return "";
             }
 
             @Override

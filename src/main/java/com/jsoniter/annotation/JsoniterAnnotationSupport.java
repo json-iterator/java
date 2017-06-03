@@ -226,7 +226,6 @@ public class JsoniterAnnotationSupport extends EmptyExtension {
         String altName = jsonProperty.value();
         if (!altName.isEmpty()) {
             binding.name = altName;
-            binding.fromNames = new String[]{altName};
         }
         if (jsonProperty.from().length > 0) {
             binding.fromNames = jsonProperty.from();

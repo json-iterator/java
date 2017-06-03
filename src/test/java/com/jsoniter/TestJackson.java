@@ -1,6 +1,7 @@
 package com.jsoniter;
 
 import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jsoniter.annotation.JacksonAnnotationSupport;
 import junit.framework.TestCase;
@@ -13,8 +14,11 @@ public class TestJackson extends TestCase {
 //        JsonIterator.setMode(DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_WITH_HASH);
     }
 
+    private ObjectMapper objectMapper;
+
     public void setUp() {
         JacksonAnnotationSupport.enable();
+        objectMapper = new ObjectMapper();
     }
 
     public void tearDown() {
@@ -36,12 +40,23 @@ public class TestJackson extends TestCase {
     }
 
     public void test_JsonAnySetter() throws IOException {
-        ObjectMapper objectMapper = new ObjectMapper();
         TestObject1 obj = objectMapper.readValue("{\"name\":\"hello\",\"id\":100}", TestObject1.class);
         assertEquals("hello", obj._name);
         assertEquals(100, obj._id);
         obj = JsonIterator.deserialize("{\"name\":\"hello\",\"id\":100}", TestObject1.class);
         assertEquals("hello", obj._name);
         assertEquals(100, obj._id);
+    }
+
+    public static class TestObject2 {
+        @JsonProperty("field-1")
+        public String field1;
+    }
+
+    public void test_JsonProperty() throws IOException {
+        TestObject2 obj = objectMapper.readValue("{\"field-1\":\"hello\"}", TestObject2.class);
+        assertEquals("hello", obj.field1);
+        obj = JsonIterator.deserialize("{\"field-1\":\"hello\"}", TestObject2.class);
+        assertEquals("hello", obj.field1);
     }
 }
