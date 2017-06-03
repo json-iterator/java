@@ -1,7 +1,8 @@
-package com.jsoniter.annotation;
+package com.jsoniter.extra;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.jsoniter.annotation.*;
 import com.jsoniter.spi.Decoder;
 import com.jsoniter.spi.Encoder;
 import com.jsoniter.spi.JsoniterSpi;

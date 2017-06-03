@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.jsoniter.annotation.JacksonAnnotationSupport;
+import com.jsoniter.extra.JacksonAnnotationSupport;
 import junit.framework.TestCase;
 
 import java.util.HashMap;

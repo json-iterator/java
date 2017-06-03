@@ -1,7 +1,10 @@
-package com.jsoniter.annotation;
+package com.jsoniter.extra;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.jsoniter.annotation.JsonIgnore;
+import com.jsoniter.annotation.JsonProperty;
+import com.jsoniter.annotation.JsoniterAnnotationSupport;
 import com.jsoniter.spi.Decoder;
 import com.jsoniter.spi.Encoder;
 import com.jsoniter.spi.JsoniterSpi;

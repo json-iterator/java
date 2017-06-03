@@ -4,8 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-import com.jsoniter.annotation.GsonAnnotationSupport;
-import com.jsoniter.output.JsonStream;
+import com.jsoniter.extra.GsonAnnotationSupport;
 import junit.framework.TestCase;
 
 public class TestGson extends TestCase {
