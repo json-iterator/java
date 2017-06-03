@@ -1,7 +1,6 @@
 package com.jsoniter;
 
 import com.jsoniter.annotation.JsonProperty;
-import com.jsoniter.annotation.JsoniterAnnotationSupport;
 import com.jsoniter.any.Any;
 import com.jsoniter.fuzzy.MaybeEmptyArrayDecoder;
 import com.jsoniter.spi.EmptyExtension;
@@ -12,21 +11,12 @@ import junit.framework.TestCase;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.Map;
 
 public class TestObject extends TestCase {
 
     static {
 //        JsonIterator.setMode(DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_STRICTLY);
-    }
-
-    public void setUp() {
-        JsoniterAnnotationSupport.enable();
-    }
-
-    public void tearDown() {
-        JsoniterAnnotationSupport.disable();
     }
 
     public static class EmptyClass {

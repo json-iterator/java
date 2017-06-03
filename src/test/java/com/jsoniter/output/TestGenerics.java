@@ -1,6 +1,5 @@
 package com.jsoniter.output;
 
-import com.jsoniter.annotation.JsoniterAnnotationSupport;
 import junit.framework.TestCase;
 
 import java.io.ByteArrayOutputStream;
@@ -15,15 +14,9 @@ public class TestGenerics extends TestCase {
     private JsonStream stream;
 
     public void setUp() {
-        JsoniterAnnotationSupport.enable();
         baos = new ByteArrayOutputStream();
         stream = new JsonStream(baos, 4096);
     }
-
-    public void tearDown() {
-        JsoniterAnnotationSupport.disable();
-    }
-
 
     public interface TestObject6Interface<A> {
         A getHello();

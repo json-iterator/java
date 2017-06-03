@@ -17,12 +17,7 @@ public class TestJackson extends TestCase {
     private ObjectMapper objectMapper;
 
     public void setUp() {
-        JacksonCompatibilityMode.enable();
         objectMapper = new ObjectMapper();
-    }
-
-    public void tearDown() {
-        JacksonCompatibilityMode.disable();
     }
 
     public static class TestObject1 {
@@ -37,7 +32,7 @@ public class TestJackson extends TestCase {
     public void test_JsonAnyGetter() throws JsonProcessingException {
         String output = objectMapper.writeValueAsString(new TestObject1());
         assertEquals("{\"100\":\"hello\"}", output);
-        output = JsonStream.serialize(new TestObject1());
+        output = JsonStream.serialize(new JacksonCompatibilityMode.Builder().build(), new TestObject1());
         assertEquals("{\"100\":\"hello\"}", output);
     }
 
@@ -51,7 +46,7 @@ public class TestJackson extends TestCase {
         obj.field1 = "hello";
         String output = objectMapper.writeValueAsString(obj);
         assertEquals("{\"field-1\":\"hello\"}", output);
-        output = JsonStream.serialize(obj);
+        output = JsonStream.serialize(new JacksonCompatibilityMode.Builder().build(), obj);
         assertEquals("{\"field-1\":\"hello\"}", output);
     }
 
@@ -66,7 +61,7 @@ public class TestJackson extends TestCase {
         obj.field1 = "hello";
         String output = objectMapper.writeValueAsString(obj);
         assertEquals("{}", output);
-        output = JsonStream.serialize(obj);
+        output = JsonStream.serialize(new JacksonCompatibilityMode.Builder().build(), obj);
         assertEquals("{}", output);
     }
 }

@@ -1,10 +1,6 @@
 package com.jsoniter;
 
-import com.jsoniter.annotation.JsonProperty;
-import com.jsoniter.annotation.JsoniterAnnotationSupport;
 import com.jsoniter.any.Any;
-import com.jsoniter.output.EncodingMode;
-import com.jsoniter.output.JsonStream;
 import junit.framework.TestCase;
 import org.junit.Assert;
 

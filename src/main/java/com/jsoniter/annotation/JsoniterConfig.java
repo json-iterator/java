@@ -9,17 +9,50 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class JsoniterAnnotationSupport extends EmptyExtension {
+public class JsoniterConfig extends EmptyExtension implements Config {
 
-    private static final JsoniterAnnotationSupport INSTANCE = new JsoniterAnnotationSupport();
+    private final String configName;
+    private final Builder builder;
 
-    public static void enable() {
-        JsoniterSpi.registerExtension(INSTANCE);
+    public JsoniterConfig(Builder builder) {
+        this.configName = JsoniterSpi.assignConfigName(builder);
+        this.builder = builder;
     }
 
-    public static void disable() {
-        JsoniterSpi.deregisterExtension(INSTANCE);
+    @Override
+    public String configName() {
+        return null;
     }
+
+    protected Builder builder() {
+        return builder;
+    }
+
+    public static class Builder {
+
+        private boolean dummy;
+
+        public JsoniterConfig build() {
+            return new JsoniterConfig(this);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            Builder builder = (Builder) o;
+
+            return dummy == builder.dummy;
+        }
+
+        @Override
+        public int hashCode() {
+            return (dummy ? 1 : 0);
+        }
+    }
+
+    public static final JsoniterConfig INSTANCE = new Builder().build();
 
     @Override
     public void updateClassDescriptor(ClassDescriptor desc) {

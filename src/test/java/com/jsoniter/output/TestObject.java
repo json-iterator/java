@@ -2,7 +2,6 @@ package com.jsoniter.output;
 
 import com.jsoniter.annotation.JsonIgnore;
 import com.jsoniter.annotation.JsonProperty;
-import com.jsoniter.annotation.JsoniterAnnotationSupport;
 import com.jsoniter.spi.TypeLiteral;
 import junit.framework.TestCase;
 
@@ -20,13 +19,8 @@ public class TestObject extends TestCase {
     private JsonStream stream;
 
     public void setUp() {
-        JsoniterAnnotationSupport.enable();
         baos = new ByteArrayOutputStream();
         stream = new JsonStream(baos, 4096);
-    }
-
-    public void tearDown() {
-        JsoniterAnnotationSupport.disable();
     }
 
     public static class TestObject1 {
@@ -166,7 +160,6 @@ public class TestObject extends TestCase {
     }
 
     public void test_collection_value_not_nullable() {
-        JsoniterAnnotationSupport.enable();
         TestObject9 obj = new TestObject9();
         obj.field1 = new String[]{"hello"};
         assertEquals("{\"field1\":[\"hello\"]}", JsonStream.serialize(obj));

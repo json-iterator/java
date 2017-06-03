@@ -10,17 +10,6 @@ import junit.framework.TestCase;
 
 public class TestGson extends TestCase {
 
-    private GsonCompatibilityMode gsonCompatibilityMode;
-
-    public void setUp() {
-        gsonCompatibilityMode = new GsonCompatibilityMode.Builder().build();
-        JsoniterSpi.registerExtension(gsonCompatibilityMode);
-    }
-
-    public void tearDown() {
-        JsoniterSpi.deregisterExtension(gsonCompatibilityMode);
-    }
-
     public static class TestObject1 {
         @SerializedName("field-1")
         public String field1;
@@ -32,7 +21,7 @@ public class TestGson extends TestCase {
         obj.field1 = "hello";
         String output = gson.toJson(obj);
         assertEquals("{\"field-1\":\"hello\"}", output);
-        output = JsonStream.serialize(obj);
+        output = JsonStream.serialize(new GsonCompatibilityMode.Builder().build(), obj);
         assertEquals("{\"field-1\":\"hello\"}", output);
     }
 
@@ -48,11 +37,9 @@ public class TestGson extends TestCase {
         String output = gson.toJson(obj);
         assertEquals("{}", output);
 
-        JsoniterSpi.deregisterExtension(gsonCompatibilityMode);
-        gsonCompatibilityMode = new GsonCompatibilityMode.Builder()
+        GsonCompatibilityMode config = new GsonCompatibilityMode.Builder()
                 .excludeFieldsWithoutExposeAnnotation().build();
-        JsoniterSpi.registerExtension(gsonCompatibilityMode);
-        output = JsonStream.serialize(obj);
+        output = JsonStream.serialize(config, obj);
         assertEquals("{}", output);
     }
 
@@ -67,7 +54,7 @@ public class TestGson extends TestCase {
         TestObject3 obj = new TestObject3();
         String output = gson.toJson(obj);
         assertEquals("{}", output);
-        output = JsonStream.serialize(obj);
+        output = JsonStream.serialize(new GsonCompatibilityMode.Builder().build(), obj);
         assertEquals("{}", output);
     }
 
@@ -82,11 +69,9 @@ public class TestGson extends TestCase {
         String output = gson.toJson(obj);
         assertEquals("{}", output);
 
-        JsoniterSpi.deregisterExtension(gsonCompatibilityMode);
-        gsonCompatibilityMode = new GsonCompatibilityMode.Builder()
+        GsonCompatibilityMode config = new GsonCompatibilityMode.Builder()
                 .excludeFieldsWithoutExposeAnnotation().build();
-        JsoniterSpi.registerExtension(gsonCompatibilityMode);
-        output = JsonStream.serialize(obj);
+        output = JsonStream.serialize(config, obj);
         assertEquals("{}", output);
     }
 }

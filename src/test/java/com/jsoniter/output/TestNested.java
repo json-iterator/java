@@ -1,7 +1,6 @@
 package com.jsoniter.output;
 
 import com.jsoniter.annotation.JsonProperty;
-import com.jsoniter.annotation.JsoniterAnnotationSupport;
 import com.jsoniter.spi.TypeLiteral;
 import junit.framework.TestCase;
 
@@ -18,13 +17,8 @@ public class TestNested extends TestCase {
     private JsonStream stream;
 
     public void setUp() {
-        JsoniterAnnotationSupport.enable();
         baos = new ByteArrayOutputStream();
         stream = new JsonStream(baos, 4096);
-    }
-
-    public void tearDown() {
-        JsoniterAnnotationSupport.disable();
     }
 
     public static class TestObject1 {

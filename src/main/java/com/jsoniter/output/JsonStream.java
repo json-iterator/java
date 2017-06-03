@@ -1,9 +1,7 @@
 package com.jsoniter.output;
 
 import com.jsoniter.any.Any;
-import com.jsoniter.spi.Encoder;
-import com.jsoniter.spi.JsonException;
-import com.jsoniter.spi.TypeLiteral;
+import com.jsoniter.spi.*;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -343,6 +341,15 @@ public class JsonStream extends OutputStream {
         }
     };
 
+    public static void serialize(Config config, Object obj, OutputStream out) {
+        JsoniterSpi.setCurrentConfig(config);
+        try {
+            serialize(obj, out);
+        } finally {
+            JsoniterSpi.clearCurrentConfig();
+        }
+
+    }
     public static void serialize(Object obj, OutputStream out) {
         JsonStream stream = tlsStream.get();
         try {
@@ -363,6 +370,15 @@ public class JsonStream extends OutputStream {
             return new AsciiOutputStream();
         }
     };
+
+    public static String serialize(Config config, Object obj) {
+        JsoniterSpi.setCurrentConfig(config);
+        try {
+            return serialize(obj);
+        } finally {
+            JsoniterSpi.clearCurrentConfig();
+        }
+    }
 
     public static String serialize(Object obj) {
         AsciiOutputStream asciiOutputStream = tlsAsciiOutputStream.get();

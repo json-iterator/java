@@ -9,16 +9,16 @@ import com.jsoniter.spi.JsoniterSpi;
 
 import java.lang.annotation.Annotation;
 
-public class JacksonCompatibilityMode extends JsoniterAnnotationSupport {
+public class JacksonCompatibilityMode extends JsoniterConfig {
 
-    private final static JacksonCompatibilityMode INSTANCE = new JacksonCompatibilityMode();
-
-    public static void enable() {
-        JsoniterSpi.registerExtension(INSTANCE);
+    public static class Builder extends JsoniterConfig.Builder {
+        public JacksonCompatibilityMode build() {
+            return new JacksonCompatibilityMode(this);
+        }
     }
 
-    public static void disable() {
-        JsoniterSpi.deregisterExtension(INSTANCE);
+    private JacksonCompatibilityMode(Builder builder) {
+        super(builder);
     }
 
     @Override

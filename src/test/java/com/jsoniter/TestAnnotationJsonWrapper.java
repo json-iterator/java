@@ -3,7 +3,6 @@ package com.jsoniter;
 import com.jsoniter.annotation.JsonProperty;
 import com.jsoniter.annotation.JsonWrapper;
 import com.jsoniter.annotation.JsonWrapperType;
-import com.jsoniter.annotation.JsoniterAnnotationSupport;
 import junit.framework.TestCase;
 
 import java.io.IOException;
@@ -13,14 +12,6 @@ public class TestAnnotationJsonWrapper extends TestCase {
     static {
 //        JsonIterator.setMode(DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_WITH_HASH);
 //        JsonIterator.setMode(DecodingMode.REFLECTION_MODE);
-    }
-
-    public void setUp() {
-        JsoniterAnnotationSupport.enable();
-    }
-
-    public void tearDown() {
-        JsoniterAnnotationSupport.disable();
     }
 
     public static class TestObject1 {

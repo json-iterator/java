@@ -1,16 +1,48 @@
 package com.jsoniter.spi;
 
+import com.fasterxml.jackson.annotation.JacksonAnnotation;
+import com.jsoniter.annotation.JsoniterConfig;
+
 import java.lang.reflect.*;
 import java.util.*;
 
 public class JsoniterSpi {
 
-    static List<Extension> extensions = new ArrayList<Extension>();
-    static Map<Class, Class> typeImpls = new HashMap<Class, Class>();
-    static volatile Map<String, MapKeyDecoder> mapKeyDecoders = new HashMap<String, MapKeyDecoder>();
-    static volatile Map<String, Encoder> encoders = new HashMap<String, Encoder>();
-    static volatile Map<String, Decoder> decoders = new HashMap<String, Decoder>();
-    static volatile Map<Class, Extension> objectFactories = new HashMap<Class, Extension>();
+    static ThreadLocal<Config> currentConfig = new ThreadLocal<Config>() {
+        @Override
+        protected Config initialValue() {
+            return JsoniterConfig.INSTANCE;
+        }
+    };
+    private static List<Extension> extensions = new ArrayList<Extension>();
+    private static Map<Class, Class> typeImpls = new HashMap<Class, Class>();
+    private static int configIndex = 0;
+    private static volatile Map<Object, String> configNames = new HashMap<Object, String>();
+    private static volatile Map<String, MapKeyDecoder> mapKeyDecoders = new HashMap<String, MapKeyDecoder>();
+    private static volatile Map<String, Encoder> encoders = new HashMap<String, Encoder>();
+    private static volatile Map<String, Decoder> decoders = new HashMap<String, Decoder>();
+    private static volatile Map<Class, Extension> objectFactories = new HashMap<Class, Extension>();
+
+    public static String assignConfigName(Object obj) {
+        String configName = configNames.get(obj);
+        if (configName != null) {
+            return configName;
+        }
+        return assignNewConfigName(obj);
+    }
+
+    private synchronized static String assignNewConfigName(Object obj) {
+        String configName = configNames.get(obj);
+        if (configName != null) {
+            return configName;
+        }
+        configIndex++;
+        configName = "cfg" + configIndex;
+        HashMap<Object, String> newCache = new HashMap<Object, String>(configNames);
+        newCache.put(obj, configName);
+        configNames = newCache;
+        return configName;
+    }
 
     public static void registerExtension(Extension extension) {
         if (!extensions.contains(extension)) {
@@ -18,12 +50,10 @@ public class JsoniterSpi {
         }
     }
 
-    public static boolean deregisterExtension(Extension extension) {
-        return extensions.remove(extension);
-    }
-
     public static List<Extension> getExtensions() {
-        return Collections.unmodifiableList(extensions);
+        ArrayList<Extension> combined = new ArrayList<Extension>(extensions);
+        combined.add(currentConfig.get());
+        return combined;
     }
 
     public static void registerMapKeyDecoder(Type mapKeyType, MapKeyDecoder mapKeyDecoder) {
@@ -104,7 +134,7 @@ public class JsoniterSpi {
         if (objectFactories.containsKey(clazz)) {
             return true;
         }
-        for (Extension extension : extensions) {
+        for (Extension extension : getExtensions()) {
             if (extension.canCreate(clazz)) {
                 addObjectFactory(clazz, extension);
                 return true;
@@ -134,7 +164,7 @@ public class JsoniterSpi {
         desc.bindingTypeWrappers = new ArrayList<WrapperDescriptor>();
         desc.keyValueTypeWrappers = new ArrayList<Method>();
         desc.unwrappers = new ArrayList<UnwrapperDescriptor>();
-        for (Extension extension : extensions) {
+        for (Extension extension : getExtensions()) {
             extension.updateClassDescriptor(desc);
         }
         for (Binding field : desc.fields) {
@@ -186,7 +216,7 @@ public class JsoniterSpi {
         desc.bindingTypeWrappers = new ArrayList<WrapperDescriptor>();
         desc.keyValueTypeWrappers = new ArrayList<Method>();
         desc.unwrappers = new ArrayList<UnwrapperDescriptor>();
-        for (Extension extension : extensions) {
+        for (Extension extension : getExtensions()) {
             extension.updateClassDescriptor(desc);
         }
         encodingDeduplicate(desc);
@@ -462,15 +492,6 @@ public class JsoniterSpi {
         return getters;
     }
 
-    public static void dump() {
-        for (String cacheKey : decoders.keySet()) {
-            System.err.println(cacheKey);
-        }
-        for (String cacheKey : encoders.keySet()) {
-            System.err.println(cacheKey);
-        }
-    }
-
     private static Map<String, Type> collectTypeVariableLookup(Type type) {
         HashMap<String, Type> vars = new HashMap<String, Type>();
         if (null == type) {
@@ -493,5 +514,13 @@ public class JsoniterSpi {
             return vars;
         }
         throw new JsonException("unexpected type: " + type);
+    }
+
+    public static void setCurrentConfig(Config val) {
+        currentConfig.set(val);
+    }
+
+    public static void clearCurrentConfig() {
+        currentConfig.set(JsoniterConfig.INSTANCE);
     }
 }

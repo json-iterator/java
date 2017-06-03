@@ -2,7 +2,6 @@ package com.jsoniter;
 
 import com.jsoniter.annotation.JsonMissingProperties;
 import com.jsoniter.annotation.JsonProperty;
-import com.jsoniter.annotation.JsoniterAnnotationSupport;
 import com.jsoniter.fuzzy.StringIntDecoder;
 import junit.framework.TestCase;
 
@@ -12,14 +11,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class TestAnnotationJsonProperty extends TestCase {
-
-    public void setUp() {
-        JsoniterAnnotationSupport.enable();
-    }
-
-    public void tearDown() {
-        JsoniterAnnotationSupport.disable();
-    }
 
     public static class TestObject1 {
         @JsonProperty(from = {"field-1"})

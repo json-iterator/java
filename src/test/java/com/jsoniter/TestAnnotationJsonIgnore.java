@@ -1,20 +1,11 @@
 package com.jsoniter;
 
 import com.jsoniter.annotation.JsonIgnore;
-import com.jsoniter.annotation.JsoniterAnnotationSupport;
 import junit.framework.TestCase;
 
 import java.io.IOException;
 
 public class TestAnnotationJsonIgnore  extends TestCase {
-
-    public void setUp() {
-        JsoniterAnnotationSupport.enable();
-    }
-
-    public void tearDown() {
-        JsoniterAnnotationSupport.disable();
-    }
 
     public static class TestObject1 {
         @JsonIgnore

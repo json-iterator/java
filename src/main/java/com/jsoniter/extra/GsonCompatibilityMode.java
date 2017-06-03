@@ -4,20 +4,22 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.jsoniter.annotation.JsonIgnore;
 import com.jsoniter.annotation.JsonProperty;
-import com.jsoniter.annotation.JsoniterAnnotationSupport;
+import com.jsoniter.annotation.JsoniterConfig;
 import com.jsoniter.spi.*;
 
 import java.lang.annotation.Annotation;
 
-public class GsonCompatibilityMode extends JsoniterAnnotationSupport {
-
-    private Builder builder;
+public class GsonCompatibilityMode extends JsoniterConfig {
 
     private GsonCompatibilityMode(Builder builder) {
-        this.builder = builder;
+        super(builder);
     }
 
-    public static class Builder {
+    protected Builder builder() {
+        return (Builder) super.builder();
+    }
+
+    public static class Builder extends JsoniterConfig.Builder {
         private boolean excludeFieldsWithoutExposeAnnotation = false;
 
         public Builder excludeFieldsWithoutExposeAnnotation() {
@@ -28,16 +30,24 @@ public class GsonCompatibilityMode extends JsoniterAnnotationSupport {
         public GsonCompatibilityMode build() {
             return new GsonCompatibilityMode(this);
         }
-    }
 
-    private final static GsonCompatibilityMode INSTANCE = new GsonCompatibilityMode(new Builder());
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            if (!super.equals(o)) return false;
 
-    public static void enable() {
-        JsoniterSpi.registerExtension(INSTANCE);
-    }
+            Builder builder = (Builder) o;
 
-    public static void disable() {
-        JsoniterSpi.deregisterExtension(INSTANCE);
+            return excludeFieldsWithoutExposeAnnotation == builder.excludeFieldsWithoutExposeAnnotation;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = super.hashCode();
+            result = 31 * result + (excludeFieldsWithoutExposeAnnotation ? 1 : 0);
+            return result;
+        }
     }
 
     @Override
@@ -133,7 +143,7 @@ public class GsonCompatibilityMode extends JsoniterAnnotationSupport {
         if (jsoniterObj != null) {
             return jsoniterObj;
         }
-        if (builder.excludeFieldsWithoutExposeAnnotation) {
+        if (builder().excludeFieldsWithoutExposeAnnotation) {
             final Expose gsonObj = getAnnotation(
                     annotations, Expose.class);
             if (gsonObj != null) {

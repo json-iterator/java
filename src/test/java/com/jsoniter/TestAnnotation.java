@@ -20,14 +20,6 @@ public class TestAnnotation extends TestCase {
 //        JsonIterator.setMode(DecodingMode.REFLECTION_MODE);
     }
 
-    public void setUp() {
-        JsoniterAnnotationSupport.enable();
-    }
-
-    public void tearDown() {
-        JsoniterAnnotationSupport.disable();
-    }
-
     public static class TestObject2 {
         private int field1;
 

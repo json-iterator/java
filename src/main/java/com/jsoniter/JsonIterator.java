@@ -1,10 +1,7 @@
 package com.jsoniter;
 
-import com.jsoniter.annotation.JsoniterAnnotationSupport;
 import com.jsoniter.any.Any;
-import com.jsoniter.spi.JsonException;
-import com.jsoniter.spi.Slice;
-import com.jsoniter.spi.TypeLiteral;
+import com.jsoniter.spi.*;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -366,14 +363,39 @@ public class JsonIterator implements Closeable {
         }
     };
 
+    public static final <T> T deserialize(Config config, String input, Class<T> clazz) {
+        JsoniterSpi.setCurrentConfig(config);
+        try {
+            return deserialize(input.getBytes(), clazz);
+        } finally {
+            JsoniterSpi.clearCurrentConfig();
+        }
+    }
     public static final <T> T deserialize(String input, Class<T> clazz) {
         return deserialize(input.getBytes(), clazz);
+    }
+
+    public static final <T> T deserialize(Config config, String input, TypeLiteral<T> typeLiteral) {
+        JsoniterSpi.setCurrentConfig(config);
+        try {
+            return deserialize(input.getBytes(), typeLiteral);
+        } finally {
+            JsoniterSpi.clearCurrentConfig();
+        }
     }
 
     public static final <T> T deserialize(String input, TypeLiteral<T> typeLiteral) {
         return deserialize(input.getBytes(), typeLiteral);
     }
 
+    public static final <T> T deserialize(Config config, byte[] input, Class<T> clazz) {
+        JsoniterSpi.setCurrentConfig(config);
+        try {
+            return deserialize(input, clazz);
+        } finally {
+            JsoniterSpi.clearCurrentConfig();
+        }
+    }
     public static final <T> T deserialize(byte[] input, Class<T> clazz) {
         int lastNotSpacePos = findLastNotSpacePos(input);
         JsonIterator iter = tlsIter.get();
@@ -388,6 +410,15 @@ public class JsonIterator implements Closeable {
             throw iter.reportError("deserialize", "premature end");
         } catch (IOException e) {
             throw new JsonException(e);
+        }
+    }
+
+    public static final <T> T deserialize(Config config, byte[] input, TypeLiteral<T> typeLiteral) {
+        JsoniterSpi.setCurrentConfig(config);
+        try {
+            return deserialize(input, typeLiteral);
+        } finally {
+            JsoniterSpi.clearCurrentConfig();
         }
     }
 
@@ -408,8 +439,26 @@ public class JsonIterator implements Closeable {
         }
     }
 
+    public static final Any deserialize(Config config, String input) {
+        JsoniterSpi.setCurrentConfig(config);
+        try {
+            return deserialize(input.getBytes());
+        } finally {
+            JsoniterSpi.clearCurrentConfig();
+        }
+    }
+
     public static final Any deserialize(String input) {
         return deserialize(input.getBytes());
+    }
+
+    public static final Any deserialize(Config config, byte[] input) {
+        JsoniterSpi.setCurrentConfig(config);
+        try {
+            return deserialize(input);
+        } finally {
+            JsoniterSpi.clearCurrentConfig();
+        }
     }
 
     public static final Any deserialize(byte[] input) {
@@ -453,9 +502,5 @@ public class JsonIterator implements Closeable {
         } catch (Exception e) {
             throw new JsonException(e);
         }
-    }
-
-    public static void enableAnnotationSupport() {
-        JsoniterAnnotationSupport.enable();
     }
 }

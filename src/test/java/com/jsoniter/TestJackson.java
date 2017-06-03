@@ -18,12 +18,7 @@ public class TestJackson extends TestCase {
     private ObjectMapper objectMapper;
 
     public void setUp() {
-        JacksonCompatibilityMode.enable();
         objectMapper = new ObjectMapper();
-    }
-
-    public void tearDown() {
-        JacksonCompatibilityMode.disable();
     }
 
     public static class TestObject1 {
@@ -44,7 +39,8 @@ public class TestJackson extends TestCase {
         TestObject1 obj = objectMapper.readValue("{\"name\":\"hello\",\"id\":100}", TestObject1.class);
         assertEquals("hello", obj._name);
         assertEquals(100, obj._id);
-        obj = JsonIterator.deserialize("{\"name\":\"hello\",\"id\":100}", TestObject1.class);
+        obj = JsonIterator.deserialize(new JacksonCompatibilityMode.Builder().build(),
+                "{\"name\":\"hello\",\"id\":100}", TestObject1.class);
         assertEquals("hello", obj._name);
         assertEquals(100, obj._id);
     }
@@ -57,7 +53,8 @@ public class TestJackson extends TestCase {
     public void test_JsonProperty() throws IOException {
         TestObject2 obj = objectMapper.readValue("{\"field-1\":\"hello\"}", TestObject2.class);
         assertEquals("hello", obj.field1);
-        obj = JsonIterator.deserialize("{\"field-1\":\"hello\"}", TestObject2.class);
+        obj = JsonIterator.deserialize(new JacksonCompatibilityMode.Builder().build(),
+                "{\"field-1\":\"hello\"}", TestObject2.class);
         assertEquals("hello", obj.field1);
     }
 
@@ -69,7 +66,8 @@ public class TestJackson extends TestCase {
     public void test_JsonIgnore() throws IOException {
         TestObject3 obj = objectMapper.readValue("{\"field1\":\"hello\"}", TestObject3.class);
         assertNull(obj.field1);
-        obj = JsonIterator.deserialize("{\"field1\":\"hello\"}", TestObject3.class);
+        obj = JsonIterator.deserialize(new JacksonCompatibilityMode.Builder().build(),
+                "{\"field1\":\"hello\"}", TestObject3.class);
         assertNull(obj.field1);
     }
 }
