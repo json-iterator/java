@@ -5,9 +5,7 @@ import com.google.gson.annotations.SerializedName;
 import com.jsoniter.annotation.JsonIgnore;
 import com.jsoniter.annotation.JsonProperty;
 import com.jsoniter.annotation.JsoniterAnnotationSupport;
-import com.jsoniter.spi.Decoder;
-import com.jsoniter.spi.Encoder;
-import com.jsoniter.spi.JsoniterSpi;
+import com.jsoniter.spi.*;
 
 import java.lang.annotation.Annotation;
 
@@ -21,6 +19,21 @@ public class GsonCompatibilityMode extends JsoniterAnnotationSupport {
 
     public static void disable() {
         JsoniterSpi.deregisterExtension(INSTANCE);
+    }
+
+    @Override
+    public void updateClassDescriptor(ClassDescriptor desc) {
+        super.updateClassDescriptor(desc);
+        removeGetterAndSetter(desc);
+    }
+
+    private void removeGetterAndSetter(ClassDescriptor desc) {
+        for (Binding binding : desc.allBindings()) {
+            if (binding.method != null) {
+                binding.toNames = new String[0];
+                binding.fromNames = new String[0];
+            }
+        }
     }
 
     @Override

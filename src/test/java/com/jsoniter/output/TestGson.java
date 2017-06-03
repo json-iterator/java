@@ -46,4 +46,19 @@ public class TestGson extends TestCase {
         output = JsonStream.serialize(obj);
         assertEquals("{}", output);
     }
+
+    public static class TestObject3 {
+        public String getField1() {
+            return "hello";
+        }
+    }
+
+    public void test_getter_should_be_ignored() {
+        Gson gson = new GsonBuilder().create();
+        TestObject3 obj = new TestObject3();
+        String output = gson.toJson(obj);
+        assertEquals("{}", output);
+        output = JsonStream.serialize(obj);
+        assertEquals("{}", output);
+    }
 }
