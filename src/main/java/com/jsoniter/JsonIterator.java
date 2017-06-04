@@ -15,6 +15,7 @@ import java.util.Map;
 
 public class JsonIterator implements Closeable {
 
+    public Config configCache;
     private static boolean isStreamingEnabled = false;
     final static ValueType[] valueTypes = new ValueType[256];
     InputStream in;
@@ -305,10 +306,18 @@ public class JsonIterator implements Closeable {
         try {
             this.existingObject = existingObject;
             Class<?> clazz = existingObject.getClass();
-            return (T) Codegen.getDecoder(TypeLiteral.create(clazz).getDecoderCacheKey(), clazz).decode(this);
+            String cacheKey = currentConfig().getDecoderCacheKey(clazz);
+            return (T) Codegen.getDecoder(cacheKey, clazz).decode(this);
         } catch (ArrayIndexOutOfBoundsException e) {
             throw reportError("read", "premature end");
         }
+    }
+
+    private Config currentConfig() {
+        if (configCache == null) {
+            configCache = JsoniterSpi.getCurrentConfig();
+        }
+        return configCache;
     }
 
     /**
@@ -323,7 +332,8 @@ public class JsonIterator implements Closeable {
     public final <T> T read(TypeLiteral<T> typeLiteral, T existingObject) throws IOException {
         try {
             this.existingObject = existingObject;
-            return (T) Codegen.getDecoder(typeLiteral.getDecoderCacheKey(), typeLiteral.getType()).decode(this);
+            String cacheKey = currentConfig().getDecoderCacheKey(typeLiteral.getType());
+            return (T) Codegen.getDecoder(cacheKey, typeLiteral.getType()).decode(this);
         } catch (ArrayIndexOutOfBoundsException e) {
             throw reportError("read", "premature end");
         }
@@ -331,7 +341,8 @@ public class JsonIterator implements Closeable {
 
     public final <T> T read(Class<T> clazz) throws IOException {
         try {
-            return (T) Codegen.getDecoder(TypeLiteral.create(clazz).getDecoderCacheKey(), clazz).decode(this);
+            String cacheKey = currentConfig().getDecoderCacheKey(clazz);
+            return (T) Codegen.getDecoder(cacheKey, clazz).decode(this);
         } catch (ArrayIndexOutOfBoundsException e) {
             throw reportError("read", "premature end");
         }

@@ -1,9 +1,30 @@
 package com.jsoniter;
 
+import com.jsoniter.spi.Config;
+import com.jsoniter.spi.ConfigListener;
+import com.jsoniter.spi.JsoniterSpi;
+
 public class JsonIteratorPool {
 
     private static ThreadLocal<JsonIterator> slot1 = new ThreadLocal<JsonIterator>();
     private static ThreadLocal<JsonIterator> slot2 = new ThreadLocal<JsonIterator>();
+
+    static {
+        JsoniterSpi.registerConfigListener(new ConfigListener() {
+
+            @Override
+            public void onCurrentConfigChanged(Config newConfig) {
+                JsonIterator iter = slot1.get();
+                if (iter != null) {
+                    iter.configCache = newConfig;
+                }
+                iter = slot2.get();
+                if (iter != null) {
+                    iter.configCache = newConfig;
+                }
+            }
+        });
+    }
 
     public static JsonIterator borrowJsonIterator() {
         JsonIterator iter = slot1.get();

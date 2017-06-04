@@ -5,14 +5,13 @@ import com.jsoniter.spi.*;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class JsoniterConfig extends EmptyExtension implements Config {
 
     private final String configName;
     private final Builder builder;
+    private volatile Map<Type, String> decoderCacheKeys = new HashMap<Type, String>();
 
     public JsoniterConfig(Builder builder) {
         this.configName = JsoniterSpi.assignConfigName(builder);
@@ -22,6 +21,24 @@ public class JsoniterConfig extends EmptyExtension implements Config {
     @Override
     public String configName() {
         return configName;
+    }
+
+    @Override
+    public String getDecoderCacheKey(Type type) {
+        String cacheKey = decoderCacheKeys.get(type);
+        if (cacheKey != null) {
+            return cacheKey;
+        }
+        synchronized(this) {
+            cacheKey = decoderCacheKeys.get(type);
+            if (cacheKey != null) {
+                return cacheKey;
+            }
+            cacheKey = TypeLiteral.create(type).getDecoderCacheKey(configName);
+            HashMap<Type, String> newCache = new HashMap<Type, String>(decoderCacheKeys);
+            newCache.put(type, cacheKey);
+            return cacheKey;
+        }
     }
 
     protected Builder builder() {

@@ -1,8 +1,6 @@
 package com.jsoniter.spi;
 
-import com.jsoniter.JsonIterator;
 import com.jsoniter.annotation.JsoniterConfig;
-import com.jsoniter.output.JsonStream;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -14,6 +12,7 @@ public class JsoniterSpi {
 
     // registered at startup, global state
     private static Config defaultConfig;
+    private static List<ConfigListener> configListeners = new ArrayList<ConfigListener>();
     private static List<Extension> extensions = new ArrayList<Extension>();
     private static Map<Class, Class> typeImpls = new HashMap<Class, Class>();
     private static Map<Type, MapKeyDecoder> globalMapKeyDecoders = new HashMap<Type, MapKeyDecoder>();
@@ -46,6 +45,9 @@ public class JsoniterSpi {
 
     public static void setCurrentConfig(Config val) {
         currentConfig.set(val);
+        for (ConfigListener configListener : configListeners) {
+            configListener.onCurrentConfigChanged(val);
+        }
     }
 
     public static void clearCurrentConfig() {
@@ -80,6 +82,10 @@ public class JsoniterSpi {
         newCache.put(obj, configName);
         configNames = newCache;
         return configName;
+    }
+
+    public static void registerConfigListener(ConfigListener configListener) {
+        configListeners.add(configListener);
     }
 
     public static void registerExtension(Extension extension) {
