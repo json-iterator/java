@@ -14,7 +14,7 @@ class Codegen {
 
     // only read/write when generating code with synchronized protection
     private final static Set<String> generatedClassNames = new HashSet<String>();
-    static StaticCodegenTarget isDoingStaticCodegen = null;
+    static CodegenAccess.StaticCodegenTarget isDoingStaticCodegen = null;
     static DecodingMode mode = DecodingMode.REFLECTION_MODE;
     static {
         String envMode = System.getenv("JSONITER_DECODING_MODE");
@@ -270,7 +270,7 @@ class Codegen {
         return false;
     }
 
-    public static void staticGenDecoders(TypeLiteral[] typeLiterals, StaticCodegenTarget staticCodegenTarget) {
+    public static void staticGenDecoders(TypeLiteral[] typeLiterals, CodegenAccess.StaticCodegenTarget staticCodegenTarget) {
         isDoingStaticCodegen = staticCodegenTarget;
         for (TypeLiteral typeLiteral : typeLiterals) {
             gen(typeLiteral.getDecoderCacheKey(), typeLiteral.getType());

@@ -15,7 +15,7 @@ import java.util.*;
 class Codegen {
 
     static EncodingMode mode = EncodingMode.REFLECTION_MODE;
-    static StaticCodegenTarget isDoingStaticCodegen;
+    static CodegenAccess.StaticCodegenTarget isDoingStaticCodegen;
     // only read/write when generating code with synchronized protection
     private final static Map<String, CodegenResult> generatedSources = new HashMap<String, CodegenResult>();
     private volatile static Map<String, Encoder> reflectionEncoders = new HashMap<String, Encoder>();
@@ -211,7 +211,7 @@ class Codegen {
         return CodegenImplObject.genObject(clazz);
     }
 
-    public static void staticGenEncoders(TypeLiteral[] typeLiterals, StaticCodegenTarget staticCodegenTarget) {
+    public static void staticGenEncoders(TypeLiteral[] typeLiterals, CodegenAccess.StaticCodegenTarget staticCodegenTarget) {
         isDoingStaticCodegen = staticCodegenTarget;
         for (TypeLiteral typeLiteral : typeLiterals) {
             gen(typeLiteral.getEncoderCacheKey(), typeLiteral.getType());

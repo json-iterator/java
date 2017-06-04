@@ -1,6 +1,8 @@
-package com.jsoniter.spi;
+package com.jsoniter.static_codegen;
 
-public interface CodegenConfig {
+import com.jsoniter.spi.TypeLiteral;
+
+public interface StaticCodegenConfig {
     /**
      * register decoder/encoder before codegen
      * register extension before codegen

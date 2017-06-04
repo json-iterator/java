@@ -1,10 +1,8 @@
 package com.jsoniter.output;
 
-import com.jsoniter.*;
 import com.jsoniter.any.Any;
 import com.jsoniter.spi.Encoder;
 import com.jsoniter.spi.JsoniterSpi;
-import com.jsoniter.spi.StaticCodegenTarget;
 import com.jsoniter.spi.TypeLiteral;
 
 import java.io.IOException;
@@ -69,5 +67,14 @@ public class CodegenAccess {
         Class<?> clazz = val.getClass();
         String cacheKey = TypeLiteral.create(clazz).getEncoderCacheKey();
         return Codegen.getReflectionEncoder(cacheKey, clazz).wrap(val);
+    }
+
+    public static class StaticCodegenTarget {
+
+        public final String outputDir;
+
+        public StaticCodegenTarget(String outputDir) {
+            this.outputDir = outputDir;
+        }
     }
 }

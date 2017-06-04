@@ -186,4 +186,12 @@ public class CodegenAccess {
     public static void skipFixedBytes(JsonIterator iter, int n) throws IOException {
         IterImpl.skipFixedBytes(iter, n);
     }
+
+    public static class StaticCodegenTarget {
+        public String outputDir;
+
+        public StaticCodegenTarget(String outputDir) {
+            this.outputDir = outputDir;
+        }
+    }
 }
