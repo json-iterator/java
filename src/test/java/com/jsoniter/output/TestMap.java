@@ -1,9 +1,6 @@
 package com.jsoniter.output;
 
-import com.jsoniter.spi.JsoniterSpi;
-import com.jsoniter.spi.MapKeyCodec;
-import com.jsoniter.spi.Slice;
-import com.jsoniter.spi.TypeLiteral;
+import com.jsoniter.spi.*;
 import junit.framework.TestCase;
 
 import java.io.ByteArrayOutputStream;
@@ -70,16 +67,11 @@ public class TestMap extends TestCase {
     }
 
     public void test_MapKeyCodec() {
-        JsoniterSpi.registerMapKeyDecoder(TestObject1.class, new MapKeyCodec() {
+        JsoniterSpi.registerMapKeyEncoder(TestObject1.class, new MapKeyEncoder() {
             @Override
             public String encode(Object mapKey) {
                 TestObject1 obj = (TestObject1) mapKey;
                 return String.valueOf(obj.Field);
-            }
-
-            @Override
-            public Object decode(Slice encodedMapKey) {
-                throw new UnsupportedOperationException();
             }
         });
         HashMap<TestObject1, Object> obj = new HashMap<TestObject1, Object>();

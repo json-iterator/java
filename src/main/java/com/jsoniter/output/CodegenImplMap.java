@@ -1,10 +1,8 @@
 package com.jsoniter.output;
 
-import com.jsoniter.spi.MapKeyCodecs;
-import com.jsoniter.spi.TypeLiteral;
+import com.jsoniter.spi.JsoniterSpi;
 
 import java.lang.reflect.Type;
-import java.util.Collection;
 
 class CodegenImplMap {
     public static CodegenResult genMap(String cacheKey, Class clazz, Type[] typeArgs) {
@@ -18,7 +16,7 @@ class CodegenImplMap {
             keyType = typeArgs[0];
             valueType = typeArgs[1];
         }
-        String mapCacheKey = MapKeyCodecs.getEncoderCacheKey(keyType);
+        String mapCacheKey = JsoniterSpi.getMapKeyEncoderCacheKey(keyType);
         CodegenResult ctx = new CodegenResult();
         ctx.append("public static void encode_(java.lang.Object obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {");
         ctx.append("if (obj == null) { stream.writeNull(); return; }");

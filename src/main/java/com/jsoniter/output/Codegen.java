@@ -97,7 +97,7 @@ class Codegen {
             clazz = (Class) pType.getRawType();
             typeArgs = pType.getActualTypeArguments();
             if (Map.class.isAssignableFrom(clazz)) {
-                MapKeyCodecs.register(typeArgs[0]);
+                DefaultMapKeyEncoder.registerOrGetExisting(typeArgs[0]);
             }
         } else {
             clazz = (Class) type;

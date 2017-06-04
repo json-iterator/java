@@ -1,20 +1,16 @@
 package com.jsoniter.output;
 
 import com.jsoniter.any.Any;
-import com.jsoniter.spi.Encoder;
-import com.jsoniter.spi.MapKeyCodec;
-import com.jsoniter.spi.MapKeyCodecs;
-import com.jsoniter.spi.TypeLiteral;
+import com.jsoniter.spi.*;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.util.HashMap;
 import java.util.Map;
 
 class ReflectionMapEncoder implements Encoder {
 
     private final TypeLiteral valueTypeLiteral;
-    private final MapKeyCodec mapKeyCodec;
+    private final MapKeyEncoder mapKeyEncoder;
 
     public ReflectionMapEncoder(Class clazz, Type[] typeArgs) {
         Type keyType = String.class;
@@ -24,9 +20,9 @@ class ReflectionMapEncoder implements Encoder {
             valueType = typeArgs[1];
         }
         if (keyType == String.class) {
-            mapKeyCodec = null;
+            mapKeyEncoder = null;
         } else {
-            mapKeyCodec = MapKeyCodecs.register(keyType);
+            mapKeyEncoder = DefaultMapKeyEncoder.registerOrGetExisting(keyType);
         }
         valueTypeLiteral = TypeLiteral.create(valueType);
     }
@@ -46,10 +42,10 @@ class ReflectionMapEncoder implements Encoder {
             } else {
                 notFirst = true;
             }
-            if (mapKeyCodec == null) {
+            if (mapKeyEncoder == null) {
                 stream.writeObjectField((String) entry.getKey());
             } else {
-                stream.writeObjectField(mapKeyCodec.encode(entry.getKey()));
+                stream.writeObjectField(mapKeyEncoder.encode(entry.getKey()));
             }
             stream.writeVal(valueTypeLiteral, entry.getValue());
         }

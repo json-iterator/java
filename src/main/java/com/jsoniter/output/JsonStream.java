@@ -337,7 +337,7 @@ public class JsonStream extends OutputStream {
     private final static ThreadLocal<JsonStream> tlsStream = new ThreadLocal<JsonStream>() {
         @Override
         protected JsonStream initialValue() {
-            return new JsonStream(null, 4096);
+            return new JsonStream(null, 512);
         }
     };
 

@@ -142,9 +142,9 @@ public class CodegenAccess {
     }
 
     public static final Object readMapKey(String cacheKey, JsonIterator iter) throws IOException {
-        Slice mapKey = readObjectFieldAsSlice(iter);
-        MapKeyCodec mapKeyCodec = JsoniterSpi.getMapKeyDecoder(cacheKey);
-        return mapKeyCodec.decode(mapKey);
+        Slice encodedMapKey = readObjectFieldAsSlice(iter);
+        MapKeyDecoder mapKeyDecoder = JsoniterSpi.getMapKeyDecoder(cacheKey);
+        return mapKeyDecoder.decode(encodedMapKey);
     }
 
     final static boolean skipWhitespacesWithoutLoadMore(JsonIterator iter) throws IOException {

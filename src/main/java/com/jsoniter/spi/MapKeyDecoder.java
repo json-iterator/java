@@ -1,7 +1,5 @@
 package com.jsoniter.spi;
 
-public interface MapKeyCodec {
-
-    String encode(Object mapKey);
+public interface MapKeyDecoder {
     Object decode(Slice encodedMapKey);
 }

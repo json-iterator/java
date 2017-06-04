@@ -1,10 +1,7 @@
 package com.jsoniter;
 
 import com.jsoniter.extra.GsonCompatibilityMode;
-import com.jsoniter.spi.JsoniterSpi;
-import com.jsoniter.spi.MapKeyCodec;
-import com.jsoniter.spi.Slice;
-import com.jsoniter.spi.TypeLiteral;
+import com.jsoniter.spi.*;
 import junit.framework.TestCase;
 
 import java.io.IOException;
@@ -47,12 +44,7 @@ public class TestMap extends TestCase {
     }
 
     public void test_MapKeyCodec() {
-        JsoniterSpi.registerMapKeyDecoder(TestObject1.class, new MapKeyCodec() {
-            @Override
-            public String encode(Object mapKey) {
-                throw new UnsupportedOperationException();
-            }
-
+        JsoniterSpi.registerMapKeyDecoder(TestObject1.class, new MapKeyDecoder() {
             @Override
             public Object decode(Slice encodedMapKey) {
                 Integer field = Integer.valueOf(encodedMapKey.toString());
