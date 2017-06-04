@@ -285,7 +285,7 @@ public class JsoniterConfig extends EmptyExtension implements Config {
             }
         }
         if (jsonProperty.implementation() != Object.class) {
-            binding.valueType = ParameterizedTypeImpl.useImpl(binding.valueType, jsonProperty.implementation());
+            binding.valueType = GenericsHelper.useImpl(binding.valueType, jsonProperty.implementation());
             binding.valueTypeLiteral = TypeLiteral.create(binding.valueType);
         }
     }

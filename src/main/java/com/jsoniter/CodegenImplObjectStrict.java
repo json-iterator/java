@@ -155,7 +155,7 @@ class CodegenImplObjectStrict {
 
     private static void appendSetExtraProperteis(StringBuilder lines, ClassDescriptor desc) {
         Binding onExtraProperties = desc.onExtraProperties;
-        if (ParameterizedTypeImpl.isSameClass(onExtraProperties.valueType, Map.class)) {
+        if (GenericsHelper.isSameClass(onExtraProperties.valueType, Map.class)) {
             if (onExtraProperties.field != null) {
                 append(lines, String.format("obj.%s = extra;", onExtraProperties.field.getName()));
             } else {

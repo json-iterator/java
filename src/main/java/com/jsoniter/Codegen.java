@@ -145,7 +145,7 @@ class Codegen {
             } else if (clazz == Set.class) {
                 clazz = implClazz == null ? HashSet.class : implClazz;
             }
-            return new ParameterizedTypeImpl(new Type[]{compType}, null, clazz);
+            return GenericsHelper.createParameterizedType(new Type[]{compType}, null, clazz);
         }
         if (Map.class.isAssignableFrom(clazz)) {
             Type keyType = String.class;
@@ -167,13 +167,13 @@ class Codegen {
                 keyType = String.class;
             }
             MapKeyDecoders.register(keyType);
-            return new ParameterizedTypeImpl(new Type[]{keyType, valueType}, null, clazz);
+            return GenericsHelper.createParameterizedType(new Type[]{keyType, valueType}, null, clazz);
         }
         if (implClazz != null) {
             if (typeArgs.length == 0) {
                 return implClazz;
             } else {
-                return new ParameterizedTypeImpl(typeArgs, null, implClazz);
+                return GenericsHelper.createParameterizedType(typeArgs, null, implClazz);
             }
         }
         return type;

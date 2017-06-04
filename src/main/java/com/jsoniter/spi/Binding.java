@@ -58,11 +58,12 @@ public class Binding {
             for (int i = 0; i < args.length; i++) {
                 args[i] = substituteTypeVariables(lookup, args[i]);
             }
-            return new ParameterizedTypeImpl(args, pType.getOwnerType(), pType.getRawType());
+            return GenericsHelper.createParameterizedType(args, pType.getOwnerType(), pType.getRawType());
         }
         if (type instanceof GenericArrayType) {
             GenericArrayType gaType = (GenericArrayType) type;
-            return new GenericArrayTypeImpl(substituteTypeVariables(lookup, gaType.getGenericComponentType()));
+            Type componentType = substituteTypeVariables(lookup, gaType.getGenericComponentType());
+            return GenericsHelper.createGenericArrayType(componentType);
         }
         return type;
     }
