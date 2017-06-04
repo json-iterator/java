@@ -4,9 +4,7 @@ import com.jsoniter.spi.*;
 import com.jsoniter.any.Any;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 class ReflectionObjectEncoder implements Encoder {
@@ -14,7 +12,7 @@ class ReflectionObjectEncoder implements Encoder {
     private final ClassDescriptor desc;
 
     public ReflectionObjectEncoder(Class clazz) {
-        desc = JsoniterSpi.getEncodingClassDescriptor(clazz, true);
+        desc = ClassDescriptor.getEncodingClassDescriptor(clazz, true);
         for (Binding binding : desc.allEncoderBindings()) {
             if (binding.encoder == null) {
                 // the field encoder might be registered directly

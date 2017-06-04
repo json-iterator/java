@@ -1,6 +1,5 @@
 package com.jsoniter;
 
-import com.jsoniter.annotation.JsonWrapperType;
 import com.jsoniter.any.Any;
 import com.jsoniter.spi.*;
 
@@ -34,7 +33,7 @@ class ReflectionObjectDecoder {
     }
 
     private final void init(Class clazz) throws Exception {
-        ClassDescriptor desc = JsoniterSpi.getDecodingClassDescriptor(clazz, true);
+        ClassDescriptor desc = ClassDescriptor.getDecodingClassDescriptor(clazz, true);
         for (Binding param : desc.ctor.parameters) {
             addBinding(clazz, param);
         }

@@ -3,14 +3,13 @@ package com.jsoniter.output;
 import com.jsoniter.CodegenAccess;
 import com.jsoniter.spi.*;
 
-import java.lang.reflect.Method;
 import java.util.*;
 
 class CodegenImplObject {
     public static CodegenResult genObject(Class clazz) {
 
         CodegenResult ctx = new CodegenResult();
-        ClassDescriptor desc = JsoniterSpi.getEncodingClassDescriptor(clazz, false);
+        ClassDescriptor desc = ClassDescriptor.getEncodingClassDescriptor(clazz, false);
         HashMap<String, Binding> bindings = new HashMap<String, Binding>();
         for (Binding binding : desc.allEncoderBindings()) {
             for (String toName : binding.toNames) {

@@ -231,7 +231,7 @@ class Codegen {
         if (clazz.isEnum()) {
             return CodegenImplEnum.genEnum(clazz);
         }
-        ClassDescriptor desc = JsoniterSpi.getDecodingClassDescriptor(clazz, false);
+        ClassDescriptor desc = ClassDescriptor.getDecodingClassDescriptor(clazz, false);
         if (shouldUseStrictMode(desc)) {
             return CodegenImplObjectStrict.genObjectUsingStrict(clazz, desc);
         } else {
