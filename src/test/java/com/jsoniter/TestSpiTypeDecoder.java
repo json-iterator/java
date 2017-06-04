@@ -12,11 +12,12 @@ import java.util.List;
 
 public class TestSpiTypeDecoder extends TestCase {
 
+    static {
+//        JsonIterator.setMode(DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_WITH_HASH);
+    }
+
     public static class TestObject1 {
         public int field1;
-
-        private TestObject1() {
-        }
     }
 
     public void test_TypeDecoder() throws IOException {

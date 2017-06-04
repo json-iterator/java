@@ -4,17 +4,12 @@ import com.jsoniter.annotation.JsonProperty;
 import com.jsoniter.spi.Encoder;
 import junit.framework.TestCase;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 public class TestAnnotationJsonProperty extends TestCase {
 
-    private ByteArrayOutputStream baos;
-    private JsonStream stream;
-
-    public void setUp() {
-        baos = new ByteArrayOutputStream();
-        stream = new JsonStream(baos, 4096);
+    static {
+//        JsonStream.setMode(EncodingMode.DYNAMIC_MODE);
     }
 
     public static class TestObject1 {
@@ -25,9 +20,8 @@ public class TestAnnotationJsonProperty extends TestCase {
     public void test_property() throws IOException {
         TestObject1 obj = new TestObject1();
         obj.field1 = "hello";
-        stream.writeVal(obj);
-        stream.close();
-        assertEquals("{\"field-1\":\"hello\"}", baos.toString());
+        String output = JsonStream.serialize(obj);
+        assertEquals("{\"field-1\":\"hello\"}", output);
     }
 
 
@@ -39,8 +33,7 @@ public class TestAnnotationJsonProperty extends TestCase {
     public void test_encoder() throws IOException {
         TestObject2 obj = new TestObject2();
         obj.field1 = 100;
-        stream.writeVal(obj);
-        stream.close();
-        assertEquals("{\"field1\":\"100\"}", baos.toString());
+        String output = JsonStream.serialize(obj);
+        assertEquals("{\"field1\":\"100\"}", output);
     }
 }

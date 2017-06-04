@@ -5,7 +5,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.jsoniter.extra.GsonCompatibilityMode;
-import com.jsoniter.spi.JsoniterSpi;
 import junit.framework.TestCase;
 
 public class TestGson extends TestCase {

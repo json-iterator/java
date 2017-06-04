@@ -8,6 +8,7 @@ import java.io.OutputStream;
 
 public class JsonStream extends OutputStream {
 
+    public Config configCache;
     public static int defaultIndentionStep = 0;
     public int indentionStep = defaultIndentionStep;
     private int indention = 0;
@@ -322,7 +323,7 @@ public class JsonStream extends OutputStream {
             return;
         }
         Class<?> clazz = obj.getClass();
-        String cacheKey = TypeLiteral.create(clazz).getEncoderCacheKey();
+        String cacheKey = currentConfig().getEncoderCacheKey(clazz);
         Codegen.getEncoder(cacheKey, clazz).encode(obj, this);
     }
 
@@ -330,8 +331,17 @@ public class JsonStream extends OutputStream {
         if (null == obj) {
             writeNull();
         } else {
-            Codegen.getEncoder(typeLiteral.getEncoderCacheKey(), typeLiteral.getType()).encode(obj, this);
+            String cacheKey = currentConfig().getEncoderCacheKey(typeLiteral.getType());
+            Codegen.getEncoder(cacheKey, typeLiteral.getType()).encode(obj, this);
         }
+    }
+
+    public Config currentConfig() {
+        if (configCache != null) {
+            return configCache;
+        }
+        configCache = JsoniterSpi.getCurrentConfig();
+        return configCache;
     }
 
     public static void serialize(Config config, Object obj, OutputStream out) {

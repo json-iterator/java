@@ -12,6 +12,7 @@ public class JsoniterConfig extends EmptyExtension implements Config {
     private final String configName;
     private final Builder builder;
     private volatile Map<Type, String> decoderCacheKeys = new HashMap<Type, String>();
+    private volatile Map<Type, String> encoderCacheKeys = new HashMap<Type, String>();
 
     public JsoniterConfig(Builder builder) {
         this.configName = JsoniterSpi.assignConfigName(builder);
@@ -37,6 +38,26 @@ public class JsoniterConfig extends EmptyExtension implements Config {
             cacheKey = TypeLiteral.create(type).getDecoderCacheKey(configName);
             HashMap<Type, String> newCache = new HashMap<Type, String>(decoderCacheKeys);
             newCache.put(type, cacheKey);
+            decoderCacheKeys = newCache;
+            return cacheKey;
+        }
+    }
+
+    @Override
+    public String getEncoderCacheKey(Type type) {
+        String cacheKey = encoderCacheKeys.get(type);
+        if (cacheKey != null) {
+            return cacheKey;
+        }
+        synchronized(this) {
+            cacheKey = encoderCacheKeys.get(type);
+            if (cacheKey != null) {
+                return cacheKey;
+            }
+            cacheKey = TypeLiteral.create(type).getEncoderCacheKey(configName);
+            HashMap<Type, String> newCache = new HashMap<Type, String>(encoderCacheKeys);
+            newCache.put(type, cacheKey);
+            encoderCacheKeys = newCache;
             return cacheKey;
         }
     }
