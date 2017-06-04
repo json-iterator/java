@@ -1,5 +1,7 @@
 package com.jsoniter;
 
+import com.jsoniter.spi.ClassInfo;
+
 import java.lang.reflect.Type;
 import java.util.*;
 
@@ -11,10 +13,10 @@ class CodegenImplArray {
         add(Vector.class);
     }};
 
-    public static String genArray(Class clazz) {
-        Class compType = clazz.getComponentType();
+    public static String genArray(ClassInfo classInfo) {
+        Class compType = classInfo.clazz.getComponentType();
         if (compType.isArray()) {
-            throw new IllegalArgumentException("nested array not supported: " + clazz.getCanonicalName());
+            throw new IllegalArgumentException("nested array not supported: " + classInfo.clazz.getCanonicalName());
         }
         StringBuilder lines = new StringBuilder();
         append(lines, "com.jsoniter.CodegenAccess.resetExistingObject(iter);");
@@ -77,11 +79,11 @@ class CodegenImplArray {
                 "{{op}}", CodegenImplNative.genReadOp(compType));
     }
 
-    public static String genCollection(Class clazz, Type[] typeArgs) {
-        if (WITH_CAPACITY_COLLECTION_CLASSES.contains(clazz)) {
-            return CodegenImplArray.genCollectionWithCapacity(clazz, typeArgs[0]);
+    public static String genCollection(ClassInfo classInfo) {
+        if (WITH_CAPACITY_COLLECTION_CLASSES.contains(classInfo.clazz)) {
+            return CodegenImplArray.genCollectionWithCapacity(classInfo.clazz, classInfo.typeArgs[0]);
         } else {
-            return CodegenImplArray.genCollectionWithoutCapacity(clazz, typeArgs[0]);
+            return CodegenImplArray.genCollectionWithoutCapacity(classInfo.clazz, classInfo.typeArgs[0]);
         }
     }
 

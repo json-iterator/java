@@ -1,16 +1,18 @@
 package com.jsoniter;
 
+import com.jsoniter.spi.ClassInfo;
+
 import java.util.*;
 
 class CodegenImplEnum {
-    public static String genEnum(Class clazz) {
+    public static String genEnum(ClassInfo classInfo) {
         StringBuilder lines = new StringBuilder();
         append(lines, "if (iter.readNull()) { return null; }");
         append(lines, "com.jsoniter.spi.Slice field = com.jsoniter.CodegenAccess.readSlice(iter);");
         append(lines, "switch (field.len()) {");
-        append(lines, renderTriTree(buildTriTree(Arrays.asList(clazz.getEnumConstants()))));
+        append(lines, renderTriTree(buildTriTree(Arrays.asList(classInfo.clazz.getEnumConstants()))));
         append(lines, "}"); // end of switch
-        append(lines, String.format("throw iter.reportError(\"decode enum\", field + \" is not valid enum for %s\");", clazz.getName()));
+        append(lines, String.format("throw iter.reportError(\"decode enum\", field + \" is not valid enum for %s\");", classInfo.clazz.getName()));
         return lines.toString();
     }
 

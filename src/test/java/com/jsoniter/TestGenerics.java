@@ -2,6 +2,7 @@ package com.jsoniter;
 
 import com.jsoniter.spi.Binding;
 import com.jsoniter.spi.ClassDescriptor;
+import com.jsoniter.spi.ClassInfo;
 import com.jsoniter.spi.TypeLiteral;
 import junit.framework.TestCase;
 
@@ -95,12 +96,12 @@ public class TestGenerics extends TestCase {
     }
 
     public void test_generic_super_class() throws IOException {
-        ClassDescriptor desc = ClassDescriptor.getDecodingClassDescriptor(Class3.class, true);
+        ClassDescriptor desc = ClassDescriptor.getDecodingClassDescriptor(new ClassInfo(Class3.class), true);
         Map<String, String> fieldDecoderCacheKeys = new HashMap<String, String>();
         for (Binding field : desc.allDecoderBindings()) {
             fieldDecoderCacheKeys.put(field.name, field.valueTypeLiteral.getDecoderCacheKey());
         }
-        for (Binding field : ClassDescriptor.getEncodingClassDescriptor(Class3.class, true).getters) {
+        for (Binding field : ClassDescriptor.getEncodingClassDescriptor(new ClassInfo(Class3.class), true).getters) {
             fieldDecoderCacheKeys.put(field.name, field.valueTypeLiteral.getDecoderCacheKey());
         }
         assertEquals(new HashMap<String, String>() {{

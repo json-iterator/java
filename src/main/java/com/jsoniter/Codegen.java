@@ -52,22 +52,14 @@ class Codegen {
                 return decoder;
             }
         }
-        Type[] typeArgs = new Type[0];
-        Class clazz;
-        if (type instanceof ParameterizedType) {
-            ParameterizedType pType = (ParameterizedType) type;
-            clazz = (Class) pType.getRawType();
-            typeArgs = pType.getActualTypeArguments();
-        } else {
-            clazz = (Class) type;
-        }
-        decoder = CodegenImplNative.NATIVE_DECODERS.get(clazz);
+        ClassInfo classInfo = new ClassInfo(type);
+        decoder = CodegenImplNative.NATIVE_DECODERS.get(classInfo.clazz);
         if (decoder != null) {
             return decoder;
         }
         addPlaceholderDecoderToSupportRecursiveStructure(cacheKey);
         if (mode == DecodingMode.REFLECTION_MODE) {
-            decoder = ReflectionDecoderFactory.create(clazz, typeArgs);
+            decoder = ReflectionDecoderFactory.create(classInfo);
             JsoniterSpi.addNewDecoder(cacheKey, decoder);
             return decoder;
         }
@@ -82,7 +74,7 @@ class Codegen {
                 }
             }
         }
-        String source = genSource(clazz, typeArgs);
+        String source = genSource(classInfo);
         source = "public static java.lang.Object decode_(com.jsoniter.JsonIterator iter) throws java.io.IOException { "
                 + source + "}";
         if ("true".equals(System.getenv("JSONITER_DEBUG"))) {
@@ -99,7 +91,7 @@ class Codegen {
             JsoniterSpi.addNewDecoder(cacheKey, decoder);
             return decoder;
         } catch (Exception e) {
-            String msg = "failed to generate decoder for: " + type + " with " + Arrays.toString(typeArgs) + ", exception: " + e;
+            String msg = "failed to generate decoder for: " + classInfo + " with " + Arrays.toString(classInfo.typeArgs) + ", exception: " + e;
             msg = msg + "\n" + source;
             throw new JsonException(msg, e);
         }
@@ -218,24 +210,24 @@ class Codegen {
         }
     }
 
-    private static String genSource(Class clazz, Type[] typeArgs) {
-        if (clazz.isArray()) {
-            return CodegenImplArray.genArray(clazz);
+    private static String genSource(ClassInfo classInfo) {
+        if (classInfo.clazz.isArray()) {
+            return CodegenImplArray.genArray(classInfo);
         }
-        if (Map.class.isAssignableFrom(clazz)) {
-            return CodegenImplMap.genMap(clazz, typeArgs);
+        if (Map.class.isAssignableFrom(classInfo.clazz)) {
+            return CodegenImplMap.genMap(classInfo);
         }
-        if (Collection.class.isAssignableFrom(clazz)) {
-            return CodegenImplArray.genCollection(clazz, typeArgs);
+        if (Collection.class.isAssignableFrom(classInfo.clazz)) {
+            return CodegenImplArray.genCollection(classInfo);
         }
-        if (clazz.isEnum()) {
-            return CodegenImplEnum.genEnum(clazz);
+        if (classInfo.clazz.isEnum()) {
+            return CodegenImplEnum.genEnum(classInfo);
         }
-        ClassDescriptor desc = ClassDescriptor.getDecodingClassDescriptor(clazz, false);
+        ClassDescriptor desc = ClassDescriptor.getDecodingClassDescriptor(classInfo, false);
         if (shouldUseStrictMode(desc)) {
-            return CodegenImplObjectStrict.genObjectUsingStrict(clazz, desc);
+            return CodegenImplObjectStrict.genObjectUsingStrict(desc);
         } else {
-            return CodegenImplObjectHash.genObjectUsingHash(clazz, desc);
+            return CodegenImplObjectHash.genObjectUsingHash(desc);
         }
     }
 

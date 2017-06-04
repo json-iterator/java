@@ -24,32 +24,33 @@ class ReflectionObjectDecoder {
     private int tempIdx;
     private ClassDescriptor desc;
 
-    public ReflectionObjectDecoder(Class clazz) {
+    public ReflectionObjectDecoder(ClassInfo classInfo) {
         try {
-            init(clazz);
+            init(classInfo);
         } catch (Exception e) {
             throw new JsonException(e);
         }
     }
 
-    private final void init(Class clazz) throws Exception {
-        ClassDescriptor desc = ClassDescriptor.getDecodingClassDescriptor(clazz, true);
+    private final void init(ClassInfo classInfo) throws Exception {
+        Class clazz = classInfo.clazz;
+        ClassDescriptor desc = ClassDescriptor.getDecodingClassDescriptor(classInfo, true);
         for (Binding param : desc.ctor.parameters) {
-            addBinding(clazz, param);
+            addBinding(classInfo, param);
         }
         this.desc = desc;
         if (desc.ctor.objectFactory == null && desc.ctor.ctor == null && desc.ctor.staticFactory == null) {
             throw new JsonException("no constructor for: " + desc.clazz);
         }
         for (Binding field : desc.fields) {
-            addBinding(clazz, field);
+            addBinding(classInfo, field);
         }
         for (Binding setter : desc.setters) {
-            addBinding(clazz, setter);
+            addBinding(classInfo, setter);
         }
         for (WrapperDescriptor setter : desc.bindingTypeWrappers) {
             for (Binding param : setter.parameters) {
-                addBinding(clazz, param);
+                addBinding(classInfo, param);
             }
         }
         if (requiredIdx > 63) {
@@ -63,7 +64,7 @@ class ReflectionObjectDecoder {
         }
     }
 
-    private void addBinding(Class clazz, final Binding binding) {
+    private void addBinding(ClassInfo classInfo, final Binding binding) {
         if (binding.asMissingWhenNotPresent) {
             binding.mask = 1L << requiredIdx;
             requiredIdx++;
@@ -87,7 +88,7 @@ class ReflectionObjectDecoder {
         for (String fromName : binding.fromNames) {
             Slice slice = Slice.make(fromName);
             if (allBindings.containsKey(slice)) {
-                throw new JsonException("name conflict found in " + clazz + ": " + fromName);
+                throw new JsonException("name conflict found in " + classInfo.clazz + ": " + fromName);
             }
             allBindings.put(slice, binding);
         }

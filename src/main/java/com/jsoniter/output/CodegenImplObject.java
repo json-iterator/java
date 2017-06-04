@@ -6,10 +6,10 @@ import com.jsoniter.spi.*;
 import java.util.*;
 
 class CodegenImplObject {
-    public static CodegenResult genObject(Class clazz) {
+    public static CodegenResult genObject(ClassInfo classInfo) {
 
         CodegenResult ctx = new CodegenResult();
-        ClassDescriptor desc = ClassDescriptor.getEncodingClassDescriptor(clazz, false);
+        ClassDescriptor desc = ClassDescriptor.getEncodingClassDescriptor(classInfo, false);
         HashMap<String, Binding> bindings = new HashMap<String, Binding>();
         for (Binding binding : desc.allEncoderBindings()) {
             for (String toName : binding.toNames) {
@@ -25,7 +25,7 @@ class CodegenImplObject {
                 return (x < y) ? -1 : ((x == y) ? 0 : 1);
             }
         });
-        ctx.append(String.format("public static void encode_(%s obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {", clazz.getCanonicalName()));
+        ctx.append(String.format("public static void encode_(%s obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {", classInfo.clazz.getCanonicalName()));
         if (hasFieldOutput(desc)) {
             int notFirst = 0;
             ctx.buffer('{');

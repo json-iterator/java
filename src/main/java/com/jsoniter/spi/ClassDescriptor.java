@@ -5,6 +5,7 @@ import java.util.*;
 
 public class ClassDescriptor {
 
+    public ClassInfo classInfo;
     public Class clazz;
     public Map<String, Type> lookup;
     public ConstructorDescriptor ctor;
@@ -21,14 +22,16 @@ public class ClassDescriptor {
     private ClassDescriptor() {
     }
 
-    public static ClassDescriptor getDecodingClassDescriptor(Class clazz, boolean includingPrivate) {
+    public static ClassDescriptor getDecodingClassDescriptor(ClassInfo classInfo, boolean includingPrivate) {
+        Class clazz = classInfo.clazz;
         Map<String, Type> lookup = collectTypeVariableLookup(clazz);
         ClassDescriptor desc = new ClassDescriptor();
+        desc.classInfo = classInfo;
         desc.clazz = clazz;
         desc.lookup = lookup;
         desc.ctor = getCtor(clazz);
-        desc.fields = getFields(lookup, clazz, includingPrivate);
-        desc.setters = getSetters(lookup, clazz, includingPrivate);
+        desc.fields = getFields(lookup, classInfo, includingPrivate);
+        desc.setters = getSetters(lookup, classInfo, includingPrivate);
         desc.bindingTypeWrappers = new ArrayList<WrapperDescriptor>();
         desc.keyValueTypeWrappers = new ArrayList<Method>();
         desc.unwrappers = new ArrayList<UnwrapperDescriptor>();
@@ -74,13 +77,15 @@ public class ClassDescriptor {
         return desc;
     }
 
-    public static ClassDescriptor getEncodingClassDescriptor(Class clazz, boolean includingPrivate) {
+    public static ClassDescriptor getEncodingClassDescriptor(ClassInfo classInfo, boolean includingPrivate) {
+        Class clazz = classInfo.clazz;
         Map<String, Type> lookup = collectTypeVariableLookup(clazz);
         ClassDescriptor desc = new ClassDescriptor();
+        desc.classInfo = classInfo;
         desc.clazz = clazz;
         desc.lookup = lookup;
-        desc.fields = getFields(lookup, clazz, includingPrivate);
-        desc.getters = getGetters(lookup, clazz, includingPrivate);
+        desc.fields = getFields(lookup, classInfo, includingPrivate);
+        desc.getters = getGetters(lookup, classInfo, includingPrivate);
         desc.bindingTypeWrappers = new ArrayList<WrapperDescriptor>();
         desc.keyValueTypeWrappers = new ArrayList<Method>();
         desc.unwrappers = new ArrayList<UnwrapperDescriptor>();
@@ -217,9 +222,9 @@ public class ClassDescriptor {
         return cctor;
     }
 
-    private static List<Binding> getFields(Map<String, Type> lookup, Class clazz, boolean includingPrivate) {
+    private static List<Binding> getFields(Map<String, Type> lookup, ClassInfo classInfo, boolean includingPrivate) {
         ArrayList<Binding> bindings = new ArrayList<Binding>();
-        for (Field field : getAllFields(clazz, includingPrivate)) {
+        for (Field field : getAllFields(classInfo.clazz, includingPrivate)) {
             if (Modifier.isStatic(field.getModifiers())) {
                 continue;
             }
@@ -232,15 +237,15 @@ public class ClassDescriptor {
             if (includingPrivate) {
                 field.setAccessible(true);
             }
-            Binding binding = createBindingFromField(lookup, clazz, field);
+            Binding binding = createBindingFromField(lookup, classInfo, field);
             bindings.add(binding);
         }
         return bindings;
     }
 
-    private static Binding createBindingFromField(Map<String, Type> lookup, Class clazz, Field field) {
+    private static Binding createBindingFromField(Map<String, Type> lookup, ClassInfo classInfo, Field field) {
         try {
-            Binding binding = new Binding(clazz, lookup, field.getGenericType());
+            Binding binding = new Binding(classInfo, lookup, field.getGenericType());
             binding.fromNames = new String[]{field.getName()};
             binding.toNames = new String[]{field.getName()};
             binding.name = field.getName();
@@ -265,9 +270,9 @@ public class ClassDescriptor {
         return allFields;
     }
 
-    private static List<Binding> getSetters(Map<String, Type> lookup, Class clazz, boolean includingPrivate) {
+    private static List<Binding> getSetters(Map<String, Type> lookup, ClassInfo classInfo, boolean includingPrivate) {
         ArrayList<Binding> setters = new ArrayList<Binding>();
-        for (Method method : getAllMethods(clazz, includingPrivate)) {
+        for (Method method : getAllMethods(classInfo.clazz, includingPrivate)) {
             if (Modifier.isStatic(method.getModifiers())) {
                 continue;
             }
@@ -290,7 +295,7 @@ public class ClassDescriptor {
             }
             try {
                 String fromName = translateSetterName(methodName);
-                Binding binding = new Binding(clazz, lookup, paramTypes[0]);
+                Binding binding = new Binding(classInfo, lookup, paramTypes[0]);
                 binding.fromNames = new String[]{fromName};
                 binding.name = fromName;
                 binding.method = method;
@@ -327,9 +332,9 @@ public class ClassDescriptor {
         return fromName;
     }
 
-    private static List<Binding> getGetters(Map<String, Type> lookup, Class clazz, boolean includingPrivate) {
+    private static List<Binding> getGetters(Map<String, Type> lookup, ClassInfo classInfo, boolean includingPrivate) {
         ArrayList<Binding> getters = new ArrayList<Binding>();
-        for (Method method : getAllMethods(clazz, includingPrivate)) {
+        for (Method method : getAllMethods(classInfo.clazz, includingPrivate)) {
             if (Modifier.isStatic(method.getModifiers())) {
                 continue;
             }
@@ -350,7 +355,7 @@ public class ClassDescriptor {
             char[] fromNameChars = toName.toCharArray();
             fromNameChars[0] = Character.toLowerCase(fromNameChars[0]);
             toName = new String(fromNameChars);
-            Binding getter = new Binding(clazz, lookup, method.getGenericReturnType());
+            Binding getter = new Binding(classInfo, lookup, method.getGenericReturnType());
             getter.toNames = new String[]{toName};
             getter.name = toName;
             getter.method = method;

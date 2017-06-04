@@ -11,14 +11,15 @@ import java.util.Map;
 public class JsoniterSpi {
 
     // registered at startup, global state
+    private static Config defaultConfig;
     private static List<Extension> extensions = new ArrayList<Extension>();
     private static Map<Class, Class> typeImpls = new HashMap<Class, Class>();
     private static Map<Type, MapKeyDecoder> globalMapKeyDecoders = new HashMap<Type, MapKeyDecoder>();
     private static Map<Type, MapKeyEncoder> globalMapKeyEncoders = new HashMap<Type, MapKeyEncoder>();
     private static Map<Type, Decoder> globalTypeDecoders = new HashMap<Type, Decoder>();
     private static Map<Type, Encoder> globalTypeEncoders = new HashMap<Type, Encoder>();
-    private static Config defaultConfig;
-    // TODO: add property encoder/decoders
+    private static Map<TypeProperty, Decoder> globalPropertyDecoders = new HashMap<TypeProperty, Decoder>();
+    private static Map<TypeProperty, Encoder> globalPropertyEncoders = new HashMap<TypeProperty, Encoder>();
 
     // current state
     private static int configIndex = 0;
@@ -130,20 +131,24 @@ public class JsoniterSpi {
         copyGlobalTypeEncoder(getCurrentConfig().configName(), typeLiteral.getType(), encoder);
     }
 
-    public static void registerPropertyDecoder(Class clazz, String field, Decoder decoder) {
-        addNewDecoder(field + "@" + TypeLiteral.create(clazz).getDecoderCacheKey(), decoder);
+    public static void registerPropertyDecoder(Class clazz, String property, Decoder decoder) {
+        globalPropertyDecoders.put(new TypeProperty(clazz, property), decoder);
+        copyGlobalPropertyDecoder(getCurrentConfig().configName(), clazz, property, decoder);
     }
 
-    public static void registerPropertyDecoder(TypeLiteral typeLiteral, String field, Decoder decoder) {
-        addNewDecoder(field + "@" + typeLiteral.getDecoderCacheKey(), decoder);
+    public static void registerPropertyDecoder(TypeLiteral typeLiteral, String property, Decoder decoder) {
+        globalPropertyDecoders.put(new TypeProperty(typeLiteral.getType(), property), decoder);
+        copyGlobalPropertyDecoder(getCurrentConfig().configName(), typeLiteral.getType(), property, decoder);
     }
 
-    public static void registerPropertyEncoder(Class clazz, String field, Encoder encoder) {
-        addNewEncoder(field + "@" + TypeLiteral.create(clazz).getEncoderCacheKey(), encoder);
+    public static void registerPropertyEncoder(Class clazz, String property, Encoder encoder) {
+        globalPropertyEncoders.put(new TypeProperty(clazz, property), encoder);
+        copyGlobalPropertyEncoder(getCurrentConfig().configName(), clazz, property, encoder);
     }
 
-    public static void registerPropertyEncoder(TypeLiteral typeLiteral, String field, Encoder encoder) {
-        addNewEncoder(field + "@" + typeLiteral.getDecoderCacheKey(), encoder);
+    public static void registerPropertyEncoder(TypeLiteral typeLiteral, String property, Encoder encoder) {
+        globalPropertyEncoders.put(new TypeProperty(typeLiteral.getType(), property), encoder);
+        copyGlobalPropertyEncoder(getCurrentConfig().configName(), typeLiteral.getType(), property, encoder);
     }
 
     // === copy from global to current ===
@@ -161,6 +166,21 @@ public class JsoniterSpi {
         for (Map.Entry<Type, Encoder> entry : globalTypeEncoders.entrySet()) {
             copyGlobalTypeEncoder(configName, entry.getKey(), entry.getValue());
         }
+        for (Map.Entry<TypeProperty, Decoder> entry : globalPropertyDecoders.entrySet()) {
+            copyGlobalPropertyDecoder(configName, entry.getKey().type, entry.getKey().property, entry.getValue());
+        }
+        for (Map.Entry<TypeProperty, Encoder> entry : globalPropertyEncoders.entrySet()) {
+            copyGlobalPropertyEncoder(configName, entry.getKey().type, entry.getKey().property, entry.getValue());
+
+        }
+    }
+
+    private static void copyGlobalPropertyEncoder(String configName, Type type, String property, Encoder propertyEncoder) {
+        addNewEncoder(property + "@" + TypeLiteral.create(type).getEncoderCacheKey(), propertyEncoder);
+    }
+
+    private static void copyGlobalPropertyDecoder(String configName, Type type, String property, Decoder propertyDecoder) {
+        addNewDecoder(property + "@" + TypeLiteral.create(type).getDecoderCacheKey(), propertyDecoder);
     }
 
     private static void copyGlobalTypeEncoder(String configName, Type type, Encoder typeEncoder) {
@@ -256,5 +276,34 @@ public class JsoniterSpi {
         HashMap<Class, Extension> copy = new HashMap<Class, Extension>(objectFactories);
         copy.put(clazz, extension);
         objectFactories = copy;
+    }
+
+    private static class TypeProperty {
+
+        public final Type type;
+        public final String property;
+
+        private TypeProperty(Type type, String property) {
+            this.type = type;
+            this.property = property;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            TypeProperty that = (TypeProperty) o;
+
+            if (type != null ? !type.equals(that.type) : that.type != null) return false;
+            return property != null ? property.equals(that.property) : that.property == null;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = type != null ? type.hashCode() : 0;
+            result = 31 * result + (property != null ? property.hashCode() : 0);
+            return result;
+        }
     }
 }

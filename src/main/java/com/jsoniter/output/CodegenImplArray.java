@@ -1,11 +1,14 @@
 package com.jsoniter.output;
 
+import com.jsoniter.spi.ClassInfo;
+
 import java.lang.reflect.Type;
 import java.util.*;
 
 class CodegenImplArray {
 
-    public static CodegenResult genArray(String cacheKey, Class clazz) {
+    public static CodegenResult genArray(String cacheKey, ClassInfo classInfo) {
+        Class clazz = classInfo.clazz;
         Class compType = clazz.getComponentType();
         if (compType.isArray()) {
             throw new IllegalArgumentException("nested array not supported: " + clazz.getCanonicalName());
@@ -47,7 +50,9 @@ class CodegenImplArray {
         return ctx;
     }
 
-    public static CodegenResult genCollection(String cacheKey, Class clazz, Type[] typeArgs) {
+    public static CodegenResult genCollection(String cacheKey, ClassInfo classInfo) {
+        Type[] typeArgs = classInfo.typeArgs;
+        Class clazz = classInfo.clazz;
         Type compType = Object.class;
         if (typeArgs.length == 0) {
             // default to List<Object>

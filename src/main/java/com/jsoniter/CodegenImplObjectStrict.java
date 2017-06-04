@@ -21,7 +21,7 @@ class CodegenImplObjectStrict {
         put("long", "0");
     }};
 
-    public static String genObjectUsingStrict(Class clazz, ClassDescriptor desc) {
+    public static String genObjectUsingStrict(ClassDescriptor desc) {
         List<Binding> allBindings = desc.allDecoderBindings();
         int lastRequiredIdx = assignMaskForRequiredProperties(allBindings);
         boolean hasRequiredBinding = lastRequiredIdx > 0;
@@ -126,7 +126,7 @@ class CodegenImplObjectStrict {
             appendSetExtraToKeyValueTypeWrappers(lines, desc);
         }
         if (!desc.ctor.parameters.isEmpty()) {
-            append(lines, String.format("%s obj = {{newInst}};", CodegenImplNative.getTypeName(clazz)));
+            append(lines, String.format("%s obj = {{newInst}};", CodegenImplNative.getTypeName(desc.clazz)));
             for (Binding field : desc.fields) {
                 append(lines, String.format("obj.%s = _%s_;", field.field.getName(), field.name));
             }
@@ -137,8 +137,8 @@ class CodegenImplObjectStrict {
         appendWrappers(desc.bindingTypeWrappers, lines);
         append(lines, "return obj;");
         return lines.toString()
-                .replace("{{clazz}}", clazz.getCanonicalName())
-                .replace("{{newInst}}", CodegenImplObjectHash.genNewInstCode(clazz, desc.ctor));
+                .replace("{{clazz}}", desc.clazz.getCanonicalName())
+                .replace("{{newInst}}", CodegenImplObjectHash.genNewInstCode(desc.clazz, desc.ctor));
     }
 
     private static void appendSetExtraToKeyValueTypeWrappers(StringBuilder lines, ClassDescriptor desc) {

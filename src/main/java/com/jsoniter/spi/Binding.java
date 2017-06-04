@@ -33,9 +33,9 @@ public class Binding {
     public int idx;
     public long mask;
 
-    public Binding(Class clazz, Map<String, Type> lookup, Type valueType) {
-        this.clazz = clazz;
-        this.clazzTypeLiteral = TypeLiteral.create(clazz);
+    public Binding(ClassInfo classInfo, Map<String, Type> lookup, Type valueType) {
+        this.clazz = classInfo.clazz;
+        this.clazzTypeLiteral = TypeLiteral.create(classInfo.type);
         this.valueType = substituteTypeVariables(lookup, valueType);
         this.valueTypeLiteral = TypeLiteral.create(this.valueType);
     }

@@ -1,11 +1,13 @@
 package com.jsoniter.output;
 
+import com.jsoniter.spi.ClassInfo;
 import com.jsoniter.spi.JsoniterSpi;
 
 import java.lang.reflect.Type;
 
 class CodegenImplMap {
-    public static CodegenResult genMap(String cacheKey, Class clazz, Type[] typeArgs) {
+    public static CodegenResult genMap(String cacheKey, ClassInfo classInfo) {
+        Type[] typeArgs = classInfo.typeArgs;
         boolean isCollectionValueNullable = true;
         if (cacheKey.endsWith("__value_not_nullable")) {
             isCollectionValueNullable = false;

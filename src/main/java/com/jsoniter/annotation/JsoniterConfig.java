@@ -62,7 +62,7 @@ public class JsoniterConfig extends EmptyExtension implements Config {
                 desc.asExtraForUnknownProperties = true;
             }
             for (String fieldName : jsonObject.unknownPropertiesWhitelist()) {
-                Binding binding = new Binding(desc.clazz, desc.lookup, Object.class);
+                Binding binding = new Binding(desc.classInfo, desc.lookup, Object.class);
                 binding.name = fieldName;
                 binding.fromNames = new String[]{binding.name};
                 binding.toNames = new String[0];
@@ -70,7 +70,7 @@ public class JsoniterConfig extends EmptyExtension implements Config {
                 desc.fields.add(binding);
             }
             for (String fieldName : jsonObject.unknownPropertiesBlacklist()) {
-                Binding binding = new Binding(desc.clazz, desc.lookup, Object.class);
+                Binding binding = new Binding(desc.classInfo, desc.lookup, Object.class);
                 binding.name = fieldName;
                 binding.fromNames = new String[]{binding.name};
                 binding.toNames = new String[0];
@@ -119,7 +119,7 @@ public class JsoniterConfig extends EmptyExtension implements Config {
                 wrapper.method = method;
                 for (int i = 0; i < annotations.length; i++) {
                     Annotation[] paramAnnotations = annotations[i];
-                    Binding binding = new Binding(desc.clazz, desc.lookup, method.getGenericParameterTypes()[i]);
+                    Binding binding = new Binding(desc.classInfo, desc.lookup, method.getGenericParameterTypes()[i]);
                     JsonProperty jsonProperty = getJsonProperty(paramAnnotations);
                     if (jsonProperty != null) {
                         updateBindingWithJsonProperty(binding, jsonProperty);
@@ -175,7 +175,7 @@ public class JsoniterConfig extends EmptyExtension implements Config {
             for (int i = 0; i < annotations.length; i++) {
                 Annotation[] paramAnnotations = annotations[i];
                 JsonProperty jsonProperty = getJsonProperty(paramAnnotations);
-                Binding binding = new Binding(desc.clazz, desc.lookup, method.getGenericParameterTypes()[i]);
+                Binding binding = new Binding(desc.classInfo, desc.lookup, method.getGenericParameterTypes()[i]);
                 if (jsonProperty != null) {
                     updateBindingWithJsonProperty(binding, jsonProperty);
                 }
@@ -204,7 +204,7 @@ public class JsoniterConfig extends EmptyExtension implements Config {
             for (int i = 0; i < annotations.length; i++) {
                 Annotation[] paramAnnotations = annotations[i];
                 JsonProperty jsonProperty = getJsonProperty(paramAnnotations);
-                Binding binding = new Binding(desc.clazz, desc.lookup, ctor.getGenericParameterTypes()[i]);
+                Binding binding = new Binding(desc.classInfo, desc.lookup, ctor.getGenericParameterTypes()[i]);
                 if (jsonProperty != null) {
                     updateBindingWithJsonProperty(binding, jsonProperty);
                 }

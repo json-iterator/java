@@ -1,5 +1,6 @@
 package com.jsoniter;
 
+import com.jsoniter.spi.ClassInfo;
 import com.jsoniter.spi.Decoder;
 
 import java.lang.reflect.Type;
@@ -7,7 +8,9 @@ import java.util.Collection;
 import java.util.Map;
 
 class ReflectionDecoderFactory {
-    public static Decoder create(Class clazz, Type... typeArgs) {
+    public static Decoder create(ClassInfo classAndArgs) {
+        Class clazz = classAndArgs.clazz;
+        Type[] typeArgs = classAndArgs.typeArgs;
         if (clazz.isArray()) {
             return new ReflectionArrayDecoder(clazz);
         }
@@ -20,6 +23,6 @@ class ReflectionDecoderFactory {
         if (clazz.isEnum()) {
             return new ReflectionEnumDecoder(clazz);
         }
-        return new ReflectionObjectDecoder(clazz).create();
+        return new ReflectionObjectDecoder(classAndArgs).create();
     }
 }

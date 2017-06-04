@@ -11,8 +11,8 @@ class ReflectionObjectEncoder implements Encoder {
 
     private final ClassDescriptor desc;
 
-    public ReflectionObjectEncoder(Class clazz) {
-        desc = ClassDescriptor.getEncodingClassDescriptor(clazz, true);
+    public ReflectionObjectEncoder(ClassInfo classInfo) {
+        desc = ClassDescriptor.getEncodingClassDescriptor(classInfo, true);
         for (Binding binding : desc.allEncoderBindings()) {
             if (binding.encoder == null) {
                 // the field encoder might be registered directly

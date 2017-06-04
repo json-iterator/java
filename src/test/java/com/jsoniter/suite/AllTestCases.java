@@ -21,13 +21,13 @@ import org.junit.runners.Suite;
         com.jsoniter.output.TestGenerics.class,
         TestCustomizeType.class, TestDemo.class,
         TestExisting.class, TestGenerics.class, TestGenerics.class, TestIO.class, TestNested.class,
-        TestObject.class, TestReadAny.class, TestReflection.class, TestSkip.class, TestSlice.class,
+        TestObject.class, TestReadAny.class, TestSkip.class, TestSlice.class,
         TestString.class, TestWhatIsNext.class,
         TestAny.class,
         com.jsoniter.output.TestArray.class,
         com.jsoniter.any.TestArray.class,
         com.jsoniter.TestArray.class,
-        TestCustomizeField.class,
+        TestSpiPropertyEncoder.class,
         com.jsoniter.TestMap.class,
         com.jsoniter.output.TestMap.class,
         TestNative.class, TestNested.class, TestObject.class, TestBoolean.class, TestFloat.class,
@@ -35,6 +35,7 @@ import org.junit.runners.Suite;
         com.jsoniter.output.TestJackson.class,
         com.jsoniter.TestJackson.class,
         TestSpiTypeEncoder.class,
-        TestSpiTypeDecoder.class})
+        TestSpiTypeDecoder.class,
+        TestSpiPropertyDecoder.class})
 public abstract class AllTestCases {
 }

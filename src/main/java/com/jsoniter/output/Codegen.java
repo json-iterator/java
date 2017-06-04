@@ -46,16 +46,8 @@ class Codegen {
             if (encoder != null) {
                 return encoder;
             }
-            Type[] typeArgs = new Type[0];
-            Class clazz;
-            if (type instanceof ParameterizedType) {
-                ParameterizedType pType = (ParameterizedType) type;
-                clazz = (Class) pType.getRawType();
-                typeArgs = pType.getActualTypeArguments();
-            } else {
-                clazz = (Class) type;
-            }
-            encoder = ReflectionEncoderFactory.create(clazz, typeArgs);
+            ClassInfo classInfo = new ClassInfo(type);
+            encoder = ReflectionEncoderFactory.create(classInfo);
             HashMap<String, Encoder> copy = new HashMap<String, Encoder>(reflectionEncoders);
             copy.put(cacheKey, encoder);
             reflectionEncoders = copy;
@@ -90,20 +82,13 @@ class Codegen {
             return encoder;
         }
         addPlaceholderEncoderToSupportRecursiveStructure(cacheKey);
-        Type[] typeArgs = new Type[0];
-        Class clazz;
-        if (type instanceof ParameterizedType) {
-            ParameterizedType pType = (ParameterizedType) type;
-            clazz = (Class) pType.getRawType();
-            typeArgs = pType.getActualTypeArguments();
-            if (Map.class.isAssignableFrom(clazz)) {
-                DefaultMapKeyEncoder.registerOrGetExisting(typeArgs[0]);
-            }
-        } else {
-            clazz = (Class) type;
+        type = chooseAccessibleSuper(type);
+        ClassInfo classInfo = new ClassInfo(type);
+        if (Map.class.isAssignableFrom(classInfo.clazz) && classInfo.typeArgs.length > 1) {
+            DefaultMapKeyEncoder.registerOrGetExisting(classInfo.typeArgs[0]);
         }
         if (mode == EncodingMode.REFLECTION_MODE) {
-            encoder = ReflectionEncoderFactory.create(clazz, typeArgs);
+            encoder = ReflectionEncoderFactory.create(classInfo);
             JsoniterSpi.addNewEncoder(cacheKey, encoder);
             return encoder;
         }
@@ -118,19 +103,18 @@ class Codegen {
                 }
             }
         }
-        clazz = chooseAccessibleSuper(clazz);
-        CodegenResult source = genSource(cacheKey, clazz, typeArgs);
+        CodegenResult source = genSource(cacheKey, classInfo);
         try {
             generatedSources.put(cacheKey, source);
             if (isDoingStaticCodegen == null) {
-                encoder = DynamicCodegen.gen(clazz, cacheKey, source);
+                encoder = DynamicCodegen.gen(classInfo.clazz, cacheKey, source);
             } else {
-                staticGen(clazz, cacheKey, source);
+                staticGen(classInfo.clazz, cacheKey, source);
             }
             JsoniterSpi.addNewEncoder(cacheKey, encoder);
             return encoder;
         } catch (Exception e) {
-            String msg = "failed to generate encoder for: " + type + " with " + Arrays.toString(typeArgs) + ", exception: " + e;
+            String msg = "failed to generate encoder for: " + type + " with " + Arrays.toString(classInfo.typeArgs) + ", exception: " + e;
             msg = msg + "\n" + source;
             throw new JsonException(msg, e);
         }
@@ -150,11 +134,32 @@ class Codegen {
         });
     }
 
-    private static Class chooseAccessibleSuper(Class clazz) {
+    private static Type chooseAccessibleSuper(Type type) {
+        Type[] typeArgs = new Type[0];
+        Class clazz;
+        if (type instanceof ParameterizedType) {
+            ParameterizedType pType = (ParameterizedType) type;
+            clazz = (Class) pType.getRawType();
+            typeArgs = pType.getActualTypeArguments();
+        } else {
+            clazz = (Class) type;
+        }
+        if (Modifier.isPublic(clazz.getModifiers())) {
+            return type;
+        }
+        clazz = walkSuperUntilPublic(clazz.getSuperclass());
+        if (typeArgs.length == 0) {
+            return clazz;
+        } else {
+            return GenericsHelper.createParameterizedType(typeArgs, null, clazz);
+        }
+    }
+
+    private static Class walkSuperUntilPublic(Class clazz) {
         if (Modifier.isPublic(clazz.getModifiers())) {
             return clazz;
         }
-        return chooseAccessibleSuper(clazz.getSuperclass());
+        return walkSuperUntilPublic(clazz.getSuperclass());
     }
 
     public static CodegenResult getGeneratedSource(String cacheKey) {
@@ -198,20 +203,21 @@ class Codegen {
         }
     }
 
-    private static CodegenResult genSource(String cacheKey, Class clazz, Type[] typeArgs) {
+    private static CodegenResult genSource(String cacheKey, ClassInfo classInfo) {
+        Class clazz = classInfo.clazz;
         if (clazz.isArray()) {
-            return CodegenImplArray.genArray(cacheKey, clazz);
+            return CodegenImplArray.genArray(cacheKey, classInfo);
         }
         if (Map.class.isAssignableFrom(clazz)) {
-            return CodegenImplMap.genMap(cacheKey, clazz, typeArgs);
+            return CodegenImplMap.genMap(cacheKey, classInfo);
         }
         if (Collection.class.isAssignableFrom(clazz)) {
-            return CodegenImplArray.genCollection(cacheKey, clazz, typeArgs);
+            return CodegenImplArray.genCollection(cacheKey, classInfo);
         }
         if (clazz.isEnum()) {
             return CodegenImplNative.genEnum(clazz);
         }
-        return CodegenImplObject.genObject(clazz);
+        return CodegenImplObject.genObject(classInfo);
     }
 
     public static void staticGenEncoders(TypeLiteral[] typeLiterals, CodegenAccess.StaticCodegenTarget staticCodegenTarget) {

@@ -7,7 +7,8 @@ import java.util.*;
 class CodegenImplObjectHash {
 
     // the implementation is from dsljson, it is the fastest although has the risk not matching field strictly
-    public static String genObjectUsingHash(Class clazz, ClassDescriptor desc) {
+    public static String genObjectUsingHash(ClassDescriptor desc) {
+        Class clazz = desc.clazz;
         StringBuilder lines = new StringBuilder();
         // === if null, return null
         append(lines, "java.lang.Object existingObj = com.jsoniter.CodegenAccess.resetExistingObject(iter);");
@@ -77,11 +78,11 @@ class CodegenImplObjectHash {
             int intHash = calcHash(fromName);
             if (intHash == 0) {
                 // hash collision, 0 can not be used as sentinel
-                return CodegenImplObjectStrict.genObjectUsingStrict(clazz, desc);
+                return CodegenImplObjectStrict.genObjectUsingStrict(desc);
             }
             if (knownHashes.contains(intHash)) {
                 // hash collision with other field can not be used as sentinel
-                return CodegenImplObjectStrict.genObjectUsingStrict(clazz, desc);
+                return CodegenImplObjectStrict.genObjectUsingStrict(desc);
             }
             knownHashes.add(intHash);
             append(lines, "case " + intHash + ": ");
