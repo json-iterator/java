@@ -35,21 +35,6 @@ public class TestAnnotation extends TestCase {
         assertEquals(100, obj.field1);
     }
 
-    public static class TestObject3 {
-        public int field1;
-
-        @JsonCreator
-        private TestObject3() {
-        }
-    }
-
-    public void test_private_ctor() throws IOException {
-        JsoniterSpi.registerTypeDecoder(TestObject3.class, ReflectionDecoderFactory.create(TestObject3.class));
-        JsonIterator iter = JsonIterator.parse("{'field1': 100}".replace('\'', '"'));
-        TestObject3 obj = iter.read(TestObject3.class);
-        assertEquals(100, obj.field1);
-    }
-
     public static class TestObject4 {
 
         private int field1;
