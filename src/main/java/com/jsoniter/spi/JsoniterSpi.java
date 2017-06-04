@@ -122,10 +122,12 @@ public class JsoniterSpi {
 
     public static void registerTypeEncoder(Class clazz, Encoder encoder) {
         globalTypeEncoders.put(clazz, encoder);
+        copyGlobalTypeEncoder(getCurrentConfig().configName(), clazz, encoder);
     }
 
     public static void registerTypeEncoder(TypeLiteral typeLiteral, Encoder encoder) {
         globalTypeEncoders.put(typeLiteral.getType(), encoder);
+        copyGlobalTypeEncoder(getCurrentConfig().configName(), typeLiteral.getType(), encoder);
     }
 
     public static void registerPropertyDecoder(Class clazz, String field, Decoder decoder) {
@@ -156,6 +158,13 @@ public class JsoniterSpi {
         for (Map.Entry<Type, Decoder> entry : globalTypeDecoders.entrySet()) {
             copyGlobalTypeDecoder(configName, entry.getKey(), entry.getValue());
         }
+        for (Map.Entry<Type, Encoder> entry : globalTypeEncoders.entrySet()) {
+            copyGlobalTypeEncoder(configName, entry.getKey(), entry.getValue());
+        }
+    }
+
+    private static void copyGlobalTypeEncoder(String configName, Type type, Encoder typeEncoder) {
+        addNewEncoder(TypeLiteral.create(type).getEncoderCacheKey(configName), typeEncoder);
     }
 
     private static void copyGlobalTypeDecoder(String configName, Type type, Decoder typeDecoder) {

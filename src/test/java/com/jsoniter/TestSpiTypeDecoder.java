@@ -7,6 +7,7 @@ import junit.framework.TestCase;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 public class TestSpiTypeDecoder extends TestCase {
@@ -48,5 +49,42 @@ public class TestSpiTypeDecoder extends TestCase {
         List<TestObject1> objs = JsonIterator.deserialize(
                 "{'field1': 100}".replace('\'', '"'), typeLiteral);
         assertEquals(101, objs.get(0).field1);
+    }
+
+    public static class MyDate {
+        Date date;
+    }
+
+    static {
+        JsoniterSpi.registerTypeDecoder(MyDate.class, new Decoder() {
+            @Override
+            public Object decode(final JsonIterator iter) throws IOException {
+                return new MyDate() {{
+                    date = new Date(iter.readLong());
+                }};
+            }
+        });
+    }
+
+    public void test_direct() throws IOException {
+        JsonIterator iter = JsonIterator.parse("1481365190000");
+        MyDate date = iter.read(MyDate.class);
+        assertEquals(1481365190000L, date.date.getTime());
+    }
+
+    public static class FieldWithMyDate {
+        public MyDate field;
+    }
+
+    public void test_as_field_type() throws IOException {
+        JsonIterator iter = JsonIterator.parse("{'field': 1481365190000}".replace('\'', '"'));
+        FieldWithMyDate obj = iter.read(FieldWithMyDate.class);
+        assertEquals(1481365190000L, obj.field.date.getTime());
+    }
+
+    public void test_as_array_element() throws IOException {
+        JsonIterator iter = JsonIterator.parse("[1481365190000]");
+        MyDate[] dates = iter.read(MyDate[].class);
+        assertEquals(1481365190000L, dates[0].date.getTime());
     }
 }
