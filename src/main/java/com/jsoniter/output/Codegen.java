@@ -96,6 +96,9 @@ class Codegen {
             ParameterizedType pType = (ParameterizedType) type;
             clazz = (Class) pType.getRawType();
             typeArgs = pType.getActualTypeArguments();
+            if (Map.class.isAssignableFrom(clazz)) {
+                MapKeyCodecs.register(typeArgs[0]);
+            }
         } else {
             clazz = (Class) type;
         }

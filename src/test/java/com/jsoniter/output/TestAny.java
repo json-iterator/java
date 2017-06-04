@@ -9,6 +9,10 @@ import java.util.HashMap;
 
 public class TestAny extends TestCase {
 
+    static {
+//        JsonStream.setMode(EncodingMode.DYNAMIC_MODE);
+    }
+
     public void test_int() {
         Any any = Any.wrap(100);
         assertEquals(ValueType.NUMBER, any.valueType());

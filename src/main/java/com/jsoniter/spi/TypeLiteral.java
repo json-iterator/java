@@ -181,19 +181,19 @@ public class TypeLiteral<T> {
     }
 
     public String getDecoderCacheKey() {
-        return getDecoderCacheKey(JsoniterSpi.getCurrentConfig());
+        return getDecoderCacheKey(JsoniterSpi.getCurrentConfig().configName());
     }
 
-    public String getDecoderCacheKey(Config config) {
-        return config.configName() + decoderCacheKey;
+    public String getDecoderCacheKey(String configName) {
+        return configName + decoderCacheKey;
     }
 
     public String getEncoderCacheKey() {
-        return getEncoderCacheKey(JsoniterSpi.getCurrentConfig());
+        return getEncoderCacheKey(JsoniterSpi.getCurrentConfig().configName());
     }
 
-    public String getEncoderCacheKey(Config config) {
-        return config.configName() + encoderCacheKey;
+    public String getEncoderCacheKey(String configName) {
+        return configName + encoderCacheKey;
     }
 
     public NativeType getNativeType() {

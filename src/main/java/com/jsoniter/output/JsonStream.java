@@ -350,12 +350,36 @@ public class JsonStream extends OutputStream {
         }
 
     }
+
     public static void serialize(Object obj, OutputStream out) {
         JsonStream stream = tlsStream.get();
         try {
             try {
                 stream.reset(out);
                 stream.writeVal(obj);
+            } finally {
+                stream.close();
+            }
+        } catch (IOException e) {
+            throw new JsonException(e);
+        }
+    }
+
+    public static void serialize(Config config, TypeLiteral typeLiteral, Object obj, OutputStream out) {
+        JsoniterSpi.setCurrentConfig(config);
+        try {
+            serialize(typeLiteral, obj, out);
+        } finally {
+            JsoniterSpi.clearCurrentConfig();
+        }
+    }
+
+    public static void serialize(TypeLiteral typeLiteral, Object obj, OutputStream out) {
+        JsonStream stream = tlsStream.get();
+        try {
+            try {
+                stream.reset(out);
+                stream.writeVal(typeLiteral, obj);
             } finally {
                 stream.close();
             }
@@ -384,6 +408,22 @@ public class JsonStream extends OutputStream {
         AsciiOutputStream asciiOutputStream = tlsAsciiOutputStream.get();
         asciiOutputStream.reset();
         serialize(obj, asciiOutputStream);
+        return asciiOutputStream.toString();
+    }
+
+    public static String serialize(Config config, TypeLiteral typeLiteral, Object obj) {
+        JsoniterSpi.setCurrentConfig(config);
+        try {
+            return serialize(typeLiteral, obj);
+        } finally {
+            JsoniterSpi.clearCurrentConfig();
+        }
+    }
+
+    public static String serialize(TypeLiteral typeLiteral, Object obj) {
+        AsciiOutputStream asciiOutputStream = tlsAsciiOutputStream.get();
+        asciiOutputStream.reset();
+        serialize(typeLiteral, obj, asciiOutputStream);
         return asciiOutputStream.toString();
     }
 

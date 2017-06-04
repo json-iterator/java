@@ -3,6 +3,7 @@ package com.jsoniter.output;
 import com.jsoniter.any.Any;
 import com.jsoniter.spi.Encoder;
 import com.jsoniter.spi.JsoniterSpi;
+import com.jsoniter.spi.MapKeyCodecs;
 import com.jsoniter.spi.TypeLiteral;
 
 import java.io.IOException;
@@ -50,6 +51,11 @@ public class CodegenAccess {
     public static void writeVal(String cacheKey, double obj, JsonStream stream) throws IOException {
         Encoder.DoubleEncoder encoder = (Encoder.DoubleEncoder) JsoniterSpi.getEncoder(cacheKey);
         encoder.encodeDouble(obj, stream);
+    }
+
+    public static void writeMapKey(String cacheKey, Object mapKey, JsonStream stream) throws IOException {
+        String encodedMapKey = JsoniterSpi.getMapKeyDecoder(cacheKey).encode(mapKey);
+        stream.writeVal(encodedMapKey);
     }
 
     public static void writeStringWithoutQuote(String obj, JsonStream stream) throws IOException {

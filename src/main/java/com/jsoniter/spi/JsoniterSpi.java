@@ -10,20 +10,31 @@ import java.util.Map;
 
 public class JsoniterSpi {
 
-    static ThreadLocal<Config> currentConfig = new ThreadLocal<Config>() {
-        @Override
-        protected Config initialValue() {
-            return JsoniterConfig.INSTANCE;
-        }
-    };
+    // registered at startup
     private static List<Extension> extensions = new ArrayList<Extension>();
     private static Map<Class, Class> typeImpls = new HashMap<Class, Class>();
+    private static Map<Type, MapKeyCodec> globalMapKeyDecoders = new HashMap<Type, MapKeyCodec>();
+    private static Config defaultConfig;
+    // TODO: add encoder/decoders
+
+    // runtime state
     private static int configIndex = 0;
+    private static ThreadLocal<Config> currentConfig = new ThreadLocal<Config>() {
+        @Override
+        protected Config initialValue() {
+            return defaultConfig;
+        }
+    };
     private static volatile Map<Object, String> configNames = new HashMap<Object, String>();
-    private static volatile Map<String, MapKeyDecoder> mapKeyDecoders = new HashMap<String, MapKeyDecoder>();
+    // TODO: split to encoder/decoder
+    private static volatile Map<String, MapKeyCodec> mapKeyCodecs = new HashMap<String, MapKeyCodec>();
     private static volatile Map<String, Encoder> encoders = new HashMap<String, Encoder>();
     private static volatile Map<String, Decoder> decoders = new HashMap<String, Decoder>();
     private static volatile Map<Class, Extension> objectFactories = new HashMap<Class, Extension>();
+
+    static {
+        defaultConfig = JsoniterConfig.INSTANCE;
+    }
 
     public static String assignConfigName(Object obj) {
         String configName = configNames.get(obj);
@@ -40,10 +51,22 @@ public class JsoniterSpi {
         }
         configIndex++;
         configName = "jsoniter_codegen.cfg" + configIndex + ".";
+        copyGlobalSettings(configName);
         HashMap<Object, String> newCache = new HashMap<Object, String>(configNames);
         newCache.put(obj, configName);
         configNames = newCache;
         return configName;
+    }
+
+    private static void copyGlobalSettings(String configName) {
+        for (Map.Entry<Type, MapKeyCodec> entry : globalMapKeyDecoders.entrySet()) {
+            copyGlobalMapKeyCodec(configName, entry.getKey(), entry.getValue());
+        }
+    }
+
+    private static void copyGlobalMapKeyCodec(String configName, Type type, MapKeyCodec codec) {
+        String cacheKey = TypeLiteral.create(type).getDecoderCacheKey(configName);
+        addNewMapCodec(cacheKey, codec);
     }
 
     public static void registerExtension(Extension extension) {
@@ -59,18 +82,19 @@ public class JsoniterSpi {
         return combined;
     }
 
-    public static void registerMapKeyDecoder(Type mapKeyType, MapKeyDecoder mapKeyDecoder) {
-        addNewMapDecoder(TypeLiteral.create(mapKeyType).getDecoderCacheKey(), mapKeyDecoder);
+    public static void registerMapKeyDecoder(Type mapKeyType, MapKeyCodec mapKeyCodec) {
+        globalMapKeyDecoders.put(mapKeyType, mapKeyCodec);
+        copyGlobalMapKeyCodec(getCurrentConfig().configName(), mapKeyType, mapKeyCodec);
     }
 
-    public synchronized static void addNewMapDecoder(String cacheKey, MapKeyDecoder mapKeyDecoder) {
-        HashMap<String, MapKeyDecoder> newCache = new HashMap<String, MapKeyDecoder>(mapKeyDecoders);
-        newCache.put(cacheKey, mapKeyDecoder);
-        mapKeyDecoders = newCache;
+    public synchronized static void addNewMapCodec(String cacheKey, MapKeyCodec mapKeyCodec) {
+        HashMap<String, MapKeyCodec> newCache = new HashMap<String, MapKeyCodec>(mapKeyCodecs);
+        newCache.put(cacheKey, mapKeyCodec);
+        mapKeyCodecs = newCache;
     }
 
-    public static MapKeyDecoder getMapKeyDecoder(String cacheKey) {
-        return mapKeyDecoders.get(cacheKey);
+    public static MapKeyCodec getMapKeyDecoder(String cacheKey) {
+        return mapKeyCodecs.get(cacheKey);
     }
 
     public static void registerTypeImplementation(Class superClazz, Class implClazz) {
@@ -165,10 +189,14 @@ public class JsoniterSpi {
     }
 
     public static void clearCurrentConfig() {
-        currentConfig.set(JsoniterConfig.INSTANCE);
+        currentConfig.set(defaultConfig);
     }
 
     public static Config getCurrentConfig() {
         return currentConfig.get();
+    }
+
+    public static void setDefaultConfig(Config val) {
+        defaultConfig = val;
     }
 }

@@ -1,5 +1,8 @@
 package com.jsoniter.output;
 
+import com.jsoniter.spi.JsoniterSpi;
+import com.jsoniter.spi.MapKeyCodec;
+import com.jsoniter.spi.Slice;
 import com.jsoniter.spi.TypeLiteral;
 import junit.framework.TestCase;
 
@@ -38,7 +41,8 @@ public class TestMap extends TestCase {
     }
 
     public void test_null() throws IOException {
-        stream.writeVal(new TypeLiteral<HashMap>(){}, null);
+        stream.writeVal(new TypeLiteral<HashMap>() {
+        }, null);
         stream.close();
         assertEquals("null".replace('\'', '"'), baos.toString());
     }
@@ -46,7 +50,8 @@ public class TestMap extends TestCase {
     public void test_value_is_null() throws IOException {
         HashMap<String, int[]> obj = new HashMap<String, int[]>();
         obj.put("hello", null);
-        stream.writeVal(new TypeLiteral<Map<String, int[]>>(){}, obj);
+        stream.writeVal(new TypeLiteral<Map<String, int[]>>() {
+        }, obj);
         stream.close();
         assertEquals("{\"hello\":null}", baos.toString());
     }
@@ -54,8 +59,33 @@ public class TestMap extends TestCase {
     public void test_integer_key() throws IOException {
         HashMap<Integer, Object> obj = new HashMap<Integer, Object>();
         obj.put(100, null);
-        stream.writeVal(new TypeLiteral<Map<Integer, Object>>(){}, obj);
+        stream.writeVal(new TypeLiteral<Map<Integer, Object>>() {
+        }, obj);
         stream.close();
         assertEquals("{\"100\":null}", baos.toString());
+    }
+
+    public static class TestObject1 {
+        public int Field;
+    }
+
+    public void test_MapKeyCodec() {
+        JsoniterSpi.registerMapKeyDecoder(TestObject1.class, new MapKeyCodec() {
+            @Override
+            public String encode(Object mapKey) {
+                TestObject1 obj = (TestObject1) mapKey;
+                return String.valueOf(obj.Field);
+            }
+
+            @Override
+            public Object decode(Slice encodedMapKey) {
+                throw new UnsupportedOperationException();
+            }
+        });
+        HashMap<TestObject1, Object> obj = new HashMap<TestObject1, Object>();
+        obj.put(new TestObject1(), null);
+        String output = JsonStream.serialize(new TypeLiteral<Map<TestObject1, Object>>() {
+        }, obj);
+        assertEquals("{\"0\":null}", output);
     }
 }

@@ -1,5 +1,8 @@
 package com.jsoniter.output;
 
+import com.jsoniter.spi.MapKeyCodecs;
+import com.jsoniter.spi.TypeLiteral;
+
 import java.lang.reflect.Type;
 import java.util.Collection;
 
@@ -11,16 +14,11 @@ class CodegenImplMap {
         }
         Type keyType = String.class;
         Type valueType = Object.class;
-        if (typeArgs.length == 0) {
-            // default to Map<String, Object>
-        } else if (typeArgs.length == 2) {
+        if (typeArgs.length == 2) {
             keyType = typeArgs[0];
             valueType = typeArgs[1];
-        } else {
-            throw new IllegalArgumentException(
-                    "can not bind to generic collection without argument types, " +
-                            "try syntax like TypeLiteral<Map<String, String>>{}");
         }
+        String mapCacheKey = MapKeyCodecs.getEncoderCacheKey(keyType);
         CodegenResult ctx = new CodegenResult();
         ctx.append("public static void encode_(java.lang.Object obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {");
         ctx.append("if (obj == null) { stream.writeNull(); return; }");
@@ -29,8 +27,12 @@ class CodegenImplMap {
         ctx.append("if(!iter.hasNext()) { return; }");
         ctx.append("java.util.Map.Entry entry = (java.util.Map.Entry)iter.next();");
         ctx.buffer('{');
-        ctx.append("stream.writeVal(entry.getKey().toString());");
-        ctx.buffer(':');
+        if (keyType == String.class) {
+            ctx.append("stream.writeVal((java.lang.String)entry.getKey());");
+        } else {
+            ctx.append(String.format("com.jsoniter.output.CodegenAccess.writeMapKey(\"%s\", entry.getKey(), stream);", mapCacheKey));
+        }
+        ctx.append("stream.write(':');");
         if (isCollectionValueNullable) {
             ctx.append("if (entry.getValue() == null) { stream.writeNull(); } else {");
             CodegenImplNative.genWriteOp(ctx, "entry.getValue()", valueType, true);
@@ -40,8 +42,13 @@ class CodegenImplMap {
         }
         ctx.append("while(iter.hasNext()) {");
         ctx.append("entry = (java.util.Map.Entry)iter.next();");
-        ctx.buffer(',');
-        ctx.append("stream.writeObjectField(entry.getKey().toString());");
+        ctx.append("stream.write(',');");
+        if (keyType == String.class) {
+            ctx.append("stream.writeVal((java.lang.String)entry.getKey());");
+        } else {
+            ctx.append(String.format("com.jsoniter.output.CodegenAccess.writeMapKey(\"%s\", entry.getKey(), stream);", mapCacheKey));
+        }
+        ctx.append("stream.write(':');");
         if (isCollectionValueNullable) {
             ctx.append("if (entry.getValue() == null) { stream.writeNull(); } else {");
             CodegenImplNative.genWriteOp(ctx, "entry.getValue()", valueType, true);
