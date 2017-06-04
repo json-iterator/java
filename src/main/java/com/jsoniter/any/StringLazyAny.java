@@ -1,9 +1,10 @@
 package com.jsoniter.any;
 
 import com.jsoniter.CodegenAccess;
-import com.jsoniter.spi.JsonException;
 import com.jsoniter.JsonIterator;
+import com.jsoniter.JsonIteratorPool;
 import com.jsoniter.ValueType;
+import com.jsoniter.spi.JsonException;
 
 import java.io.IOException;
 
@@ -52,45 +53,53 @@ class StringLazyAny extends LazyAny {
 
     @Override
     public int toInt() {
+        JsonIterator iter = parse();
         try {
-            JsonIterator iter = parse();
             CodegenAccess.nextToken(iter);
             return iter.readInt();
         } catch (IOException e) {
             throw new JsonException(e);
+        } finally {
+            JsonIteratorPool.returnJsonIterator(iter);
         }
     }
 
     @Override
     public long toLong() {
+        JsonIterator iter = parse();
         try {
-            JsonIterator iter = parse();
             CodegenAccess.nextToken(iter);
             return iter.readLong();
         } catch (IOException e) {
             throw new JsonException(e);
+        } finally {
+            JsonIteratorPool.returnJsonIterator(iter);
         }
     }
 
     @Override
     public float toFloat() {
+        JsonIterator iter = parse();
         try {
-            JsonIterator iter = parse();
             CodegenAccess.nextToken(iter);
             return iter.readFloat();
         } catch (IOException e) {
             throw new JsonException(e);
+        } finally {
+            JsonIteratorPool.returnJsonIterator(iter);
         }
     }
 
     @Override
     public double toDouble() {
+        JsonIterator iter = parse();
         try {
-            JsonIterator iter = parse();
             CodegenAccess.nextToken(iter);
             return iter.readDouble();
         } catch (IOException e) {
             throw new JsonException(e);
+        } finally {
+            JsonIteratorPool.returnJsonIterator(iter);
         }
     }
 
@@ -102,10 +111,13 @@ class StringLazyAny extends LazyAny {
 
     private void fillCache() {
         if (cache == null) {
+            JsonIterator iter = parse();
             try {
-                cache = parse().readString();
+                cache = iter.readString();
             } catch (IOException e) {
                 throw new JsonException();
+            } finally {
+                JsonIteratorPool.returnJsonIterator(iter);
             }
         }
     }

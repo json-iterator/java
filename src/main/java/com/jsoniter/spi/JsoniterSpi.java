@@ -1,6 +1,8 @@
 package com.jsoniter.spi;
 
+import com.jsoniter.JsonIterator;
 import com.jsoniter.annotation.JsoniterConfig;
+import com.jsoniter.output.JsonStream;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;

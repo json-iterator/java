@@ -18,14 +18,6 @@ class DefaultMapKeyDecoder implements MapKeyDecoder {
         return mapKeyDecoder;
     }
 
-    // can not reuse the tlsIter in JsonIterator
-    // as this will be invoked while tlsIter is in use
-    private ThreadLocal<JsonIterator> tlsIter = new ThreadLocal<JsonIterator>() {
-        @Override
-        protected JsonIterator initialValue() {
-            return new JsonIterator();
-        }
-    };
     private final TypeLiteral mapKeyTypeLiteral;
 
     private DefaultMapKeyDecoder(TypeLiteral mapKeyTypeLiteral) {
@@ -34,12 +26,14 @@ class DefaultMapKeyDecoder implements MapKeyDecoder {
 
     @Override
     public Object decode(Slice encodedMapKey) {
-        JsonIterator iter = tlsIter.get();
+        JsonIterator iter = JsonIteratorPool.borrowJsonIterator();
         iter.reset(encodedMapKey);
         try {
             return iter.read(mapKeyTypeLiteral);
         } catch (IOException e) {
             throw new JsonException(e);
+        } finally {
+            JsonIteratorPool.returnJsonIterator(iter);
         }
     }
 }

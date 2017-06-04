@@ -233,10 +233,6 @@ public abstract class Any implements Iterable<Any> {
         return wrap(newVal);
     }
 
-    public JsonIterator parse() {
-        throw new UnsupportedOperationException();
-    }
-
     public abstract void writeTo(JsonStream stream) throws IOException;
 
     protected JsonException reportUnexpectedType(ValueType toType) {

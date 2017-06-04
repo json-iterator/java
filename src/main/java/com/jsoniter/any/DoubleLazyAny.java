@@ -1,5 +1,7 @@
 package com.jsoniter.any;
 
+import com.jsoniter.JsonIterator;
+import com.jsoniter.JsonIteratorPool;
 import com.jsoniter.spi.JsonException;
 import com.jsoniter.ValueType;
 
@@ -57,10 +59,13 @@ class DoubleLazyAny extends LazyAny {
 
     private void fillCache() {
         if (!isCached) {
+            JsonIterator iter = parse();
             try {
-                cache = parse().readDouble();
+                cache = iter.readDouble();
             } catch (IOException e) {
                 throw new JsonException(e);
+            } finally {
+                JsonIteratorPool.returnJsonIterator(iter);
             }
             isCached = true;
         }

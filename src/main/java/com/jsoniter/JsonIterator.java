@@ -356,13 +356,6 @@ public class JsonIterator implements Closeable {
         IterImplSkip.skip(this);
     }
 
-    private static ThreadLocal<JsonIterator> tlsIter = new ThreadLocal<JsonIterator>() {
-        @Override
-        protected JsonIterator initialValue() {
-            return new JsonIterator();
-        }
-    };
-
     public static final <T> T deserialize(Config config, String input, Class<T> clazz) {
         JsoniterSpi.setCurrentConfig(config);
         try {
@@ -398,7 +391,7 @@ public class JsonIterator implements Closeable {
     }
     public static final <T> T deserialize(byte[] input, Class<T> clazz) {
         int lastNotSpacePos = findLastNotSpacePos(input);
-        JsonIterator iter = tlsIter.get();
+        JsonIterator iter = JsonIteratorPool.borrowJsonIterator();
         iter.reset(input, 0, lastNotSpacePos);
         try {
             T val = iter.read(clazz);
@@ -410,6 +403,8 @@ public class JsonIterator implements Closeable {
             throw iter.reportError("deserialize", "premature end");
         } catch (IOException e) {
             throw new JsonException(e);
+        } finally {
+            JsonIteratorPool.returnJsonIterator(iter);
         }
     }
 
@@ -424,7 +419,7 @@ public class JsonIterator implements Closeable {
 
     public static final <T> T deserialize(byte[] input, TypeLiteral<T> typeLiteral) {
         int lastNotSpacePos = findLastNotSpacePos(input);
-        JsonIterator iter = tlsIter.get();
+        JsonIterator iter = JsonIteratorPool.borrowJsonIterator();
         iter.reset(input, 0, lastNotSpacePos);
         try {
             T val = iter.read(typeLiteral);
@@ -436,6 +431,8 @@ public class JsonIterator implements Closeable {
             throw iter.reportError("deserialize", "premature end");
         } catch (IOException e) {
             throw new JsonException(e);
+        } finally {
+            JsonIteratorPool.returnJsonIterator(iter);
         }
     }
 
@@ -463,7 +460,7 @@ public class JsonIterator implements Closeable {
 
     public static final Any deserialize(byte[] input) {
         int lastNotSpacePos = findLastNotSpacePos(input);
-        JsonIterator iter = tlsIter.get();
+        JsonIterator iter = JsonIteratorPool.borrowJsonIterator();
         iter.reset(input, 0, lastNotSpacePos);
         try {
             Any val = iter.readAny();
@@ -475,6 +472,8 @@ public class JsonIterator implements Closeable {
             throw iter.reportError("deserialize", "premature end");
         } catch (IOException e) {
             throw new JsonException(e);
+        } finally {
+            JsonIteratorPool.returnJsonIterator(iter);
         }
     }
 
