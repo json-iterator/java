@@ -499,7 +499,9 @@ public class JsonIterator implements Closeable {
     }
 
     public static void setMode(DecodingMode mode) {
-        Codegen.setMode(mode);
+        Config newConfig = JsoniterSpi.getDefaultConfig().copyBuilder().decodingMode(mode).build();
+        JsoniterSpi.setDefaultConfig(newConfig);
+        JsoniterSpi.setCurrentConfig(newConfig);
     }
 
     public static void enableStreamingSupport() {

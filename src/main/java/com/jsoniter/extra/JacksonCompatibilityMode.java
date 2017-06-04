@@ -5,20 +5,25 @@ import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.jsoniter.annotation.*;
 import com.jsoniter.spi.Decoder;
 import com.jsoniter.spi.Encoder;
-import com.jsoniter.spi.JsoniterSpi;
+import com.jsoniter.spi.Config;
 
 import java.lang.annotation.Annotation;
 
-public class JacksonCompatibilityMode extends JsoniterConfig {
+public class JacksonCompatibilityMode extends Config {
 
-    public static class Builder extends JsoniterConfig.Builder {
+    public static class Builder extends Config.Builder {
         public JacksonCompatibilityMode build() {
-            return new JacksonCompatibilityMode(this);
+            return (JacksonCompatibilityMode) super.build();
+        }
+
+        @Override
+        protected Config doBuild(String configName) {
+            return new JacksonCompatibilityMode(configName, this);
         }
     }
 
-    private JacksonCompatibilityMode(Builder builder) {
-        super(builder);
+    private JacksonCompatibilityMode(String configName, Builder builder) {
+        super(configName, builder);
     }
 
     @Override
@@ -148,7 +153,7 @@ public class JacksonCompatibilityMode extends JsoniterConfig {
         if (jacksonObj == null) {
             return null;
         }
-        return new JsonUnwrapper(){
+        return new JsonUnwrapper() {
             @Override
             public Class<? extends Annotation> annotationType() {
                 return JsonUnwrapper.class;
@@ -166,7 +171,7 @@ public class JacksonCompatibilityMode extends JsoniterConfig {
         if (jacksonObj == null) {
             return null;
         }
-        return new JsonWrapper(){
+        return new JsonWrapper() {
             @Override
             public JsonWrapperType value() {
                 return JsonWrapperType.KEY_VALUE;

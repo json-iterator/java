@@ -139,12 +139,10 @@ public class TestObject extends TestCase {
         TestObject8 obj = new TestObject8();
         obj.field1 = new String[]{"hello"};
         assertEquals("{\"field1\":[\"hello\"]}", JsonStream.serialize(obj));
-        if (Codegen.mode == EncodingMode.DYNAMIC_MODE) {
-            try {
-                JsonStream.serialize(new TestObject8());
-                fail();
-            } catch (NullPointerException e) {
-            }
+        try {
+            JsonStream.serialize(new TestObject8());
+            fail();
+        } catch (NullPointerException e) {
         }
     }
 
@@ -164,41 +162,39 @@ public class TestObject extends TestCase {
         obj.field1 = new String[]{"hello"};
         assertEquals("{\"field1\":[\"hello\"]}", JsonStream.serialize(obj));
 
-        if (Codegen.mode == EncodingMode.DYNAMIC_MODE) {
-            obj = new TestObject9();
-            obj.field1 = new String[]{null};
-            try {
-                JsonStream.serialize(obj);
-                fail();
-            } catch (NullPointerException e) {
-            }
+        obj = new TestObject9();
+        obj.field1 = new String[]{null};
+        try {
+            JsonStream.serialize(obj);
+            fail();
+        } catch (NullPointerException e) {
+        }
 
-            obj = new TestObject9();
-            obj.field2 = new ArrayList();
-            obj.field2.add(null);
-            try {
-                JsonStream.serialize(obj);
-                fail();
-            } catch (NullPointerException e) {
-            }
+        obj = new TestObject9();
+        obj.field2 = new ArrayList();
+        obj.field2.add(null);
+        try {
+            JsonStream.serialize(obj);
+            fail();
+        } catch (NullPointerException e) {
+        }
 
-            obj = new TestObject9();
-            obj.field3 = new HashSet<String>();
-            obj.field3.add(null);
-            try {
-                JsonStream.serialize(obj);
-                fail();
-            } catch (NullPointerException e) {
-            }
+        obj = new TestObject9();
+        obj.field3 = new HashSet<String>();
+        obj.field3.add(null);
+        try {
+            JsonStream.serialize(obj);
+            fail();
+        } catch (NullPointerException e) {
+        }
 
-            obj = new TestObject9();
-            obj.field4 = new HashMap<String, String>();
-            obj.field4.put("hello", null);
-            try {
-                JsonStream.serialize(obj);
-                fail();
-            } catch (NullPointerException e) {
-            }
+        obj = new TestObject9();
+        obj.field4 = new HashMap<String, String>();
+        obj.field4.put("hello", null);
+        try {
+            JsonStream.serialize(obj);
+            fail();
+        } catch (NullPointerException e) {
         }
     }
 

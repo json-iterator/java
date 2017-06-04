@@ -1,6 +1,6 @@
 package com.jsoniter.suite;
 
-import com.jsoniter.DecodingMode;
+import com.jsoniter.spi.DecodingMode;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.StreamingCategory;
 import com.jsoniter.output.EncodingMode;

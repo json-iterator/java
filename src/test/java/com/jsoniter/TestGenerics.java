@@ -104,15 +104,13 @@ public class TestGenerics extends TestCase {
         for (Binding field : ClassDescriptor.getEncodingClassDescriptor(new ClassInfo(Class3.class), true).getters) {
             fieldDecoderCacheKeys.put(field.name, field.valueTypeLiteral.getDecoderCacheKey());
         }
-        assertEquals(new HashMap<String, String>() {{
-            put("field1", "jsoniter_codegen.cfg1.decoder.java.util.List_java.lang.String");
-            put("field2", "jsoniter_codegen.cfg1.decoder.java.lang.Integer_array");
-            put("field3", "jsoniter_codegen.cfg1.decoder.java.util.List_java.lang.Integer_array");
-            put("field4", "jsoniter_codegen.cfg1.decoder.java.util.List_java.lang.String_array");
-            put("field5", "jsoniter_codegen.cfg1.decoder.java.lang.Float");
-            put("field6", "jsoniter_codegen.cfg1.decoder.java.util.List_java.util.Map_java.lang.String_java.util.List_java.lang.Integer");
-            put("field7", "jsoniter_codegen.cfg1.decoder.java.lang.Object");
-            put("field8", "jsoniter_codegen.cfg1.decoder.java.util.List_java.lang.String");
-        }}, fieldDecoderCacheKeys);
+        assertTrue(fieldDecoderCacheKeys.get("field1").endsWith("decoder.java.util.List_java.lang.String"));
+        assertTrue(fieldDecoderCacheKeys.get("field2").endsWith("decoder.java.lang.Integer_array"));
+        assertTrue(fieldDecoderCacheKeys.get("field3").endsWith("decoder.java.util.List_java.lang.Integer_array"));
+        assertTrue(fieldDecoderCacheKeys.get("field4").endsWith("decoder.java.util.List_java.lang.String_array"));
+        assertTrue(fieldDecoderCacheKeys.get("field5").endsWith("decoder.java.lang.Float"));
+        assertTrue(fieldDecoderCacheKeys.get("field6").endsWith("decoder.java.util.List_java.util.Map_java.lang.String_java.util.List_java.lang.Integer"));
+        assertTrue(fieldDecoderCacheKeys.get("field7").endsWith("decoder.java.lang.Object"));
+        assertTrue(fieldDecoderCacheKeys.get("field8").endsWith("decoder.java.util.List_java.lang.String"));
     }
 }

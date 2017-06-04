@@ -15,17 +15,6 @@ class Codegen {
     // only read/write when generating code with synchronized protection
     private final static Set<String> generatedClassNames = new HashSet<String>();
     static CodegenAccess.StaticCodegenTarget isDoingStaticCodegen = null;
-    static DecodingMode mode = DecodingMode.REFLECTION_MODE;
-    static {
-        String envMode = System.getenv("JSONITER_DECODING_MODE");
-        if (envMode != null) {
-            mode = DecodingMode.valueOf(envMode);
-        }
-    }
-
-    public static void setMode(DecodingMode mode) {
-        Codegen.mode = mode;
-    }
 
     static Decoder getDecoder(String cacheKey, Type type) {
         Decoder decoder = JsoniterSpi.getDecoder(cacheKey);
@@ -58,6 +47,8 @@ class Codegen {
             return decoder;
         }
         addPlaceholderDecoderToSupportRecursiveStructure(cacheKey);
+        Config currentConfig = JsoniterSpi.getCurrentConfig();
+        DecodingMode mode = currentConfig.decodingMode();
         if (mode == DecodingMode.REFLECTION_MODE) {
             decoder = ReflectionDecoderFactory.create(classInfo);
             JsoniterSpi.addNewDecoder(cacheKey, decoder);
@@ -74,7 +65,7 @@ class Codegen {
                 }
             }
         }
-        String source = genSource(classInfo);
+        String source = genSource(mode, classInfo);
         source = "public static java.lang.Object decode_(com.jsoniter.JsonIterator iter) throws java.io.IOException { "
                 + source + "}";
         if ("true".equals(System.getenv("JSONITER_DEBUG"))) {
@@ -210,7 +201,7 @@ class Codegen {
         }
     }
 
-    private static String genSource(ClassInfo classInfo) {
+    private static String genSource(DecodingMode mode, ClassInfo classInfo) {
         if (classInfo.clazz.isArray()) {
             return CodegenImplArray.genArray(classInfo);
         }
@@ -224,14 +215,14 @@ class Codegen {
             return CodegenImplEnum.genEnum(classInfo);
         }
         ClassDescriptor desc = ClassDescriptor.getDecodingClassDescriptor(classInfo, false);
-        if (shouldUseStrictMode(desc)) {
+        if (shouldUseStrictMode(mode, desc)) {
             return CodegenImplObjectStrict.genObjectUsingStrict(desc);
         } else {
             return CodegenImplObjectHash.genObjectUsingHash(desc);
         }
     }
 
-    private static boolean shouldUseStrictMode(ClassDescriptor desc) {
+    private static boolean shouldUseStrictMode(DecodingMode mode, ClassDescriptor desc) {
         if (mode == DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_STRICTLY) {
             return true;
         }

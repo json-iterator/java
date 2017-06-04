@@ -1,4 +1,4 @@
-package com.jsoniter;
+package com.jsoniter.spi;
 
 public enum DecodingMode {
     /**

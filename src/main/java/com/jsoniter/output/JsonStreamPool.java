@@ -1,31 +1,11 @@
 package com.jsoniter.output;
 
-import com.jsoniter.spi.Config;
-import com.jsoniter.spi.ConfigListener;
-import com.jsoniter.spi.JsoniterSpi;
-
 public class JsonStreamPool {
 
     private final static ThreadLocal<JsonStream> slot1 = new ThreadLocal<JsonStream>();
     private final static ThreadLocal<JsonStream> slot2 = new ThreadLocal<JsonStream>();
     private final static ThreadLocal<AsciiOutputStream> osSlot1 = new ThreadLocal<AsciiOutputStream>();
     private final static ThreadLocal<AsciiOutputStream> osSlot2 = new ThreadLocal<AsciiOutputStream>();
-
-    static {
-        JsoniterSpi.registerConfigListener(new ConfigListener() {
-            @Override
-            public void onCurrentConfigChanged(Config newConfig) {
-                JsonStream stream = slot1.get();
-                if (stream != null) {
-                    stream.configCache = newConfig;
-                }
-                stream = slot2.get();
-                if (stream != null) {
-                    stream.configCache = newConfig;
-                }
-            }
-        });
-    }
 
     public static JsonStream borrowJsonStream() {
         JsonStream stream = slot1.get();
@@ -42,6 +22,7 @@ public class JsonStreamPool {
     }
 
     public static void returnJsonStream(JsonStream jsonStream) {
+        jsonStream.configCache = null;
         if (slot1.get() == null) {
             slot1.set(jsonStream);
             return;

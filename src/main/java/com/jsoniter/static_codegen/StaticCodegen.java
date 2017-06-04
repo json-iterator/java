@@ -1,7 +1,7 @@
 package com.jsoniter.static_codegen;
 
 import com.jsoniter.CodegenAccess;
-import com.jsoniter.DecodingMode;
+import com.jsoniter.spi.DecodingMode;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.output.EncodingMode;
 import com.jsoniter.output.JsonStream;

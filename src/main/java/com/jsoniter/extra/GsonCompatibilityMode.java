@@ -4,22 +4,22 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.jsoniter.annotation.JsonIgnore;
 import com.jsoniter.annotation.JsonProperty;
-import com.jsoniter.annotation.JsoniterConfig;
+import com.jsoniter.spi.Config;
 import com.jsoniter.spi.*;
 
 import java.lang.annotation.Annotation;
 
-public class GsonCompatibilityMode extends JsoniterConfig {
+public class GsonCompatibilityMode extends Config {
 
-    private GsonCompatibilityMode(Builder builder) {
-        super(builder);
+    private GsonCompatibilityMode(String configName, Builder builder) {
+        super(configName, builder);
     }
 
     protected Builder builder() {
         return (Builder) super.builder();
     }
 
-    public static class Builder extends JsoniterConfig.Builder {
+    public static class Builder extends Config.Builder {
         private boolean excludeFieldsWithoutExposeAnnotation = false;
 
         public Builder excludeFieldsWithoutExposeAnnotation() {
@@ -28,7 +28,12 @@ public class GsonCompatibilityMode extends JsoniterConfig {
         }
 
         public GsonCompatibilityMode build() {
-            return new GsonCompatibilityMode(this);
+            return (GsonCompatibilityMode) super.build();
+        }
+
+        @Override
+        protected Config doBuild(String configName) {
+            return new GsonCompatibilityMode(configName, this);
         }
 
         @Override

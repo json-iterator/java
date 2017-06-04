@@ -12,11 +12,15 @@ import java.util.List;
 
 public class TestSpiTypeEncoder extends TestCase {
 
+    static {
+//        JsonStream.setMode(EncodingMode.DYNAMIC_MODE);
+    }
+
     public static class MyDate {
         Date date;
     }
 
-    public void test_TypeDecoder() throws IOException {
+    public void test_TypeEncoder() throws IOException {
         JsoniterSpi.registerTypeEncoder(MyDate.class, new EmptyEncoder() {
             @Override
             public void encode(Object obj, JsonStream stream) throws IOException {
@@ -24,13 +28,14 @@ public class TestSpiTypeEncoder extends TestCase {
                 stream.writeVal(date.date.getTime());
             }
         });
+        System.out.println(JsoniterSpi.getCurrentConfig().configName());
         MyDate myDate = new MyDate();
         myDate.date = new Date(1481365190000L);
         String output = JsonStream.serialize(myDate);
         assertEquals("1481365190000", output);
     }
 
-    public void test_TypeDecoder_for_type_literal() {
+    public void test_TypeEncoder_for_type_literal() {
         TypeLiteral<List<MyDate>> typeLiteral = new TypeLiteral<List<MyDate>>() {
         };
         JsoniterSpi.registerTypeEncoder(typeLiteral, new EmptyEncoder() {

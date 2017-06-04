@@ -9,8 +9,6 @@ import java.io.OutputStream;
 public class JsonStream extends OutputStream {
 
     public Config configCache;
-    public static int defaultIndentionStep = 0;
-    public int indentionStep = defaultIndentionStep;
     private int indention = 0;
     private OutputStream out;
     byte buf[];
@@ -261,7 +259,7 @@ public class JsonStream extends OutputStream {
     }
 
     public final void writeArrayStart() throws IOException {
-        indention += indentionStep;
+        indention += currentConfig().indentionStep();
         write('[');
         writeIndention();
     }
@@ -295,12 +293,14 @@ public class JsonStream extends OutputStream {
     }
 
     public final void writeArrayEnd() throws IOException {
+        int indentionStep = currentConfig().indentionStep();
         writeIndention(indentionStep);
         indention -= indentionStep;
         write(']');
     }
 
     public final void writeObjectStart() throws IOException {
+        int indentionStep = currentConfig().indentionStep();
         indention += indentionStep;
         write('{');
         writeIndention();
@@ -312,6 +312,7 @@ public class JsonStream extends OutputStream {
     }
 
     public final void writeObjectEnd() throws IOException {
+        int indentionStep = currentConfig().indentionStep();
         writeIndention(indentionStep);
         indention -= indentionStep;
         write('}');
@@ -331,7 +332,8 @@ public class JsonStream extends OutputStream {
         if (null == obj) {
             writeNull();
         } else {
-            String cacheKey = currentConfig().getEncoderCacheKey(typeLiteral.getType());
+            Config config = currentConfig();
+            String cacheKey = config.getEncoderCacheKey(typeLiteral.getType());
             Codegen.getEncoder(cacheKey, typeLiteral.getType()).encode(obj, this);
         }
     }
@@ -436,7 +438,16 @@ public class JsonStream extends OutputStream {
     }
 
     public static void setMode(EncodingMode mode) {
-        Codegen.setMode(mode);
+        Config newConfig = JsoniterSpi.getDefaultConfig().copyBuilder().encodingMode(mode).build();
+        JsoniterSpi.setDefaultConfig(newConfig);
+        JsoniterSpi.setCurrentConfig(newConfig);
+
+    }
+
+    public static void setIndentionStep(int indentionStep) {
+        Config newConfig = JsoniterSpi.getDefaultConfig().copyBuilder().indentionStep(indentionStep).build();
+        JsoniterSpi.setDefaultConfig(newConfig);
+        JsoniterSpi.setCurrentConfig(newConfig);
     }
 
     public static void registerNativeEncoder(Class clazz, Encoder encoder) {

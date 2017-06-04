@@ -14,23 +14,10 @@ import java.util.*;
 
 class Codegen {
 
-    static EncodingMode mode = EncodingMode.REFLECTION_MODE;
     static CodegenAccess.StaticCodegenTarget isDoingStaticCodegen;
     // only read/write when generating code with synchronized protection
     private final static Map<String, CodegenResult> generatedSources = new HashMap<String, CodegenResult>();
     private volatile static Map<String, Encoder> reflectionEncoders = new HashMap<String, Encoder>();
-
-    static {
-        String envMode = System.getenv("JSONITER_ENCODING_MODE");
-        if (envMode != null) {
-            mode = EncodingMode.valueOf(envMode);
-        }
-    }
-
-    public static void setMode(EncodingMode mode) {
-        Codegen.mode = mode;
-    }
-
 
     public static Encoder getReflectionEncoder(String cacheKey, Type type) {
         Encoder encoder = CodegenImplNative.NATIVE_ENCODERS.get(type);
@@ -87,6 +74,7 @@ class Codegen {
         if (Map.class.isAssignableFrom(classInfo.clazz) && classInfo.typeArgs.length > 1) {
             DefaultMapKeyEncoder.registerOrGetExisting(classInfo.typeArgs[0]);
         }
+        EncodingMode mode = JsoniterSpi.getCurrentConfig().encodingMode();
         if (mode == EncodingMode.REFLECTION_MODE) {
             encoder = ReflectionEncoderFactory.create(classInfo);
             JsoniterSpi.addNewEncoder(cacheKey, encoder);
