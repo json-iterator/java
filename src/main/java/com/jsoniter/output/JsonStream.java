@@ -334,13 +334,6 @@ public class JsonStream extends OutputStream {
         }
     }
 
-    private final static ThreadLocal<JsonStream> tlsStream = new ThreadLocal<JsonStream>() {
-        @Override
-        protected JsonStream initialValue() {
-            return new JsonStream(null, 512);
-        }
-    };
-
     public static void serialize(Config config, Object obj, OutputStream out) {
         JsoniterSpi.setCurrentConfig(config);
         try {
@@ -352,7 +345,7 @@ public class JsonStream extends OutputStream {
     }
 
     public static void serialize(Object obj, OutputStream out) {
-        JsonStream stream = tlsStream.get();
+        JsonStream stream = JsonStreamPool.borrowJsonStream();
         try {
             try {
                 stream.reset(out);
@@ -362,6 +355,8 @@ public class JsonStream extends OutputStream {
             }
         } catch (IOException e) {
             throw new JsonException(e);
+        } finally {
+            JsonStreamPool.returnJsonStream(stream);
         }
     }
 
@@ -375,7 +370,7 @@ public class JsonStream extends OutputStream {
     }
 
     public static void serialize(TypeLiteral typeLiteral, Object obj, OutputStream out) {
-        JsonStream stream = tlsStream.get();
+        JsonStream stream = JsonStreamPool.borrowJsonStream();
         try {
             try {
                 stream.reset(out);
@@ -385,15 +380,10 @@ public class JsonStream extends OutputStream {
             }
         } catch (IOException e) {
             throw new JsonException(e);
+        } finally {
+            JsonStreamPool.returnJsonStream(stream);
         }
     }
-
-    private final static ThreadLocal<AsciiOutputStream> tlsAsciiOutputStream = new ThreadLocal<AsciiOutputStream>() {
-        @Override
-        protected AsciiOutputStream initialValue() {
-            return new AsciiOutputStream();
-        }
-    };
 
     public static String serialize(Config config, Object obj) {
         JsoniterSpi.setCurrentConfig(config);
@@ -405,10 +395,14 @@ public class JsonStream extends OutputStream {
     }
 
     public static String serialize(Object obj) {
-        AsciiOutputStream asciiOutputStream = tlsAsciiOutputStream.get();
-        asciiOutputStream.reset();
-        serialize(obj, asciiOutputStream);
-        return asciiOutputStream.toString();
+        AsciiOutputStream asciiOutputStream = JsonStreamPool.borrowAsciiOutputStream();
+        try {
+            asciiOutputStream.reset();
+            serialize(obj, asciiOutputStream);
+            return asciiOutputStream.toString();
+        } finally {
+            JsonStreamPool.returnAsciiOutputStream(asciiOutputStream);
+        }
     }
 
     public static String serialize(Config config, TypeLiteral typeLiteral, Object obj) {
@@ -421,10 +415,14 @@ public class JsonStream extends OutputStream {
     }
 
     public static String serialize(TypeLiteral typeLiteral, Object obj) {
-        AsciiOutputStream asciiOutputStream = tlsAsciiOutputStream.get();
-        asciiOutputStream.reset();
-        serialize(typeLiteral, obj, asciiOutputStream);
-        return asciiOutputStream.toString();
+        AsciiOutputStream asciiOutputStream = JsonStreamPool.borrowAsciiOutputStream();
+        try {
+            asciiOutputStream.reset();
+            serialize(typeLiteral, obj, asciiOutputStream);
+            return asciiOutputStream.toString();
+        } finally {
+            JsonStreamPool.returnAsciiOutputStream(asciiOutputStream);
+        }
     }
 
     public static void setMode(EncodingMode mode) {

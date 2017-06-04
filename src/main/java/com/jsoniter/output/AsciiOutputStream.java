@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 class AsciiOutputStream extends OutputStream {
-    private char[] buf = new char[4096];
+    private char[] buf = new char[512];
     private int count = 0;
 
     @Override
