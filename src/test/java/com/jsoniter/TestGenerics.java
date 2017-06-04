@@ -105,14 +105,14 @@ public class TestGenerics extends TestCase {
             fieldDecoderCacheKeys.put(field.name, field.valueTypeLiteral.getDecoderCacheKey());
         }
         assertEquals(new HashMap<String, String>() {{
-            put("field1", "decoder.java.util.List_java.lang.String");
-            put("field2", "decoder.java.lang.Integer_array");
-            put("field3", "decoder.java.util.List_java.lang.Integer_array");
-            put("field4", "decoder.java.util.List_java.lang.String_array");
-            put("field5", "decoder.java.lang.Float");
-            put("field6", "decoder.java.util.List_java.util.Map_java.lang.String_java.util.List_java.lang.Integer");
-            put("field7", "decoder.java.lang.Object");
-            put("field8", "decoder.java.util.List_java.lang.String");
+            put("field1", "jsoniter_codegen.cfg1.decoder.java.util.List_java.lang.String");
+            put("field2", "jsoniter_codegen.cfg1.decoder.java.lang.Integer_array");
+            put("field3", "jsoniter_codegen.cfg1.decoder.java.util.List_java.lang.Integer_array");
+            put("field4", "jsoniter_codegen.cfg1.decoder.java.util.List_java.lang.String_array");
+            put("field5", "jsoniter_codegen.cfg1.decoder.java.lang.Float");
+            put("field6", "jsoniter_codegen.cfg1.decoder.java.util.List_java.util.Map_java.lang.String_java.util.List_java.lang.Integer");
+            put("field7", "jsoniter_codegen.cfg1.decoder.java.lang.Object");
+            put("field8", "jsoniter_codegen.cfg1.decoder.java.util.List_java.lang.String");
         }}, fieldDecoderCacheKeys);
     }
 }

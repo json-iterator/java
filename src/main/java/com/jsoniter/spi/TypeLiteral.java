@@ -56,6 +56,7 @@ public class TypeLiteral<T> {
     final Type type;
     final String decoderCacheKey;
     final String encoderCacheKey;
+    // TODO: remove native type
     final NativeType nativeType;
 
     /**
@@ -180,11 +181,19 @@ public class TypeLiteral<T> {
     }
 
     public String getDecoderCacheKey() {
-        return decoderCacheKey;
+        return getDecoderCacheKey(JsoniterSpi.getCurrentConfig());
+    }
+
+    public String getDecoderCacheKey(Config config) {
+        return config.configName() + decoderCacheKey;
     }
 
     public String getEncoderCacheKey() {
-        return encoderCacheKey;
+        return getEncoderCacheKey(JsoniterSpi.getCurrentConfig());
+    }
+
+    public String getEncoderCacheKey(Config config) {
+        return config.configName() + encoderCacheKey;
     }
 
     public NativeType getNativeType() {

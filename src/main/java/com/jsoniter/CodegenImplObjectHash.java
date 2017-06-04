@@ -4,7 +4,7 @@ import com.jsoniter.spi.*;
 
 import java.util.*;
 
-public class CodegenImplObjectHash {
+class CodegenImplObjectHash {
 
     // the implementation is from dsljson, it is the fastest although has the risk not matching field strictly
     public static String genObjectUsingHash(Class clazz, ClassDescriptor desc) {

@@ -37,7 +37,7 @@ public class JsoniterSpi {
             return configName;
         }
         configIndex++;
-        configName = "cfg" + configIndex;
+        configName = "jsoniter_codegen.cfg" + configIndex + ".";
         HashMap<Object, String> newCache = new HashMap<Object, String>(configNames);
         newCache.put(obj, configName);
         configNames = newCache;
@@ -522,5 +522,9 @@ public class JsoniterSpi {
 
     public static void clearCurrentConfig() {
         currentConfig.set(JsoniterConfig.INSTANCE);
+    }
+
+    public static Config getCurrentConfig() {
+        return currentConfig.get();
     }
 }

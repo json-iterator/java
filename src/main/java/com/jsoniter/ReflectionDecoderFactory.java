@@ -6,7 +6,7 @@ import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Map;
 
-public class ReflectionDecoderFactory {
+class ReflectionDecoderFactory {
     public static Decoder create(Class clazz, Type... typeArgs) {
         if (clazz.isArray()) {
             return new ReflectionArrayDecoder(clazz);

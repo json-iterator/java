@@ -21,7 +21,7 @@ public class JsoniterConfig extends EmptyExtension implements Config {
 
     @Override
     public String configName() {
-        return null;
+        return configName;
     }
 
     protected Builder builder() {
