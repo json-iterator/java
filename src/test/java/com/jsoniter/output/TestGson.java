@@ -73,4 +73,16 @@ public class TestGson extends TestCase {
         output = JsonStream.serialize(config, obj);
         assertEquals("{}", output);
     }
+
+    public void test_serializeNulls() {
+        TestObject4 obj = new TestObject4();
+        Gson gson = new GsonBuilder().serializeNulls().create();
+        String output = gson.toJson(obj);
+        assertEquals("{\"field1\":null}", output);
+
+        GsonCompatibilityMode config = new GsonCompatibilityMode.Builder()
+                .serializeNulls().build();
+        output = JsonStream.serialize(config, obj);
+        assertEquals("{\"field1\":null}", output);
+    }
 }

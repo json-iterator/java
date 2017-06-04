@@ -21,9 +21,15 @@ public class GsonCompatibilityMode extends Config {
 
     public static class Builder extends Config.Builder {
         private boolean excludeFieldsWithoutExposeAnnotation = false;
+        private boolean serializeNulls = false;
 
         public Builder excludeFieldsWithoutExposeAnnotation() {
             excludeFieldsWithoutExposeAnnotation = true;
+            return this;
+        }
+
+        public Builder serializeNulls() {
+            serializeNulls = true;
             return this;
         }
 
@@ -44,21 +50,28 @@ public class GsonCompatibilityMode extends Config {
 
             Builder builder = (Builder) o;
 
-            return excludeFieldsWithoutExposeAnnotation == builder.excludeFieldsWithoutExposeAnnotation;
+            if (excludeFieldsWithoutExposeAnnotation != builder.excludeFieldsWithoutExposeAnnotation) return false;
+            return serializeNulls == builder.serializeNulls;
         }
 
         @Override
         public int hashCode() {
             int result = super.hashCode();
             result = 31 * result + (excludeFieldsWithoutExposeAnnotation ? 1 : 0);
+            result = 31 * result + (serializeNulls ? 1 : 0);
             return result;
         }
     }
 
     @Override
     public void updateClassDescriptor(ClassDescriptor desc) {
-        super.updateClassDescriptor(desc);
         removeGetterAndSetter(desc);
+        for (Binding binding : desc.allEncoderBindings()) {
+            if (builder().serializeNulls) {
+                binding.shouldOmitNull = false;
+            }
+        }
+        super.updateClassDescriptor(desc);
     }
 
     private void removeGetterAndSetter(ClassDescriptor desc) {
