@@ -22,11 +22,6 @@ public class TestSpiPropertyEncoder extends TestCase {
                 String str = (String) obj;
                 stream.writeVal(Integer.valueOf(str));
             }
-
-            @Override
-            public Any wrap(Object obj) {
-                throw new UnsupportedOperationException();
-            }
         });
         TestObject1 obj = new TestObject1();
         obj.field1 = "100";
@@ -42,11 +37,6 @@ public class TestSpiPropertyEncoder extends TestCase {
             public void encode(Object obj, JsonStream stream) throws IOException {
                 String str = (String) obj;
                 stream.writeVal(Integer.valueOf(str) + 1);
-            }
-
-            @Override
-            public Any wrap(Object obj) {
-                throw new UnsupportedOperationException();
             }
         });
         TestObject1 obj = new TestObject1();

@@ -10,7 +10,7 @@ import java.util.Map;
 
 public class ReflectionEncoderFactory {
 
-    public static Encoder create(ClassInfo classInfo) {
+    public static Encoder.ReflectionEncoder create(ClassInfo classInfo) {
         Class clazz = classInfo.clazz;
         Type[] typeArgs = classInfo.typeArgs;
         if (clazz.isArray()) {

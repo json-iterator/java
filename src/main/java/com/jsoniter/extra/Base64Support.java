@@ -36,11 +36,6 @@ public class Base64Support {
                 Base64.encodeToBytes(bytes, stream);
                 stream.write('"');
             }
-
-            @Override
-            public Any wrap(Object obj) {
-                return null;
-            }
         });
     }
 }

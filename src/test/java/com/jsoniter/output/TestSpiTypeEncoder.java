@@ -1,6 +1,6 @@
 package com.jsoniter.output;
 
-import com.jsoniter.spi.EmptyEncoder;
+import com.jsoniter.spi.Encoder;
 import com.jsoniter.spi.JsoniterSpi;
 import com.jsoniter.spi.TypeLiteral;
 import junit.framework.TestCase;
@@ -21,7 +21,7 @@ public class TestSpiTypeEncoder extends TestCase {
     }
 
     public void test_TypeEncoder() throws IOException {
-        JsoniterSpi.registerTypeEncoder(MyDate.class, new EmptyEncoder() {
+        JsoniterSpi.registerTypeEncoder(MyDate.class, new Encoder() {
             @Override
             public void encode(Object obj, JsonStream stream) throws IOException {
                 MyDate date = (MyDate) obj;
@@ -38,7 +38,7 @@ public class TestSpiTypeEncoder extends TestCase {
     public void test_TypeEncoder_for_type_literal() {
         TypeLiteral<List<MyDate>> typeLiteral = new TypeLiteral<List<MyDate>>() {
         };
-        JsoniterSpi.registerTypeEncoder(typeLiteral, new EmptyEncoder() {
+        JsoniterSpi.registerTypeEncoder(typeLiteral, new Encoder() {
             @Override
             public void encode(Object obj, JsonStream stream) throws IOException {
                 List<MyDate> dates = (List<MyDate>) obj;

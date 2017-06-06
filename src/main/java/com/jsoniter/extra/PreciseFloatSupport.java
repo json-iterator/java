@@ -20,7 +20,7 @@ public class PreciseFloatSupport {
             throw new JsonException("PreciseFloatSupport.enable can only be called once");
         }
         enabled = true;
-        JsoniterSpi.registerTypeEncoder(Double.class, new Encoder() {
+        JsoniterSpi.registerTypeEncoder(Double.class, new Encoder.ReflectionEncoder() {
             @Override
             public void encode(Object obj, JsonStream stream) throws IOException {
                 stream.writeRaw(obj.toString());
@@ -38,7 +38,7 @@ public class PreciseFloatSupport {
                 stream.writeRaw(Double.toString(obj));
             }
         });
-        JsoniterSpi.registerTypeEncoder(Float.class, new Encoder() {
+        JsoniterSpi.registerTypeEncoder(Float.class, new Encoder.ReflectionEncoder() {
             @Override
             public void encode(Object obj, JsonStream stream) throws IOException {
                 stream.writeRaw(obj.toString());

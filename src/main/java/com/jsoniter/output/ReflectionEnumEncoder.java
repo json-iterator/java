@@ -5,7 +5,7 @@ import com.jsoniter.spi.Encoder;
 
 import java.io.IOException;
 
-class ReflectionEnumEncoder implements Encoder {
+class ReflectionEnumEncoder implements Encoder.ReflectionEncoder {
     public ReflectionEnumEncoder(Class clazz) {
     }
 

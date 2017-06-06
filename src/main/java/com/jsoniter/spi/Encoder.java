@@ -9,8 +9,11 @@ public interface Encoder {
 
     void encode(Object obj, JsonStream stream) throws IOException;
 
-    // TODO: remove this from encoder interface
-    Any wrap(Object obj);
+
+    interface ReflectionEncoder extends Encoder {
+
+        Any wrap(Object obj);
+    }
 
     abstract class BooleanEncoder implements Encoder {
         @Override
@@ -21,7 +24,7 @@ public interface Encoder {
         public abstract void encodeBoolean(boolean obj, JsonStream stream) throws IOException;
     }
 
-    abstract class ShortEncoder implements Encoder {
+    abstract class ShortEncoder implements ReflectionEncoder {
 
         @Override
         public void encode(Object obj, JsonStream stream) throws IOException {
@@ -47,7 +50,7 @@ public interface Encoder {
         }
     }
 
-    abstract class IntEncoder implements Encoder {
+    abstract class IntEncoder implements ReflectionEncoder {
         @Override
         public void encode(Object obj, JsonStream stream) throws IOException {
             encodeInt((Integer) obj, stream);
@@ -72,7 +75,7 @@ public interface Encoder {
         }
     }
 
-    abstract class LongEncoder implements Encoder {
+    abstract class LongEncoder implements ReflectionEncoder {
         @Override
         public void encode(Object obj, JsonStream stream) throws IOException {
             encodeLong((Long) obj, stream);
@@ -97,7 +100,7 @@ public interface Encoder {
         }
     }
 
-    abstract class FloatEncoder implements Encoder {
+    abstract class FloatEncoder implements ReflectionEncoder {
         @Override
         public void encode(Object obj, JsonStream stream) throws IOException {
             encodeFloat((Float) obj, stream);
@@ -122,7 +125,7 @@ public interface Encoder {
         }
     }
 
-    abstract class DoubleEncoder implements Encoder {
+    abstract class DoubleEncoder implements ReflectionEncoder {
         @Override
         public void encode(Object obj, JsonStream stream) throws IOException {
             encodeDouble((Double) obj, stream);

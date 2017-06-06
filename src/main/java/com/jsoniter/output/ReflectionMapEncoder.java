@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.Map;
 
-class ReflectionMapEncoder implements Encoder {
+class ReflectionMapEncoder implements Encoder.ReflectionEncoder {
 
     private final TypeLiteral valueTypeLiteral;
     private final MapKeyEncoder mapKeyEncoder;

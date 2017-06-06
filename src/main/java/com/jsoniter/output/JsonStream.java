@@ -450,7 +450,7 @@ public class JsonStream extends OutputStream {
         JsoniterSpi.setCurrentConfig(newConfig);
     }
 
-    public static void registerNativeEncoder(Class clazz, Encoder encoder) {
+    public static void registerNativeEncoder(Class clazz, Encoder.ReflectionEncoder encoder) {
         CodegenImplNative.NATIVE_ENCODERS.put(clazz, encoder);
     }
 }

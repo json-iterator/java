@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.List;
 
-class ReflectionListEncoder implements Encoder {
+class ReflectionListEncoder implements Encoder.ReflectionEncoder {
 
     private final TypeLiteral compTypeLiteral;
 

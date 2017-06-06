@@ -107,7 +107,7 @@ public class GsonCompatibilityMode extends Config {
     @Override
     public Encoder createEncoder(String cacheKey, Type type) {
         if (Date.class == type) {
-            return new EmptyEncoder() {
+            return new Encoder() {
                 @Override
                 public void encode(Object obj, JsonStream stream) throws IOException {
                     DateFormat dateFormat = builder().dateFormat.get();

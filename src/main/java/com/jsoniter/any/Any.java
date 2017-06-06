@@ -14,7 +14,7 @@ import java.util.*;
 public abstract class Any implements Iterable<Any> {
 
     static {
-        Encoder anyEncoder = new Encoder() {
+        Encoder.ReflectionEncoder anyEncoder = new Encoder.ReflectionEncoder() {
             @Override
             public void encode(Object obj, JsonStream stream) throws IOException {
                 Any any = (Any) obj;

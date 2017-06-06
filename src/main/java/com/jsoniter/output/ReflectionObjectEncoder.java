@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-class ReflectionObjectEncoder implements Encoder {
+class ReflectionObjectEncoder implements Encoder.ReflectionEncoder {
 
     private final ClassDescriptor desc;
 

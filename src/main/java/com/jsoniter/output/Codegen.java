@@ -17,10 +17,10 @@ class Codegen {
     static CodegenAccess.StaticCodegenTarget isDoingStaticCodegen;
     // only read/write when generating code with synchronized protection
     private final static Map<String, CodegenResult> generatedSources = new HashMap<String, CodegenResult>();
-    private volatile static Map<String, Encoder> reflectionEncoders = new HashMap<String, Encoder>();
+    private volatile static Map<String, Encoder.ReflectionEncoder> reflectionEncoders = new HashMap<String, Encoder.ReflectionEncoder>();
 
-    public static Encoder getReflectionEncoder(String cacheKey, Type type) {
-        Encoder encoder = CodegenImplNative.NATIVE_ENCODERS.get(type);
+    public static Encoder.ReflectionEncoder getReflectionEncoder(String cacheKey, Type type) {
+        Encoder.ReflectionEncoder encoder = CodegenImplNative.NATIVE_ENCODERS.get(type);
         if (encoder != null) {
             return encoder;
         }
@@ -35,7 +35,7 @@ class Codegen {
             }
             ClassInfo classInfo = new ClassInfo(type);
             encoder = ReflectionEncoderFactory.create(classInfo);
-            HashMap<String, Encoder> copy = new HashMap<String, Encoder>(reflectionEncoders);
+            HashMap<String, Encoder.ReflectionEncoder> copy = new HashMap<String, Encoder.ReflectionEncoder>(reflectionEncoders);
             copy.put(cacheKey, encoder);
             reflectionEncoders = copy;
             return encoder;
@@ -113,11 +113,6 @@ class Codegen {
             @Override
             public void encode(Object obj, JsonStream stream) throws IOException {
                 JsoniterSpi.getEncoder(cacheKey).encode(obj, stream);
-            }
-
-            @Override
-            public Any wrap(Object obj) {
-                return JsoniterSpi.getEncoder(cacheKey).wrap(obj);
             }
         });
     }

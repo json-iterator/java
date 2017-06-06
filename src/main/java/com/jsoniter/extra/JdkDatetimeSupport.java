@@ -31,7 +31,7 @@ public class JdkDatetimeSupport {
             throw new JsonException("JdkDatetimeSupport.enable can only be called once");
         }
         JdkDatetimeSupport.pattern = pattern;
-        JsoniterSpi.registerTypeEncoder(Date.class, new Encoder() {
+        JsoniterSpi.registerTypeEncoder(Date.class, new Encoder.ReflectionEncoder() {
             @Override
             public void encode(Object obj, JsonStream stream) throws IOException {
                 stream.writeVal(sdf.get().format(obj));

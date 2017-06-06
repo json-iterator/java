@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 
-class ReflectionArrayEncoder implements Encoder {
+class ReflectionArrayEncoder implements Encoder.ReflectionEncoder {
 
     private final TypeLiteral compTypeLiteral;
 

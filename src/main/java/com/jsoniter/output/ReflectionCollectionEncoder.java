@@ -9,7 +9,7 @@ import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Iterator;
 
-class ReflectionCollectionEncoder implements Encoder {
+class ReflectionCollectionEncoder implements Encoder.ReflectionEncoder {
 
     private final TypeLiteral compTypeLiteral;
 

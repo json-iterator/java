@@ -51,7 +51,7 @@ public class Base64FloatSupport {
         }
         enabled = true;
         enableDecoders();
-        JsoniterSpi.registerTypeEncoder(Double.class, new Encoder() {
+        JsoniterSpi.registerTypeEncoder(Double.class, new Encoder.ReflectionEncoder() {
             @Override
             public void encode(Object obj, JsonStream stream) throws IOException {
                 Double number = (Double) obj;
@@ -72,7 +72,7 @@ public class Base64FloatSupport {
                 Base64.encodeLongBits(bits, stream);
             }
         });
-        JsoniterSpi.registerTypeEncoder(Float.class, new Encoder() {
+        JsoniterSpi.registerTypeEncoder(Float.class, new Encoder.ReflectionEncoder() {
             @Override
             public void encode(Object obj, JsonStream stream) throws IOException {
                 Float number = (Float) obj;
