@@ -1,5 +1,6 @@
 package com.jsoniter.output;
 
+import com.google.gson.FieldNamingStrategy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
@@ -7,6 +8,7 @@ import com.google.gson.annotations.SerializedName;
 import com.jsoniter.extra.GsonCompatibilityMode;
 import junit.framework.TestCase;
 
+import java.lang.reflect.Field;
 import java.text.DateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -143,5 +145,26 @@ public class TestGson extends TestCase {
         } finally {
             TimeZone.setDefault(orig);
         }
+    }
+
+    public void test_setFieldNamingStrategy() {
+        FieldNamingStrategy fieldNamingStrategy = new FieldNamingStrategy() {
+            @Override
+            public String translateName(Field f) {
+                return "_" + f.getName();
+            }
+        };
+        Gson gson = new GsonBuilder()
+                .setFieldNamingStrategy(fieldNamingStrategy)
+                .create();
+        TestObject4 obj = new TestObject4();
+        obj.field1 = "hello";
+        String output = gson.toJson(obj);
+        assertEquals("{\"_field1\":\"hello\"}", output);
+        GsonCompatibilityMode config = new GsonCompatibilityMode.Builder()
+                .setFieldNamingStrategy(fieldNamingStrategy)
+                .build();
+        output = JsonStream.serialize(config, obj);
+        assertEquals("{\"_field1\":\"hello\"}", output);
     }
 }
