@@ -32,6 +32,7 @@ public class ClassDescriptor {
         desc.ctor = getCtor(clazz);
         desc.fields = getFields(lookup, classInfo, includingPrivate);
         desc.setters = getSetters(lookup, classInfo, includingPrivate);
+        desc.getters = new ArrayList<Binding>();
         desc.bindingTypeWrappers = new ArrayList<WrapperDescriptor>();
         desc.keyValueTypeWrappers = new ArrayList<Method>();
         desc.unwrappers = new ArrayList<UnwrapperDescriptor>();

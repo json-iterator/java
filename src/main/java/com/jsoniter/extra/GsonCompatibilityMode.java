@@ -2,6 +2,7 @@ package com.jsoniter.extra;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.jsoniter.JsonIterator;
 import com.jsoniter.annotation.JsonIgnore;
 import com.jsoniter.annotation.JsonProperty;
 import com.jsoniter.any.Any;
@@ -13,6 +14,7 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -116,6 +118,24 @@ public class GsonCompatibilityMode extends Config {
             };
         }
         return super.createEncoder(cacheKey, type);
+    }
+
+    @Override
+    public Decoder createDecoder(String cacheKey, Type type) {
+        if (Date.class == type) {
+            return new Decoder() {
+                @Override
+                public Object decode(JsonIterator iter) throws IOException {
+                    DateFormat dateFormat = builder().dateFormat.get();
+                    try {
+                        return dateFormat.parse(iter.readString());
+                    } catch (ParseException e) {
+                        throw new JsonException(e);
+                    }
+                }
+            };
+        }
+        return super.createDecoder(cacheKey, type);
     }
 
     @Override
