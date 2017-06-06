@@ -3,8 +3,11 @@ package com.jsoniter.output;
 import com.jsoniter.any.Any;
 import com.jsoniter.spi.*;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Type;
 
 public class JsonStream extends OutputStream {
 
@@ -342,6 +345,16 @@ public class JsonStream extends OutputStream {
         }
     }
 
+    public final <T> void writeVal(Type type, T obj) throws IOException {
+        if (null == obj) {
+            writeNull();
+        } else {
+            Config config = currentConfig();
+            String cacheKey = config.getEncoderCacheKey(type);
+            Codegen.getEncoder(cacheKey, type).encode(obj, this);
+        }
+    }
+
     public Config currentConfig() {
         if (configCache != null) {
             return configCache;
@@ -401,43 +414,69 @@ public class JsonStream extends OutputStream {
         }
     }
 
+    public static void serialize(Type type, Object obj, OutputStream out) {
+        JsonStream stream = JsonStreamPool.borrowJsonStream();
+        try {
+            try {
+                stream.reset(out);
+                stream.writeVal(type, obj);
+            } finally {
+                stream.close();
+            }
+        } catch (IOException e) {
+            throw new JsonException(e);
+        } finally {
+            JsonStreamPool.returnJsonStream(stream);
+        }
+    }
+
     public static String serialize(Config config, Object obj) {
         JsoniterSpi.setCurrentConfig(config);
         try {
-            return serialize(obj);
+            return serialize(config.escapeUnicode(), obj.getClass(), obj);
         } finally {
             JsoniterSpi.clearCurrentConfig();
         }
     }
 
     public static String serialize(Object obj) {
-        AsciiOutputStream asciiOutputStream = JsonStreamPool.borrowAsciiOutputStream();
-        try {
-            asciiOutputStream.reset();
-            serialize(obj, asciiOutputStream);
-            return asciiOutputStream.toString();
-        } finally {
-            JsonStreamPool.returnAsciiOutputStream(asciiOutputStream);
-        }
+        return serialize(JsoniterSpi.getCurrentConfig().escapeUnicode(), obj.getClass(), obj);
     }
 
     public static String serialize(Config config, TypeLiteral typeLiteral, Object obj) {
         JsoniterSpi.setCurrentConfig(config);
         try {
-            return serialize(typeLiteral, obj);
+            return serialize(config.escapeUnicode(), typeLiteral.getType(), obj);
         } finally {
             JsoniterSpi.clearCurrentConfig();
         }
     }
 
     public static String serialize(TypeLiteral typeLiteral, Object obj) {
-        AsciiOutputStream asciiOutputStream = JsonStreamPool.borrowAsciiOutputStream();
-        try {
-            asciiOutputStream.reset();
-            serialize(typeLiteral, obj, asciiOutputStream);
-            return asciiOutputStream.toString();
-        } finally {
-            JsonStreamPool.returnAsciiOutputStream(asciiOutputStream);
+        return serialize(JsoniterSpi.getCurrentConfig().escapeUnicode(), typeLiteral.getType(), obj);
+    }
+
+    public static String serialize(boolean escapeUnicode, Type type, Object obj) {
+        if (escapeUnicode) {
+            AsciiOutputStream asciiOutputStream = JsonStreamPool.borrowAsciiOutputStream();
+            try {
+                asciiOutputStream.reset();
+                serialize(type, obj, asciiOutputStream);
+                return asciiOutputStream.toString();
+            } finally {
+                JsonStreamPool.returnAsciiOutputStream(asciiOutputStream);
+            }
+        } else {
+            ByteArrayOutputStream baos = JsonStreamPool.borrowByteArrayOutputStream();
+            try {
+                baos.reset();
+                serialize(type, obj, baos);
+                return baos.toString("UTF8");
+            } catch (UnsupportedEncodingException e) {
+                throw new JsonException(e);
+            } finally {
+                JsonStreamPool.returnByteArrayOutputStream(baos);
+            }
         }
     }
 

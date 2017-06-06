@@ -29,7 +29,7 @@ public class Config extends EmptyExtension {
         if (cacheKey != null) {
             return cacheKey;
         }
-        synchronized(this) {
+        synchronized (this) {
             cacheKey = decoderCacheKeys.get(type);
             if (cacheKey != null) {
                 return cacheKey;
@@ -47,7 +47,7 @@ public class Config extends EmptyExtension {
         if (cacheKey != null) {
             return cacheKey;
         }
-        synchronized(this) {
+        synchronized (this) {
             cacheKey = encoderCacheKeys.get(type);
             if (cacheKey != null) {
                 return cacheKey;
@@ -76,6 +76,10 @@ public class Config extends EmptyExtension {
         return builder.indentionStep;
     }
 
+    public boolean escapeUnicode() {
+        return builder.escapeUnicode;
+    }
+
     public EncodingMode encodingMode() {
         return builder.encodingMode;
     }
@@ -85,6 +89,7 @@ public class Config extends EmptyExtension {
         private DecodingMode decodingMode;
         private EncodingMode encodingMode;
         private int indentionStep;
+        private boolean escapeUnicode = true;
 
         public Builder() {
             String envMode = System.getenv("JSONITER_DECODING_MODE");
@@ -113,6 +118,11 @@ public class Config extends EmptyExtension {
 
         public Builder indentionStep(int indentionStep) {
             this.indentionStep = indentionStep;
+            return this;
+        }
+
+        public Builder escapeUnicode(boolean escapeUnicode) {
+            this.escapeUnicode = escapeUnicode;
             return this;
         }
 
@@ -147,6 +157,7 @@ public class Config extends EmptyExtension {
             Builder builder = (Builder) o;
 
             if (indentionStep != builder.indentionStep) return false;
+            if (escapeUnicode != builder.escapeUnicode) return false;
             if (decodingMode != builder.decodingMode) return false;
             return encodingMode == builder.encodingMode;
         }
@@ -156,6 +167,7 @@ public class Config extends EmptyExtension {
             int result = decodingMode != null ? decodingMode.hashCode() : 0;
             result = 31 * result + (encodingMode != null ? encodingMode.hashCode() : 0);
             result = 31 * result + indentionStep;
+            result = 31 * result + (escapeUnicode ? 1 : 0);
             return result;
         }
 
@@ -164,6 +176,7 @@ public class Config extends EmptyExtension {
             builder.encodingMode = encodingMode;
             builder.decodingMode = decodingMode;
             builder.indentionStep = indentionStep;
+            builder.escapeUnicode = escapeUnicode;
             return builder;
         }
     }

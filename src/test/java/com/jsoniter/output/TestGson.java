@@ -206,4 +206,28 @@ public class TestGson extends TestCase {
                 "  \"field1\": \"hello\"\n" +
                 "}", output);
     }
+
+    public void test_disableHtmlEscaping_off() {
+        Gson gson = new GsonBuilder()
+                .disableHtmlEscaping()
+                .create();
+        String output = gson.toJson("<html>中文</html>");
+        assertEquals("\"<html>中文</html>\"", output);
+        GsonCompatibilityMode config = new GsonCompatibilityMode.Builder()
+                .disableHtmlEscaping()
+                .build();
+        output = JsonStream.serialize(config, "<html>中文</html>");
+        assertEquals("\"<html>中文</html>\"", output);
+    }
+
+    public void test_disableHtmlEscaping_on() {
+        Gson gson = new GsonBuilder()
+                .create();
+        String output = gson.toJson("<html>&nbsp;</html>");
+        assertEquals("\"\\u003chtml\\u003e\\u0026nbsp;\\u003c/html\\u003e\"", output);
+        GsonCompatibilityMode config = new GsonCompatibilityMode.Builder()
+                .build();
+        output = JsonStream.serialize(config, "<html>&nbsp;</html>");
+        assertEquals("\"\\u003chtml\\u003e\\u0026nbsp;\\u003c/html\\u003e\"", output);
+    }
 }
