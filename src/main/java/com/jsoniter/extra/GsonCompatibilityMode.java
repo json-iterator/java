@@ -1,5 +1,6 @@
 package com.jsoniter.extra;
 
+import com.google.gson.FieldNamingPolicy;
 import com.google.gson.FieldNamingStrategy;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
@@ -77,6 +78,11 @@ public class GsonCompatibilityMode extends Config {
 
         public Builder setFieldNamingStrategy(FieldNamingStrategy fieldNamingStrategy) {
             this.fieldNamingStrategy = fieldNamingStrategy;
+            return this;
+        }
+
+        public Builder setFieldNamingPolicy(FieldNamingPolicy namingConvention) {
+            this.fieldNamingStrategy = namingConvention;
             return this;
         }
 

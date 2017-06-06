@@ -1,5 +1,6 @@
 package com.jsoniter.output;
 
+import com.google.gson.FieldNamingPolicy;
 import com.google.gson.FieldNamingStrategy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -166,5 +167,20 @@ public class TestGson extends TestCase {
                 .build();
         output = JsonStream.serialize(config, obj);
         assertEquals("{\"_field1\":\"hello\"}", output);
+    }
+
+    public void test_setFieldNamingPolicy() {
+        Gson gson = new GsonBuilder()
+                .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE)
+                .create();
+        TestObject4 obj = new TestObject4();
+        obj.field1 = "hello";
+        String output = gson.toJson(obj);
+        assertEquals("{\"Field1\":\"hello\"}", output);
+        GsonCompatibilityMode config = new GsonCompatibilityMode.Builder()
+                .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE)
+                .build();
+        output = JsonStream.serialize(config, obj);
+        assertEquals("{\"Field1\":\"hello\"}", output);
     }
 }
