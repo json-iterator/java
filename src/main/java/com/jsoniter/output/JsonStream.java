@@ -308,7 +308,11 @@ public class JsonStream extends OutputStream {
 
     public final void writeObjectField(String field) throws IOException {
         writeVal(field);
-        write(':');
+        if (indention > 0) {
+            write((byte) ':', (byte) ' ');
+        } else {
+            write(':');
+        }
     }
 
     public final void writeObjectEnd() throws IOException {

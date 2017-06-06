@@ -7,6 +7,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.jsoniter.extra.GsonCompatibilityMode;
+import com.jsoniter.spi.JsoniterSpi;
 import junit.framework.TestCase;
 
 import java.lang.reflect.Field;
@@ -182,5 +183,27 @@ public class TestGson extends TestCase {
                 .build();
         output = JsonStream.serialize(config, obj);
         assertEquals("{\"Field1\":\"hello\"}", output);
+    }
+
+    public void test_setPrettyPrinting() {
+        if (JsoniterSpi.getCurrentConfig().encodingMode() != EncodingMode.REFLECTION_MODE) {
+            return;
+        }
+        Gson gson = new GsonBuilder()
+                .setPrettyPrinting()
+                .create();
+        TestObject4 obj = new TestObject4();
+        obj.field1 = "hello";
+        String output = gson.toJson(obj);
+        assertEquals("{\n" +
+                "  \"field1\": \"hello\"\n" +
+                "}", output);
+        GsonCompatibilityMode config = new GsonCompatibilityMode.Builder()
+                .setPrettyPrinting()
+                .build();
+        output = JsonStream.serialize(config, obj);
+        assertEquals("{\n" +
+                "  \"field1\": \"hello\"\n" +
+                "}", output);
     }
 }

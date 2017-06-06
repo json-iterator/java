@@ -86,6 +86,11 @@ public class GsonCompatibilityMode extends Config {
             return this;
         }
 
+        public Builder setPrettyPrinting() {
+            indentionStep(2);
+            return this;
+        }
+
         public GsonCompatibilityMode build() {
             return (GsonCompatibilityMode) super.build();
         }
