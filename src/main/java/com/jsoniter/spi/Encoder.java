@@ -9,6 +9,7 @@ public interface Encoder {
 
     void encode(Object obj, JsonStream stream) throws IOException;
 
+    // TODO: remove this from encoder interface
     Any wrap(Object obj);
 
     abstract class BooleanEncoder implements Encoder {

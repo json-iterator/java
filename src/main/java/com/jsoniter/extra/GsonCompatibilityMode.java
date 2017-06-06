@@ -4,10 +4,18 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.jsoniter.annotation.JsonIgnore;
 import com.jsoniter.annotation.JsonProperty;
+import com.jsoniter.any.Any;
+import com.jsoniter.output.JsonStream;
 import com.jsoniter.spi.Config;
 import com.jsoniter.spi.*;
 
+import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class GsonCompatibilityMode extends Config {
 
@@ -22,6 +30,12 @@ public class GsonCompatibilityMode extends Config {
     public static class Builder extends Config.Builder {
         private boolean excludeFieldsWithoutExposeAnnotation = false;
         private boolean serializeNulls = false;
+        private ThreadLocal<DateFormat> dateFormat = new ThreadLocal<DateFormat>() {
+            @Override
+            protected DateFormat initialValue() {
+                return DateFormat.getDateTimeInstance(DateFormat.DEFAULT, DateFormat.DEFAULT, Locale.US);
+            }
+        };
 
         public Builder excludeFieldsWithoutExposeAnnotation() {
             excludeFieldsWithoutExposeAnnotation = true;
@@ -30,6 +44,31 @@ public class GsonCompatibilityMode extends Config {
 
         public Builder serializeNulls() {
             serializeNulls = true;
+            return this;
+        }
+
+        public Builder setDateFormat(int dateStyle) {
+            // no op, same as gson
+            return this;
+        }
+
+        public Builder setDateFormat(final int dateStyle, final int timeStyle) {
+            dateFormat = new ThreadLocal<DateFormat>() {
+                @Override
+                protected DateFormat initialValue() {
+                    return DateFormat.getDateTimeInstance(dateStyle, timeStyle, Locale.US);
+                }
+            };
+            return this;
+        }
+
+        public Builder setDateFormat(final String pattern) {
+            dateFormat = new ThreadLocal<DateFormat>() {
+                @Override
+                protected DateFormat initialValue() {
+                    return new SimpleDateFormat(pattern, Locale.US);
+                }
+            };
             return this;
         }
 
@@ -51,7 +90,8 @@ public class GsonCompatibilityMode extends Config {
             Builder builder = (Builder) o;
 
             if (excludeFieldsWithoutExposeAnnotation != builder.excludeFieldsWithoutExposeAnnotation) return false;
-            return serializeNulls == builder.serializeNulls;
+            if (serializeNulls != builder.serializeNulls) return false;
+            return dateFormat.get().equals(builder.dateFormat.get());
         }
 
         @Override
@@ -59,8 +99,23 @@ public class GsonCompatibilityMode extends Config {
             int result = super.hashCode();
             result = 31 * result + (excludeFieldsWithoutExposeAnnotation ? 1 : 0);
             result = 31 * result + (serializeNulls ? 1 : 0);
+            result = 31 * result + dateFormat.get().hashCode();
             return result;
         }
+    }
+
+    @Override
+    public Encoder createEncoder(String cacheKey, Type type) {
+        if (Date.class == type) {
+            return new EmptyEncoder() {
+                @Override
+                public void encode(Object obj, JsonStream stream) throws IOException {
+                    DateFormat dateFormat = builder().dateFormat.get();
+                    stream.writeVal(dateFormat.format(obj));
+                }
+            };
+        }
+        return super.createEncoder(cacheKey, type);
     }
 
     @Override

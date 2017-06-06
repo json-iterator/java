@@ -7,6 +7,11 @@ import com.google.gson.annotations.SerializedName;
 import com.jsoniter.extra.GsonCompatibilityMode;
 import junit.framework.TestCase;
 
+import java.text.DateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
+
 public class TestGson extends TestCase {
 
     public static class TestObject1 {
@@ -84,5 +89,59 @@ public class TestGson extends TestCase {
                 .serializeNulls().build();
         output = JsonStream.serialize(config, obj);
         assertEquals("{\"field1\":null}", output);
+    }
+
+    public void test_setDateFormat_no_op() {
+        TimeZone orig = TimeZone.getDefault();
+        try {
+            TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+            Gson gson = new GsonBuilder().create();
+            String output = gson.toJson(new Date(0));
+            assertEquals("\"Jan 1, 1970, 12:00:00 AM\"", output);
+            GsonCompatibilityMode config = new GsonCompatibilityMode.Builder()
+                    .build();
+            output = JsonStream.serialize(config, new Date(0));
+            assertEquals("\"Jan 1, 1970, 12:00:00 AM\"", output);
+        } finally {
+            TimeZone.setDefault(orig);
+        }
+    }
+
+    public void test_setDateFormat_with_style() {
+        TimeZone orig = TimeZone.getDefault();
+        try {
+            TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+            Gson gson = new GsonBuilder()
+                    .setDateFormat(DateFormat.LONG, DateFormat.LONG)
+                    .create();
+            String output = gson.toJson(new Date(0));
+            assertEquals("\"January 1, 1970 at 12:00:00 AM UTC\"", output);
+            GsonCompatibilityMode config = new GsonCompatibilityMode.Builder()
+                    .setDateFormat(DateFormat.LONG, DateFormat.LONG)
+                    .build();
+            output = JsonStream.serialize(config, new Date(0));
+            assertEquals("\"January 1, 1970 at 12:00:00 AM UTC\"", output);
+        } finally {
+            TimeZone.setDefault(orig);
+        }
+    }
+
+    public void test_setDateFormat_with_format() {
+        TimeZone orig = TimeZone.getDefault();
+        try {
+            TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+            Gson gson = new GsonBuilder()
+                    .setDateFormat("EEE, MMM d, yyyy hh:mm:ss a z")
+                    .create();
+            String output = gson.toJson(new Date(0));
+            assertEquals("\"Thu, Jan 1, 1970 12:00:00 AM UTC\"", output);
+            GsonCompatibilityMode config = new GsonCompatibilityMode.Builder()
+                    .setDateFormat("EEE, MMM d, yyyy hh:mm:ss a z")
+                    .build();
+            output = JsonStream.serialize(config, new Date(0));
+            assertEquals("\"Thu, Jan 1, 1970 12:00:00 AM UTC\"", output);
+        } finally {
+            TimeZone.setDefault(orig);
+        }
     }
 }
