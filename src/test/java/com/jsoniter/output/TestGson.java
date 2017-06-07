@@ -6,6 +6,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.google.gson.annotations.Since;
+import com.google.gson.annotations.Until;
 import com.jsoniter.extra.GsonCompatibilityMode;
 import com.jsoniter.spi.JsoniterSpi;
 import junit.framework.TestCase;
@@ -229,5 +231,30 @@ public class TestGson extends TestCase {
                 .build();
         output = JsonStream.serialize(config, "<html>&nbsp;</html>");
         assertEquals("\"\\u003chtml\\u003e\\u0026nbsp;\\u003c/html\\u003e\"", output);
+    }
+
+    public static class TestObject5 {
+        @Since(3.0)
+        public String field1 = "field1";
+        @Until(1.0)
+        public String field2 = "field2";
+        @Since(2.0)
+        public String field3 = "field3";
+        @Until(2.0)
+        public String field4 = "field4";
+    }
+
+    public void test_setVersion() {
+        TestObject5 obj = new TestObject5();
+        Gson gson = new GsonBuilder()
+                .setVersion(2.0)
+                .create();
+        String output = gson.toJson(obj);
+        assertEquals("{\"field3\":\"field3\"}", output);
+        GsonCompatibilityMode config = new GsonCompatibilityMode.Builder()
+                .setVersion(2.0)
+                .build();
+        output = JsonStream.serialize(config, obj);
+        assertEquals("{\"field3\":\"field3\"}", output);
     }
 }

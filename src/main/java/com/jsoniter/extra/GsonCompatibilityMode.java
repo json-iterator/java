@@ -4,6 +4,8 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.FieldNamingStrategy;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.google.gson.annotations.Since;
+import com.google.gson.annotations.Until;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.annotation.JsonIgnore;
 import com.jsoniter.annotation.JsonProperty;
@@ -66,6 +68,7 @@ public class GsonCompatibilityMode extends Config {
             }
         };
         private FieldNamingStrategy fieldNamingStrategy;
+        private Double version;
 
         public Builder excludeFieldsWithoutExposeAnnotation() {
             excludeFieldsWithoutExposeAnnotation = true;
@@ -122,6 +125,11 @@ public class GsonCompatibilityMode extends Config {
             return this;
         }
 
+        public Builder setVersion(double version) {
+            this.version = version;
+            return this;
+        }
+
         public GsonCompatibilityMode build() {
             escapeUnicode(false);
             return (GsonCompatibilityMode) super.build();
@@ -144,7 +152,9 @@ public class GsonCompatibilityMode extends Config {
             if (serializeNulls != builder.serializeNulls) return false;
             if (disableHtmlEscaping != builder.disableHtmlEscaping) return false;
             if (!dateFormat.get().equals(builder.dateFormat.get())) return false;
-            return fieldNamingStrategy != null ? fieldNamingStrategy.equals(builder.fieldNamingStrategy) : builder.fieldNamingStrategy == null;
+            if (fieldNamingStrategy != null ? !fieldNamingStrategy.equals(builder.fieldNamingStrategy) : builder.fieldNamingStrategy != null)
+                return false;
+            return version != null ? version.equals(builder.version) : builder.version == null;
         }
 
         @Override
@@ -155,6 +165,7 @@ public class GsonCompatibilityMode extends Config {
             result = 31 * result + (disableHtmlEscaping ? 1 : 0);
             result = 31 * result + dateFormat.get().hashCode();
             result = 31 * result + (fieldNamingStrategy != null ? fieldNamingStrategy.hashCode() : 0);
+            result = 31 * result + (version != null ? version.hashCode() : 0);
             return result;
         }
 
@@ -166,6 +177,7 @@ public class GsonCompatibilityMode extends Config {
             copied.disableHtmlEscaping = disableHtmlEscaping;
             copied.dateFormat = dateFormat;
             copied.fieldNamingStrategy = fieldNamingStrategy;
+            copied.version = version;
             return copied;
         }
     }
@@ -293,6 +305,18 @@ public class GsonCompatibilityMode extends Config {
         for (Binding binding : desc.allEncoderBindings()) {
             if (builder().serializeNulls) {
                 binding.shouldOmitNull = false;
+            }
+            if (builder().version != null) {
+                Since since = binding.getAnnotation(Since.class);
+                if (since != null && builder().version < since.value()) {
+                    binding.toNames = new String[0];
+                    binding.fromNames = new String[0];
+                }
+                Until until = binding.getAnnotation(Until.class);
+                if (until != null && builder().version >= until.value()) {
+                    binding.toNames = new String[0];
+                    binding.fromNames = new String[0];
+                }
             }
         }
         super.updateClassDescriptor(desc);

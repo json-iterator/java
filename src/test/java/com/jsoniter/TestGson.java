@@ -6,6 +6,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.google.gson.annotations.Since;
+import com.google.gson.annotations.Until;
 import com.jsoniter.extra.GsonCompatibilityMode;
 import com.jsoniter.output.JsonStream;
 import junit.framework.TestCase;
@@ -115,5 +117,37 @@ public class TestGson extends TestCase {
                 .build();
         obj = JsonIterator.deserialize(config, "{\"Field1\":\"hello\"}", TestObject3.class);
         assertEquals("hello", obj.field1);
+    }
+
+    public static class TestObject5 {
+        @Since(3.0)
+        public String field1 = "";
+        @Until(1.0)
+        public String field2 = "";
+        @Since(2.0)
+        public String field3 = "";
+        @Until(2.0)
+        public String field4 = "";
+    }
+
+    public void test_setVersion() {
+        Gson gson = new GsonBuilder()
+                .setVersion(2.0)
+                .create();
+        TestObject5 obj = gson.fromJson("{\"field1\":\"field1\",\"field2\":\"field2\",\"field3\":\"field3\",\"field4\":\"field4\"}",
+                TestObject5.class);
+        assertEquals("", obj.field1);
+        assertEquals("", obj.field2);
+        assertEquals("field3", obj.field3);
+        assertEquals("", obj.field4);
+        GsonCompatibilityMode config = new GsonCompatibilityMode.Builder()
+                .setVersion(2.0)
+                .build();
+        obj = JsonIterator.deserialize(config, "{\"field1\":\"field1\",\"field2\":\"field2\",\"field3\":\"field3\",\"field4\":\"field4\"}",
+                TestObject5.class);
+        assertEquals("", obj.field1);
+        assertEquals("", obj.field2);
+        assertEquals("field3", obj.field3);
+        assertEquals("", obj.field4);
     }
 }
