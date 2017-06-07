@@ -1,9 +1,6 @@
 package com.jsoniter.output;
 
-import com.google.gson.FieldNamingPolicy;
-import com.google.gson.FieldNamingStrategy;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.gson.*;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.annotations.Since;
@@ -253,6 +250,31 @@ public class TestGson extends TestCase {
         assertEquals("{\"field3\":\"field3\"}", output);
         GsonCompatibilityMode config = new GsonCompatibilityMode.Builder()
                 .setVersion(2.0)
+                .build();
+        output = JsonStream.serialize(config, obj);
+        assertEquals("{\"field3\":\"field3\"}", output);
+    }
+
+    public void test_addSerializationExclusionStrategy() {
+        TestObject5 obj = new TestObject5();
+        ExclusionStrategy exclusionStrategy = new ExclusionStrategy() {
+            @Override
+            public boolean shouldSkipField(FieldAttributes f) {
+                return !f.getName().equals("field3");
+            }
+
+            @Override
+            public boolean shouldSkipClass(Class<?> clazz) {
+                return false;
+            }
+        };
+        Gson gson = new GsonBuilder()
+                .addSerializationExclusionStrategy(exclusionStrategy)
+                .create();
+        String output = gson.toJson(obj);
+        assertEquals("{\"field3\":\"field3\"}", output);
+        GsonCompatibilityMode config = new GsonCompatibilityMode.Builder()
+                .addSerializationExclusionStrategy(exclusionStrategy)
                 .build();
         output = JsonStream.serialize(config, obj);
         assertEquals("{\"field3\":\"field3\"}", output);

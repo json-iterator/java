@@ -1,9 +1,6 @@
 package com.jsoniter;
 
-import com.google.gson.FieldNamingPolicy;
-import com.google.gson.FieldNamingStrategy;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.gson.*;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.annotations.Since;
@@ -142,6 +139,38 @@ public class TestGson extends TestCase {
         assertEquals("", obj.field4);
         GsonCompatibilityMode config = new GsonCompatibilityMode.Builder()
                 .setVersion(2.0)
+                .build();
+        obj = JsonIterator.deserialize(config, "{\"field1\":\"field1\",\"field2\":\"field2\",\"field3\":\"field3\",\"field4\":\"field4\"}",
+                TestObject5.class);
+        assertEquals("", obj.field1);
+        assertEquals("", obj.field2);
+        assertEquals("field3", obj.field3);
+        assertEquals("", obj.field4);
+    }
+
+    public void test_addDeserializationExclusionStrategy() {
+        ExclusionStrategy exclusionStrategy = new ExclusionStrategy() {
+            @Override
+            public boolean shouldSkipField(FieldAttributes f) {
+                return !f.getName().equals("field3");
+            }
+
+            @Override
+            public boolean shouldSkipClass(Class<?> clazz) {
+                return false;
+            }
+        };
+        Gson gson = new GsonBuilder()
+                .addDeserializationExclusionStrategy(exclusionStrategy)
+                .create();
+        TestObject5 obj = gson.fromJson("{\"field1\":\"field1\",\"field2\":\"field2\",\"field3\":\"field3\",\"field4\":\"field4\"}",
+                TestObject5.class);
+        assertEquals("", obj.field1);
+        assertEquals("", obj.field2);
+        assertEquals("field3", obj.field3);
+        assertEquals("", obj.field4);
+        GsonCompatibilityMode config = new GsonCompatibilityMode.Builder()
+                .addDeserializationExclusionStrategy(exclusionStrategy)
                 .build();
         obj = JsonIterator.deserialize(config, "{\"field1\":\"field1\",\"field2\":\"field2\",\"field3\":\"field3\",\"field4\":\"field4\"}",
                 TestObject5.class);

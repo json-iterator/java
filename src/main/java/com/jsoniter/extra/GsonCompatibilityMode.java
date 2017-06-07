@@ -1,7 +1,6 @@
 package com.jsoniter.extra;
 
-import com.google.gson.FieldNamingPolicy;
-import com.google.gson.FieldNamingStrategy;
+import com.google.gson.*;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.annotations.Since;
@@ -20,7 +19,9 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 
 public class GsonCompatibilityMode extends Config {
 
@@ -69,6 +70,8 @@ public class GsonCompatibilityMode extends Config {
         };
         private FieldNamingStrategy fieldNamingStrategy;
         private Double version;
+        private Set<ExclusionStrategy> serializationExclusionStrategies = new HashSet<ExclusionStrategy>();
+        private Set<ExclusionStrategy> deserializationExclusionStrategies = new HashSet<ExclusionStrategy>();
 
         public Builder excludeFieldsWithoutExposeAnnotation() {
             excludeFieldsWithoutExposeAnnotation = true;
@@ -130,6 +133,23 @@ public class GsonCompatibilityMode extends Config {
             return this;
         }
 
+        public Builder setExclusionStrategies(ExclusionStrategy... strategies) {
+            for (ExclusionStrategy strategy : strategies) {
+                addSerializationExclusionStrategy(strategy);
+            }
+            return this;
+        }
+
+        public Builder addSerializationExclusionStrategy(ExclusionStrategy exclusionStrategy) {
+            serializationExclusionStrategies.add(exclusionStrategy);
+            return this;
+        }
+
+        public Builder addDeserializationExclusionStrategy(ExclusionStrategy exclusionStrategy) {
+            deserializationExclusionStrategies.add(exclusionStrategy);
+            return this;
+        }
+
         public GsonCompatibilityMode build() {
             escapeUnicode(false);
             return (GsonCompatibilityMode) super.build();
@@ -154,7 +174,10 @@ public class GsonCompatibilityMode extends Config {
             if (!dateFormat.get().equals(builder.dateFormat.get())) return false;
             if (fieldNamingStrategy != null ? !fieldNamingStrategy.equals(builder.fieldNamingStrategy) : builder.fieldNamingStrategy != null)
                 return false;
-            return version != null ? version.equals(builder.version) : builder.version == null;
+            if (version != null ? !version.equals(builder.version) : builder.version != null) return false;
+            if (serializationExclusionStrategies != null ? !serializationExclusionStrategies.equals(builder.serializationExclusionStrategies) : builder.serializationExclusionStrategies != null)
+                return false;
+            return deserializationExclusionStrategies != null ? deserializationExclusionStrategies.equals(builder.deserializationExclusionStrategies) : builder.deserializationExclusionStrategies == null;
         }
 
         @Override
@@ -166,6 +189,8 @@ public class GsonCompatibilityMode extends Config {
             result = 31 * result + dateFormat.get().hashCode();
             result = 31 * result + (fieldNamingStrategy != null ? fieldNamingStrategy.hashCode() : 0);
             result = 31 * result + (version != null ? version.hashCode() : 0);
+            result = 31 * result + (serializationExclusionStrategies != null ? serializationExclusionStrategies.hashCode() : 0);
+            result = 31 * result + (deserializationExclusionStrategies != null ? deserializationExclusionStrategies.hashCode() : 0);
             return result;
         }
 
@@ -178,6 +203,8 @@ public class GsonCompatibilityMode extends Config {
             copied.dateFormat = dateFormat;
             copied.fieldNamingStrategy = fieldNamingStrategy;
             copied.version = version;
+            copied.serializationExclusionStrategies = new HashSet<ExclusionStrategy>(serializationExclusionStrategies);
+            copied.deserializationExclusionStrategies = new HashSet<ExclusionStrategy>(deserializationExclusionStrategies);
             return copied;
         }
     }
@@ -301,11 +328,6 @@ public class GsonCompatibilityMode extends Config {
                 binding.toNames = new String[]{translated};
                 binding.fromNames = new String[]{translated};
             }
-        }
-        for (Binding binding : desc.allEncoderBindings()) {
-            if (builder().serializeNulls) {
-                binding.shouldOmitNull = false;
-            }
             if (builder().version != null) {
                 Since since = binding.getAnnotation(Since.class);
                 if (since != null && builder().version < since.value()) {
@@ -317,6 +339,29 @@ public class GsonCompatibilityMode extends Config {
                     binding.toNames = new String[0];
                     binding.fromNames = new String[0];
                 }
+            }
+            for (ExclusionStrategy strategy : builder().serializationExclusionStrategies) {
+                if (strategy.shouldSkipClass(binding.clazz)) {
+                    binding.toNames = new String[0];
+                    continue;
+                }
+                if (strategy.shouldSkipField(new FieldAttributes(binding.field))) {
+                    binding.toNames = new String[0];
+                }
+            }
+            for (ExclusionStrategy strategy : builder().deserializationExclusionStrategies) {
+                if (strategy.shouldSkipClass(binding.clazz)) {
+                    binding.fromNames = new String[0];
+                    continue;
+                }
+                if (strategy.shouldSkipField(new FieldAttributes(binding.field))) {
+                    binding.fromNames = new String[0];
+                }
+            }
+        }
+        for (Binding binding : desc.allEncoderBindings()) {
+            if (builder().serializeNulls) {
+                binding.shouldOmitNull = false;
             }
         }
         super.updateClassDescriptor(desc);
