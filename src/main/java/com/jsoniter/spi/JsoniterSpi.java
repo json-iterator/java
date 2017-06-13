@@ -239,7 +239,11 @@ public class JsoniterSpi {
 
     public synchronized static void addNewDecoder(String cacheKey, Decoder decoder) {
         HashMap<String, Decoder> newCache = new HashMap<String, Decoder>(decoders);
-        newCache.put(cacheKey, decoder);
+        if (decoder == null) {
+            newCache.remove(cacheKey);
+        } else {
+            newCache.put(cacheKey, decoder);
+        }
         decoders = newCache;
     }
 
@@ -249,7 +253,11 @@ public class JsoniterSpi {
 
     public synchronized static void addNewEncoder(String cacheKey, Encoder encoder) {
         HashMap<String, Encoder> newCache = new HashMap<String, Encoder>(encoders);
-        newCache.put(cacheKey, encoder);
+        if (encoder == null) {
+            newCache.remove(cacheKey);
+        } else {
+            newCache.put(cacheKey, encoder);
+        }
         encoders = newCache;
     }
 

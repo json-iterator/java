@@ -69,42 +69,43 @@ class Codegen {
             return encoder;
         }
         addPlaceholderEncoderToSupportRecursiveStructure(cacheKey);
-        type = chooseAccessibleSuper(type);
-        ClassInfo classInfo = new ClassInfo(type);
-        if (Map.class.isAssignableFrom(classInfo.clazz) && classInfo.typeArgs.length > 1) {
-            DefaultMapKeyEncoder.registerOrGetExisting(classInfo.typeArgs[0]);
-        }
-        EncodingMode mode = JsoniterSpi.getCurrentConfig().encodingMode();
-        if (mode == EncodingMode.REFLECTION_MODE) {
-            encoder = ReflectionEncoderFactory.create(classInfo);
-            JsoniterSpi.addNewEncoder(cacheKey, encoder);
-            return encoder;
-        }
-        if (isDoingStaticCodegen == null) {
-            try {
-                encoder = (Encoder) Class.forName(cacheKey).newInstance();
-                JsoniterSpi.addNewEncoder(cacheKey, encoder);
+        try {
+            type = chooseAccessibleSuper(type);
+            ClassInfo classInfo = new ClassInfo(type);
+            if (Map.class.isAssignableFrom(classInfo.clazz) && classInfo.typeArgs.length > 1) {
+                DefaultMapKeyEncoder.registerOrGetExisting(classInfo.typeArgs[0]);
+            }
+            EncodingMode mode = JsoniterSpi.getCurrentConfig().encodingMode();
+            if (mode == EncodingMode.REFLECTION_MODE) {
+                encoder = ReflectionEncoderFactory.create(classInfo);
                 return encoder;
-            } catch (Exception e) {
-                if (mode == EncodingMode.STATIC_MODE) {
-                    throw new JsonException("static gen should provide the encoder we need, but failed to create the encoder", e);
+            }
+            if (isDoingStaticCodegen == null) {
+                try {
+                    encoder = (Encoder) Class.forName(cacheKey).newInstance();
+                    return encoder;
+                } catch (Exception e) {
+                    if (mode == EncodingMode.STATIC_MODE) {
+                        throw new JsonException("static gen should provide the encoder we need, but failed to create the encoder", e);
+                    }
                 }
             }
-        }
-        CodegenResult source = genSource(cacheKey, classInfo);
-        try {
-            generatedSources.put(cacheKey, source);
-            if (isDoingStaticCodegen == null) {
-                encoder = DynamicCodegen.gen(classInfo.clazz, cacheKey, source);
-            } else {
-                staticGen(classInfo.clazz, cacheKey, source);
+            CodegenResult source = genSource(cacheKey, classInfo);
+            try {
+                generatedSources.put(cacheKey, source);
+                if (isDoingStaticCodegen == null) {
+                    encoder = DynamicCodegen.gen(classInfo.clazz, cacheKey, source);
+                } else {
+                    staticGen(classInfo.clazz, cacheKey, source);
+                }
+                return encoder;
+            } catch (Exception e) {
+                String msg = "failed to generate encoder for: " + type + " with " + Arrays.toString(classInfo.typeArgs) + ", exception: " + e;
+                msg = msg + "\n" + source;
+                throw new JsonException(msg, e);
             }
+        } finally {
             JsoniterSpi.addNewEncoder(cacheKey, encoder);
-            return encoder;
-        } catch (Exception e) {
-            String msg = "failed to generate encoder for: " + type + " with " + Arrays.toString(classInfo.typeArgs) + ", exception: " + e;
-            msg = msg + "\n" + source;
-            throw new JsonException(msg, e);
         }
     }
 
@@ -112,7 +113,11 @@ class Codegen {
         JsoniterSpi.addNewEncoder(cacheKey, new Encoder() {
             @Override
             public void encode(Object obj, JsonStream stream) throws IOException {
-                JsoniterSpi.getEncoder(cacheKey).encode(obj, stream);
+                Encoder encoder = JsoniterSpi.getEncoder(cacheKey);
+                if (this == encoder) {
+                    throw new JsonException("internal error: placeholder is not replaced with real encoder");
+                }
+                encoder.encode(obj, stream);
             }
         });
     }

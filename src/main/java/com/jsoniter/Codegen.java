@@ -47,44 +47,45 @@ class Codegen {
             return decoder;
         }
         addPlaceholderDecoderToSupportRecursiveStructure(cacheKey);
-        Config currentConfig = JsoniterSpi.getCurrentConfig();
-        DecodingMode mode = currentConfig.decodingMode();
-        if (mode == DecodingMode.REFLECTION_MODE) {
-            decoder = ReflectionDecoderFactory.create(classInfo);
-            JsoniterSpi.addNewDecoder(cacheKey, decoder);
-            return decoder;
-        }
-        if (isDoingStaticCodegen == null) {
-            try {
-                decoder = (Decoder) Class.forName(cacheKey).newInstance();
-                JsoniterSpi.addNewDecoder(cacheKey, decoder);
+        try {
+            Config currentConfig = JsoniterSpi.getCurrentConfig();
+            DecodingMode mode = currentConfig.decodingMode();
+            if (mode == DecodingMode.REFLECTION_MODE) {
+                decoder = ReflectionDecoderFactory.create(classInfo);
                 return decoder;
-            } catch (Exception e) {
-                if (mode == DecodingMode.STATIC_MODE) {
-                    throw new JsonException("static gen should provide the decoder we need, but failed to create the decoder", e);
+            }
+            if (isDoingStaticCodegen == null) {
+                try {
+                    decoder = (Decoder) Class.forName(cacheKey).newInstance();
+                    return decoder;
+                } catch (Exception e) {
+                    if (mode == DecodingMode.STATIC_MODE) {
+                        throw new JsonException("static gen should provide the decoder we need, but failed to create the decoder", e);
+                    }
                 }
             }
-        }
-        String source = genSource(mode, classInfo);
-        source = "public static java.lang.Object decode_(com.jsoniter.JsonIterator iter) throws java.io.IOException { "
-                + source + "}";
-        if ("true".equals(System.getenv("JSONITER_DEBUG"))) {
-            System.out.println(">>> " + cacheKey);
-            System.out.println(source);
-        }
-        try {
-            generatedClassNames.add(cacheKey);
-            if (isDoingStaticCodegen == null) {
-                decoder = DynamicCodegen.gen(cacheKey, source);
-            } else {
-                staticGen(cacheKey, source);
+            String source = genSource(mode, classInfo);
+            source = "public static java.lang.Object decode_(com.jsoniter.JsonIterator iter) throws java.io.IOException { "
+                    + source + "}";
+            if ("true".equals(System.getenv("JSONITER_DEBUG"))) {
+                System.out.println(">>> " + cacheKey);
+                System.out.println(source);
             }
+            try {
+                generatedClassNames.add(cacheKey);
+                if (isDoingStaticCodegen == null) {
+                    decoder = DynamicCodegen.gen(cacheKey, source);
+                } else {
+                    staticGen(cacheKey, source);
+                }
+                return decoder;
+            } catch (Exception e) {
+                String msg = "failed to generate decoder for: " + classInfo + " with " + Arrays.toString(classInfo.typeArgs) + ", exception: " + e;
+                msg = msg + "\n" + source;
+                throw new JsonException(msg, e);
+            }
+        } finally {
             JsoniterSpi.addNewDecoder(cacheKey, decoder);
-            return decoder;
-        } catch (Exception e) {
-            String msg = "failed to generate decoder for: " + classInfo + " with " + Arrays.toString(classInfo.typeArgs) + ", exception: " + e;
-            msg = msg + "\n" + source;
-            throw new JsonException(msg, e);
         }
     }
 
@@ -92,7 +93,11 @@ class Codegen {
         JsoniterSpi.addNewDecoder(cacheKey, new Decoder() {
             @Override
             public Object decode(JsonIterator iter) throws IOException {
-                return JsoniterSpi.getDecoder(cacheKey).decode(iter);
+                Decoder decoder = JsoniterSpi.getDecoder(cacheKey);
+                if (this == decoder) {
+                    throw new JsonException("internal error: placeholder is not replaced with real decoder");
+                }
+                return decoder.decode(iter);
             }
         });
     }
