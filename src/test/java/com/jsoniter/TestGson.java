@@ -179,4 +179,13 @@ public class TestGson extends TestCase {
         assertEquals("field3", obj.field3);
         assertEquals("", obj.field4);
     }
+
+    public void test_int_as_string() {
+        Gson gson = new Gson();
+        String str = gson.fromJson("1", String.class);
+        assertEquals("1", str);
+        GsonCompatibilityMode config = new GsonCompatibilityMode.Builder().build();
+        str = JsonIterator.deserialize(config, "1", String.class);
+        assertEquals("1", str);
+    }
 }

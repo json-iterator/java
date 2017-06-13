@@ -147,6 +147,7 @@ class ReflectionObjectDecoder {
             }
             while (CodegenAccess.nextToken(iter) == ',') {
                 fieldName = CodegenAccess.readObjectFieldAsSlice(iter);
+                System.out.println(fieldName);
                 binding = allBindings.get(fieldName);
                 if (binding == null) {
                     extra = onUnknownProperty(iter, fieldName, extra);
@@ -157,6 +158,8 @@ class ReflectionObjectDecoder {
                     setToBinding(obj, binding, decodeBinding(iter, obj, binding));
                 }
             }
+            System.out.println(iter.currentBuffer());
+            System.out.println("Exit Object");
             if (tracker != expectedTracker) {
                 if (desc.onMissingProperties == null) {
                     throw new JsonException("missing required properties: " + collectMissingFields(tracker));

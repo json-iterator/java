@@ -16,7 +16,9 @@ public class JsonIteratorPool {
             slot2.set(null);
             return iter;
         }
-        return new JsonIterator();
+        iter = new JsonIterator();
+        iter.reset(new byte[512]);
+        return iter;
     }
 
     public static void returnJsonIterator(JsonIterator iter) {

@@ -305,7 +305,8 @@ public class GsonCompatibilityMode extends Config {
                 public Object decode(JsonIterator iter) throws IOException {
                     DateFormat dateFormat = builder().dateFormat.get();
                     try {
-                        return dateFormat.parse(iter.readString());
+                        String input = iter.readString();
+                        return dateFormat.parse(input);
                     } catch (ParseException e) {
                         throw new JsonException(e);
                     }

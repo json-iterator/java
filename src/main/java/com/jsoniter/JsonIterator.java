@@ -6,6 +6,7 @@ import com.jsoniter.spi.*;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -340,18 +341,18 @@ public class JsonIterator implements Closeable {
     }
 
     public final <T> T read(Class<T> clazz) throws IOException {
-        try {
-            String cacheKey = currentConfig().getDecoderCacheKey(clazz);
-            return (T) Codegen.getDecoder(cacheKey, clazz).decode(this);
-        } catch (ArrayIndexOutOfBoundsException e) {
-            throw reportError("read", "premature end");
-        }
+        return (T) read((Type) clazz);
     }
 
     public final <T> T read(TypeLiteral<T> typeLiteral) throws IOException {
+        return (T) read(typeLiteral.getType());
+    }
+
+    public final Object read(Type type) throws IOException {
         try {
-            String cacheKey = typeLiteral.getDecoderCacheKey();
-            return (T) Codegen.getDecoder(cacheKey, typeLiteral.getType()).decode(this);
+            System.out.println(currentConfig());
+            String cacheKey = currentConfig().getDecoderCacheKey(type);
+            return Codegen.getDecoder(cacheKey, type).decode(this);
         } catch (ArrayIndexOutOfBoundsException e) {
             throw reportError("read", "premature end");
         }
@@ -375,6 +376,7 @@ public class JsonIterator implements Closeable {
             JsoniterSpi.clearCurrentConfig();
         }
     }
+
     public static final <T> T deserialize(String input, Class<T> clazz) {
         return deserialize(input.getBytes(), clazz);
     }
@@ -400,6 +402,7 @@ public class JsonIterator implements Closeable {
             JsoniterSpi.clearCurrentConfig();
         }
     }
+
     public static final <T> T deserialize(byte[] input, Class<T> clazz) {
         int lastNotSpacePos = findLastNotSpacePos(input);
         JsonIterator iter = JsonIteratorPool.borrowJsonIterator();
@@ -489,7 +492,7 @@ public class JsonIterator implements Closeable {
     }
 
     private static int findLastNotSpacePos(byte[] input) {
-        for(int i = input.length - 1; i >= 0; i--) {
+        for (int i = input.length - 1; i >= 0; i--) {
             byte c = input[i];
             if (c != ' ' && c != '\t' && c != '\n' && c != '\r') {
                 return i + 1;

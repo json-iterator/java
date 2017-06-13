@@ -53,11 +53,13 @@ class IterImplString {
     }
 
     public static final String readString(JsonIterator iter) throws IOException {
-        byte c = IterImpl.readByte(iter);
+        byte c = IterImpl.nextToken(iter);
         if (c != '"') {
-            if (readStringIsNull(iter, c)) {
+            if (c == 'n') {
+                IterImpl.skipFixedBytes(iter, 3);
                 return null;
             }
+            iter.reportError("readString", "expect string or null, but " + (char) c);
         }
         int j = parse(iter);
         return new String(iter.reusableChars, 0, j);
@@ -90,20 +92,6 @@ class IterImplString {
             iter.head = i - 1;
         }
         return IterImpl.readStringSlowPath(iter, alreadyCopied);
-    }
-
-    private static boolean readStringIsNull(JsonIterator iter, byte c) throws IOException {
-        if (c == 'n') {
-            IterImpl.skipFixedBytes(iter, 3);
-            return true;
-        } else {
-            c = IterImpl.nextToken(iter);
-            if (c == 'n') {
-                IterImpl.skipFixedBytes(iter, 3);
-                return true;
-            }
-        }
-        return false;
     }
 
     public static int translateHex(final byte b) {
