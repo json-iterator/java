@@ -70,12 +70,14 @@ class Codegen {
         }
         addPlaceholderEncoderToSupportRecursiveStructure(cacheKey);
         try {
-            type = chooseAccessibleSuper(type);
+            EncodingMode mode = JsoniterSpi.getCurrentConfig().encodingMode();
+            if (mode != EncodingMode.REFLECTION_MODE) {
+                type = chooseAccessibleSuper(type);
+            }
             ClassInfo classInfo = new ClassInfo(type);
             if (Map.class.isAssignableFrom(classInfo.clazz) && classInfo.typeArgs.length > 1) {
                 DefaultMapKeyEncoder.registerOrGetExisting(classInfo.typeArgs[0]);
             }
-            EncodingMode mode = JsoniterSpi.getCurrentConfig().encodingMode();
             if (mode == EncodingMode.REFLECTION_MODE) {
                 encoder = ReflectionEncoderFactory.create(classInfo);
                 return encoder;

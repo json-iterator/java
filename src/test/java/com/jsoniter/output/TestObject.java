@@ -2,6 +2,7 @@ package com.jsoniter.output;
 
 import com.jsoniter.annotation.JsonIgnore;
 import com.jsoniter.annotation.JsonProperty;
+import com.jsoniter.spi.Config;
 import com.jsoniter.spi.TypeLiteral;
 import junit.framework.TestCase;
 
@@ -138,9 +139,13 @@ public class TestObject extends TestCase {
     public void test_not_nullable() {
         TestObject8 obj = new TestObject8();
         obj.field1 = new String[]{"hello"};
-        assertEquals("{\"field1\":[\"hello\"]}", JsonStream.serialize(obj));
+        Config config = new Config.Builder()
+                .encodingMode(EncodingMode.DYNAMIC_MODE)
+                .build();
+        assertEquals("{\"field1\":[\"hello\"]}",
+                JsonStream.serialize(config, obj));
         try {
-            JsonStream.serialize(new TestObject8());
+            JsonStream.serialize(config, new TestObject8());
             fail();
         } catch (NullPointerException e) {
         }
@@ -162,10 +167,13 @@ public class TestObject extends TestCase {
         obj.field1 = new String[]{"hello"};
         assertEquals("{\"field1\":[\"hello\"]}", JsonStream.serialize(obj));
 
+        Config config = new Config.Builder()
+                .encodingMode(EncodingMode.DYNAMIC_MODE)
+                .build();
         obj = new TestObject9();
         obj.field1 = new String[]{null};
         try {
-            JsonStream.serialize(obj);
+            JsonStream.serialize(config, obj);
             fail();
         } catch (NullPointerException e) {
         }
@@ -174,7 +182,7 @@ public class TestObject extends TestCase {
         obj.field2 = new ArrayList();
         obj.field2.add(null);
         try {
-            JsonStream.serialize(obj);
+            JsonStream.serialize(config, obj);
             fail();
         } catch (NullPointerException e) {
         }
@@ -183,7 +191,7 @@ public class TestObject extends TestCase {
         obj.field3 = new HashSet<String>();
         obj.field3.add(null);
         try {
-            JsonStream.serialize(obj);
+            JsonStream.serialize(config, obj);
             fail();
         } catch (NullPointerException e) {
         }
@@ -192,7 +200,7 @@ public class TestObject extends TestCase {
         obj.field4 = new HashMap<String, String>();
         obj.field4.put("hello", null);
         try {
-            JsonStream.serialize(obj);
+            JsonStream.serialize(config, obj);
             fail();
         } catch (NullPointerException e) {
         }

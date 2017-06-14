@@ -70,10 +70,10 @@ public class TestNested extends TestCase {
             stream.writeVal(obj);
             stream.close();
             assertEquals("{\n" +
-                    "  \"objs\":[\n" +
+                    "  \"objs\": [\n" +
                     "    {\n" +
-                    "      \"field1\":\"1\",\n" +
-                    "      \"field2\":\"2\"\n" +
+                    "      \"field1\": \"1\",\n" +
+                    "      \"field2\": \"2\"\n" +
                     "    }\n" +
                     "  ]\n" +
                     "}".replace('\'', '"'), baos.toString());
@@ -97,9 +97,9 @@ public class TestNested extends TestCase {
             }});
             stream.close();
             assertEquals("{\n" +
-                    "  \"hello\":{\n" +
-                    "    \"field1\":\"1\",\n" +
-                    "    \"field2\":\"2\"\n" +
+                    "  \"hello\": {\n" +
+                    "    \"field1\": \"1\",\n" +
+                    "    \"field2\": \"2\"\n" +
                     "  }\n" +
                     "}".replace('\'', '"'), baos.toString());
         } finally {
