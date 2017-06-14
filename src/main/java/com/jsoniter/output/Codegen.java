@@ -117,7 +117,21 @@ class Codegen {
             public void encode(Object obj, JsonStream stream) throws IOException {
                 Encoder encoder = JsoniterSpi.getEncoder(cacheKey);
                 if (this == encoder) {
-                    throw new JsonException("internal error: placeholder is not replaced with real encoder");
+                    for(int i = 0; i < 30; i++) {
+                        encoder = JsoniterSpi.getEncoder(cacheKey);
+                        if (this == encoder) {
+                            try {
+                                Thread.sleep(1000);
+                            } catch (InterruptedException e) {
+                                throw new JsonException(e);
+                            }
+                        } else {
+                            break;
+                        }
+                    }
+                    if (this == encoder) {
+                        throw new JsonException("internal error: placeholder is not replaced with real encoder");
+                    }
                 }
                 encoder.encode(obj, stream);
             }

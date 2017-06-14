@@ -95,7 +95,21 @@ class Codegen {
             public Object decode(JsonIterator iter) throws IOException {
                 Decoder decoder = JsoniterSpi.getDecoder(cacheKey);
                 if (this == decoder) {
-                    throw new JsonException("internal error: placeholder is not replaced with real decoder");
+                    for(int i = 0; i < 30; i++) {
+                        decoder = JsoniterSpi.getDecoder(cacheKey);
+                        if (this == decoder) {
+                            try {
+                                Thread.sleep(1000);
+                            } catch (InterruptedException e) {
+                                throw new JsonException(e);
+                            }
+                        } else {
+                            break;
+                        }
+                    }
+                    if (this == decoder) {
+                        throw new JsonException("internal error: placeholder is not replaced with real decoder");
+                    }
                 }
                 return decoder.decode(iter);
             }
