@@ -350,7 +350,6 @@ public class JsonIterator implements Closeable {
 
     public final Object read(Type type) throws IOException {
         try {
-            System.out.println(currentConfig());
             String cacheKey = currentConfig().getDecoderCacheKey(type);
             return Codegen.getDecoder(cacheKey, type).decode(this);
         } catch (ArrayIndexOutOfBoundsException e) {

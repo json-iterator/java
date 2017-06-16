@@ -4,6 +4,7 @@ import com.jsoniter.annotation.JsonIgnore;
 import junit.framework.TestCase;
 
 import java.io.IOException;
+import java.io.Serializable;
 
 public class TestAnnotationJsonIgnore extends TestCase {
 
