@@ -31,6 +31,8 @@ public class BenchGson {
                 .setDateFormat("EEE MMM dd HH:mm:ss Z yyyy")
                 .create();
         gsonCompatibilityMode = new GsonCompatibilityMode.Builder().setDateFormat("EEE MMM dd HH:mm:ss Z yyyy").build();
+        JsoniterSpi.setCurrentConfig(gsonCompatibilityMode);
+        JsonIterator.setMode(DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_WITH_HASH);
         if (params != null) {
             if (params.getBenchmark().contains("jsoniterDynamicCodegenDecoder")) {
                 JsonIterator.setMode(DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_WITH_HASH);
@@ -38,7 +40,7 @@ public class BenchGson {
         }
     }
 
-//    @Benchmark
+    @Benchmark
     public void gsonDecoder(Blackhole bh) throws IOException {
         FileInputStream stream = new FileInputStream("/tmp/tweets.json");
         InputStreamReader reader = new InputStreamReader(stream);
@@ -56,7 +58,6 @@ public class BenchGson {
         FileInputStream stream = new FileInputStream("/tmp/tweets.json");
         JsonIterator iter = JsonIteratorPool.borrowJsonIterator();
         try {
-            System.out.print(iter.currentBuffer());
             iter.reset(stream);
             bh.consume(iter.read(new TypeReference<List<Tweet>>() {
             }.getType()));
@@ -66,40 +67,6 @@ public class BenchGson {
         }
     }
 
-    @Test
-    public void test() throws IOException {
-        gson = new GsonBuilder()
-                .setDateFormat("EEE MMM dd HH:mm:ss Z yyyy")
-                .create();
-        FileInputStream stream = new FileInputStream("/tmp/tweets.json");
-        InputStreamReader reader = new InputStreamReader(stream);
-        try {
-            System.out.println(gson.fromJson(reader, new TypeReference<List<Tweet>>() {
-            }.getType()));;
-        } finally {
-            reader.close();
-            stream.close();
-        }
-        FileInputStream fileInputStream = new FileInputStream("/tmp/tweets.json");
-//        byte[] input = new byte[1024 * 1024 * 32];
-//        int len = fileInputStream.read(input);
-        gsonCompatibilityMode = new GsonCompatibilityMode.Builder()
-                .setDateFormat("EEE MMM dd HH:mm:ss Z yyyy")
-                .build();
-        JsoniterSpi.setCurrentConfig(gsonCompatibilityMode);
-        JsonIterator iter = JsonIteratorPool.borrowJsonIterator();
-        try {
-            System.out.println("!!!");
-            JsonIterator.enableStreamingSupport();
-            iter.reset(fileInputStream);
-            List<Tweet> obj = (List<Tweet>) iter.read( new TypeReference<List<Tweet>>() {}.getType());
-            System.out.println(obj.size());
-        } catch (RuntimeException e){
-            e.printStackTrace();
-        } finally {
-            JsonIteratorPool.returnJsonIterator(iter);
-        }
-    }
 //
 //    @Benchmark
 //    public void jsoniterDynamicCodegenDecoder(Blackhole bh) throws IOException {

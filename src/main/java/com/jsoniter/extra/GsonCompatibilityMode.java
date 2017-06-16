@@ -34,6 +34,7 @@ public class GsonCompatibilityMode extends Config {
     private final static int SURR2_LAST = 0xDFFF;
     private static final String[] REPLACEMENT_CHARS;
     private static final String[] HTML_SAFE_REPLACEMENT_CHARS;
+
     static {
         REPLACEMENT_CHARS = new String[128];
         for (int i = 0; i <= 0x1f; i++) {
@@ -53,6 +54,7 @@ public class GsonCompatibilityMode extends Config {
         HTML_SAFE_REPLACEMENT_CHARS['='] = "\\u003d";
         HTML_SAFE_REPLACEMENT_CHARS['\''] = "\\u0027";
     }
+
     private GsonCompatibilityMode(String configName, Builder builder) {
         super(configName, builder);
     }
@@ -278,7 +280,7 @@ public class GsonCompatibilityMode extends Config {
                                 _surrogate = 0;
                                 // Ok, then, is the second part valid?
                                 if (c < SURR2_FIRST || c > SURR2_LAST) {
-                                    throw new JsonException("Broken surrogate pair: first char 0x"+Integer.toHexString(firstPart)+", second 0x"+Integer.toHexString(c)+"; illegal combination");
+                                    throw new JsonException("Broken surrogate pair: first char 0x" + Integer.toHexString(firstPart) + ", second 0x" + Integer.toHexString(c) + "; illegal combination");
                                 }
                                 c = 0x10000 + ((firstPart - SURR1_FIRST) << 10) + (c - SURR2_FIRST);
                                 if (c > 0x10FFFF) { // illegal in JSON as well as in XML
@@ -331,6 +333,81 @@ public class GsonCompatibilityMode extends Config {
                         return null;
                     } else {
                         throw new JsonException("expect string, but found " + valueType);
+                    }
+                }
+            };
+        } else if (boolean.class == type) {
+            return new Decoder.BooleanDecoder() {
+                @Override
+                public boolean decodeBoolean(JsonIterator iter) throws IOException {
+                    ValueType valueType = iter.whatIsNext();
+                    if (valueType == ValueType.BOOLEAN) {
+                        return iter.readBoolean();
+                    } else if (valueType == ValueType.NULL) {
+                        iter.skip();
+                        return false;
+                    } else {
+                        throw new JsonException("expect boolean, but found " + valueType);
+                    }
+                }
+            };
+        } else if (long.class == type) {
+            return new Decoder.LongDecoder() {
+                @Override
+                public long decodeLong(JsonIterator iter) throws IOException {
+                    ValueType valueType = iter.whatIsNext();
+                    if (valueType == ValueType.NUMBER) {
+                        return iter.readLong();
+                    } else if (valueType == ValueType.NULL) {
+                        iter.skip();
+                        return 0;
+                    } else {
+                        throw new JsonException("expect long, but found " + valueType);
+                    }
+                }
+            };
+        } else if (int.class == type) {
+            return new Decoder.IntDecoder() {
+                @Override
+                public int decodeInt(JsonIterator iter) throws IOException {
+                    ValueType valueType = iter.whatIsNext();
+                    if (valueType == ValueType.NUMBER) {
+                        return iter.readInt();
+                    } else if (valueType == ValueType.NULL) {
+                        iter.skip();
+                        return 0;
+                    } else {
+                        throw new JsonException("expect int, but found " + valueType);
+                    }
+                }
+            };
+        } else if (float.class == type) {
+            return new Decoder.FloatDecoder() {
+                @Override
+                public float decodeFloat(JsonIterator iter) throws IOException {
+                    ValueType valueType = iter.whatIsNext();
+                    if (valueType == ValueType.NUMBER) {
+                        return iter.readFloat();
+                    } else if (valueType == ValueType.NULL) {
+                        iter.skip();
+                        return 0.0f;
+                    } else {
+                        throw new JsonException("expect float, but found " + valueType);
+                    }
+                }
+            };
+        } else if (double.class == type) {
+            return new Decoder.DoubleDecoder() {
+                @Override
+                public double decodeDouble(JsonIterator iter) throws IOException {
+                    ValueType valueType = iter.whatIsNext();
+                    if (valueType == ValueType.NUMBER) {
+                        return iter.readDouble();
+                    } else if (valueType == ValueType.NULL) {
+                        iter.skip();
+                        return 0.0d;
+                    } else {
+                        throw new JsonException("expect float, but found " + valueType);
                     }
                 }
             };

@@ -104,6 +104,7 @@ public class JsonIterator implements Closeable {
     }
 
     public final void reset(InputStream in) {
+        JsonIterator.enableStreamingSupport();
         this.in = in;
         this.head = 0;
         this.tail = 0;

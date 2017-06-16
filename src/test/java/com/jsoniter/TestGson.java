@@ -8,6 +8,9 @@ import com.google.gson.annotations.Until;
 import com.jsoniter.extra.GsonCompatibilityMode;
 import junit.framework.TestCase;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Date;
 import java.util.TimeZone;
@@ -195,5 +198,76 @@ public class TestGson extends TestCase {
         GsonCompatibilityMode config = new GsonCompatibilityMode.Builder().build();
         str = JsonIterator.deserialize(config, "true", String.class);
         assertEquals("true", str);
+    }
+
+    public static class TestObject6 {
+        public boolean field;
+    }
+
+    public void test_null_as_boolean() {
+        Gson gson = new Gson();
+        TestObject6 obj = gson.fromJson("{\"field\":null}", TestObject6.class);
+        assertFalse(obj.field);
+        GsonCompatibilityMode config = new GsonCompatibilityMode.Builder().build();
+        obj = JsonIterator.deserialize(config, "{\"field\":null}", TestObject6.class);
+        assertFalse(obj.field);
+    }
+
+    public static class TestObject7 {
+        public long field;
+    }
+
+    public void test_null_as_long() {
+        Gson gson = new Gson();
+        TestObject7 obj = gson.fromJson("{\"field\":null}", TestObject7.class);
+        assertEquals(0, obj.field);
+        GsonCompatibilityMode config = new GsonCompatibilityMode.Builder().build();
+        obj = JsonIterator.deserialize(config, "{\"field\":null}", TestObject7.class);
+        assertEquals(0, obj.field);
+    }
+
+    public static class TestObject8 {
+        public int field;
+    }
+
+    public void test_null_as_int() {
+        Gson gson = new Gson();
+        TestObject8 obj = gson.fromJson("{\"field\":null}", TestObject8.class);
+        assertEquals(0, obj.field);
+        GsonCompatibilityMode config = new GsonCompatibilityMode.Builder().build();
+        obj = JsonIterator.deserialize(config, "{\"field\":null}", TestObject8.class);
+        assertEquals(0, obj.field);
+    }
+
+    public static class TestObject9 {
+        public float field;
+    }
+
+    public void test_null_as_float() {
+        Gson gson = new Gson();
+        TestObject9 obj = gson.fromJson("{\"field\":null}", TestObject9.class);
+        assertEquals(0.0f, obj.field);
+        GsonCompatibilityMode config = new GsonCompatibilityMode.Builder().build();
+        obj = JsonIterator.deserialize(config, "{\"field\":null}", TestObject9.class);
+        assertEquals(0.0f, obj.field);
+    }
+
+    public static class TestObject10 {
+        public double field;
+    }
+
+    public void test_null_as_double() {
+        Gson gson = new Gson();
+        TestObject10 obj = gson.fromJson("{\"field\":null}", TestObject10.class);
+        assertEquals(0.0d, obj.field);
+        GsonCompatibilityMode config = new GsonCompatibilityMode.Builder().build();
+        obj = JsonIterator.deserialize(config, "{\"field\":null}", TestObject10.class);
+        assertEquals(0.0d, obj.field);
+    }
+
+    public void test() throws IOException {
+        FileInputStream stream = new FileInputStream("/tmp/tweets.json");
+        JsonIterator iter = JsonIterator.parse(stream, 4092);
+        System.out.println(iter.whatIsNext());
     }
 }
