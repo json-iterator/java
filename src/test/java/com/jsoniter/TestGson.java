@@ -8,9 +8,6 @@ import com.google.gson.annotations.Until;
 import com.jsoniter.extra.GsonCompatibilityMode;
 import junit.framework.TestCase;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Date;
 import java.util.TimeZone;
@@ -263,11 +260,5 @@ public class TestGson extends TestCase {
         GsonCompatibilityMode config = new GsonCompatibilityMode.Builder().build();
         obj = JsonIterator.deserialize(config, "{\"field\":null}", TestObject10.class);
         assertEquals(0.0d, obj.field);
-    }
-
-    public void test() throws IOException {
-        FileInputStream stream = new FileInputStream("/tmp/tweets.json");
-        JsonIterator iter = JsonIterator.parse(stream, 4092);
-        System.out.println(iter.whatIsNext());
     }
 }

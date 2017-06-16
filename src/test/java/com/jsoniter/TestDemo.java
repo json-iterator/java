@@ -9,12 +9,10 @@ import com.jsoniter.spi.Decoder;
 import com.jsoniter.spi.EmptyExtension;
 import com.jsoniter.spi.JsoniterSpi;
 import com.jsoniter.spi.TypeLiteral;
-import com.sun.deploy.config.DefaultConfig;
 import junit.framework.TestCase;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.util.Date;
 import java.util.HashMap;
 
 public class TestDemo extends TestCase {
