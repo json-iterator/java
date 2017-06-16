@@ -2,6 +2,7 @@ package com.jsoniter.suite;
 
 import com.jsoniter.*;
 import com.jsoniter.TestGenerics;
+import com.jsoniter.TestGson;
 import com.jsoniter.TestNested;
 import com.jsoniter.TestObject;
 import com.jsoniter.any.TestList;
@@ -41,6 +42,8 @@ import org.junit.runners.Suite;
         com.jsoniter.TestJackson.class,
         TestSpiTypeEncoder.class,
         TestSpiTypeDecoder.class,
-        TestSpiPropertyDecoder.class})
+        TestSpiPropertyDecoder.class,
+        TestGson.class,
+        com.jsoniter.output.TestGson.class})
 public abstract class AllTestCases {
 }

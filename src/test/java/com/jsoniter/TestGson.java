@@ -6,7 +6,6 @@ import com.google.gson.annotations.SerializedName;
 import com.google.gson.annotations.Since;
 import com.google.gson.annotations.Until;
 import com.jsoniter.extra.GsonCompatibilityMode;
-import com.jsoniter.output.JsonStream;
 import junit.framework.TestCase;
 
 import java.lang.reflect.Field;
@@ -52,11 +51,11 @@ public class TestGson extends TestCase {
         try {
             TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
             Gson gson = new GsonBuilder().create();
-            Date obj = gson.fromJson("\"Jan 1, 1970, 12:00:00 AM\"", Date.class);
+            Date obj = gson.fromJson("\"Jan 1, 1970 12:00:00 AM\"", Date.class);
             assertEquals(0, obj.getTime());
             GsonCompatibilityMode config = new GsonCompatibilityMode.Builder()
                     .build();
-            obj = JsonIterator.deserialize(config, "\"Jan 1, 1970, 12:00:00 AM\"", Date.class);
+            obj = JsonIterator.deserialize(config, "\"Jan 1, 1970 12:00:00 AM\"", Date.class);
             assertEquals(0, obj.getTime());
         } finally {
             TimeZone.setDefault(orig);
@@ -182,10 +181,19 @@ public class TestGson extends TestCase {
 
     public void test_int_as_string() {
         Gson gson = new Gson();
-        String str = gson.fromJson("1", String.class);
-        assertEquals("1", str);
+        String str = gson.fromJson("1.1", String.class);
+        assertEquals("1.1", str);
         GsonCompatibilityMode config = new GsonCompatibilityMode.Builder().build();
         str = JsonIterator.deserialize(config, "1", String.class);
         assertEquals("1", str);
+    }
+
+    public void test_bool_as_string() {
+        Gson gson = new Gson();
+        String str = gson.fromJson("true", String.class);
+        assertEquals("true", str);
+        GsonCompatibilityMode config = new GsonCompatibilityMode.Builder().build();
+        str = JsonIterator.deserialize(config, "true", String.class);
+        assertEquals("true", str);
     }
 }

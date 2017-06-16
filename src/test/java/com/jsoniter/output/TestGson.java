@@ -100,11 +100,11 @@ public class TestGson extends TestCase {
             TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
             Gson gson = new GsonBuilder().create();
             String output = gson.toJson(new Date(0));
-            assertEquals("\"Jan 1, 1970, 12:00:00 AM\"", output);
+            assertEquals("\"Jan 1, 1970 12:00:00 AM\"", output);
             GsonCompatibilityMode config = new GsonCompatibilityMode.Builder()
                     .build();
             output = JsonStream.serialize(config, new Date(0));
-            assertEquals("\"Jan 1, 1970, 12:00:00 AM\"", output);
+            assertEquals("\"Jan 1, 1970 12:00:00 AM\"", output);
         } finally {
             TimeZone.setDefault(orig);
         }
@@ -118,12 +118,12 @@ public class TestGson extends TestCase {
                     .setDateFormat(DateFormat.LONG, DateFormat.LONG)
                     .create();
             String output = gson.toJson(new Date(0));
-            assertEquals("\"January 1, 1970 at 12:00:00 AM UTC\"", output);
+            assertEquals("\"January 1, 1970 12:00:00 AM UTC\"", output);
             GsonCompatibilityMode config = new GsonCompatibilityMode.Builder()
                     .setDateFormat(DateFormat.LONG, DateFormat.LONG)
                     .build();
             output = JsonStream.serialize(config, new Date(0));
-            assertEquals("\"January 1, 1970 at 12:00:00 AM UTC\"", output);
+            assertEquals("\"January 1, 1970 12:00:00 AM UTC\"", output);
         } finally {
             TimeZone.setDefault(orig);
         }

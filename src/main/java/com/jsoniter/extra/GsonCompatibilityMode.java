@@ -1,15 +1,18 @@
 package com.jsoniter.extra;
 
-import com.google.gson.*;
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
+import com.google.gson.FieldNamingPolicy;
+import com.google.gson.FieldNamingStrategy;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.annotations.Since;
 import com.google.gson.annotations.Until;
 import com.jsoniter.JsonIterator;
+import com.jsoniter.ValueType;
 import com.jsoniter.annotation.JsonIgnore;
 import com.jsoniter.annotation.JsonProperty;
 import com.jsoniter.output.JsonStream;
-import com.jsoniter.spi.Config;
 import com.jsoniter.spi.*;
 
 import java.io.IOException;
@@ -309,6 +312,25 @@ public class GsonCompatibilityMode extends Config {
                         return dateFormat.parse(input);
                     } catch (ParseException e) {
                         throw new JsonException(e);
+                    }
+                }
+            };
+        } else if (String.class == type) {
+            return new Decoder() {
+                @Override
+                public Object decode(JsonIterator iter) throws IOException {
+                    ValueType valueType = iter.whatIsNext();
+                    if (valueType == ValueType.STRING) {
+                        return iter.readString();
+                    } else if (valueType == ValueType.NUMBER) {
+                        return iter.readNumberAsString();
+                    } else if (valueType == ValueType.BOOLEAN) {
+                        return iter.readBoolean() ? "true" : "false";
+                    } else if (valueType == ValueType.NULL) {
+                        iter.skip();
+                        return null;
+                    } else {
+                        throw new JsonException("expect string, but found " + valueType);
                     }
                 }
             };

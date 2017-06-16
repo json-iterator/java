@@ -9,6 +9,7 @@ import com.jsoniter.spi.Decoder;
 import com.jsoniter.spi.EmptyExtension;
 import com.jsoniter.spi.JsoniterSpi;
 import com.jsoniter.spi.TypeLiteral;
+import com.sun.deploy.config.DefaultConfig;
 import junit.framework.TestCase;
 
 import java.io.IOException;
@@ -58,6 +59,10 @@ public class TestDemo extends TestCase {
         System.out.println(user);
     }
 
+    public static class TestObject2 {
+
+    }
+
     public void test_empty_array_as_null() throws IOException {
         JsoniterSpi.registerExtension(new EmptyExtension() {
             @Override
@@ -66,7 +71,7 @@ public class TestDemo extends TestCase {
                     // avoid infinite loop
                     return null;
                 }
-                if (type != Date.class) {
+                if (type != TestObject2.class) {
                     return null;
                 }
                 return new Decoder() {
@@ -90,7 +95,7 @@ public class TestDemo extends TestCase {
             }
         });
         JsonIterator iter = JsonIterator.parse("[]");
-        assertNull(iter.read(Date.class));
+        assertNull(iter.read(TestObject2.class));
     }
 
     public static class Order {

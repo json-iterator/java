@@ -188,6 +188,10 @@ public class JsonIterator implements Closeable {
         return IterImplArray.readArray(this);
     }
 
+    public String readNumberAsString() throws IOException {
+        return IterImplForStreaming.readNumber(this);
+    }
+
     public static interface ReadArrayCallback {
         boolean handle(JsonIterator iter, Object attachment) throws IOException;
     }
@@ -226,7 +230,12 @@ public class JsonIterator implements Closeable {
 
     public final BigDecimal readBigDecimal() throws IOException {
         // skip whitespace by read next
-        if (whatIsNext() != ValueType.NUMBER) {
+        ValueType valueType = whatIsNext();
+        if (valueType == ValueType.NULL) {
+            skip();
+            return null;
+        }
+        if (valueType != ValueType.NUMBER) {
             throw reportError("readBigDecimal", "not number");
         }
         return new BigDecimal(IterImplForStreaming.readNumber(this));
@@ -234,7 +243,12 @@ public class JsonIterator implements Closeable {
 
     public final BigInteger readBigInteger() throws IOException {
         // skip whitespace by read next
-        if (whatIsNext() != ValueType.NUMBER) {
+        ValueType valueType = whatIsNext();
+        if (valueType == ValueType.NULL) {
+            skip();
+            return null;
+        }
+        if (valueType != ValueType.NUMBER) {
             throw reportError("readBigDecimal", "not number");
         }
         return new BigInteger(IterImplForStreaming.readNumber(this));
