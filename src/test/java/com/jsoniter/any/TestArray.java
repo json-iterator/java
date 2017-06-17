@@ -63,4 +63,11 @@ public class TestArray extends TestCase {
         assertEquals(3, iter.next().toInt());
         assertFalse(iter.hasNext());
     }
+
+    public void test_equals_and_hashcode() {
+        Any obj1 = JsonIterator.deserialize("[1,2,3]");
+        Any obj2 = JsonIterator.deserialize("[1, 2, 3]");
+        assertEquals(obj1, obj2);
+        assertEquals(obj1.hashCode(), obj2.hashCode());
+    }
 }

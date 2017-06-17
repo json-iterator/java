@@ -333,4 +333,22 @@ public abstract class Any implements Iterable<Any> {
     protected boolean isWildcard(Object key) {
         return wildcardHashCode == key.hashCode() && wildcard.equals(key);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Any any = (Any) o;
+
+        Object obj = this.object();
+        Object thatObj = any.object();
+        return obj != null ? obj.equals(thatObj) : thatObj == null;
+    }
+
+    @Override
+    public int hashCode() {
+        Object obj = this.object();
+        return obj != null ? obj.hashCode() : 0;
+    }
 }
