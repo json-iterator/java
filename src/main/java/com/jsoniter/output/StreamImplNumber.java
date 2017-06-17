@@ -49,9 +49,7 @@ class StreamImplNumber {
     private static final byte[] MIN_INT = "-2147483648".getBytes();
 
     public static final void writeInt(final JsonStream stream, int value) throws IOException {
-        if (stream.buf.length - stream.count < 11) {
-            stream.flushBuffer();
-        }
+        stream.ensure(12);
         byte[] buf = stream.buf;
         int pos = stream.count;
         if (value < 0) {
@@ -117,9 +115,7 @@ class StreamImplNumber {
     private static final byte[] MIN_LONG = "-9223372036854775808".getBytes();
 
     public static final void writeLong(final JsonStream stream, long value) throws IOException {
-        if (stream.buf.length - stream.count < 21) {
-            stream.flushBuffer();
-        }
+        stream.ensure(22);
         byte[] buf = stream.buf;
         int pos = stream.count;
         if (value < 0) {
@@ -232,9 +228,7 @@ class StreamImplNumber {
             return;
         }
         stream.write('.');
-        if (stream.buf.length - stream.count < 10) {
-            stream.flushBuffer();
-        }
+        stream.ensure(11);
         for (int p = precision - 1; p > 0 && fval < POW10[p]; p--) {
             stream.buf[stream.count++] = '0';
         }
@@ -262,9 +256,7 @@ class StreamImplNumber {
             return;
         }
         stream.write('.');
-        if (stream.buf.length - stream.count < 10) {
-            stream.flushBuffer();
-        }
+        stream.ensure(11);
         for (int p = precision - 1; p > 0 && fval < POW10[p]; p--) {
             stream.buf[stream.count++] = '0';
         }

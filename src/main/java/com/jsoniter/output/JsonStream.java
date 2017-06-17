@@ -3,10 +3,8 @@ package com.jsoniter.output;
 import com.jsoniter.any.Any;
 import com.jsoniter.spi.*;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 
 public class JsonStream extends OutputStream {
@@ -30,34 +28,46 @@ public class JsonStream extends OutputStream {
         this.count = 0;
     }
 
-    public final void write(int b) throws IOException {
-        if (count == buf.length) {
-            flushBuffer();
+    final void ensure(int minimal) throws IOException {
+        int available = buf.length - count;
+        if (available < minimal) {
+            if (count > 1024) {
+                flushBuffer();
+            }
+            growAtLeast(minimal);
         }
+    }
+
+    private final void growAtLeast(int minimal) {
+        int toGrow = buf.length;
+        if (toGrow < minimal) {
+            toGrow = minimal;
+        }
+        byte[] newBuf = new byte[buf.length + toGrow];
+        System.arraycopy(buf, 0, newBuf, 0, buf.length);
+        buf = newBuf;
+    }
+
+    public final void write(int b) throws IOException {
+        ensure(1);
         buf[count++] = (byte) b;
     }
 
     public final void write(byte b1, byte b2) throws IOException {
-        if (count >= buf.length - 1) {
-            flushBuffer();
-        }
+        ensure(2);
         buf[count++] = b1;
         buf[count++] = b2;
     }
 
     public final void write(byte b1, byte b2, byte b3) throws IOException {
-        if (count >= buf.length - 2) {
-            flushBuffer();
-        }
+        ensure(3);
         buf[count++] = b1;
         buf[count++] = b2;
         buf[count++] = b3;
     }
 
     public final void write(byte b1, byte b2, byte b3, byte b4) throws IOException {
-        if (count >= buf.length - 3) {
-            flushBuffer();
-        }
+        ensure(4);
         buf[count++] = b1;
         buf[count++] = b2;
         buf[count++] = b3;
@@ -65,9 +75,7 @@ public class JsonStream extends OutputStream {
     }
 
     public final void write(byte b1, byte b2, byte b3, byte b4, byte b5) throws IOException {
-        if (count >= buf.length - 4) {
-            flushBuffer();
-        }
+        ensure(5);
         buf[count++] = b1;
         buf[count++] = b2;
         buf[count++] = b3;
@@ -76,9 +84,7 @@ public class JsonStream extends OutputStream {
     }
 
     public final void write(byte b1, byte b2, byte b3, byte b4, byte b5, byte b6) throws IOException {
-        if (count >= buf.length - 5) {
-            flushBuffer();
-        }
+        ensure(6);
         buf[count++] = b1;
         buf[count++] = b2;
         buf[count++] = b3;
@@ -88,16 +94,20 @@ public class JsonStream extends OutputStream {
     }
 
     public final void write(byte b[], int off, int len) throws IOException {
-        if (len >= buf.length - count) {
-            if (len >= buf.length) {
+        if (out == null) {
+            ensure(len);
+        } else {
+            if (len >= buf.length - count) {
+                if (len >= buf.length) {
             /* If the request length exceeds the size of the output buffer,
                flush the output buffer and then write the data directly.
                In this way buffered streams will cascade harmlessly. */
+                    flushBuffer();
+                    out.write(b, off, len);
+                    return;
+                }
                 flushBuffer();
-                out.write(b, off, len);
-                return;
             }
-            flushBuffer();
         }
         System.arraycopy(b, off, buf, count, len);
         count += len;
@@ -142,6 +152,12 @@ public class JsonStream extends OutputStream {
     }
 
     public final void writeRaw(String val, int remaining) throws IOException {
+        if (out == null) {
+            ensure(remaining);
+            val.getBytes(0, remaining, buf, count);
+            count += remaining;
+            return;
+        }
         int i = 0;
         for (; ; ) {
             int available = buf.length - count;
@@ -288,16 +304,9 @@ public class JsonStream extends OutputStream {
         }
         write('\n');
         int toWrite = indention - delta;
-        int i = 0;
-        for (; ; ) {
-            for (; i < toWrite && count < buf.length; i++) {
-                buf[count++] = ' ';
-            }
-            if (i == toWrite) {
-                break;
-            } else {
-                flushBuffer();
-            }
+        ensure(toWrite);
+        for (int i = 0; i < toWrite && count < buf.length; i++) {
+            buf[count++] = ' ';
         }
     }
 
@@ -496,4 +505,7 @@ public class JsonStream extends OutputStream {
         CodegenImplNative.NATIVE_ENCODERS.put(clazz, encoder);
     }
 
+    public Slice buffer() {
+        return new Slice(buf, 0, count);
+    }
 }

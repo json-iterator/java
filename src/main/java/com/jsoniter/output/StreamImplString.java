@@ -63,7 +63,7 @@ class StreamImplString {
             toWriteLen = bufLengthMinusTwo - stream.count;
         }
         if (toWriteLen < 0) {
-            stream.flushBuffer();
+            stream.ensure(32);
             if (stream.count + toWriteLen > bufLengthMinusTwo) {
                 toWriteLen = bufLengthMinusTwo - stream.count;
             }
@@ -103,7 +103,7 @@ class StreamImplString {
             toWriteLen = bufLen - stream.count;
         }
         if (toWriteLen < 0) {
-            stream.flushBuffer();
+            stream.ensure(32);
             if (stream.count + toWriteLen > bufLen) {
                 toWriteLen = bufLen - stream.count;
             }
