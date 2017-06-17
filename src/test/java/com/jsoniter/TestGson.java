@@ -37,11 +37,15 @@ public class TestGson extends TestCase {
         // test if the iterator reuse will keep right config cache
         JsonIterator.deserialize(new GsonCompatibilityMode.Builder().build(),
                 "{\"field-1\":\"hello\"}", TestObject2.class);
-        Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+        Gson gson = new GsonBuilder()
+                .excludeFieldsWithoutExposeAnnotation()
+                .create();
         TestObject2 obj = gson.fromJson("{\"field1\":\"hello\"}", TestObject2.class);
         assertNull(obj.field1);
-        obj = JsonIterator.deserialize(new GsonCompatibilityMode.Builder()
-                        .excludeFieldsWithoutExposeAnnotation().build(),
+        GsonCompatibilityMode config = new GsonCompatibilityMode.Builder()
+                .excludeFieldsWithoutExposeAnnotation()
+                .build();
+        obj = JsonIterator.deserialize(config,
                 "{\"field1\":\"hello\"}", TestObject2.class);
         assertNull(obj.field1);
     }

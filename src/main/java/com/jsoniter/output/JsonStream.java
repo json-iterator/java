@@ -110,6 +110,9 @@ public class JsonStream extends OutputStream {
 
     @Override
     public void close() throws IOException {
+        if (out == null) {
+            return;
+        }
         if (count > 0) {
             flushBuffer();
         }
@@ -119,6 +122,9 @@ public class JsonStream extends OutputStream {
     }
 
     final void flushBuffer() throws IOException {
+        if (out == null) {
+            return;
+        }
         out.write(buf, 0, count);
         count = 0;
     }
@@ -457,26 +463,19 @@ public class JsonStream extends OutputStream {
     }
 
     public static String serialize(boolean escapeUnicode, Type type, Object obj) {
-        if (escapeUnicode) {
-            AsciiOutputStream asciiOutputStream = JsonStreamPool.borrowAsciiOutputStream();
-            try {
-                asciiOutputStream.reset();
-                serialize(type, obj, asciiOutputStream);
-                return asciiOutputStream.toString();
-            } finally {
-                JsonStreamPool.returnAsciiOutputStream(asciiOutputStream);
+        JsonStream stream = JsonStreamPool.borrowJsonStream();
+        try {
+            stream.reset(null);
+            stream.writeVal(type, obj);
+            if (escapeUnicode) {
+                return new String(stream.buf, 0, stream.count);
+            } else {
+                return new String(stream.buf, 0, stream.count, "UTF8");
             }
-        } else {
-            ByteArrayOutputStream baos = JsonStreamPool.borrowByteArrayOutputStream();
-            try {
-                baos.reset();
-                serialize(type, obj, baos);
-                return baos.toString("UTF8");
-            } catch (UnsupportedEncodingException e) {
-                throw new JsonException(e);
-            } finally {
-                JsonStreamPool.returnByteArrayOutputStream(baos);
-            }
+        } catch (IOException e) {
+            throw new JsonException(e);
+        } finally {
+            JsonStreamPool.returnJsonStream(stream);
         }
     }
 
@@ -496,4 +495,5 @@ public class JsonStream extends OutputStream {
     public static void registerNativeEncoder(Class clazz, Encoder.ReflectionEncoder encoder) {
         CodegenImplNative.NATIVE_ENCODERS.put(clazz, encoder);
     }
+
 }

@@ -5,6 +5,7 @@ import com.jsoniter.TestGenerics;
 import com.jsoniter.TestGson;
 import com.jsoniter.TestNested;
 import com.jsoniter.TestObject;
+import com.jsoniter.TestString;
 import com.jsoniter.any.TestList;
 import com.jsoniter.output.*;
 import org.junit.runner.RunWith;
@@ -27,7 +28,9 @@ import org.junit.runners.Suite;
         TestObject.class,
         com.jsoniter.output.TestObject.class,
         TestReadAny.class, TestSkip.class, TestSlice.class,
-        TestString.class, TestWhatIsNext.class,
+        TestString.class,
+        com.jsoniter.output.TestString.class,
+        TestWhatIsNext.class,
         TestAny.class,
         com.jsoniter.output.TestArray.class,
         com.jsoniter.any.TestArray.class,

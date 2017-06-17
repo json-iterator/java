@@ -31,6 +31,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package com.jsoniter.output;
 
+import com.jsoniter.spi.JsonException;
+
 import java.io.IOException;
 
 class StreamImplString {
@@ -39,6 +41,10 @@ class StreamImplString {
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
             'a', 'b', 'c', 'd', 'e', 'f'};
     private static final boolean[] CAN_DIRECT_WRITE = new boolean[128];
+    private final static int SURR1_FIRST = 0xD800;
+    private final static int SURR1_LAST = 0xDBFF;
+    private final static int SURR2_FIRST = 0xDC00;
+    private final static int SURR2_LAST = 0xDFFF;
 
     static {
         for (int i = 0; i < CAN_DIRECT_WRITE.length; i++) {
@@ -122,41 +128,102 @@ class StreamImplString {
     }
 
     private static void writeStringSlowPath(JsonStream stream, String val, int i, int valLen) throws IOException {
+        boolean escapeUnicode = stream.currentConfig().escapeUnicode();
+        if (escapeUnicode) {
+            for (; i < valLen; i++) {
+                int c = val.charAt(i);
+                if (c > 125) {
+                    byte b4 = (byte) (c & 0xf);
+                    byte b3 = (byte) (c >> 4 & 0xf);
+                    byte b2 = (byte) (c >> 8 & 0xf);
+                    byte b1 = (byte) (c >> 12 & 0xf);
+                    stream.write((byte) '\\', (byte) 'u', ITOA[b1], ITOA[b2], ITOA[b3], ITOA[b4]);
+                } else {
+                    writeAsciiChar(stream, c);
+                }
+            }
+        } else {
+            writeStringSlowPathWithoutEscapeUnicode(stream, val, i, valLen);
+        }
+    }
+
+    private static void writeStringSlowPathWithoutEscapeUnicode(JsonStream stream, String val, int i, int valLen) throws IOException {
+        int _surrogate;
         for (; i < valLen; i++) {
             int c = val.charAt(i);
             if (c > 125) {
-                byte b4 = (byte) (c & 0xf);
-                byte b3 = (byte) (c >> 4 & 0xf);
-                byte b2 = (byte) (c >> 8 & 0xf);
-                byte b1 = (byte) (c >> 12 & 0xf);
-                stream.write((byte) '\\', (byte) 'u', ITOA[b1], ITOA[b2], ITOA[b3], ITOA[b4]);
-            } else {
-                switch (c) {
-                    case '"':
-                        stream.write((byte) '\\', (byte) '"');
+                if (c < 0x800) { // 2-byte
+                    stream.write(
+                            (byte) (0xc0 | (c >> 6)),
+                            (byte) (0x80 | (c & 0x3f))
+                    );
+                } else { // 3 or 4 bytes
+                    // Surrogates?
+                    if (c < SURR1_FIRST || c > SURR2_LAST) {
+                        stream.write(
+                                (byte) (0xe0 | (c >> 12)),
+                                (byte) (0x80 | ((c >> 6) & 0x3f)),
+                                (byte) (0x80 | (c & 0x3f))
+                        );
+                        continue;
+                    }
+                    // Yup, a surrogate:
+                    if (c > SURR1_LAST) { // must be from first range
+                        throw new JsonException("illegalSurrogate");
+                    }
+                    _surrogate = c;
+                    // and if so, followed by another from next range
+                    if (i >= valLen) { // unless we hit the end?
                         break;
-                    case '\\':
-                        stream.write((byte) '\\', (byte) '\\');
-                        break;
-                    case '\b':
-                        stream.write((byte) '\\', (byte) 'b');
-                        break;
-                    case '\f':
-                        stream.write((byte) '\\', (byte) 'f');
-                        break;
-                    case '\n':
-                        stream.write((byte) '\\', (byte) 'n');
-                        break;
-                    case '\r':
-                        stream.write((byte) '\\', (byte) 'r');
-                        break;
-                    case '\t':
-                        stream.write((byte) '\\', (byte) 't');
-                        break;
-                    default:
-                        stream.write(c);
+                    }
+                    int firstPart = _surrogate;
+                    _surrogate = 0;
+                    // Ok, then, is the second part valid?
+                    if (c < SURR2_FIRST || c > SURR2_LAST) {
+                        throw new JsonException("Broken surrogate pair: first char 0x" + Integer.toHexString(firstPart) + ", second 0x" + Integer.toHexString(c) + "; illegal combination");
+                    }
+                    c = 0x10000 + ((firstPart - SURR1_FIRST) << 10) + (c - SURR2_FIRST);
+                    if (c > 0x10FFFF) { // illegal in JSON as well as in XML
+                        throw new JsonException("illegalSurrogate");
+                    }
+                    stream.write(
+                            (byte) (0xf0 | (c >> 18)),
+                            (byte) (0x80 | ((c >> 12) & 0x3f)),
+                            (byte) (0x80 | ((c >> 6) & 0x3f)),
+                            (byte) (0x80 | (c & 0x3f))
+                    );
                 }
+            } else {
+                writeAsciiChar(stream, c);
             }
+        }
+    }
+
+    private static void writeAsciiChar(JsonStream stream, int c) throws IOException {
+        switch (c) {
+            case '"':
+                stream.write((byte) '\\', (byte) '"');
+                break;
+            case '\\':
+                stream.write((byte) '\\', (byte) '\\');
+                break;
+            case '\b':
+                stream.write((byte) '\\', (byte) 'b');
+                break;
+            case '\f':
+                stream.write((byte) '\\', (byte) 'f');
+                break;
+            case '\n':
+                stream.write((byte) '\\', (byte) 'n');
+                break;
+            case '\r':
+                stream.write((byte) '\\', (byte) 'r');
+                break;
+            case '\t':
+                stream.write((byte) '\\', (byte) 't');
+                break;
+            default:
+                stream.write(c);
         }
     }
 }
