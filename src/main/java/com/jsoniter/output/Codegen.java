@@ -190,7 +190,7 @@ class Codegen {
         String className = cacheKey.substring(cacheKey.lastIndexOf('.') + 1);
         String packageName = cacheKey.substring(0, cacheKey.lastIndexOf('.'));
         writer.write("package " + packageName + ";\n");
-        writer.write("public class " + className + " extends com.jsoniter.spi.EmptyEncoder {\n");
+        writer.write("public class " + className + " implements com.jsoniter.spi.Encoder {\n");
         writer.write(source.generateWrapperCode(clazz));
         writer.write(source.toString());
         writer.write("}\n");
