@@ -415,30 +415,32 @@ class IterImpl {
     static final double readPositiveDouble(final JsonIterator iter) throws IOException {
         int oldHead = iter.head;
         try {
-            long value = IterImplNumber.readLong(iter); // without the dot
-            if (iter.head == iter.tail) {
-                return value;
-            }
-            byte c = iter.buf[iter.head];
-            if (c == '.') {
-                iter.head++;
-                int start = iter.head;
-                c = iter.buf[iter.head++];
-                long decimalPart = readPositiveLong(iter, c);
-                int decimalPlaces = iter.head - start;
-                if (decimalPlaces > 0 && decimalPlaces < IterImplNumber.POW10.length && (iter.head - oldHead) < 10) {
-                    value = value * IterImplNumber.POW10[decimalPlaces] + decimalPart;
-                    return value / (double) IterImplNumber.POW10[decimalPlaces];
-                } else {
-                    iter.head = oldHead;
-                    return IterImplForStreaming.readDoubleSlowPath(iter);
+            try {
+                long value = IterImplNumber.readLong(iter); // without the dot
+                if (iter.head == iter.tail) {
+                    return value;
                 }
-            } else {
-                if (iter.head < iter.tail && iter.buf[iter.head] == 'e') {
-                    iter.head = oldHead;
-                    return IterImplForStreaming.readDoubleSlowPath(iter);
+                byte c = iter.buf[iter.head];
+                if (c == '.') {
+                    iter.head++;
+                    int start = iter.head;
+                    c = iter.buf[iter.head++];
+                    long decimalPart = readPositiveLong(iter, c);
+                    int decimalPlaces = iter.head - start;
+                    if (decimalPlaces > 0 && decimalPlaces < IterImplNumber.POW10.length && (iter.head - oldHead) < 10) {
+                        value = value * IterImplNumber.POW10[decimalPlaces] + decimalPart;
+                        return value / (double) IterImplNumber.POW10[decimalPlaces];
+                    } else {
+                        iter.head = oldHead;
+                        return IterImplForStreaming.readDoubleSlowPath(iter);
+                    }
                 } else {
                     return value;
+                }
+            } finally {
+                if (iter.head < iter.tail && (iter.buf[iter.head] == 'e' || iter.buf[iter.head] == 'E')) {
+                    iter.head = oldHead;
+                    return IterImplForStreaming.readDoubleSlowPath(iter);
                 }
             }
         } catch (JsonException e) {

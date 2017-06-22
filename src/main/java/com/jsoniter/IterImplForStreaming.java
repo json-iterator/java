@@ -524,7 +524,8 @@ class IterImplForStreaming {
 
     public static final double readDoubleSlowPath(final JsonIterator iter) throws IOException {
         try {
-            return Double.valueOf(readNumber(iter));
+            String numberAsStr = readNumber(iter);
+            return Double.valueOf(numberAsStr);
         } catch (NumberFormatException e) {
             throw iter.reportError("readDoubleSlowPath", e.toString());
         }

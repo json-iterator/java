@@ -44,6 +44,11 @@ public class TestFloat extends TestCase {
         assertEquals(720368.54775807d, parseDouble("720368.547758075,"), 0.01f);
     }
 
+    public void test_combination_of_dot_and_exponent() throws IOException {
+        double v = JsonIterator.parse("8.37377E9").readFloat();
+        assertEquals(Double.valueOf("8.37377E9"), v, 1000d);
+    }
+
     @Category(StreamingCategory.class)
     public void test_streaming() throws IOException {
         isStreaming = true;
