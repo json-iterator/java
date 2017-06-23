@@ -76,6 +76,10 @@ public class Config extends EmptyExtension {
         return builder.indentionStep;
     }
 
+    public boolean omitZero() {
+        return builder.omitZero;
+    }
+
     public boolean escapeUnicode() {
         return builder.escapeUnicode;
     }
@@ -90,6 +94,7 @@ public class Config extends EmptyExtension {
         private EncodingMode encodingMode;
         private int indentionStep;
         private boolean escapeUnicode = true;
+        private boolean omitZero;
 
         public Builder() {
             String envMode = System.getenv("JSONITER_DECODING_MODE");
@@ -118,6 +123,11 @@ public class Config extends EmptyExtension {
 
         public Builder indentionStep(int indentionStep) {
             this.indentionStep = indentionStep;
+            return this;
+        }
+
+        public Builder omitZero(boolean b) {
+            omitZero = b;
             return this;
         }
 
@@ -159,6 +169,7 @@ public class Config extends EmptyExtension {
             if (indentionStep != builder.indentionStep) return false;
             if (escapeUnicode != builder.escapeUnicode) return false;
             if (decodingMode != builder.decodingMode) return false;
+            if (omitZero != builder.omitZero) return false;
             return encodingMode == builder.encodingMode;
         }
 
@@ -168,6 +179,7 @@ public class Config extends EmptyExtension {
             result = 31 * result + (encodingMode != null ? encodingMode.hashCode() : 0);
             result = 31 * result + indentionStep;
             result = 31 * result + (escapeUnicode ? 1 : 0);
+            result = 31 * result + (omitZero ? 1 : 0);
             return result;
         }
 
@@ -177,6 +189,7 @@ public class Config extends EmptyExtension {
             builder.decodingMode = decodingMode;
             builder.indentionStep = indentionStep;
             builder.escapeUnicode = escapeUnicode;
+            builder.omitZero = omitZero;
             return builder;
         }
     }

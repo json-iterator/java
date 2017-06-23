@@ -59,10 +59,14 @@ class ReflectionObjectEncoder implements Encoder.ReflectionEncoder {
         }
         stream.writeObjectStart();
         boolean notFirst = false;
+        boolean omitZero = JsoniterSpi.getCurrentConfig().omitZero();
         for (Binding field : desc.fields) {
             Object val = field.field.get(obj);
             for (String toName : field.toNames) {
                 if (!(field.shouldOmitNull && val == null)) {
+                    if (omitZero && val instanceof Number && ((Number) val).doubleValue() == 0) {
+                        continue;
+                    }
                     if (notFirst) {
                         stream.writeMore();
                     } else {
@@ -81,6 +85,9 @@ class ReflectionObjectEncoder implements Encoder.ReflectionEncoder {
             Object val = getter.method.invoke(obj);
             for (String toName : getter.toNames) {
                 if (!(getter.shouldOmitNull && val == null)) {
+                    if (omitZero && val instanceof Number && ((Number) val).doubleValue() == 0) {
+                        continue;
+                    }
                     if (notFirst) {
                         stream.writeMore();
                     } else {
