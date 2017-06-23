@@ -87,6 +87,7 @@ class CodegenImplObject {
             isCollectionValueNullable = true;
         }
         boolean nullable = !valueClazz.isPrimitive();
+        boolean omitZero = JsoniterSpi.getCurrentConfig().omitZero();
         if (!binding.isNullable) {
             nullable = false;
         }
@@ -108,11 +109,22 @@ class CodegenImplObject {
                 ctx.append(String.format("if (%s == null) { stream.writeNull(); } else {", valueAccessor));
             }
         } else {
-            notFirst = appendComma(ctx, notFirst);
-            ctx.buffer('"');
-            ctx.buffer(toName);
-            ctx.buffer('"');
-            ctx.buffer(':');
+            if (encoder == null && valueClazz.isPrimitive() && !(valueClazz == String.class) && omitZero) {
+                if (notFirst == 0) {
+                    notFirst = 2;
+                    ctx.append("boolean notFirst = false;");
+                }
+                String t = CodegenImplNative.getTypeName(binding.valueType);
+                ctx.append(String.format("if (!(((%s)%s) == 0)) {", t, valueAccessor));
+                appendComma(ctx, notFirst);
+                ctx.append(CodegenResult.bufferToWriteOp("\"" + toName + "\":"));
+            } else {
+                notFirst = appendComma(ctx, notFirst);
+                ctx.buffer('"');
+                ctx.buffer(toName);
+                ctx.buffer('"');
+                ctx.buffer(':');
+            }
         }
         if (encoder == null) {
             CodegenImplNative.genWriteOp(ctx, valueAccessor, binding.valueType, nullable, isCollectionValueNullable);
@@ -120,7 +132,7 @@ class CodegenImplObject {
             ctx.append(String.format("com.jsoniter.output.CodegenAccess.writeVal(\"%s\", %s, stream);",
                     fieldCacheKey, valueAccessor));
         }
-        if (nullable) {
+        if (nullable || omitZero) {
             ctx.append("}");
         }
         return notFirst;
