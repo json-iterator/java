@@ -8,6 +8,31 @@ import java.util.*;
 
 class CodegenImplArray {
 
+    public static CodegenResult genCollection(String cacheKey, ClassInfo classInfo) {
+        Type[] typeArgs = classInfo.typeArgs;
+        Class clazz = classInfo.clazz;
+        Type compType = Object.class;
+        if (typeArgs.length == 0) {
+            // default to List<Object>
+        } else if (typeArgs.length == 1) {
+            compType = typeArgs[0];
+        } else {
+            throw new IllegalArgumentException(
+                    "can not bind to generic collection without argument types, " +
+                            "try syntax like TypeLiteral<List<Integer>>{}");
+        }
+        if (clazz == List.class) {
+            clazz = ArrayList.class;
+        } else if (clazz == Set.class) {
+            clazz = HashSet.class;
+        }
+        if (List.class.isAssignableFrom(clazz)) {
+            return genList(cacheKey, clazz, compType);
+        } else {
+            return genCollection(cacheKey, clazz, compType);
+        }
+    }
+
     public static CodegenResult genArray(String cacheKey, ClassInfo classInfo) {
         boolean noIndention = JsoniterSpi.getCurrentConfig().indentionStep() == 0;
         Class clazz = classInfo.clazz;
@@ -27,12 +52,9 @@ class CodegenImplArray {
         ctx.append(String.format("%s[] arr = (%s[])obj;", compType.getCanonicalName(), compType.getCanonicalName()));
         if (noIndention) {
             ctx.append("if (arr.length == 0) { return; }");
-        } else {
-            ctx.append("if (arr.length == 0) { stream.write((byte)'[', (byte)']'); return; }");
-        }
-        if (noIndention) {
             ctx.buffer('[');
         } else {
+            ctx.append("if (arr.length == 0) { stream.write((byte)'[', (byte)']'); return; }");
             ctx.append("stream.writeArrayStart(); stream.writeIndention();");
         }
         ctx.append("int i = 0;");
@@ -66,31 +88,6 @@ class CodegenImplArray {
         }
         ctx.append("}"); // public static void encode_
         return ctx;
-    }
-
-    public static CodegenResult genCollection(String cacheKey, ClassInfo classInfo) {
-        Type[] typeArgs = classInfo.typeArgs;
-        Class clazz = classInfo.clazz;
-        Type compType = Object.class;
-        if (typeArgs.length == 0) {
-            // default to List<Object>
-        } else if (typeArgs.length == 1) {
-            compType = typeArgs[0];
-        } else {
-            throw new IllegalArgumentException(
-                    "can not bind to generic collection without argument types, " +
-                            "try syntax like TypeLiteral<List<Integer>>{}");
-        }
-        if (clazz == List.class) {
-            clazz = ArrayList.class;
-        } else if (clazz == Set.class) {
-            clazz = HashSet.class;
-        }
-        if (List.class.isAssignableFrom(clazz)) {
-            return genList(cacheKey, clazz, compType);
-        } else {
-            return genCollection(cacheKey, clazz, compType);
-        }
     }
 
     private static CodegenResult genList(String cacheKey, Class clazz, Type compType) {
@@ -129,6 +126,7 @@ class CodegenImplArray {
     }
 
     private static CodegenResult genCollection(String cacheKey, Class clazz, Type compType) {
+        boolean noIndention = JsoniterSpi.getCurrentConfig().indentionStep() == 0;
         boolean isCollectionValueNullable = true;
         if (cacheKey.endsWith("__value_not_nullable")) {
             isCollectionValueNullable = false;
@@ -136,8 +134,13 @@ class CodegenImplArray {
         CodegenResult ctx = new CodegenResult();
         ctx.append("public static void encode_(java.lang.Object obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {");
         ctx.append("java.util.Iterator iter = ((java.util.Collection)obj).iterator();");
-        ctx.append("if (!iter.hasNext()) { return; }");
-        ctx.buffer('[');
+        if (noIndention) {
+            ctx.append("if (!iter.hasNext()) { return; }");
+            ctx.buffer('[');
+        } else {
+            ctx.append("if (!iter.hasNext()) { stream.write((byte)'[', (byte)']'); return; }");
+            ctx.append("stream.writeArrayStart(); stream.writeIndention();");
+        }
         ctx.append("java.lang.Object e = iter.next();");
         if (isCollectionValueNullable) {
             ctx.append("if (e == null) { stream.writeNull(); } else {");
@@ -147,7 +150,11 @@ class CodegenImplArray {
             CodegenImplNative.genWriteOp(ctx, "e", compType, false);
         }
         ctx.append("while (iter.hasNext()) {");
-        ctx.append("stream.write(',');");
+        if (noIndention) {
+            ctx.append("stream.write(',');");
+        } else {
+            ctx.append("stream.writeMore();");
+        }
         ctx.append("e = iter.next();");
         if (isCollectionValueNullable) {
             ctx.append("if (e == null) { stream.writeNull(); } else {");
@@ -157,7 +164,11 @@ class CodegenImplArray {
             CodegenImplNative.genWriteOp(ctx, "e", compType, false);
         }
         ctx.append("}"); // while
-        ctx.buffer(']');
+        if (noIndention) {
+            ctx.buffer(']');
+        } else {
+            ctx.append("stream.writeArrayEnd();");
+        }
         ctx.append("}"); // public static void encode_
         return ctx;
     }

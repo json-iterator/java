@@ -48,6 +48,7 @@ import org.junit.runners.Suite;
         TestSpiPropertyDecoder.class,
         TestGson.class,
         com.jsoniter.output.TestGson.class,
-        TestStreamBuffer.class})
+        TestStreamBuffer.class,
+        TestCollection.class})
 public abstract class AllTestCases {
 }
