@@ -91,6 +91,7 @@ class CodegenImplArray {
     }
 
     private static CodegenResult genList(String cacheKey, Class clazz, Type compType) {
+        boolean noIndention = JsoniterSpi.getCurrentConfig().indentionStep() == 0;
         boolean isCollectionValueNullable = true;
         if (cacheKey.endsWith("__value_not_nullable")) {
             isCollectionValueNullable = false;
@@ -99,8 +100,13 @@ class CodegenImplArray {
         ctx.append("public static void encode_(java.lang.Object obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {");
         ctx.append("java.util.List list = (java.util.List)obj;");
         ctx.append("int size = list.size();");
-        ctx.append("if (size == 0) { return; }");
-        ctx.buffer('[');
+        if (noIndention) {
+            ctx.append("if (size == 0) { return; }");
+            ctx.buffer('[');
+        } else {
+            ctx.append("if (size == 0) { stream.write((byte)'[', (byte)']'); return; }");
+            ctx.append("stream.writeArrayStart(); stream.writeIndention();");
+        }
         ctx.append("java.lang.Object e = list.get(0);");
         if (isCollectionValueNullable) {
             ctx.append("if (e == null) { stream.writeNull(); } else {");
@@ -110,7 +116,11 @@ class CodegenImplArray {
             CodegenImplNative.genWriteOp(ctx, "e", compType, false);
         }
         ctx.append("for (int i = 1; i < size; i++) {");
-        ctx.append("stream.write(',');");
+        if (noIndention) {
+            ctx.append("stream.write(',');");
+        } else {
+            ctx.append("stream.writeMore();");
+        }
         ctx.append("e = list.get(i);");
         if (isCollectionValueNullable) {
             ctx.append("if (e == null) { stream.writeNull(); } else {");
@@ -120,7 +130,11 @@ class CodegenImplArray {
             CodegenImplNative.genWriteOp(ctx, "e", compType, false);
         }
         ctx.append("}"); // for
-        ctx.buffer(']');
+        if (noIndention) {
+            ctx.buffer(']');
+        } else {
+            ctx.append("stream.writeArrayEnd();");
+        }
         ctx.append("}"); // public static void encode_
         return ctx;
     }
