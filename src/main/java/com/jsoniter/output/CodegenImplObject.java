@@ -81,8 +81,8 @@ class CodegenImplObject {
                 ctx.append(CodegenResult.bufferToWriteOp("\"" + toName + "\":"));
             } else {
                 notFirst = appendComma(ctx, notFirst);
-                ctx.append(String.format("if (%s == null) { stream.writeNull(); } else {", valueAccessor));
                 ctx.append(CodegenResult.bufferToWriteOp("\"" + toName + "\":"));
+                ctx.append(String.format("if (%s == null) { stream.writeNull(); } else {", valueAccessor));
             }
         } else {
             notFirst = appendComma(ctx, notFirst);
