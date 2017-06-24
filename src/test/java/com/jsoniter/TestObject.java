@@ -238,26 +238,4 @@ public class TestObject extends TestCase {
         any.asMap().put("field4", Any.wrap(4));
         assertEquals("{\"field1\":1,\"field3\":3,\"field2\":2,\"field4\":4}", any.toString());
     }
-
-    public static class TOmitZero {
-
-        public int i;
-        public long l = 1;
-        public float f;
-        public double d = 1;
-    }
-
-    public void test_omit_zero() {
-        Config def = JsoniterSpi.getCurrentConfig();
-        try {
-            JsonStream.setOmitZero(true);
-            assertEquals("{\"l\":1,\"d\":1}", JsonStream.serialize(new TOmitZero()));
-
-            JsonStream.setMode(EncodingMode.DYNAMIC_MODE);
-            assertEquals("{\"l\":1,\"d\":1}", JsonStream.serialize(new TOmitZero()));
-        } finally {
-            JsoniterSpi.setDefaultConfig(def);
-            JsoniterSpi.setCurrentConfig(def);
-        }
-    }
 }

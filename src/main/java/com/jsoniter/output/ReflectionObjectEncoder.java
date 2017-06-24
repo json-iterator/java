@@ -4,7 +4,6 @@ import com.jsoniter.spi.*;
 import com.jsoniter.any.Any;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -103,10 +102,8 @@ class ReflectionObjectEncoder implements Encoder.ReflectionEncoder {
     }
 
     private boolean writeEncodeTo(JsonStream stream, boolean notFirst, EncodeTo encodeTo, Object val) throws IOException {
-        if (!(encodeTo.binding.shouldOmitNull && val == null)) {
-            if (JsoniterSpi.getCurrentConfig().omitZero() && val instanceof Number && ((Number) val).doubleValue() == 0) {
-                return notFirst;
-            }
+        OmitValue defaultValueToOmit = encodeTo.binding.defaultValueToOmit;
+        if (!(defaultValueToOmit != null && defaultValueToOmit.shouldOmit(val))) {
             if (notFirst) {
                 stream.writeMore();
             } else {

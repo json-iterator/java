@@ -79,7 +79,7 @@ public class TestObject extends TestCase {
         TestObject4 obj = new TestObject4();
         stream.writeVal(obj);
         stream.close();
-        assertEquals("{}".replace('\'', '"'), baos.toString());
+        assertEquals("{\"field1\":null}".replace('\'', '"'), baos.toString());
     }
 
     public static enum MyEnum {
@@ -121,13 +121,13 @@ public class TestObject extends TestCase {
         TestObject6 obj = new TestObject6();
         stream.writeVal(obj);
         stream.close();
-        assertEquals("{}", baos.toString());
+        assertEquals("{\"field1\":null}", baos.toString());
     }
 
     public static class TestObject7 {
         private int[] field1;
 
-        @JsonProperty(omitNull = false)
+        @JsonProperty(defaultValueToOmit = "void")
         public int[] getField1() {
             return field1;
         }
@@ -161,13 +161,13 @@ public class TestObject extends TestCase {
     }
 
     public static class TestObject9 {
-        @JsonProperty(collectionValueNullable = false)
+        @JsonProperty(collectionValueNullable = false, defaultValueToOmit = "null")
         public String[] field1;
-        @JsonProperty(collectionValueNullable = false)
+        @JsonProperty(collectionValueNullable = false, defaultValueToOmit = "null")
         public List<String> field2;
-        @JsonProperty(collectionValueNullable = false)
+        @JsonProperty(collectionValueNullable = false, defaultValueToOmit = "null")
         public Set<String> field3;
-        @JsonProperty(collectionValueNullable = false)
+        @JsonProperty(collectionValueNullable = false, defaultValueToOmit = "null")
         public Map<String, String> field4;
     }
 
@@ -216,7 +216,7 @@ public class TestObject extends TestCase {
     }
 
     public static class TestObject10 {
-        @JsonProperty(omitNull = false)
+        @JsonProperty(defaultValueToOmit = "void")
         public String field1;
     }
 
@@ -225,7 +225,9 @@ public class TestObject extends TestCase {
     }
 
     public static class TestObject11 {
+        @JsonProperty(defaultValueToOmit = "null")
         public String field1;
+        @JsonProperty(defaultValueToOmit = "null")
         public String field2;
         @JsonProperty(nullable = false)
         public Integer field3;
@@ -277,11 +279,11 @@ public class TestObject extends TestCase {
     }
 
     public static class TestObject14 {
-        @JsonProperty(nullable = true, omitNull = true)
+        @JsonProperty(nullable = true, defaultValueToOmit = "null")
         public String field1;
         @JsonProperty(nullable = false)
         public String field2;
-        @JsonProperty(nullable = true, omitNull = false)
+        @JsonProperty(nullable = true, defaultValueToOmit = "void")
         public String field3;
     }
 
@@ -312,7 +314,9 @@ public class TestObject extends TestCase {
     }
 
     public static class TestObject15 {
+        @JsonProperty(defaultValueToOmit = "null")
         public Integer i1;
+        @JsonProperty(defaultValueToOmit = "null")
         public Integer i2;
     }
 
@@ -330,7 +334,7 @@ public class TestObject extends TestCase {
     }
 
     public static class TestObject16 {
-        @JsonProperty(omitNull = false)
+        @JsonProperty(defaultValueToOmit = "void")
         public Integer i;
     }
 
@@ -342,5 +346,75 @@ public class TestObject extends TestCase {
         assertEquals("{\n" +
                 "  \"i\": null\n" +
                 "}", JsonStream.serialize(cfg, new TestObject16()));
+    }
+
+    public static class TestObject17 {
+        public boolean b;
+        public int i;
+        public byte bt;
+        public short s;
+        public long l = 1;
+        public float f;
+        public double d = 1;
+        public char e;
+    }
+
+    public void test_omit_default() {
+        Config cfg = new Config.Builder()
+                .omitDefaultValue(true)
+                .build();
+        assertEquals("{\"l\":1,\"d\":1}", JsonStream.serialize(cfg, new TestObject17()));
+        cfg = new Config.Builder()
+                .omitDefaultValue(true)
+                .encodingMode(EncodingMode.DYNAMIC_MODE)
+                .build();
+        assertEquals("{\"l\":1,\"d\":1}", JsonStream.serialize(cfg, new TestObject17()));
+    }
+
+    public static class TestObject18 {
+        @JsonProperty(defaultValueToOmit = "true")
+        public boolean b = true;
+        @JsonProperty(defaultValueToOmit = "true")
+        public Boolean B = true;
+        @JsonProperty(defaultValueToOmit = "1")
+        public int i = 1;
+        @JsonProperty(defaultValueToOmit = "1")
+        public Integer I = 1;
+        @JsonProperty(defaultValueToOmit = "1")
+        public byte bt = 1;
+        @JsonProperty(defaultValueToOmit = "1")
+        public Byte BT = 1;
+        @JsonProperty(defaultValueToOmit = "1")
+        public short s = 1;
+        @JsonProperty(defaultValueToOmit = "1")
+        public Short S = 1;
+        @JsonProperty(defaultValueToOmit = "1")
+        public long l = 1L;
+        @JsonProperty(defaultValueToOmit = "1")
+        public Long L = 1L;
+        @JsonProperty(defaultValueToOmit = "1")
+        public float f = 1F;
+        @JsonProperty(defaultValueToOmit = "1")
+        public Float F = 1F;
+        @JsonProperty(defaultValueToOmit = "1")
+        public double d = 1D;
+        @JsonProperty(defaultValueToOmit = "1")
+        public Double D = 1D;
+        @JsonProperty(defaultValueToOmit = "a")
+        public char c = 'a';
+        @JsonProperty(defaultValueToOmit = "a")
+        public Character C = 'a';
+    }
+
+    public void test_omit_selft_defined() {
+        Config cfg = new Config.Builder()
+                .omitDefaultValue(true)
+                .build();
+        assertEquals("{}", JsonStream.serialize(cfg, new TestObject18()));
+        cfg = new Config.Builder()
+                .omitDefaultValue(true)
+                .encodingMode(EncodingMode.DYNAMIC_MODE)
+                .build();
+        assertEquals("{}", JsonStream.serialize(cfg, new TestObject18()));
     }
 }

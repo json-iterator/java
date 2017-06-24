@@ -65,7 +65,6 @@ public class GsonCompatibilityMode extends Config {
 
     public static class Builder extends Config.Builder {
         private boolean excludeFieldsWithoutExposeAnnotation = false;
-        private boolean serializeNulls = false;
         private boolean disableHtmlEscaping = false;
         private ThreadLocal<DateFormat> dateFormat = new ThreadLocal<DateFormat>() {
             @Override
@@ -78,13 +77,17 @@ public class GsonCompatibilityMode extends Config {
         private Set<ExclusionStrategy> serializationExclusionStrategies = new HashSet<ExclusionStrategy>();
         private Set<ExclusionStrategy> deserializationExclusionStrategies = new HashSet<ExclusionStrategy>();
 
+        public Builder() {
+            omitDefaultValue(true);
+        }
+
         public Builder excludeFieldsWithoutExposeAnnotation() {
             excludeFieldsWithoutExposeAnnotation = true;
             return this;
         }
 
         public Builder serializeNulls() {
-            serializeNulls = true;
+            omitDefaultValue(false);
             return this;
         }
 
@@ -174,7 +177,6 @@ public class GsonCompatibilityMode extends Config {
             Builder builder = (Builder) o;
 
             if (excludeFieldsWithoutExposeAnnotation != builder.excludeFieldsWithoutExposeAnnotation) return false;
-            if (serializeNulls != builder.serializeNulls) return false;
             if (disableHtmlEscaping != builder.disableHtmlEscaping) return false;
             if (!dateFormat.get().equals(builder.dateFormat.get())) return false;
             if (fieldNamingStrategy != null ? !fieldNamingStrategy.equals(builder.fieldNamingStrategy) : builder.fieldNamingStrategy != null)
@@ -189,7 +191,6 @@ public class GsonCompatibilityMode extends Config {
         public int hashCode() {
             int result = super.hashCode();
             result = 31 * result + (excludeFieldsWithoutExposeAnnotation ? 1 : 0);
-            result = 31 * result + (serializeNulls ? 1 : 0);
             result = 31 * result + (disableHtmlEscaping ? 1 : 0);
             result = 31 * result + dateFormat.get().hashCode();
             result = 31 * result + (fieldNamingStrategy != null ? fieldNamingStrategy.hashCode() : 0);
@@ -203,7 +204,6 @@ public class GsonCompatibilityMode extends Config {
         public Config.Builder copy() {
             Builder copied = (Builder) super.copy();
             copied.excludeFieldsWithoutExposeAnnotation = excludeFieldsWithoutExposeAnnotation;
-            copied.serializeNulls = serializeNulls;
             copied.disableHtmlEscaping = disableHtmlEscaping;
             copied.dateFormat = dateFormat;
             copied.fieldNamingStrategy = fieldNamingStrategy;
@@ -212,6 +212,17 @@ public class GsonCompatibilityMode extends Config {
             copied.deserializationExclusionStrategies = new HashSet<ExclusionStrategy>(deserializationExclusionStrategies);
             return copied;
         }
+    }
+
+    @Override
+    protected OmitValue createOmitValue(Type valueType) {
+        if (valueType instanceof Class) {
+            Class clazz = (Class) valueType;
+            if (clazz.isPrimitive()) {
+                return null; // gson do not omit primitive zero
+            }
+        }
+        return super.createOmitValue(valueType);
     }
 
     @Override
@@ -459,11 +470,6 @@ public class GsonCompatibilityMode extends Config {
                 }
             }
         }
-        for (Binding binding : desc.allEncoderBindings()) {
-            if (builder().serializeNulls) {
-                binding.shouldOmitNull = false;
-            }
-        }
         super.updateClassDescriptor(desc);
     }
 
@@ -526,8 +532,8 @@ public class GsonCompatibilityMode extends Config {
             }
 
             @Override
-            public boolean omitNull() {
-                return true;
+            public String defaultValueToOmit() {
+                return "";
             }
 
             @Override

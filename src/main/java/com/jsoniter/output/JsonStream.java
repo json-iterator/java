@@ -499,12 +499,6 @@ public class JsonStream extends OutputStream {
         JsoniterSpi.setCurrentConfig(newConfig);
     }
 
-    public static void setOmitZero(boolean omitZero) {
-        Config newConfig = JsoniterSpi.getDefaultConfig().copyBuilder().omitZero(omitZero).build();
-        JsoniterSpi.setDefaultConfig(newConfig);
-        JsoniterSpi.setCurrentConfig(newConfig);
-    }
-
     public static void registerNativeEncoder(Class clazz, Encoder.ReflectionEncoder encoder) {
         CodegenImplNative.NATIVE_ENCODERS.put(clazz, encoder);
     }

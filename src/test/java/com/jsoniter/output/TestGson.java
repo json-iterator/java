@@ -82,16 +82,30 @@ public class TestGson extends TestCase {
         assertEquals("{}", output);
     }
 
+    public static class TestObject5 {
+        public String field1;
+        public int field2;
+    }
+
     public void test_serializeNulls() {
-        TestObject4 obj = new TestObject4();
-        Gson gson = new GsonBuilder().serializeNulls().create();
+        TestObject5 obj = new TestObject5();
+        Gson gson = new GsonBuilder().create();
         String output = gson.toJson(obj);
-        assertEquals("{\"field1\":null}", output);
+        assertEquals("{\"field2\":0}", output);
+
+        gson = new GsonBuilder().serializeNulls().create();
+        output = gson.toJson(obj);
+        assertEquals("{\"field1\":null,\"field2\":0}", output);
 
         GsonCompatibilityMode config = new GsonCompatibilityMode.Builder()
+                .build();
+        output = JsonStream.serialize(config, obj);
+        assertEquals("{\"field2\":0}", output);
+
+        config = new GsonCompatibilityMode.Builder()
                 .serializeNulls().build();
         output = JsonStream.serialize(config, obj);
-        assertEquals("{\"field1\":null}", output);
+        assertEquals("{\"field1\":null,\"field2\":0}", output);
     }
 
     public void test_setDateFormat_no_op() {
@@ -230,7 +244,7 @@ public class TestGson extends TestCase {
         assertEquals("\"\\u003chtml\\u003e\\u0026nbsp;\\u003c/html\\u003e\"", output);
     }
 
-    public static class TestObject5 {
+    public static class TestObject6 {
         @Since(3.0)
         public String field1 = "field1";
         @Until(1.0)
@@ -242,7 +256,7 @@ public class TestGson extends TestCase {
     }
 
     public void test_setVersion() {
-        TestObject5 obj = new TestObject5();
+        TestObject6 obj = new TestObject6();
         Gson gson = new GsonBuilder()
                 .setVersion(2.0)
                 .create();
@@ -256,7 +270,7 @@ public class TestGson extends TestCase {
     }
 
     public void test_addSerializationExclusionStrategy() {
-        TestObject5 obj = new TestObject5();
+        TestObject6 obj = new TestObject6();
         ExclusionStrategy exclusionStrategy = new ExclusionStrategy() {
             @Override
             public boolean shouldSkipField(FieldAttributes f) {

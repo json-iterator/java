@@ -113,8 +113,8 @@ public class JacksonCompatibilityMode extends Config {
             }
 
             @Override
-            public boolean omitNull() {
-                return true;
+            public String defaultValueToOmit() {
+                return "";
             }
 
             @Override
