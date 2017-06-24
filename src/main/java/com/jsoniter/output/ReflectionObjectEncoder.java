@@ -95,7 +95,11 @@ class ReflectionObjectEncoder implements Encoder.ReflectionEncoder {
                 unwrapper.method.invoke(obj, stream);
             }
         }
-        stream.writeObjectEnd();
+        if (notFirst) {
+            stream.writeObjectEnd();
+        } else {
+            stream.write('}');
+        }
     }
 
     private boolean writeEncodeTo(JsonStream stream, boolean notFirst, EncodeTo encodeTo, Object val) throws IOException {
@@ -103,6 +107,7 @@ class ReflectionObjectEncoder implements Encoder.ReflectionEncoder {
             if (notFirst) {
                 stream.writeMore();
             } else {
+                stream.writeIndention();
                 notFirst = true;
             }
             stream.writeObjectField(encodeTo.toName);

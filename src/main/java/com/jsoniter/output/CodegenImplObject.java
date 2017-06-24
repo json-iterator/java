@@ -41,7 +41,7 @@ class CodegenImplObject {
             if (supportBuffer) {
                 ctx.buffer('}');
             } else {
-                ctx.append("stream.writeObjectEnd();");
+                ctx.append("if (notFirst) { stream.writeObjectEnd(); } else { stream.write('}'); }");
             }
         } else {
             ctx.buffer("{}");
@@ -139,10 +139,13 @@ class CodegenImplObject {
             if (supportBuffer) {
                 ctx.append("if (notFirst) { stream.write(','); } else { notFirst = true; }");
             } else {
-                ctx.append("if (notFirst) { stream.writeMore(); } else { notFirst = true; }");
+                ctx.append("if (notFirst) { stream.writeMore(); } else { stream.writeIndention(); notFirst = true; }");
             }
         } else { // this is the first, do not write comma
             notFirst = 1;
+            if (!supportBuffer) {
+                ctx.append("stream.writeIndention();");
+            }
         }
         return notFirst;
     }

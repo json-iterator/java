@@ -303,4 +303,22 @@ public class TestObject extends TestCase {
                 "  \"field3\": null\n" +
                 "}", output);
     }
+
+    public static class TestObject15 {
+        public Integer i1;
+        public Integer i2;
+    }
+
+    public void test_indention_with_empty_object() {
+        Config config = JsoniterSpi.getCurrentConfig().copyBuilder()
+                .indentionStep(2)
+                .encodingMode(EncodingMode.REFLECTION_MODE)
+                .build();
+        assertEquals("{}", JsonStream.serialize(config, new TestObject15()));
+        config = JsoniterSpi.getCurrentConfig().copyBuilder()
+                .indentionStep(2)
+                .encodingMode(EncodingMode.DYNAMIC_MODE)
+                .build();
+        assertEquals("{}", JsonStream.serialize(config, new TestObject15()));
+    }
 }
