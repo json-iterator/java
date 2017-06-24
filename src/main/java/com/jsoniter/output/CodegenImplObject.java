@@ -6,14 +6,14 @@ import java.util.*;
 
 class CodegenImplObject {
     public static CodegenResult genObject(ClassInfo classInfo) {
-        boolean supportBuffer = JsoniterSpi.getCurrentConfig().indentionStep() == 0;
+        boolean noIndention = JsoniterSpi.getCurrentConfig().indentionStep() == 0;
         CodegenResult ctx = new CodegenResult();
         ClassDescriptor desc = ClassDescriptor.getEncodingClassDescriptor(classInfo, false);
         List<EncodeTo> encodeTos = desc.encodeTos();
         ctx.append(String.format("public static void encode_(%s obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {", classInfo.clazz.getCanonicalName()));
         if (hasFieldOutput(desc)) {
             int notFirst = 0;
-            if (supportBuffer) {
+            if (noIndention) {
                 ctx.buffer('{');
             } else {
                 ctx.append("stream.writeObjectStart();");
@@ -38,7 +38,7 @@ class CodegenImplObject {
                     ctx.append(String.format("obj.%s(stream);", unwrapper.method.getName()));
                 }
             }
-            if (supportBuffer) {
+            if (noIndention) {
                 ctx.buffer('}');
             } else {
                 ctx.append("if (notFirst) { stream.writeObjectEnd(); } else { stream.write('}'); }");
@@ -59,7 +59,7 @@ class CodegenImplObject {
     }
 
     private static int genField(CodegenResult ctx, Binding binding, String toName, int notFirst) {
-        boolean supportBuffer = JsoniterSpi.getCurrentConfig().indentionStep() == 0;
+        boolean noIndention = JsoniterSpi.getCurrentConfig().indentionStep() == 0;
         String fieldCacheKey = binding.encoderCacheKey();
         Encoder encoder = JsoniterSpi.getEncoder(fieldCacheKey);
         boolean isCollectionValueNullable = binding.isCollectionValueNullable;
@@ -87,14 +87,14 @@ class CodegenImplObject {
                 }
                 ctx.append(String.format("if (%s != null) {", valueAccessor));
                 notFirst = appendComma(ctx, notFirst);
-                if (supportBuffer) {
+                if (noIndention) {
                     ctx.append(CodegenResult.bufferToWriteOp("\"" + toName + "\":"));
                 } else {
                     ctx.append(String.format("stream.writeObjectField(\"%s\");", toName));
                 }
             } else {
                 notFirst = appendComma(ctx, notFirst);
-                if (supportBuffer) {
+                if (noIndention) {
                     ctx.buffer('"');
                     ctx.buffer(toName);
                     ctx.buffer('"');
@@ -106,7 +106,7 @@ class CodegenImplObject {
             }
         } else {
             notFirst = appendComma(ctx, notFirst);
-            if (supportBuffer) {
+            if (noIndention) {
                 ctx.buffer('"');
                 ctx.buffer(toName);
                 ctx.buffer('"');
@@ -128,22 +128,22 @@ class CodegenImplObject {
     }
 
     private static int appendComma(CodegenResult ctx, int notFirst) {
-        boolean supportBuffer = JsoniterSpi.getCurrentConfig().indentionStep() == 0;
+        boolean noIndention = JsoniterSpi.getCurrentConfig().indentionStep() == 0;
         if (notFirst == 1) { // definitely not first
-            if (supportBuffer) {
+            if (noIndention) {
                 ctx.buffer(',');
             } else {
                 ctx.append("stream.writeMore();");
             }
         } else if (notFirst == 2) { // maybe not first, previous field is omitNull
-            if (supportBuffer) {
+            if (noIndention) {
                 ctx.append("if (notFirst) { stream.write(','); } else { notFirst = true; }");
             } else {
                 ctx.append("if (notFirst) { stream.writeMore(); } else { stream.writeIndention(); notFirst = true; }");
             }
         } else { // this is the first, do not write comma
             notFirst = 1;
-            if (!supportBuffer) {
+            if (!noIndention) {
                 ctx.append("stream.writeIndention();");
             }
         }

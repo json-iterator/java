@@ -296,7 +296,7 @@ public class TestObject extends TestCase {
                 .indentionStep(2)
                 .encodingMode(EncodingMode.REFLECTION_MODE)
                 .build();
-        output = JsonStream.serialize(dynamicCfg, obj);
+        output = JsonStream.serialize(reflectionCfg, obj);
         assertEquals("{\n" +
                 "  \"field1\": \"1\",\n" +
                 "  \"field2\": \"2\",\n" +

@@ -5,6 +5,7 @@ import com.jsoniter.spi.*;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.util.Iterator;
 import java.util.Map;
 
 class ReflectionMapEncoder implements Encoder.ReflectionEncoder {
@@ -34,23 +35,36 @@ class ReflectionMapEncoder implements Encoder.ReflectionEncoder {
             return;
         }
         Map<Object, Object> map = (Map<Object, Object>) obj;
+        Iterator<Map.Entry<Object, Object>> iter = map.entrySet().iterator();
+        if (!iter.hasNext()) {
+            stream.write((byte) '{', (byte) '}');
+            return;
+        }
         stream.writeObjectStart();
         boolean notFirst = false;
-        for (Map.Entry<Object, Object> entry : map.entrySet()) {
-            if (notFirst) {
-                stream.writeMore();
-            } else {
-                stream.writeIndention();
-                notFirst = true;
-            }
-            if (mapKeyEncoder == null) {
-                stream.writeObjectField((String) entry.getKey());
-            } else {
-                stream.writeObjectField(mapKeyEncoder.encode(entry.getKey()));
-            }
-            stream.writeVal(valueTypeLiteral, entry.getValue());
+        Map.Entry<Object, Object> entry = iter.next();
+        notFirst = writeEntry(stream, notFirst, entry);
+        while (iter.hasNext()) {
+            entry = iter.next();
+            notFirst = writeEntry(stream, notFirst, entry);
         }
         stream.writeObjectEnd();
+    }
+
+    private boolean writeEntry(JsonStream stream, boolean notFirst, Map.Entry<Object, Object> entry) throws IOException {
+        if (notFirst) {
+            stream.writeMore();
+        } else {
+            stream.writeIndention();
+            notFirst = true;
+        }
+        if (mapKeyEncoder == null) {
+            stream.writeObjectField((String) entry.getKey());
+        } else {
+            stream.writeObjectField(mapKeyEncoder.encode(entry.getKey()));
+        }
+        stream.writeVal(valueTypeLiteral, entry.getValue());
+        return notFirst;
     }
 
     @Override

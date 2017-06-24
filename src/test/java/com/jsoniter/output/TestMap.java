@@ -1,6 +1,9 @@
 package com.jsoniter.output;
 
-import com.jsoniter.spi.*;
+import com.jsoniter.spi.Config;
+import com.jsoniter.spi.JsoniterSpi;
+import com.jsoniter.spi.MapKeyEncoder;
+import com.jsoniter.spi.TypeLiteral;
 import junit.framework.TestCase;
 
 import java.io.ByteArrayOutputStream;
@@ -79,5 +82,42 @@ public class TestMap extends TestCase {
         String output = JsonStream.serialize(new TypeLiteral<Map<TestObject1, Object>>() {
         }, obj);
         assertEquals("{\"0\":null}", output);
+    }
+
+    public void test_indention() {
+        Map<String, String> map = new HashMap<String, String>();
+        map.put("field1", "1");
+        map.put("field2", "2");
+        Config dynamicCfg = new Config.Builder()
+                .indentionStep(2)
+                .encodingMode(EncodingMode.DYNAMIC_MODE)
+                .build();
+        String output = JsonStream.serialize(dynamicCfg, map);
+        assertEquals("{\n" +
+                "  \"field1\": \"1\",\n" +
+                "  \"field2\": \"2\"\n" +
+                "}", output);
+        Config reflectionCfg = new Config.Builder()
+                .indentionStep(2)
+                .encodingMode(EncodingMode.REFLECTION_MODE)
+                .build();
+        output = JsonStream.serialize(reflectionCfg, map);
+        assertEquals("{\n" +
+                "  \"field1\": \"1\",\n" +
+                "  \"field2\": \"2\"\n" +
+                "}", output);
+    }
+
+    public void test_indention_with_empty_map() {
+        Config config = JsoniterSpi.getCurrentConfig().copyBuilder()
+                .indentionStep(2)
+                .encodingMode(EncodingMode.REFLECTION_MODE)
+                .build();
+        assertEquals("{}", JsonStream.serialize(config, new HashMap<String, String>()));
+        config = JsoniterSpi.getCurrentConfig().copyBuilder()
+                .indentionStep(2)
+                .encodingMode(EncodingMode.DYNAMIC_MODE)
+                .build();
+        assertEquals("{}", JsonStream.serialize(config, new HashMap<String, String>()));
     }
 }
