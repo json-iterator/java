@@ -1,48 +1,18 @@
 package com.jsoniter.output;
 
+import com.jsoniter.spi.JsonException;
+import com.jsoniter.spi.JsoniterSpi;
+
 class CodegenResult {
 
+    private final boolean supportBuffer;
     String prelude = null; // first
     String epilogue = null; // last
     private StringBuilder lines = new StringBuilder();
     private StringBuilder buffered = new StringBuilder();
 
-    public static String bufferToWriteOp(String buffered) {
-        if (buffered == null) {
-            return "";
-        }
-        if (buffered.length() == 1) {
-            return String.format("stream.write((byte)'%s');", escape(buffered.charAt(0)));
-        } else if (buffered.length() == 2) {
-            return String.format("stream.write((byte)'%s', (byte)'%s');",
-                    escape(buffered.charAt(0)), escape(buffered.charAt(1)));
-        } else if (buffered.length() == 3) {
-            return String.format("stream.write((byte)'%s', (byte)'%s', (byte)'%s');",
-                    escape(buffered.charAt(0)), escape(buffered.charAt(1)), escape(buffered.charAt(2)));
-        } else if (buffered.length() == 4) {
-            return String.format("stream.write((byte)'%s', (byte)'%s', (byte)'%s', (byte)'%s');",
-                    escape(buffered.charAt(0)), escape(buffered.charAt(1)), escape(buffered.charAt(2)), escape(buffered.charAt(3)));
-        } else {
-            StringBuilder escaped = new StringBuilder();
-            for (int i = 0; i < buffered.length(); i++) {
-                char c = buffered.charAt(i);
-                if (c == '"') {
-                    escaped.append('\\');
-                }
-                escaped.append(c);
-            }
-            return String.format("stream.writeRaw(\"%s\", %s);", escaped.toString(), buffered.length());
-        }
-    }
-
-    private static String escape(char c) {
-        if (c == '"') {
-            return "\\\"";
-        }
-        if (c == '\\') {
-            return "\\\\";
-        }
-        return String.valueOf(c);
+    public CodegenResult() {
+        supportBuffer = JsoniterSpi.getCurrentConfig().indentionStep() == 0;
     }
 
     public void append(String str) {
@@ -56,14 +26,23 @@ class CodegenResult {
     }
 
     public void buffer(char c) {
-        buffered.append(c);
+        if (supportBuffer) {
+            buffered.append(c);
+        } else {
+            throw new UnsupportedOperationException("internal error: should not call buffer when indention step > 0");
+        }
     }
 
     public void buffer(String s) {
         if (s == null) {
             return;
         }
-        buffered.append(s);
+        if (supportBuffer) {
+            buffered.append(s);
+        } else {
+            throw new UnsupportedOperationException("internal error: should not call buffer when indention step > 0");
+
+        }
     }
 
     public void flushBuffer() {
@@ -110,5 +89,43 @@ class CodegenResult {
     private static void append(StringBuilder lines, String line) {
         lines.append(line);
         lines.append('\n');
+    }
+
+    public static String bufferToWriteOp(String buffered) {
+        if (buffered == null) {
+            return "";
+        }
+        if (buffered.length() == 1) {
+            return String.format("stream.write((byte)'%s');", escape(buffered.charAt(0)));
+        } else if (buffered.length() == 2) {
+            return String.format("stream.write((byte)'%s', (byte)'%s');",
+                    escape(buffered.charAt(0)), escape(buffered.charAt(1)));
+        } else if (buffered.length() == 3) {
+            return String.format("stream.write((byte)'%s', (byte)'%s', (byte)'%s');",
+                    escape(buffered.charAt(0)), escape(buffered.charAt(1)), escape(buffered.charAt(2)));
+        } else if (buffered.length() == 4) {
+            return String.format("stream.write((byte)'%s', (byte)'%s', (byte)'%s', (byte)'%s');",
+                    escape(buffered.charAt(0)), escape(buffered.charAt(1)), escape(buffered.charAt(2)), escape(buffered.charAt(3)));
+        } else {
+            StringBuilder escaped = new StringBuilder();
+            for (int i = 0; i < buffered.length(); i++) {
+                char c = buffered.charAt(i);
+                if (c == '"') {
+                    escaped.append('\\');
+                }
+                escaped.append(c);
+            }
+            return String.format("stream.writeRaw(\"%s\", %s);", escaped.toString(), buffered.length());
+        }
+    }
+
+    private static String escape(char c) {
+        if (c == '"') {
+            return "\\\"";
+        }
+        if (c == '\\') {
+            return "\\\\";
+        }
+        return String.valueOf(c);
     }
 }

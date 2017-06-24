@@ -268,4 +268,39 @@ public class TestObject extends TestCase {
 
         }
     }
+
+    public static class TestObject14 {
+        @JsonProperty(nullable = true, omitNull = true)
+        public String field1;
+        @JsonProperty(nullable = false)
+        public String field2;
+        @JsonProperty(nullable = true, omitNull = false)
+        public String field3;
+    }
+
+    public void test_indention() {
+        Config dynamicCfg = new Config.Builder()
+                .indentionStep(2)
+                .encodingMode(EncodingMode.DYNAMIC_MODE)
+                .build();
+        TestObject14 obj = new TestObject14();
+        obj.field1 = "1";
+        obj.field2 = "2";
+        String output = JsonStream.serialize(dynamicCfg, obj);
+        assertEquals("{\n" +
+                "  \"field1\": \"1\",\n" +
+                "  \"field2\": \"2\",\n" +
+                "  \"field3\": null\n" +
+                "}", output);
+        Config reflectionCfg = new Config.Builder()
+                .indentionStep(2)
+                .encodingMode(EncodingMode.REFLECTION_MODE)
+                .build();
+        output = JsonStream.serialize(dynamicCfg, obj);
+        assertEquals("{\n" +
+                "  \"field1\": \"1\",\n" +
+                "  \"field2\": \"2\",\n" +
+                "  \"field3\": null\n" +
+                "}", output);
+    }
 }
