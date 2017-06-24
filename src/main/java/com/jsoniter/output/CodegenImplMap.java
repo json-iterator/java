@@ -26,7 +26,7 @@ class CodegenImplMap {
         ctx.append("java.util.Iterator iter = map.entrySet().iterator();");
         ctx.append("if(!iter.hasNext()) { return; }");
         ctx.append("java.util.Map.Entry entry = (java.util.Map.Entry)iter.next();");
-        ctx.buffer('{');
+        ctx.append("stream.writeObjectStart();");
         if (keyType == String.class) {
             ctx.append("stream.writeVal((java.lang.String)entry.getKey());");
         } else {
@@ -42,7 +42,7 @@ class CodegenImplMap {
         }
         ctx.append("while(iter.hasNext()) {");
         ctx.append("entry = (java.util.Map.Entry)iter.next();");
-        ctx.append("stream.write(',');");
+        ctx.append("stream.writeMore();");
         if (keyType == String.class) {
             ctx.append("stream.writeVal((java.lang.String)entry.getKey());");
         } else {
@@ -57,7 +57,7 @@ class CodegenImplMap {
             CodegenImplNative.genWriteOp(ctx, "entry.getValue()", valueType, false);
         }
         ctx.append("}");
-        ctx.buffer('}');
+        ctx.append("stream.writeObjectEnd();");
         ctx.append("}");
         return ctx;
     }

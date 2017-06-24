@@ -24,7 +24,7 @@ class CodegenImplArray {
         ctx.append("public static void encode_(java.lang.Object obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {");
         ctx.append(String.format("%s[] arr = (%s[])obj;", compType.getCanonicalName(), compType.getCanonicalName()));
         ctx.append("if (arr.length == 0) { return; }");
-        ctx.buffer('[');
+        ctx.append("stream.writeArrayStart();");
         ctx.append("int i = 0;");
         ctx.append(String.format("%s e = arr[i++];", compType.getCanonicalName()));
         if (isCollectionValueNullable) {
@@ -35,7 +35,7 @@ class CodegenImplArray {
             CodegenImplNative.genWriteOp(ctx, "e", compType, false);
         }
         ctx.append("while (i < arr.length) {");
-        ctx.append("stream.write(',');");
+        ctx.append("stream.writeMore();");
         ctx.append("e = arr[i++];");
         if (isCollectionValueNullable) {
             ctx.append("if (e == null) { stream.writeNull(); } else {");
@@ -45,7 +45,7 @@ class CodegenImplArray {
             CodegenImplNative.genWriteOp(ctx, "e", compType, false);
         }
         ctx.append("}");
-        ctx.buffer(']');
+        ctx.append("stream.writeArrayEnd();");
         ctx.append("}");
         return ctx;
     }
