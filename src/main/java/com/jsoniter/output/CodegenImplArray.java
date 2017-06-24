@@ -1,6 +1,7 @@
 package com.jsoniter.output;
 
 import com.jsoniter.spi.ClassInfo;
+import com.jsoniter.spi.JsoniterSpi;
 
 import java.lang.reflect.Type;
 import java.util.*;
@@ -8,6 +9,7 @@ import java.util.*;
 class CodegenImplArray {
 
     public static CodegenResult genArray(String cacheKey, ClassInfo classInfo) {
+        boolean noIndention = JsoniterSpi.getCurrentConfig().indentionStep() == 0;
         Class clazz = classInfo.clazz;
         Class compType = clazz.getComponentType();
         if (compType.isArray()) {
@@ -23,8 +25,16 @@ class CodegenImplArray {
         CodegenResult ctx = new CodegenResult();
         ctx.append("public static void encode_(java.lang.Object obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {");
         ctx.append(String.format("%s[] arr = (%s[])obj;", compType.getCanonicalName(), compType.getCanonicalName()));
-        ctx.append("if (arr.length == 0) { return; }");
-        ctx.buffer('[');
+        if (noIndention) {
+            ctx.append("if (arr.length == 0) { return; }");
+        } else {
+            ctx.append("if (arr.length == 0) { stream.write((byte)'[', (byte)']'); return; }");
+        }
+        if (noIndention) {
+            ctx.buffer('[');
+        } else {
+            ctx.append("stream.writeArrayStart(); stream.writeIndention();");
+        }
         ctx.append("int i = 0;");
         ctx.append(String.format("%s e = arr[i++];", compType.getCanonicalName()));
         if (isCollectionValueNullable) {
@@ -35,7 +45,11 @@ class CodegenImplArray {
             CodegenImplNative.genWriteOp(ctx, "e", compType, false);
         }
         ctx.append("while (i < arr.length) {");
-        ctx.append("stream.write(',');");
+        if (noIndention) {
+            ctx.append("stream.write(',');");
+        } else {
+            ctx.append("stream.writeMore();");
+        }
         ctx.append("e = arr[i++];");
         if (isCollectionValueNullable) {
             ctx.append("if (e == null) { stream.writeNull(); } else {");
@@ -45,7 +59,11 @@ class CodegenImplArray {
             CodegenImplNative.genWriteOp(ctx, "e", compType, false);
         }
         ctx.append("}"); // while
-        ctx.buffer(']');
+        if (noIndention) {
+            ctx.buffer(']');
+        } else {
+            ctx.append("stream.writeArrayEnd();");
+        }
         ctx.append("}"); // public static void encode_
         return ctx;
     }

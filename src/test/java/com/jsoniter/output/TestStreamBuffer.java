@@ -41,6 +41,7 @@ public class TestStreamBuffer extends TestCase {
             JsoniterSpi.setCurrentConfig(new Config.Builder().indentionStep(32).build());
             JsonStream jsonStream = new JsonStream(null, 32);
             jsonStream.writeArrayStart();
+            jsonStream.writeIndention();
             assertEquals(34, jsonStream.buffer().len());
         } finally {
             JsoniterSpi.setCurrentConfig(oldConfig);
