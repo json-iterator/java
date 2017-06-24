@@ -27,6 +27,7 @@ public class JsonStreamPool {
 
     public static void returnJsonStream(JsonStream jsonStream) {
         jsonStream.configCache = null;
+        jsonStream.indention = 0;
         if (slot1.get() == null) {
             slot1.set(jsonStream);
             return;

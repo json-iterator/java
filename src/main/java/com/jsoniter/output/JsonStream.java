@@ -10,7 +10,7 @@ import java.lang.reflect.Type;
 public class JsonStream extends OutputStream {
 
     public Config configCache;
-    private int indention = 0;
+    int indention = 0;
     private OutputStream out;
     byte buf[];
     int count;
@@ -294,7 +294,7 @@ public class JsonStream extends OutputStream {
         writeIndention();
     }
 
-    private void writeIndention() throws IOException {
+    public void writeIndention() throws IOException {
         writeIndention(0);
     }
 
@@ -321,7 +321,6 @@ public class JsonStream extends OutputStream {
         int indentionStep = currentConfig().indentionStep();
         indention += indentionStep;
         write('{');
-        writeIndention();
     }
 
     public final void writeObjectField(String field) throws IOException {

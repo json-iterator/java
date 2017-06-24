@@ -30,7 +30,7 @@ class CodegenImplArray {
         if (isCollectionValueNullable) {
             ctx.append("if (e == null) { stream.writeNull(); } else {");
             CodegenImplNative.genWriteOp(ctx, "e", compType, true);
-            ctx.append("}");
+            ctx.append("}"); // if
         } else {
             CodegenImplNative.genWriteOp(ctx, "e", compType, false);
         }
@@ -40,13 +40,13 @@ class CodegenImplArray {
         if (isCollectionValueNullable) {
             ctx.append("if (e == null) { stream.writeNull(); } else {");
             CodegenImplNative.genWriteOp(ctx, "e", compType, true);
-            ctx.append("}");
+            ctx.append("}"); // if
         } else {
             CodegenImplNative.genWriteOp(ctx, "e", compType, false);
         }
-        ctx.append("}");
+        ctx.append("}"); // while
         ctx.buffer(']');
-        ctx.append("}");
+        ctx.append("}"); // public static void encode_
         return ctx;
     }
 
@@ -100,13 +100,13 @@ class CodegenImplArray {
         if (isCollectionValueNullable) {
             ctx.append("if (e == null) { stream.writeNull(); } else {");
             CodegenImplNative.genWriteOp(ctx, "e", compType, true);
-            ctx.append("}");
+            ctx.append("}"); // if
         } else {
             CodegenImplNative.genWriteOp(ctx, "e", compType, false);
         }
-        ctx.append("}");
+        ctx.append("}"); // for
         ctx.buffer(']');
-        ctx.append("}");
+        ctx.append("}"); // public static void encode_
         return ctx;
     }
 
@@ -124,7 +124,7 @@ class CodegenImplArray {
         if (isCollectionValueNullable) {
             ctx.append("if (e == null) { stream.writeNull(); } else {");
             CodegenImplNative.genWriteOp(ctx, "e", compType, true);
-            ctx.append("}");
+            ctx.append("}"); // if
         } else {
             CodegenImplNative.genWriteOp(ctx, "e", compType, false);
         }
@@ -134,13 +134,13 @@ class CodegenImplArray {
         if (isCollectionValueNullable) {
             ctx.append("if (e == null) { stream.writeNull(); } else {");
             CodegenImplNative.genWriteOp(ctx, "e", compType, true);
-            ctx.append("}");
+            ctx.append("}"); // if
         } else {
             CodegenImplNative.genWriteOp(ctx, "e", compType, false);
         }
-        ctx.append("}");
+        ctx.append("}"); // while
         ctx.buffer(']');
-        ctx.append("}");
+        ctx.append("}"); // public static void encode_
         return ctx;
     }
 

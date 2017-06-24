@@ -40,6 +40,7 @@ class ReflectionMapEncoder implements Encoder.ReflectionEncoder {
             if (notFirst) {
                 stream.writeMore();
             } else {
+                stream.writeIndention();
                 notFirst = true;
             }
             if (mapKeyEncoder == null) {

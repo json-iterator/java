@@ -269,9 +269,10 @@ class CodegenImplNative {
     }
 
     public static void genWriteOp(CodegenResult ctx, String code, Type valueType, boolean isNullable, boolean isCollectionValueNullable) {
+        boolean supportBuffer = JsoniterSpi.getCurrentConfig().indentionStep() == 0;
         String cacheKey = TypeLiteral.create(valueType).getEncoderCacheKey();
         if (JsoniterSpi.getEncoder(cacheKey) == null) {
-            if (!isNullable && String.class == valueType) {
+            if (supportBuffer && !isNullable && String.class == valueType) {
                 ctx.buffer('"');
                 ctx.append(String.format("com.jsoniter.output.CodegenAccess.writeStringWithoutQuote((java.lang.String)%s, stream);", code));
                 ctx.buffer('"');
