@@ -72,7 +72,11 @@ class Codegen {
         try {
             EncodingMode mode = JsoniterSpi.getCurrentConfig().encodingMode();
             if (mode != EncodingMode.REFLECTION_MODE) {
+                Type originalType = type;
                 type = chooseAccessibleSuper(type);
+                if (Object.class == type) {
+                    throw new JsonException("dynamic code can not serialize private class: " + originalType);
+                }
             }
             ClassInfo classInfo = new ClassInfo(type);
             if (Map.class.isAssignableFrom(classInfo.clazz) && classInfo.typeArgs.length > 1) {

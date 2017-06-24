@@ -1,6 +1,5 @@
 package com.jsoniter.output;
 
-import com.jsoniter.CodegenAccess;
 import com.jsoniter.spi.*;
 
 import java.util.*;
@@ -10,27 +9,13 @@ class CodegenImplObject {
 
         CodegenResult ctx = new CodegenResult();
         ClassDescriptor desc = ClassDescriptor.getEncodingClassDescriptor(classInfo, false);
-        HashMap<String, Binding> bindings = new HashMap<String, Binding>();
-        for (Binding binding : desc.allEncoderBindings()) {
-            for (String toName : binding.toNames) {
-                bindings.put(toName, binding);
-            }
-        }
-        ArrayList<String> toNames = new ArrayList<String>(bindings.keySet());
-        Collections.sort(toNames, new Comparator<String>() {
-            @Override
-            public int compare(String o1, String o2) {
-                int x = CodegenAccess.calcHash(o1);
-                int y = CodegenAccess.calcHash(o2);
-                return (x < y) ? -1 : ((x == y) ? 0 : 1);
-            }
-        });
+        List<EncodeTo> encodeTos = desc.encodeTos();
         ctx.append(String.format("public static void encode_(%s obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {", classInfo.clazz.getCanonicalName()));
         if (hasFieldOutput(desc)) {
             int notFirst = 0;
             ctx.buffer('{');
-            for (String toName : toNames) {
-                notFirst = genField(ctx, bindings.get(toName), toName, notFirst);
+            for (EncodeTo encodeTo : encodeTos) {
+                notFirst = genField(ctx, encodeTo.binding, encodeTo.toName, notFirst);
             }
             for (UnwrapperDescriptor unwrapper : desc.unwrappers) {
                 if (unwrapper.isMap) {
@@ -62,12 +47,7 @@ class CodegenImplObject {
         if (!desc.unwrappers.isEmpty()) {
             return true;
         }
-        for (Binding binding : desc.allEncoderBindings()) {
-            if (binding.toNames.length > 0) {
-                return true;
-            }
-        }
-        return false;
+        return !desc.encodeTos().isEmpty();
     }
 
     private static int genField(CodegenResult ctx, Binding binding, String toName, int notFirst) {
