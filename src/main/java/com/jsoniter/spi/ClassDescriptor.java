@@ -107,6 +107,9 @@ public class ClassDescriptor {
             if (binding.encoder != null) {
                 JsoniterSpi.addNewEncoder(binding.encoderCacheKey(), binding.encoder);
             }
+            if (!binding.isNullable) {
+                binding.shouldOmitNull = false;
+            }
         }
         return desc;
     }
@@ -423,10 +426,40 @@ public class ClassDescriptor {
         return bindings;
     }
 
+
     public List<Binding> allEncoderBindings() {
         ArrayList<Binding> bindings = new ArrayList<Binding>(8);
         bindings.addAll(fields);
         bindings.addAll(getters);
         return bindings;
+    }
+
+    public List<EncodeTo> encodeTos() {
+        HashMap<String, Integer> previousAppearance = new HashMap<String, Integer>();
+        ArrayList<EncodeTo> encodeTos = new ArrayList<EncodeTo>(8);
+        collectEncodeTo(encodeTos, fields, previousAppearance);
+        collectEncodeTo(encodeTos, getters, previousAppearance);
+        ArrayList<EncodeTo> removedNulls = new ArrayList<EncodeTo>(encodeTos.size());
+        for (EncodeTo encodeTo : encodeTos) {
+            if (encodeTo != null) {
+                removedNulls.add(encodeTo);
+            }
+        }
+        return removedNulls;
+    }
+
+    private void collectEncodeTo(ArrayList<EncodeTo> encodeTos, List<Binding> fields, HashMap<String, Integer> previousAppearance) {
+        for (Binding field : fields) {
+            for (String toName : field.toNames) {
+                if (previousAppearance.containsKey(toName)) {
+                    encodeTos.set(previousAppearance.get(toName), null);
+                }
+                previousAppearance.put(toName, encodeTos.size());
+                EncodeTo encodeTo = new EncodeTo();
+                encodeTo.binding = field;
+                encodeTo.toName = toName;
+                encodeTos.add(encodeTo);
+            }
+        }
     }
 }

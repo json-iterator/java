@@ -3,6 +3,7 @@ package com.jsoniter.output;
 import com.jsoniter.annotation.JsonIgnore;
 import com.jsoniter.annotation.JsonProperty;
 import com.jsoniter.spi.Config;
+import com.jsoniter.spi.JsonException;
 import com.jsoniter.spi.JsoniterSpi;
 import com.jsoniter.spi.TypeLiteral;
 import junit.framework.TestCase;
@@ -219,21 +220,21 @@ public class TestObject extends TestCase {
     public static class TestObject11 {
         public String field1;
         public String field2;
-        public String field3;
+        @JsonProperty(nullable = false)
+        public Integer field3;
     }
 
     public void test_omit_null() {
-//        JsonStream.setMode(EncodingMode.DYNAMIC_MODE);
-        assertEquals("{}", JsonStream.serialize(new TestObject11()));
+        assertEquals("{\"field3\":null}", JsonStream.serialize(new TestObject11()));
         TestObject11 obj = new TestObject11();
         obj.field1 = "hello";
-        assertEquals("{\"field1\":\"hello\"}", JsonStream.serialize(obj));
+        assertEquals("{\"field1\":\"hello\",\"field3\":null}", JsonStream.serialize(obj));
         obj = new TestObject11();
         obj.field2 = "hello";
-        assertEquals("{\"field2\":\"hello\"}", JsonStream.serialize(obj));
+        assertEquals("{\"field2\":\"hello\",\"field3\":null}", JsonStream.serialize(obj));
         obj = new TestObject11();
-        obj.field3 = "hello";
-        assertEquals("{\"field3\":\"hello\"}", JsonStream.serialize(obj));
+        obj.field3 = 3;
+        assertEquals("{\"field3\":3}", JsonStream.serialize(obj));
     }
 
 
@@ -260,6 +261,11 @@ public class TestObject extends TestCase {
         if (EncodingMode.REFLECTION_MODE.equals(encodingMode)) {
             return;
         }
-        JsonStream.serialize(new TestObject13());
+        try {
+            JsonStream.serialize(new TestObject13());
+            fail("should throw JsonException");
+        } catch (JsonException e) {
+
+        }
     }
 }
