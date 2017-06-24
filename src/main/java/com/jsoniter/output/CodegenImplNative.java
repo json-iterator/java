@@ -318,12 +318,21 @@ class CodegenImplNative {
         }
     }
     public static CodegenResult genEnum(Class clazz) {
+        boolean noIndention = JsoniterSpi.getCurrentConfig().indentionStep() == 0;
         CodegenResult ctx = new CodegenResult();
         ctx.append(String.format("public static void encode_(java.lang.Object obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {", clazz.getCanonicalName()));
         ctx.append("if (obj == null) { stream.writeNull(); return; }");
-        ctx.buffer('"');
+        if (noIndention) {
+            ctx.buffer('"');
+        } else {
+            ctx.append("stream.write('\"');");
+        }
         ctx.append("stream.writeRaw(obj.toString());");
-        ctx.buffer('"');
+        if (noIndention) {
+            ctx.buffer('"');
+        } else {
+            ctx.append("stream.write('\"');");
+        }
         ctx.append("}");
         return ctx;
     }

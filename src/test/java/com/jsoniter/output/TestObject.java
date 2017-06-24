@@ -96,6 +96,13 @@ public class TestObject extends TestCase {
         stream.writeVal(obj);
         stream.close();
         assertEquals("{'field1':'HELLO'}".replace('\'', '"'), baos.toString());
+        Config cfg = new Config.Builder()
+                .encodingMode(EncodingMode.DYNAMIC_MODE)
+                .indentionStep(2)
+                .build();
+        assertEquals("{\n" +
+                "  \"field1\": \"HELLO\"\n" +
+                "}", JsonStream.serialize(cfg, obj));
     }
 
     public static class TestObject6 {
