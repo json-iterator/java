@@ -41,7 +41,7 @@ class CodegenImplObject {
             if (supportBuffer) {
                 ctx.buffer('}');
             } else {
-                ctx.append("if (notFirst) { stream.writeObjectEnd(); } else { stream.write('}'); }");
+                ctx.append("stream.writeObjectEnd();");
             }
         } else {
             ctx.buffer("{}");
