@@ -286,7 +286,6 @@ public class JsonStream extends OutputStream {
     public final void writeArrayStart() throws IOException {
         indention += currentConfig().indentionStep();
         write('[');
-        writeIndention();
     }
 
     public final void writeMore() throws IOException {

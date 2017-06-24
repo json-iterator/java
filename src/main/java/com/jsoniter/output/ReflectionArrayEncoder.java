@@ -28,6 +28,7 @@ class ReflectionArrayEncoder implements Encoder.ReflectionEncoder {
             return;
         }
         stream.writeArrayStart();
+        stream.writeIndention();
         stream.writeVal(compTypeLiteral, Array.get(obj, 0));
         for (int i = 1; i < len; i++) {
             stream.writeMore();

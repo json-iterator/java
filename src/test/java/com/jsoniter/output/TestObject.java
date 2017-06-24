@@ -96,6 +96,13 @@ public class TestObject extends TestCase {
         stream.writeVal(obj);
         stream.close();
         assertEquals("{'field1':'HELLO'}".replace('\'', '"'), baos.toString());
+        Config cfg = new Config.Builder()
+                .encodingMode(EncodingMode.DYNAMIC_MODE)
+                .indentionStep(2)
+                .build();
+        assertEquals("{\n" +
+                "  \"field1\": \"HELLO\"\n" +
+                "}", JsonStream.serialize(cfg, obj));
     }
 
     public static class TestObject6 {
@@ -296,7 +303,7 @@ public class TestObject extends TestCase {
                 .indentionStep(2)
                 .encodingMode(EncodingMode.REFLECTION_MODE)
                 .build();
-        output = JsonStream.serialize(dynamicCfg, obj);
+        output = JsonStream.serialize(reflectionCfg, obj);
         assertEquals("{\n" +
                 "  \"field1\": \"1\",\n" +
                 "  \"field2\": \"2\",\n" +
@@ -320,5 +327,20 @@ public class TestObject extends TestCase {
                 .encodingMode(EncodingMode.DYNAMIC_MODE)
                 .build();
         assertEquals("{}", JsonStream.serialize(config, new TestObject15()));
+    }
+
+    public static class TestObject16 {
+        @JsonProperty(omitNull = false)
+        public Integer i;
+    }
+
+    public void test_missing_notFirst() {
+        Config cfg = JsoniterSpi.getCurrentConfig().copyBuilder()
+            .indentionStep(2)
+            .encodingMode(EncodingMode.DYNAMIC_MODE)
+            .build();
+        assertEquals("{\n" +
+                "  \"i\": null\n" +
+                "}", JsonStream.serialize(cfg, new TestObject16()));
     }
 }

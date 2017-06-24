@@ -1,5 +1,6 @@
 package com.jsoniter.output;
 
+import com.jsoniter.spi.Config;
 import com.jsoniter.spi.TypeLiteral;
 import junit.framework.TestCase;
 
@@ -115,5 +116,37 @@ public class TestArray extends TestCase {
 
     public void test_default_empty_collection() throws IOException {
         assertEquals("[]", JsonStream.serialize(Collections.emptySet()));
+    }
+
+    public void test_indention() {
+        Config cfg = new Config.Builder()
+                .encodingMode(EncodingMode.REFLECTION_MODE)
+                .indentionStep(2)
+                .build();
+        assertEquals("[\n" +
+                "  1,\n" +
+                "  2\n" +
+                "]", JsonStream.serialize(cfg, new int[]{1, 2}));
+        cfg = new Config.Builder()
+                .encodingMode(EncodingMode.DYNAMIC_MODE)
+                .indentionStep(2)
+                .build();
+        assertEquals("[\n" +
+                "  1,\n" +
+                "  2\n" +
+                "]", JsonStream.serialize(cfg, new int[]{1, 2}));
+    }
+
+    public void test_indention_with_empty_array() {
+        Config cfg = new Config.Builder()
+                .encodingMode(EncodingMode.REFLECTION_MODE)
+                .indentionStep(2)
+                .build();
+        assertEquals("[]", JsonStream.serialize(cfg, new int[]{}));
+        cfg = new Config.Builder()
+                .encodingMode(EncodingMode.DYNAMIC_MODE)
+                .indentionStep(2)
+                .build();
+        assertEquals("[]", JsonStream.serialize(cfg, new int[]{}));
     }
 }

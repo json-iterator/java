@@ -269,10 +269,10 @@ class CodegenImplNative {
     }
 
     public static void genWriteOp(CodegenResult ctx, String code, Type valueType, boolean isNullable, boolean isCollectionValueNullable) {
-        boolean supportBuffer = JsoniterSpi.getCurrentConfig().indentionStep() == 0;
+        boolean noIndention = JsoniterSpi.getCurrentConfig().indentionStep() == 0;
         String cacheKey = TypeLiteral.create(valueType).getEncoderCacheKey();
         if (JsoniterSpi.getEncoder(cacheKey) == null) {
-            if (supportBuffer && !isNullable && String.class == valueType) {
+            if (noIndention && !isNullable && String.class == valueType) {
                 ctx.buffer('"');
                 ctx.append(String.format("com.jsoniter.output.CodegenAccess.writeStringWithoutQuote((java.lang.String)%s, stream);", code));
                 ctx.buffer('"');
@@ -318,12 +318,21 @@ class CodegenImplNative {
         }
     }
     public static CodegenResult genEnum(Class clazz) {
+        boolean noIndention = JsoniterSpi.getCurrentConfig().indentionStep() == 0;
         CodegenResult ctx = new CodegenResult();
         ctx.append(String.format("public static void encode_(java.lang.Object obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {", clazz.getCanonicalName()));
         ctx.append("if (obj == null) { stream.writeNull(); return; }");
-        ctx.buffer('"');
+        if (noIndention) {
+            ctx.buffer('"');
+        } else {
+            ctx.append("stream.write('\"');");
+        }
         ctx.append("stream.writeRaw(obj.toString());");
-        ctx.buffer('"');
+        if (noIndention) {
+            ctx.buffer('"');
+        } else {
+            ctx.append("stream.write('\"');");
+        }
         ctx.append("}");
         return ctx;
     }

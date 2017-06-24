@@ -34,6 +34,7 @@ class ReflectionCollectionEncoder implements Encoder.ReflectionEncoder {
             return;
         }
         stream.writeArrayStart();
+        stream.writeIndention();
         stream.writeVal(compTypeLiteral, iter.next());
         while (iter.hasNext()) {
             stream.writeMore();
