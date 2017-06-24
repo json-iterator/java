@@ -108,7 +108,7 @@ public class TestNested extends TestCase {
     }
 
     public static class TestObject3 {
-        @JsonProperty(omitNull = false)
+        @JsonProperty(defaultValueToOmit = "void")
         public TestObject3 reference;
     }
 

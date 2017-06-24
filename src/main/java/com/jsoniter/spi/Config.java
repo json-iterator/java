@@ -14,6 +14,16 @@ public class Config extends EmptyExtension {
     private static volatile Map<String, Config> configs = new HashMap<String, Config>();
     private volatile Map<Type, String> decoderCacheKeys = new HashMap<Type, String>();
     private volatile Map<Type, String> encoderCacheKeys = new HashMap<Type, String>();
+    private final static Map<Class, OmitValue> primitiveOmitValues = new HashMap<Class, OmitValue>() {{
+        put(boolean.class, new OmitValue.False());
+        put(char.class, new OmitValue.ZeroChar());
+        put(byte.class, new OmitValue.ZeroByte());
+        put(short.class, new OmitValue.ZeroShort());
+        put(int.class, new OmitValue.ZeroInt());
+        put(long.class, new OmitValue.ZeroLong());
+        put(float.class, new OmitValue.ZeroFloat());
+        put(double.class, new OmitValue.ZeroDouble());
+    }};
 
     protected Config(String configName, Builder builder) {
         this.configName = configName;
@@ -76,6 +86,10 @@ public class Config extends EmptyExtension {
         return builder.indentionStep;
     }
 
+    public boolean omitDefaultValue() {
+        return builder.omitDefaultValue;
+    }
+
     public boolean escapeUnicode() {
         return builder.escapeUnicode;
     }
@@ -90,6 +104,7 @@ public class Config extends EmptyExtension {
         private EncodingMode encodingMode;
         private int indentionStep;
         private boolean escapeUnicode = true;
+        private boolean omitDefaultValue = false;
 
         public Builder() {
             String envMode = System.getenv("JSONITER_DECODING_MODE");
@@ -118,6 +133,11 @@ public class Config extends EmptyExtension {
 
         public Builder indentionStep(int indentionStep) {
             this.indentionStep = indentionStep;
+            return this;
+        }
+
+        public Builder omitDefaultValue(boolean omitDefaultValue) {
+            this.omitDefaultValue = omitDefaultValue;
             return this;
         }
 
@@ -159,6 +179,7 @@ public class Config extends EmptyExtension {
             if (indentionStep != builder.indentionStep) return false;
             if (escapeUnicode != builder.escapeUnicode) return false;
             if (decodingMode != builder.decodingMode) return false;
+            if (omitDefaultValue != builder.omitDefaultValue) return false;
             return encodingMode == builder.encodingMode;
         }
 
@@ -168,6 +189,7 @@ public class Config extends EmptyExtension {
             result = 31 * result + (encodingMode != null ? encodingMode.hashCode() : 0);
             result = 31 * result + indentionStep;
             result = 31 * result + (escapeUnicode ? 1 : 0);
+            result = 31 * result + (omitDefaultValue ? 1 : 0);
             return result;
         }
 
@@ -177,6 +199,7 @@ public class Config extends EmptyExtension {
             builder.decodingMode = decodingMode;
             builder.indentionStep = indentionStep;
             builder.escapeUnicode = escapeUnicode;
+            builder.omitDefaultValue = omitDefaultValue;
             return builder;
         }
     }
@@ -349,6 +372,7 @@ public class Config extends EmptyExtension {
     }
 
     private void updateBindings(ClassDescriptor desc) {
+        boolean globalOmitDefault = JsoniterSpi.getCurrentConfig().omitDefaultValue();
         for (Binding binding : desc.allBindings()) {
             JsonIgnore jsonIgnore = getJsonIgnore(binding.annotations);
             if (jsonIgnore != null) {
@@ -364,6 +388,9 @@ public class Config extends EmptyExtension {
             if (jsonUnwrapper != null) {
                 binding.fromNames = new String[0];
                 binding.toNames = new String[0];
+            }
+            if (globalOmitDefault) {
+                binding.defaultValueToOmit = createOmitValue(binding.valueType);
             }
             JsonProperty jsonProperty = getJsonProperty(binding.annotations);
             if (jsonProperty != null) {
@@ -388,7 +415,10 @@ public class Config extends EmptyExtension {
         binding.asMissingWhenNotPresent = jsonProperty.required();
         binding.isNullable = jsonProperty.nullable();
         binding.isCollectionValueNullable = jsonProperty.collectionValueNullable();
-        binding.shouldOmitNull = jsonProperty.omitNull();
+        String defaultValueToOmit = jsonProperty.defaultValueToOmit();
+        if (!defaultValueToOmit.isEmpty()) {
+            binding.defaultValueToOmit = OmitValue.Parsed.parse(binding.valueType, defaultValueToOmit);
+        }
         String altName = jsonProperty.value();
         if (!altName.isEmpty()) {
             binding.name = altName;
@@ -417,6 +447,14 @@ public class Config extends EmptyExtension {
             binding.valueType = GenericsHelper.useImpl(binding.valueType, jsonProperty.implementation());
             binding.valueTypeLiteral = TypeLiteral.create(binding.valueType);
         }
+    }
+
+    protected OmitValue createOmitValue(Type valueType) {
+        OmitValue omitValue = primitiveOmitValues.get(valueType);
+        if (omitValue != null) {
+            return omitValue;
+        }
+        return new OmitValue.Null();
     }
 
     protected JsonWrapper getJsonWrapper(Annotation[] annotations) {

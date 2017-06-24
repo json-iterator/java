@@ -60,7 +60,11 @@ public @interface JsonProperty {
     boolean collectionValueNullable() default true;
 
     /**
-     * @return if true, do not write the field altogether if value is null
+     * @return the default value to omit
+     * null, to omit null value
+     * \"xxx\", to omit string value
+     * 123, to omit number
+     * void, to always encode this field, ignore global config
      */
-    boolean omitNull() default true;
+    String defaultValueToOmit() default "";
 }

@@ -107,9 +107,6 @@ public class ClassDescriptor {
             if (binding.encoder != null) {
                 JsoniterSpi.addNewEncoder(binding.encoderCacheKey(), binding.encoder);
             }
-            if (!binding.isNullable) {
-                binding.shouldOmitNull = false;
-            }
         }
         return desc;
     }
