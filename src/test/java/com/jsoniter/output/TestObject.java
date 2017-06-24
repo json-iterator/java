@@ -321,4 +321,19 @@ public class TestObject extends TestCase {
                 .build();
         assertEquals("{}", JsonStream.serialize(config, new TestObject15()));
     }
+
+    public static class TestObject16 {
+        @JsonProperty(omitNull = false)
+        public Integer i;
+    }
+
+    public void test_missing_notFirst() {
+        Config cfg = JsoniterSpi.getCurrentConfig().copyBuilder()
+            .indentionStep(2)
+            .encodingMode(EncodingMode.DYNAMIC_MODE)
+            .build();
+        assertEquals("{\n" +
+                "  \"i\": null\n" +
+                "}", JsonStream.serialize(cfg, new TestObject16()));
+    }
 }

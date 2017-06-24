@@ -41,7 +41,13 @@ class CodegenImplObject {
             if (noIndention) {
                 ctx.buffer('}');
             } else {
-                ctx.append("if (notFirst) { stream.writeObjectEnd(); } else { stream.write('}'); }");
+                if (notFirst == 1) { // definitely not first
+                    ctx.append("stream.writeObjectEnd();");
+                } else if (notFirst == 2) { // // maybe not first, previous field is omitNull
+                    ctx.append("if (notFirst) { stream.writeObjectEnd(); } else { stream.write('}'); }");
+                } else { // this is the first
+                    ctx.append("stream.write('}');");
+                }
             }
         } else {
             ctx.buffer("{}");
