@@ -3,6 +3,7 @@ package com.jsoniter.output;
 import com.jsoniter.annotation.JsonIgnore;
 import com.jsoniter.annotation.JsonProperty;
 import com.jsoniter.spi.Config;
+import com.jsoniter.spi.JsoniterSpi;
 import com.jsoniter.spi.TypeLiteral;
 import junit.framework.TestCase;
 
@@ -249,5 +250,16 @@ public class TestObject extends TestCase {
         stream.writeVal(obj);
         stream.close();
         assertEquals("{\"field1\":0}", baos.toString());
+    }
+
+    private static class TestObject13 {
+    }
+
+    public void test_private_class() {
+        EncodingMode encodingMode = JsoniterSpi.getCurrentConfig().encodingMode();
+        if (EncodingMode.REFLECTION_MODE.equals(encodingMode)) {
+            return;
+        }
+        JsonStream.serialize(new TestObject13());
     }
 }
