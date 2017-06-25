@@ -307,11 +307,12 @@ public class ClassDescriptor {
             try {
                 String fromName = translateSetterName(methodName);
                 Binding field = allFields.get(fromName);
-                if (!(field == null) && field.isTransient) {
-                    continue;
-                }
                 Binding setter = new Binding(classInfo, lookup, paramTypes[0]);
-                setter.fromNames = new String[]{fromName};
+                if (!(field == null) && field.isTransient) {
+                    setter.fromNames = new String[0];
+                } else {
+                    setter.fromNames = new String[]{fromName};
+                }
                 setter.name = fromName;
                 setter.method = method;
                 setter.annotations = method.getAnnotations();
@@ -370,12 +371,13 @@ public class ClassDescriptor {
             char[] fromNameChars = toName.toCharArray();
             fromNameChars[0] = Character.toLowerCase(fromNameChars[0]);
             toName = new String(fromNameChars);
+            Binding getter = new Binding(classInfo, lookup, method.getGenericReturnType());
             Binding field = allFields.get(toName);
             if (!(field == null) && field.isTransient) {
-                continue;
+                getter.toNames = new String[0];
+            } else {
+                getter.toNames = new String[]{toName};
             }
-            Binding getter = new Binding(classInfo, lookup, method.getGenericReturnType());
-            getter.toNames = new String[]{toName};
             getter.name = toName;
             getter.method = method;
             getter.annotations = method.getAnnotations();
