@@ -30,9 +30,10 @@ public class ClassDescriptor {
         desc.clazz = clazz;
         desc.lookup = lookup;
         desc.ctor = getCtor(clazz);
-        desc.fields = getFields(lookup, classInfo, includingPrivate);
-        desc.setters = getSetters(lookup, classInfo, includingPrivate);
+        Map<String, Binding> allFields = getFields(lookup, classInfo, includingPrivate);
+        desc.setters = getSetters(lookup, classInfo, includingPrivate, allFields);
         desc.getters = new ArrayList<Binding>();
+        desc.fields = omitTransient(allFields);
         desc.bindingTypeWrappers = new ArrayList<WrapperDescriptor>();
         desc.keyValueTypeWrappers = new ArrayList<Method>();
         desc.unwrappers = new ArrayList<UnwrapperDescriptor>();
@@ -85,8 +86,9 @@ public class ClassDescriptor {
         desc.classInfo = classInfo;
         desc.clazz = clazz;
         desc.lookup = lookup;
-        desc.fields = getFields(lookup, classInfo, includingPrivate);
-        desc.getters = getGetters(lookup, classInfo, includingPrivate);
+        Map<String, Binding> allFields = getFields(lookup, classInfo, includingPrivate);
+        desc.getters = getGetters(lookup, classInfo, includingPrivate, allFields);
+        desc.fields = omitTransient(allFields);
         desc.bindingTypeWrappers = new ArrayList<WrapperDescriptor>();
         desc.keyValueTypeWrappers = new ArrayList<Method>();
         desc.unwrappers = new ArrayList<UnwrapperDescriptor>();
@@ -109,6 +111,16 @@ public class ClassDescriptor {
             }
         }
         return desc;
+    }
+
+    private static List<Binding> omitTransient(Map<String, Binding> map) {
+        List<Binding> out = new ArrayList<Binding>();
+        for (Binding binding : map.values()) {
+            if (!binding.isTransient) {
+                out.add(binding);
+            }
+        }
+        return out;
     }
 
     private static void decodingDeduplicate(ClassDescriptor desc) {
@@ -223,13 +235,10 @@ public class ClassDescriptor {
         return cctor;
     }
 
-    private static List<Binding> getFields(Map<String, Type> lookup, ClassInfo classInfo, boolean includingPrivate) {
-        ArrayList<Binding> bindings = new ArrayList<Binding>();
+    private static Map<String, Binding> getFields(Map<String, Type> lookup, ClassInfo classInfo, boolean includingPrivate) {
+        Map<String, Binding> output = new LinkedHashMap<String, Binding>();// To ensure fields order
         for (Field field : getAllFields(classInfo.clazz, includingPrivate)) {
             if (Modifier.isStatic(field.getModifiers())) {
-                continue;
-            }
-            if (Modifier.isTransient(field.getModifiers())) {
                 continue;
             }
             if (!includingPrivate && !Modifier.isPublic(field.getType().getModifiers())) {
@@ -238,13 +247,13 @@ public class ClassDescriptor {
             if (includingPrivate) {
                 field.setAccessible(true);
             }
-            Binding binding = createBindingFromField(lookup, classInfo, field);
-            bindings.add(binding);
+            Binding binding = createBindingFromField(lookup, classInfo, field, Modifier.isTransient(field.getModifiers()));
+            output.put(binding.name, binding);
         }
-        return bindings;
+        return output;
     }
 
-    private static Binding createBindingFromField(Map<String, Type> lookup, ClassInfo classInfo, Field field) {
+    private static Binding createBindingFromField(Map<String, Type> lookup, ClassInfo classInfo, Field field, boolean isTransient) {
         try {
             Binding binding = new Binding(classInfo, lookup, field.getGenericType());
             binding.fromNames = new String[]{field.getName()};
@@ -252,6 +261,7 @@ public class ClassDescriptor {
             binding.name = field.getName();
             binding.annotations = field.getAnnotations();
             binding.field = field;
+            binding.isTransient = isTransient;
             return binding;
         } catch (Exception e) {
             throw new JsonException("failed to create binding for field: " + field, e);
@@ -271,7 +281,7 @@ public class ClassDescriptor {
         return allFields;
     }
 
-    private static List<Binding> getSetters(Map<String, Type> lookup, ClassInfo classInfo, boolean includingPrivate) {
+    private static List<Binding> getSetters(Map<String, Type> lookup, ClassInfo classInfo, boolean includingPrivate, Map<String, Binding> allFields) {
         ArrayList<Binding> setters = new ArrayList<Binding>();
         for (Method method : getAllMethods(classInfo.clazz, includingPrivate)) {
             if (Modifier.isStatic(method.getModifiers())) {
@@ -296,12 +306,17 @@ public class ClassDescriptor {
             }
             try {
                 String fromName = translateSetterName(methodName);
-                Binding binding = new Binding(classInfo, lookup, paramTypes[0]);
-                binding.fromNames = new String[]{fromName};
-                binding.name = fromName;
-                binding.method = method;
-                binding.annotations = method.getAnnotations();
-                setters.add(binding);
+                Binding field = allFields.get(fromName);
+                Binding setter = new Binding(classInfo, lookup, paramTypes[0]);
+                if (!(field == null) && field.isTransient) {
+                    setter.fromNames = new String[0];
+                } else {
+                    setter.fromNames = new String[]{fromName};
+                }
+                setter.name = fromName;
+                setter.method = method;
+                setter.annotations = method.getAnnotations();
+                setters.add(setter);
             } catch (Exception e) {
                 throw new JsonException("failed to create binding from setter: " + method, e);
             }
@@ -333,7 +348,7 @@ public class ClassDescriptor {
         return fromName;
     }
 
-    private static List<Binding> getGetters(Map<String, Type> lookup, ClassInfo classInfo, boolean includingPrivate) {
+    private static List<Binding> getGetters(Map<String, Type> lookup, ClassInfo classInfo, boolean includingPrivate, Map<String, Binding> allFields) {
         ArrayList<Binding> getters = new ArrayList<Binding>();
         for (Method method : getAllMethods(classInfo.clazz, includingPrivate)) {
             if (Modifier.isStatic(method.getModifiers())) {
@@ -357,7 +372,12 @@ public class ClassDescriptor {
             fromNameChars[0] = Character.toLowerCase(fromNameChars[0]);
             toName = new String(fromNameChars);
             Binding getter = new Binding(classInfo, lookup, method.getGenericReturnType());
-            getter.toNames = new String[]{toName};
+            Binding field = allFields.get(toName);
+            if (!(field == null) && field.isTransient) {
+                getter.toNames = new String[0];
+            } else {
+                getter.toNames = new String[]{toName};
+            }
             getter.name = toName;
             getter.method = method;
             getter.annotations = method.getAnnotations();

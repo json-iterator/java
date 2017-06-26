@@ -25,6 +25,7 @@ public class Binding {
     public boolean asExtraWhenPresent;
     public boolean isNullable = true;
     public boolean isCollectionValueNullable = true;
+    public boolean isTransient;
     public OmitValue defaultValueToOmit;
     // then this property will not be unknown
     // but we do not want to bind it anywhere
