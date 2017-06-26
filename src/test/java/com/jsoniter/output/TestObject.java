@@ -417,4 +417,17 @@ public class TestObject extends TestCase {
                 .build();
         assertEquals("{}", JsonStream.serialize(cfg, new TestObject18()));
     }
+
+    public static class TestObject19 {
+        public transient int hello;
+
+        public int getHello() {
+            return hello;
+        }
+    }
+
+    public void test_transient_field_getter() {
+        String output = JsonStream.serialize(new TestObject19());
+        assertEquals("{}", output);
+    }
 }
