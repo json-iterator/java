@@ -1,6 +1,8 @@
 language: java
 sudo: false # faster builds
 
+install: true
+
 script: "mvn cobertura:cobertura"
 
 after_success:
