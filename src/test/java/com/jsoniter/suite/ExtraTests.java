@@ -5,7 +5,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
-@Suite.SuiteClasses({TestBase64.class, TestJdkDatetime.class, TestNamingStrategy.class, TestPreciseFloat.class})
+@Suite.SuiteClasses({TestBase64.class, TestNamingStrategy.class, TestPreciseFloat.class})
 public class ExtraTests {
 
 }
