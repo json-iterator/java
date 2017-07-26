@@ -181,32 +181,30 @@ public class ClassDescriptor {
         }
     }
 
-    // TODO: do not remove, set toNames to []
     private static void encodingDeduplicate(ClassDescriptor desc) {
-        HashMap<String, Binding> byName = new HashMap<String, Binding>();
+        HashMap<String, Binding> byToName = new HashMap<String, Binding>();
+        HashMap<String, Binding> byFieldName = new HashMap<String, Binding>();
         for (Binding field : desc.fields) {
             for (String toName : field.toNames) {
-                if (byName.containsKey(toName)) {
+                if (byToName.containsKey(toName)) {
                     throw new JsonException("field encode to same name: " + toName);
                 }
-                byName.put(toName, field);
+                byToName.put(toName, field);
             }
+            byFieldName.put(field.name, field);
         }
         for (Binding getter : new ArrayList<Binding>(desc.getters)) {
+            Binding existing = byFieldName.get(getter.name);
+            if (existing != null) {
+                existing.toNames = new String[0];
+            }
             for (String toName : getter.toNames) {
-                Binding existing = byName.get(toName);
+                existing = byToName.get(toName);
                 if (existing == null) {
-                    byName.put(toName, getter);
+                    byToName.put(toName, getter);
                     continue;
                 }
-                if (desc.fields.remove(existing)) {
-                    continue;
-                }
-                if (existing.method != null && existing.method.getName().equals(getter.method.getName())) {
-                    // inherited interface getter
-                    desc.getters.remove(getter);
-                    continue;
-                }
+                existing.toNames = new String[0];
                 throw new JsonException("field encode to same name: " + toName);
             }
         }

@@ -36,4 +36,18 @@ public class TestAnnotationJsonProperty extends TestCase {
         String output = JsonStream.serialize(obj);
         assertEquals("{\"field1\":\"100\"}", output);
     }
+
+    public static class TestObject3 {
+        public String field1 = "hello";
+
+        @JsonProperty(to = {"field-1"})
+        public String getField1() {
+            return field1;
+        }
+    }
+
+    public void test_getter() throws IOException {
+        String output = JsonStream.serialize(new TestObject3());
+        assertEquals("{\"field-1\":\"hello\"}", output);
+    }
 }
