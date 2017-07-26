@@ -205,7 +205,6 @@ public class ClassDescriptor {
                     continue;
                 }
                 existing.toNames = new String[0];
-                throw new JsonException("field encode to same name: " + toName);
             }
         }
     }
