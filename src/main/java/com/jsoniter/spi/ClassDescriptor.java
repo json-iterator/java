@@ -26,7 +26,7 @@ public class ClassDescriptor {
 
     public static ClassDescriptor getDecodingClassDescriptor(ClassInfo classInfo, boolean includingPrivate) {
         Class clazz = classInfo.clazz;
-        Map<String, Type> lookup = collectTypeVariableLookup(clazz);
+        Map<String, Type> lookup = collectTypeVariableLookup(classInfo.type);
         ClassDescriptor desc = new ClassDescriptor();
         desc.classInfo = classInfo;
         desc.clazz = clazz;
@@ -82,7 +82,7 @@ public class ClassDescriptor {
 
     public static ClassDescriptor getEncodingClassDescriptor(ClassInfo classInfo, boolean includingPrivate) {
         Class clazz = classInfo.clazz;
-        Map<String, Type> lookup = collectTypeVariableLookup(clazz);
+        Map<String, Type> lookup = collectTypeVariableLookup(classInfo.type);
         ClassDescriptor desc = new ClassDescriptor();
         desc.classInfo = classInfo;
         desc.clazz = clazz;
