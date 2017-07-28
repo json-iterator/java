@@ -132,12 +132,8 @@ class StreamImplString {
         if (escapeUnicode) {
             for (; i < valLen; i++) {
                 int c = val.charAt(i);
-                if (c > 125 || c < 32) {
-                    byte b4 = (byte) (c & 0xf);
-                    byte b3 = (byte) (c >> 4 & 0xf);
-                    byte b2 = (byte) (c >> 8 & 0xf);
-                    byte b1 = (byte) (c >> 12 & 0xf);
-                    stream.write((byte) '\\', (byte) 'u', ITOA[b1], ITOA[b2], ITOA[b3], ITOA[b4]);
+                if (c > 125) {
+                    writeAsSlashU(stream, c);
                 } else {
                     writeAsciiChar(stream, c);
                 }
@@ -223,7 +219,19 @@ class StreamImplString {
                 stream.write((byte) '\\', (byte) 't');
                 break;
             default:
-                stream.write(c);
+                if (c < 32) {
+                    writeAsSlashU(stream, c);
+                } else {
+                    stream.write(c);
+                }
         }
+    }
+
+    private static void writeAsSlashU(JsonStream stream, int c) throws IOException {
+        byte b4 = (byte) (c & 0xf);
+        byte b3 = (byte) (c >> 4 & 0xf);
+        byte b2 = (byte) (c >> 8 & 0xf);
+        byte b1 = (byte) (c >> 12 & 0xf);
+        stream.write((byte) '\\', (byte) 'u', ITOA[b1], ITOA[b2], ITOA[b3], ITOA[b4]);
     }
 }
