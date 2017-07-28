@@ -191,6 +191,9 @@ class CodegenImplObjectStrict {
     }
 
     private static String updateBindingSetOp(String rendered, Binding binding) {
+        if (binding.fromNames.length == 0) {
+            return rendered;
+        }
         while (true) {
             String marker = "_" + binding.name + "_";
             int start = rendered.indexOf(marker);

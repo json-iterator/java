@@ -3,9 +3,6 @@ package com.jsoniter;
 import com.jsoniter.annotation.JsonProperty;
 import com.jsoniter.any.Any;
 import com.jsoniter.fuzzy.MaybeEmptyArrayDecoder;
-import com.jsoniter.output.EncodingMode;
-import com.jsoniter.output.JsonStream;
-import com.jsoniter.spi.Config;
 import com.jsoniter.spi.EmptyExtension;
 import com.jsoniter.spi.JsonException;
 import com.jsoniter.spi.JsoniterSpi;
@@ -38,7 +35,7 @@ public class TestObject extends TestCase {
         assertNull(simpleObj.field1);
         iter.reset(iter.buf);
         Object obj = iter.read(Object.class);
-        assertEquals(0, ((Map)obj).size());
+        assertEquals(0, ((Map) obj).size());
         iter.reset(iter.buf);
         Any any = iter.readAny();
         assertEquals(0, any.size());
@@ -58,7 +55,7 @@ public class TestObject extends TestCase {
         assertEquals("hello", any.toString("field1"));
         assertEquals(ValueType.INVALID, any.get("field2").valueType());
         iter.reset(iter.buf);
-        assertEquals("hello", ((Map)iter.read()).get("field1"));
+        assertEquals("hello", ((Map) iter.read()).get("field1"));
     }
 
     public void test_two_fields() throws IOException {
@@ -168,6 +165,7 @@ public class TestObject extends TestCase {
             WORLD,
             WOW
         }
+
         public MyEnum field1;
     }
 
@@ -224,6 +222,7 @@ public class TestObject extends TestCase {
 
     public static class TestObject7 {
         public PrivateSub field1;
+
         public void setFieldXXX(PrivateSub obj) {
         }
     }
@@ -231,6 +230,20 @@ public class TestObject extends TestCase {
     public void test_private_ref() throws IOException {
         TestObject7 obj = JsonIterator.deserialize("{}", TestObject7.class);
         assertNull(obj.field1);
+    }
+
+    public static class TestObject8 {
+        public String field1;
+
+        @JsonProperty(from = {"field-1"})
+        public void setField1(String obj) {
+            field1 = "!!!" + obj;
+        }
+    }
+
+    public void test_setter_is_preferred() throws IOException {
+        TestObject8 obj = JsonIterator.deserialize("{\"field-1\":\"hello\"}", TestObject8.class);
+        assertEquals("!!!hello", obj.field1);
     }
 
     public void skip_object_lazy_any_to_string() {

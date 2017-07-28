@@ -113,71 +113,45 @@ public class ClassDescriptor {
         return desc;
     }
 
-    // TODO: do not remove, set fromNames to []
     private static void decodingDeduplicate(ClassDescriptor desc) {
-        HashMap<String, Binding> byName = new HashMap<String, Binding>();
+        HashMap<String, Binding> byFromName = new HashMap<String, Binding>();
+        HashMap<String, Binding> byFieldName = new HashMap<String, Binding>();
         for (Binding field : desc.fields) {
             for (String fromName : field.fromNames) {
-                if (byName.containsKey(fromName)) {
+                if (byFromName.containsKey(fromName)) {
                     throw new JsonException("field decode from same name: " + fromName);
                 }
-                byName.put(fromName, field);
+                byFromName.put(fromName, field);
             }
+            byFieldName.put(field.name, field);
         }
         ArrayList<Binding> iteratingSetters = new ArrayList<Binding>(desc.setters);
         Collections.reverse(iteratingSetters);
         for (Binding setter : iteratingSetters) {
-            for (String fromName : setter.fromNames) {
-                Binding existing = byName.get(fromName);
-                if (existing == null) {
-                    byName.put(fromName, setter);
-                    continue;
-                }
-                if (desc.fields.remove(existing)) {
-                    continue;
-                }
-                if (existing.method != null && existing.method.getName().equals(setter.method.getName())) {
-                    // inherited interface setter
-                    // iterate in reverse order, so that the setter from child class will be kept
-                    desc.setters.remove(existing);
-                    continue;
-                }
-                throw new JsonException("setter decode from same name: " + fromName);
+            Binding existing = byFieldName.get(setter.name);
+            if (existing != null) {
+                existing.fromNames = new String[0];
             }
+            deduplicateByFromName(byFromName, setter);
         }
         for (WrapperDescriptor wrapper : desc.bindingTypeWrappers) {
             for (Binding param : wrapper.parameters) {
-                for (String fromName : param.fromNames) {
-                    Binding existing = byName.get(fromName);
-                    if (existing == null) {
-                        byName.put(fromName, param);
-                        continue;
-                    }
-                    if (desc.fields.remove(existing)) {
-                        continue;
-                    }
-                    if (desc.setters.remove(existing)) {
-                        continue;
-                    }
-                    throw new JsonException("wrapper parameter decode from same name: " + fromName);
-                }
+                deduplicateByFromName(byFromName, param);
             }
         }
         for (Binding param : desc.ctor.parameters) {
-            for (String fromName : param.fromNames) {
-                Binding existing = byName.get(fromName);
-                if (existing == null) {
-                    byName.put(fromName, param);
-                    continue;
-                }
-                if (desc.fields.remove(existing)) {
-                    continue;
-                }
-                if (desc.setters.remove(existing)) {
-                    continue;
-                }
-                throw new JsonException("ctor parameter decode from same name: " + fromName);
+            deduplicateByFromName(byFromName, param);
+        }
+    }
+
+    private static void deduplicateByFromName(Map<String, Binding> byFromName, Binding setter) {
+        for (String fromName : setter.fromNames) {
+            Binding existing = byFromName.get(fromName);
+            if (existing == null) {
+                byFromName.put(fromName, setter);
+                continue;
             }
+            existing.fromNames = new String[0];
         }
     }
 

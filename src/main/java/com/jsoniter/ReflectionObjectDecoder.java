@@ -103,7 +103,7 @@ class ReflectionObjectDecoder {
             if (desc.bindingTypeWrappers.isEmpty()) {
                 return new OnlyField();
             } else {
-                return new WithSetter();
+                return new WithWrapper();
             }
         } else {
             return new WithCtor();
@@ -249,7 +249,7 @@ class ReflectionObjectDecoder {
         }
     }
 
-    public class WithSetter implements Decoder {
+    public class WithWrapper implements Decoder {
 
         @Override
         public Object decode(JsonIterator iter) throws IOException {
