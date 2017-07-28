@@ -132,7 +132,7 @@ class StreamImplString {
         if (escapeUnicode) {
             for (; i < valLen; i++) {
                 int c = val.charAt(i);
-                if (c > 125) {
+                if (c > 125 || c < 32) {
                     byte b4 = (byte) (c & 0xf);
                     byte b3 = (byte) (c >> 4 & 0xf);
                     byte b2 = (byte) (c >> 8 & 0xf);
