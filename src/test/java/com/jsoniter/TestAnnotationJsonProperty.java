@@ -23,8 +23,6 @@ public class TestAnnotationJsonProperty extends TestCase {
         assertEquals(100, obj.field1);
     }
 
-
-
     public static class TestObject2 {
         @JsonProperty(required = true)
         public int field1;
@@ -97,5 +95,30 @@ public class TestAnnotationJsonProperty extends TestCase {
         TestObject7 obj = iter.read(TestObject7.class);
         assertEquals(Arrays.asList(100), obj.values);
         assertEquals(LinkedList.class, obj.values.getClass());
+    }
+
+    public static class TestObject8 {
+        public String error;
+        @JsonProperty(value = "rs", required = true)
+        public boolean result;
+        @JsonProperty(value = "code",required = true)
+        public int code2;
+
+        @Override
+        public String toString() {
+            StringBuilder builder = new StringBuilder();
+            builder.append("code=");
+            builder.append(code2);
+            builder.append(" rs=");
+            builder.append(result);
+            return builder.toString();
+
+        }
+    }
+
+    public void test_required() throws IOException {
+        String test ="{\"rs\":true,\"code\":200}";
+        TestObject8 entity = JsonIterator.deserialize(test, TestObject8.class);
+        assertEquals(200, entity.code2);
     }
 }
