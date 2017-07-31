@@ -209,11 +209,10 @@ public class ClassDescriptor {
             if (includingPrivate) {
                 field.setAccessible(true);
             }
-            Binding binding = createBindingFromField(lookup, classInfo, field);
             if (isTransient(field.getModifiers())) {
-                binding.toNames = new String[0];
-                binding.fromNames = new String[0];
+                continue;
             }
+            Binding binding = createBindingFromField(lookup, classInfo, field);
             bindings.add(binding);
         }
         return bindings;
