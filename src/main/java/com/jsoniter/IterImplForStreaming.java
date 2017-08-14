@@ -543,6 +543,7 @@ class IterImplForStreaming {
                 byte c = iter.buf[i];
                 switch (c) {
                     case '-':
+                    case '+':
                     case '.':
                     case 'e':
                     case 'E':
