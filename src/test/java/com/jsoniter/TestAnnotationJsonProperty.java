@@ -3,6 +3,7 @@ package com.jsoniter;
 import com.jsoniter.annotation.JsonMissingProperties;
 import com.jsoniter.annotation.JsonProperty;
 import com.jsoniter.fuzzy.StringIntDecoder;
+import com.jsoniter.output.JsonStream;
 import junit.framework.TestCase;
 
 import java.io.IOException;
@@ -120,5 +121,24 @@ public class TestAnnotationJsonProperty extends TestCase {
         String test ="{\"rs\":true,\"code\":200}";
         TestObject8 entity = JsonIterator.deserialize(test, TestObject8.class);
         assertEquals(200, entity.code2);
+    }
+
+    public static class TestObject9 {
+        private String field1 = "hello";
+
+        public String getField1() {
+            return field1;
+        }
+
+        @JsonProperty("field-1")
+        public void setField1(String field1) {
+            this.field1 = field1;
+        }
+    }
+
+    public void test_getter_and_setter() throws IOException {
+        String test ="{\"field-1\":\"hi\"}";
+        TestObject9 entity = JsonIterator.deserialize(test, TestObject9.class);
+        assertEquals("hi", entity.getField1());
     }
 }

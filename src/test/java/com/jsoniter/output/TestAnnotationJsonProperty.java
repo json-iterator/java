@@ -40,7 +40,7 @@ public class TestAnnotationJsonProperty extends TestCase {
     public static class TestObject3 {
         public String field1 = "hello";
 
-        @JsonProperty(to = {"field-1"})
+        @JsonProperty("field-1")
         public String getField1() {
             return field1;
         }
@@ -48,6 +48,24 @@ public class TestAnnotationJsonProperty extends TestCase {
 
     public void test_getter() throws IOException {
         String output = JsonStream.serialize(new TestObject3());
+        assertEquals("{\"field-1\":\"hello\"}", output);
+    }
+
+    public static class TestObject4 {
+        private String field1 = "hello";
+
+        @JsonProperty("field-1")
+        public String getField1() {
+            return field1;
+        }
+
+        public void setField1(String field1) {
+            this.field1 = field1;
+        }
+    }
+
+    public void test_getter_and_setter() throws IOException {
+        String output = JsonStream.serialize(new TestObject4());
         assertEquals("{\"field-1\":\"hello\"}", output);
     }
 }
