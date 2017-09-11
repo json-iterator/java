@@ -9,7 +9,7 @@ import java.util.Arrays;
 
 class NotFoundAny extends Any {
 
-    private final JsonException exception;
+    protected final JsonException exception;
 
     public NotFoundAny(Object[] keys, int idx, Object obj) {
         this.exception = new JsonException(String.format("Value not found: failed to get path %s, because #%s section of the path ( %s ) not found in %s",

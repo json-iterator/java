@@ -181,6 +181,14 @@ public abstract class Any implements Iterable<Any> {
         return 0;
     }
 
+    public Any mustBeValid() {
+        if(this instanceof NotFoundAny) {
+            throw ((NotFoundAny) this).exception;
+        } else {
+            return this;
+        }
+    }
+
     public Set<String> keys() {
         return EMPTY_KEYS;
     }
