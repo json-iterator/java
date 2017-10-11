@@ -1,5 +1,6 @@
 package com.jsoniter;
 
+import com.jsoniter.annotation.JsonIgnore;
 import com.jsoniter.annotation.JsonProperty;
 import com.jsoniter.annotation.JsonWrapper;
 import com.jsoniter.annotation.JsonWrapperType;
@@ -46,5 +47,31 @@ public class TestAnnotationJsonWrapper extends TestCase {
         JsonIterator iter = JsonIterator.parse("{'field1': 100}".replace('\'', '"'));
         TestObject2 obj = iter.read(TestObject2.class);
         assertEquals(100, obj._field1);
+    }
+
+    public static class AAA {
+        @JsonProperty("name_1")
+        public String name;
+
+        @JsonIgnore
+        public String partA;
+        @JsonIgnore
+        public String partB;
+
+        @JsonWrapper
+        public void foreignFromJson(@JsonProperty(value = "parts", from ={"p2"}, required = false) String parts) {
+            if(parts == null){
+                return;
+            }
+            String[] ps = parts.split(",");
+            partA = ps[0];
+            partB = ps.length > 1 ? ps[1] : null;
+        }
+    }
+
+    public void test_issue_104() {
+        String jsonStr = "{'name':'aaa', 'name_1':'bbb'}".replace('\'', '\"');
+        AAA aaa = JsonIterator.deserialize(jsonStr, AAA.class);
+        assertEquals("bbb", aaa.name);
     }
 }

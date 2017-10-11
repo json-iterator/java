@@ -402,7 +402,10 @@ class ReflectionObjectDecoder {
         for (WrapperDescriptor wrapper : desc.bindingTypeWrappers) {
             Object[] args = new Object[wrapper.parameters.size()];
             for (int i = 0; i < wrapper.parameters.size(); i++) {
-                args[i] = temp[wrapper.parameters.get(i).idx];
+                Object arg = temp[wrapper.parameters.get(i).idx];
+                if (arg != NOT_SET) {
+                    args[i] = arg;
+                }
             }
             wrapper.method.invoke(obj, args);
         }
