@@ -1,5 +1,6 @@
 package com.jsoniter;
 
+import com.jsoniter.annotation.JsonCreator;
 import com.jsoniter.annotation.JsonMissingProperties;
 import com.jsoniter.annotation.JsonProperty;
 import com.jsoniter.fuzzy.StringIntDecoder;
@@ -140,5 +141,21 @@ public class TestAnnotationJsonProperty extends TestCase {
         String test ="{\"field-1\":\"hi\"}";
         TestObject9 entity = JsonIterator.deserialize(test, TestObject9.class);
         assertEquals("hi", entity.getField1());
+    }
+
+    public static class TestObject10 {
+        public int field;
+
+        @JsonCreator
+        public TestObject10(@JsonProperty("hello") int field) {
+            this.field = field;
+        }
+    }
+
+    public void test_creator_with_json_property() {
+        String input = "{\"hello\":100}";
+        TestObject10 obj = JsonIterator.deserialize(input, TestObject10.class);
+        assertEquals(100, obj.field);
+        assertEquals("{\"field\":100}", JsonStream.serialize(obj));
     }
 }

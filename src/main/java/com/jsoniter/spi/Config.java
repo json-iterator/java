@@ -343,6 +343,9 @@ public class Config extends EmptyExtension {
     }
 
     private void detectCtor(ClassDescriptor desc) {
+        if (desc.ctor == null) {
+            return;
+        }
         for (Constructor ctor : desc.clazz.getDeclaredConstructors()) {
             JsonCreator jsonCreator = getJsonCreator(ctor.getAnnotations());
             if (jsonCreator == null) {
