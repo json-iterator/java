@@ -377,8 +377,10 @@ public class Config extends EmptyExtension {
     private void updateBindings(ClassDescriptor desc) {
         boolean globalOmitDefault = JsoniterSpi.getCurrentConfig().omitDefaultValue();
         for (Binding binding : desc.allBindings()) {
+            boolean annotated = false;
             JsonIgnore jsonIgnore = getJsonIgnore(binding.annotations);
             if (jsonIgnore != null) {
+                annotated = true;
                 if (jsonIgnore.ignoreDecoding()) {
                     binding.fromNames = new String[0];
                 }
@@ -389,6 +391,7 @@ public class Config extends EmptyExtension {
             // map JsonUnwrapper is not getter
             JsonUnwrapper jsonUnwrapper = getJsonUnwrapper(binding.annotations);
             if (jsonUnwrapper != null) {
+                annotated = true;
                 binding.fromNames = new String[0];
                 binding.toNames = new String[0];
             }
@@ -397,19 +400,29 @@ public class Config extends EmptyExtension {
             }
             JsonProperty jsonProperty = getJsonProperty(binding.annotations);
             if (jsonProperty != null) {
+                annotated = true;
                 updateBindingWithJsonProperty(binding, jsonProperty);
             }
             if (getAnnotation(binding.annotations, JsonMissingProperties.class) != null) {
+                annotated = true;
                 // this binding will not bind from json
                 // instead it will be set by jsoniter with missing property names
                 binding.fromNames = new String[0];
                 desc.onMissingProperties = binding;
             }
             if (getAnnotation(binding.annotations, JsonExtraProperties.class) != null) {
+                annotated = true;
                 // this binding will not bind from json
                 // instead it will be set by jsoniter with extra properties
                 binding.fromNames = new String[0];
                 desc.onExtraProperties = binding;
+            }
+            if (annotated && binding.field != null) {
+                for (Binding setter : desc.setters) {
+                    if (binding.name.equals(setter.name)) {
+                        throw new JsonException("annotation should be marked on getter/setter for field: " + binding.name);
+                    }
+                }
             }
         }
     }
