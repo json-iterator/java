@@ -5,6 +5,7 @@ import com.jsoniter.annotation.JsonMissingProperties;
 import com.jsoniter.annotation.JsonProperty;
 import com.jsoniter.fuzzy.StringIntDecoder;
 import com.jsoniter.output.JsonStream;
+import com.jsoniter.spi.DecodingMode;
 import com.jsoniter.spi.JsonException;
 import junit.framework.TestCase;
 
@@ -145,11 +146,15 @@ public class TestAnnotationJsonProperty extends TestCase {
     }
 
     public static class TestObject10 {
-        public int field;
+        private int field;
 
         @JsonCreator
         public TestObject10(@JsonProperty("hello") int field) {
             this.field = field;
+        }
+
+        public int getField() {
+            return field;
         }
     }
 

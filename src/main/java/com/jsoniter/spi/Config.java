@@ -418,9 +418,11 @@ public class Config extends EmptyExtension {
                 desc.onExtraProperties = binding;
             }
             if (annotated && binding.field != null) {
-                for (Binding setter : desc.setters) {
-                    if (binding.name.equals(setter.name)) {
-                        throw new JsonException("annotation should be marked on getter/setter for field: " + binding.name);
+                if (desc.setters != null) {
+                    for (Binding setter : desc.setters) {
+                        if (binding.name.equals(setter.name)) {
+                            throw new JsonException("annotation should be marked on getter/setter for field: " + binding.name);
+                        }
                     }
                 }
             }
