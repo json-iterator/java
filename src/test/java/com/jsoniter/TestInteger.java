@@ -92,6 +92,16 @@ public class TestInteger extends TestCase {
             fail();
         } catch (JsonException e) {
         }
+        try {
+            JsonIterator.deserialize("001", long.class);
+            fail();
+        } catch (JsonException e) {
+        }
+        try {
+            JsonIterator.deserialize("001");
+            fail();
+        } catch (JsonException e) {
+        }
     }
 
     public void test_max_int() throws IOException {
