@@ -481,7 +481,7 @@ class IterImplForStreaming {
                     // overflow
                     if (value == Long.MIN_VALUE) {
                         // if there is more number following, subsequent read will fail anyway
-                        iter.head = i;
+                        iter.head = i + 1;
                         return value;
                     } else {
                         throw iter.reportError("readPositiveLong", "value is too large for long");
@@ -508,7 +508,7 @@ class IterImplForStreaming {
                     // overflow
                     if (value == Integer.MIN_VALUE) {
                         // if there is more number following, subsequent read will fail anyway
-                        iter.head = i;
+                        iter.head = i + 1;
                         return value;
                     } else {
                         throw iter.reportError("readPositiveInt", "value is too large for int");

@@ -94,6 +94,12 @@ public class TestInteger extends TestCase {
         }
     }
 
+    public void test_max_int() throws IOException {
+        int[] ints = JsonIterator.deserialize("[2147483647,-2147483648]", int[].class);
+        assertEquals(Integer.MAX_VALUE, ints[0]);
+        assertEquals(Integer.MIN_VALUE, ints[1]);
+    }
+
     private int parseInt(String input) throws IOException {
         if (isStreaming) {
             JsonIterator iter = JsonIterator.parse(new ByteArrayInputStream(input.getBytes()), 2);
