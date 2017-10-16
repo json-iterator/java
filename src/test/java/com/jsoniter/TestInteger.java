@@ -21,13 +21,21 @@ public class TestInteger extends TestCase {
     }
 
     public void test_positive_negative_int() throws IOException {
+        assertEquals(0, parseInt("0"));
+        assertEquals(1, parseInt("01"));
         assertEquals(4321, parseInt("4321"));
         assertEquals(54321, parseInt("54321"));
         assertEquals(654321, parseInt("654321"));
         assertEquals(7654321, parseInt("7654321"));
         assertEquals(87654321, parseInt("87654321"));
         assertEquals(987654321, parseInt("987654321"));
+        assertEquals(2147483647, parseInt("2147483647"));
+        assertEquals(2147483647, parseInt("002147483647"));
         assertEquals(-4321, parseInt("-4321"));
+        assertEquals(0, parseInt("-0"));
+        assertEquals(-2147483647, parseInt("-2147483647"));
+        assertEquals(-2147483648, parseInt("-2147483648"));
+        assertEquals(-2147483648, parseInt("-002147483648"));
     }
 
     public void test_positive_negative_long() throws IOException {
@@ -39,7 +47,12 @@ public class TestInteger extends TestCase {
         assertEquals(7654321L, parseLong("7654321"));
         assertEquals(87654321L, parseLong("87654321"));
         assertEquals(987654321L, parseLong("987654321"));
+        assertEquals(9223372036854775807L, parseLong("9223372036854775807"));
+        assertEquals(9223372036854775807L, parseLong("009223372036854775807"));
         assertEquals(-4321L, parseLong("-4321"));
+        assertEquals(-9223372036854775807L, parseLong("-9223372036854775807"));
+        assertEquals(-9223372036854775808L, parseLong("-9223372036854775808"));
+        assertEquals(-9223372036854775808L, parseLong("-009223372036854775808"));
     }
 
     public void test_max_min_int() throws IOException {
@@ -92,7 +105,9 @@ public class TestInteger extends TestCase {
             return iter.readInt();
         } else {
             JsonIterator iter = JsonIterator.parse(input);
-            return iter.readInt();
+            int v = iter.readInt();
+            assertEquals(input.length(), iter.head);
+            return v;
         }
     }
 
@@ -102,7 +117,9 @@ public class TestInteger extends TestCase {
             return iter.readLong();
         } else {
             JsonIterator iter = JsonIterator.parse(input);
-            return iter.readLong();
+            long v = iter.readLong();
+            assertEquals(input.length(), iter.head);
+            return v;
         }
     }
 }
