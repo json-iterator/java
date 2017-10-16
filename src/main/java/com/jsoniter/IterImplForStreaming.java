@@ -477,15 +477,8 @@ class IterImplForStreaming {
                     return value;
                 }
                 value = (value << 3) + (value << 1) + ind;
-                if (value < 0) {
-                    // overflow
-                    if (value == Long.MIN_VALUE) {
-                        // if there is more number following, subsequent read will fail anyway
-                        iter.head = i;
-                        return value;
-                    } else {
-                        throw iter.reportError("readPositiveLong", "value is too large for long");
-                    }
+                if (value < 0 && value != Long.MIN_VALUE) {
+                    throw iter.reportError("readPositiveLong", "value is too large for long");
                 }
             }
             if (!IterImpl.loadMore(iter)) {
@@ -504,15 +497,8 @@ class IterImplForStreaming {
                     return value;
                 }
                 value = (value << 3) + (value << 1) + ind;
-                if (value < 0) {
-                    // overflow
-                    if (value == Integer.MIN_VALUE) {
-                        // if there is more number following, subsequent read will fail anyway
-                        iter.head = i;
-                        return value;
-                    } else {
-                        throw iter.reportError("readPositiveInt", "value is too large for int");
-                    }
+                if (value < 0 && value != Integer.MIN_VALUE) {
+                    throw iter.reportError("readPositiveInt", "value is too large for int");
                 }
             }
             if (!IterImpl.loadMore(iter)) {

@@ -307,9 +307,6 @@ class IterImpl {
 
     static final int readPositiveInt(final JsonIterator iter, byte c) throws IOException {
         int ind = IterImplNumber.intDigits[c];
-        if (ind == 0) {
-            return 0;
-        }
         if (ind == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
             throw iter.reportError("readPositiveInt", "expect 0~9");
         }
