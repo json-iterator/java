@@ -87,8 +87,6 @@ class IterImplNumber {
         byte c = IterImpl.nextToken(iter);
         if (c == '-') {
             return -IterImpl.readPositiveInt(iter, IterImpl.readByte(iter));
-        } else if (c == '0') {
-            throw new JsonException("leading zero is invalid number");
         } else {
             return IterImpl.readPositiveInt(iter, c);
         }
@@ -98,8 +96,6 @@ class IterImplNumber {
         byte c = IterImpl.nextToken(iter);
         if (c == '-') {
             return -IterImpl.readPositiveLong(iter, IterImpl.readByte(iter));
-        } else if (c == '0') {
-            throw new JsonException("leading zero is invalid number");
         } else {
             return IterImpl.readPositiveLong(iter, c);
         }

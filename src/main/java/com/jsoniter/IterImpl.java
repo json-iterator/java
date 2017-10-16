@@ -308,10 +308,10 @@ class IterImpl {
     static final int readPositiveInt(final JsonIterator iter, byte c) throws IOException {
         int ind = IterImplNumber.intDigits[c];
         if (ind == 0) {
-            return 0;
+            throw iter.reportError("readPositiveInt", "leading zero is invalid for int");
         }
         if (ind == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
-            throw iter.reportError("readPositiveInt", "expect 0~9");
+            throw iter.reportError("readPositiveInt", "expect 1~9");
         }
         if (iter.tail - iter.head > 9) {
             int i = iter.head;
@@ -362,8 +362,11 @@ class IterImpl {
 
     static final long readPositiveLong(final JsonIterator iter, byte c) throws IOException {
         long ind = IterImplNumber.intDigits[c];
+        if (ind == 0) {
+            throw iter.reportError("readPositiveLong", "leading zero is invalid for long");
+        }
         if (ind == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
-            throw iter.reportError("readPositiveLong", "expect 0~9");
+            throw iter.reportError("readPositiveLong", "expect 1~9");
         }
         if (iter.tail - iter.head > 9) {
             int i = iter.head;
