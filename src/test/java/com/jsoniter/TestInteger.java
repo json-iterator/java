@@ -86,6 +86,14 @@ public class TestInteger extends TestCase {
         test_large_number();
     }
 
+    public void test_leading_zero() throws IOException {
+        try {
+            JsonIterator.deserialize("001", int.class);
+            fail();
+        } catch (JsonException e) {
+        }
+    }
+
     private int parseInt(String input) throws IOException {
         if (isStreaming) {
             JsonIterator iter = JsonIterator.parse(new ByteArrayInputStream(input.getBytes()), 2);
