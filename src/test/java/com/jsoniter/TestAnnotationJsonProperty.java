@@ -178,12 +178,10 @@ public class TestAnnotationJsonProperty extends TestCase {
         }
     }
 
-    public void test_should_throw_exception_when_json_property_on_field_when_getter_and_setter_present() {
+    public void test_field_and_getter_setter() {
         String input = "{\"hello\":100}";
-        try {
-            JsonIterator.deserialize(input, TestObject11.class);
-            fail();
-        } catch (JsonException e) {
-        }
+        TestObject11 obj = JsonIterator.deserialize(input, TestObject11.class);
+        assertEquals(100, obj.field);
     }
+
 }

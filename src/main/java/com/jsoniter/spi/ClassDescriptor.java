@@ -128,6 +128,9 @@ public class ClassDescriptor {
         ArrayList<Binding> iteratingSetters = new ArrayList<Binding>(desc.setters);
         Collections.reverse(iteratingSetters);
         for (Binding setter : iteratingSetters) {
+            if (setter.fromNames.length == 0) {
+                continue;
+            }
             Binding existing = byFieldName.get(setter.name);
             if (existing != null) {
                 existing.fromNames = new String[0];
@@ -168,6 +171,9 @@ public class ClassDescriptor {
             byFieldName.put(field.name, field);
         }
         for (Binding getter : new ArrayList<Binding>(desc.getters)) {
+            if (getter.toNames.length == 0) {
+                continue;
+            }
             Binding existing = byFieldName.get(getter.name);
             if (existing != null) {
                 existing.toNames = new String[0];

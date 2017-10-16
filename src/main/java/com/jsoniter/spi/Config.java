@@ -420,8 +420,15 @@ public class Config extends EmptyExtension {
             if (annotated && binding.field != null) {
                 if (desc.setters != null) {
                     for (Binding setter : desc.setters) {
-                        if (binding.name.equals(setter.name)) {
-                            throw new JsonException("annotation should be marked on getter/setter for field: " + binding.name);
+                        if (binding.field.getName().equals(setter.name)) {
+                            setter.fromNames = new String[0];
+                            setter.toNames = new String[0];
+                        }
+                    }
+                    for (Binding getter : desc.getters) {
+                        if (binding.field.getName().equals(getter.name)) {
+                            getter.fromNames = new String[0];
+                            getter.toNames = new String[0];
                         }
                     }
                 }
