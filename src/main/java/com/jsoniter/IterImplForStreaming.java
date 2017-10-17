@@ -476,9 +476,7 @@ class IterImplForStreaming {
                     iter.head = i;
                     return value;
                 }
-                if (value == 0) {
-                    throw iter.reportError("readLongSlowPath", "leading zero is invalid for long");
-                } else if (value == Long.MIN_VALUE) {
+                if (value == Long.MIN_VALUE) {
                     throw iter.reportError("readLongSlowPath", "value is too large for long");
                 }
                 value = (value << 3) + (value << 1) + ind;
@@ -501,9 +499,7 @@ class IterImplForStreaming {
                     iter.head = i;
                     return value;
                 }
-                if (value == 0) {
-                    throw iter.reportError("readIntSlowPath", "leading zero is invalid for int");
-                } else if (value == Integer.MIN_VALUE) {
+                if (value == Integer.MIN_VALUE) {
                     throw iter.reportError("readIntSlowPath", "value is too large for int");
                 }
                 value = (value << 3) + (value << 1) + ind;
