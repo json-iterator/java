@@ -1,13 +1,11 @@
 package com.jsoniter;
 
 import com.jsoniter.spi.JsonException;
-import joptsimple.internal.Strings;
 import junit.framework.TestCase;
 import org.junit.experimental.categories.Category;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.Arrays;
 
 public class TestString extends TestCase {
 

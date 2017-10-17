@@ -251,4 +251,13 @@ public class TestObject extends TestCase {
         any.asMap().put("field4", Any.wrap(4));
         assertEquals("{\"field1\":1,\"field3\":3,\"field2\":2,\"field4\":4}", any.toString());
     }
+
+    public static class TestObject9 {
+        public int 字段;
+    }
+
+    public void test_non_ascii_field() {
+        TestObject9 obj = JsonIterator.deserialize("{\"字段\":100}", TestObject9.class);
+        assertEquals(100, obj.字段);
+    }
 }
