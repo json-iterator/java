@@ -476,16 +476,14 @@ class IterImplForStreaming {
                     iter.head = i;
                     return value;
                 }
+                if (value == 0) {
+                    throw iter.reportError("readLongSlowPath", "leading zero is invalid for long");
+                } else if (value == Long.MIN_VALUE) {
+                    throw iter.reportError("readLongSlowPath", "value is too large for long");
+                }
                 value = (value << 3) + (value << 1) + ind;
-                if (value < 0) {
-                    // overflow
-                    if (value == Long.MIN_VALUE) {
-                        // if there is more number following, subsequent read will fail anyway
-                        iter.head = i + 1;
-                        return value;
-                    } else {
-                        throw iter.reportError("readPositiveLong", "value is too large for long");
-                    }
+                if (value < 0 && value != Long.MIN_VALUE) {
+                    throw iter.reportError("readLongSlowPath", "value is too large for long");
                 }
             }
             if (!IterImpl.loadMore(iter)) {
@@ -503,16 +501,14 @@ class IterImplForStreaming {
                     iter.head = i;
                     return value;
                 }
+                if (value == 0) {
+                    throw iter.reportError("readIntSlowPath", "leading zero is invalid for int");
+                } else if (value == Integer.MIN_VALUE) {
+                    throw iter.reportError("readIntSlowPath", "value is too large for int");
+                }
                 value = (value << 3) + (value << 1) + ind;
-                if (value < 0) {
-                    // overflow
-                    if (value == Integer.MIN_VALUE) {
-                        // if there is more number following, subsequent read will fail anyway
-                        iter.head = i + 1;
-                        return value;
-                    } else {
-                        throw iter.reportError("readPositiveInt", "value is too large for int");
-                    }
+                if (value < 0 && value != Integer.MIN_VALUE) {
+                    throw iter.reportError("readIntSlowPath", "value is too large for int");
                 }
             }
             if (!IterImpl.loadMore(iter)) {

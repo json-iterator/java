@@ -307,11 +307,8 @@ class IterImpl {
 
     static final int readPositiveInt(final JsonIterator iter, byte c) throws IOException {
         int ind = IterImplNumber.intDigits[c];
-        if (ind == 0) {
-            throw iter.reportError("readPositiveInt", "leading zero is invalid for int");
-        }
         if (ind == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
-            throw iter.reportError("readPositiveInt", "expect 1~9");
+            throw iter.reportError("readPositiveInt", "expect 0~9");
         }
         if (iter.tail - iter.head > 9) {
             int i = iter.head;
@@ -319,6 +316,9 @@ class IterImpl {
             if (ind2 == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
                 iter.head = i;
                 return ind;
+            }
+            if (ind == 0) {
+                throw iter.reportError("readPositiveInt", "leading zero is invalid for int");
             }
             int ind3 = IterImplNumber.intDigits[iter.buf[++i]];
             if (ind3 == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
@@ -362,11 +362,8 @@ class IterImpl {
 
     static final long readPositiveLong(final JsonIterator iter, byte c) throws IOException {
         long ind = IterImplNumber.intDigits[c];
-        if (ind == 0) {
-            throw iter.reportError("readPositiveLong", "leading zero is invalid for long");
-        }
         if (ind == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
-            throw iter.reportError("readPositiveLong", "expect 1~9");
+            throw iter.reportError("readPositiveLong", "expect 0~9");
         }
         if (iter.tail - iter.head > 9) {
             int i = iter.head;
@@ -374,6 +371,9 @@ class IterImpl {
             if (ind2 == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
                 iter.head = i;
                 return ind;
+            }
+            if (ind == 0) {
+                throw iter.reportError("readPositiveLong", "leading zero is invalid for long");
             }
             int ind3 = IterImplNumber.intDigits[iter.buf[++i]];
             if (ind3 == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
