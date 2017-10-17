@@ -1,11 +1,13 @@
 package com.jsoniter;
 
 import com.jsoniter.spi.JsonException;
+import joptsimple.internal.Strings;
 import junit.framework.TestCase;
 import org.junit.experimental.categories.Category;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.Arrays;
 
 public class TestString extends TestCase {
 
@@ -92,6 +94,26 @@ public class TestString extends TestCase {
             JsonIterator.deserialize("\"abc", String.class);
             fail();
         } catch (JsonException e) {
+        }
+    }
+
+    public void test_invalid_string() throws IOException {
+        for (String str : new String[]{
+                "\"\\x0008\"",
+                "\"\\u000Z\"",
+                "\"\\u000\"",
+                "\"\\u00\"",
+                "\"\\u0\"",
+                "\"\\\"",
+                "\"\\udd1e\"",
+                "\"\\ud834\"",
+                "\"\\ud834\\x\"",
+                "\"\\ud834\\ud834\"",
+        }) {
+            try {JsonIterator.deserialize(str, String.class);
+            } catch (JsonException e) {
+            } catch (IndexOutOfBoundsException e) {
+            }
         }
     }
 

@@ -210,6 +210,7 @@ class IterImpl {
 
     public final static int readStringSlowPath(JsonIterator iter, int j) throws IOException {
         try {
+            boolean isExpectingLowSurrogate = false;
             for (int i = iter.head; i < iter.tail; ) {
                 int bc = iter.buf[i++];
                 if (bc == '"') {
@@ -243,6 +244,23 @@ class IterImpl {
                                     (IterImplString.translateHex(iter.buf[i++]) << 8) +
                                     (IterImplString.translateHex(iter.buf[i++]) << 4) +
                                     IterImplString.translateHex(iter.buf[i++]);
+                            if (Character.isHighSurrogate((char) bc)) {
+                                if (isExpectingLowSurrogate) {
+                                    throw new JsonException("invalid surrogate");
+                                } else {
+                                    isExpectingLowSurrogate = true;
+                                }
+                            } else if (Character.isLowSurrogate((char) bc)) {
+                                if (isExpectingLowSurrogate) {
+                                    isExpectingLowSurrogate = false;
+                                } else {
+                                    throw new JsonException("invalid surrogate");
+                                }
+                            } else {
+                                if (isExpectingLowSurrogate) {
+                                    throw new JsonException("invalid surrogate");
+                                }
+                            }
                             break;
 
                         default:

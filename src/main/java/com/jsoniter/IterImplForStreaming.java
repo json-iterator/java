@@ -1,6 +1,7 @@
 package com.jsoniter;
 
 import com.jsoniter.any.Any;
+import com.jsoniter.spi.JsonException;
 import com.jsoniter.spi.Slice;
 
 import java.io.IOException;
@@ -382,6 +383,7 @@ class IterImplForStreaming {
     }
 
     public final static int readStringSlowPath(JsonIterator iter, int j) throws IOException {
+        boolean isExpectingLowSurrogate = false;
         for (;;) {
             int bc = readByte(iter);
             if (bc == '"') {
@@ -414,6 +416,23 @@ class IterImplForStreaming {
                                 (IterImplString.translateHex(readByte(iter)) << 8) +
                                 (IterImplString.translateHex(readByte(iter)) << 4) +
                                 IterImplString.translateHex(readByte(iter));
+                        if (Character.isHighSurrogate((char) bc)) {
+                            if (isExpectingLowSurrogate) {
+                                throw new JsonException("invalid surrogate");
+                            } else {
+                                isExpectingLowSurrogate = true;
+                            }
+                        } else if (Character.isLowSurrogate((char) bc)) {
+                            if (isExpectingLowSurrogate) {
+                                isExpectingLowSurrogate = false;
+                            } else {
+                                throw new JsonException("invalid surrogate");
+                            }
+                        } else {
+                            if (isExpectingLowSurrogate) {
+                                throw new JsonException("invalid surrogate");
+                            }
+                        }
                         break;
 
                     default:
