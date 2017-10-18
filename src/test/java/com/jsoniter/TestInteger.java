@@ -93,6 +93,8 @@ public class TestInteger extends TestCase {
     }
 
     public void test_leading_zero() throws IOException {
+        assertEquals(Integer.valueOf(0), JsonIterator.deserialize("0", int.class));
+        assertEquals(Long.valueOf(0), JsonIterator.deserialize("0", long.class));
         try {
             JsonIterator.deserialize("01", int.class);
             fail();

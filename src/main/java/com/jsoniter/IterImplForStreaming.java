@@ -591,6 +591,7 @@ class IterImplForStreaming {
     static final long readPositiveLong(final JsonIterator iter, byte c) throws IOException {
         long ind = IterImplNumber.intDigits[c];
         if (ind == 0) {
+            assertNotLeadingZero(iter);
             return 0;
         }
         if (ind == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
@@ -602,11 +603,27 @@ class IterImplForStreaming {
     static final int readPositiveInt(final JsonIterator iter, byte c) throws IOException {
         int ind = IterImplNumber.intDigits[c];
         if (ind == 0) {
+            assertNotLeadingZero(iter);
             return 0;
         }
         if (ind == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
             throw iter.reportError("readPositiveInt", "expect 0~9");
         }
         return IterImplForStreaming.readIntSlowPath(iter, ind);
+    }
+
+    static void assertNotLeadingZero(JsonIterator iter) throws IOException {
+        try {
+            byte nextByte = IterImpl.readByte(iter);
+            iter.unreadByte();
+            int ind2 = IterImplNumber.intDigits[nextByte];
+            if (ind2 == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
+                return;
+            }
+            throw iter.reportError("readPositiveInt", "leading zero is invalid");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            iter.head = iter.tail;
+            return;
+        }
     }
 }
