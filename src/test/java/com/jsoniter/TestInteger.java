@@ -64,14 +64,38 @@ public class TestInteger extends TestCase {
 
     public void test_large_number() throws IOException {
         try {
-            JsonIterator.deserialize(Integer.toString(Integer.MIN_VALUE) + "1", Integer.class);
+            JsonIterator.deserialize("2147483648", Integer.class);
             fail();
         } catch (JsonException e) {
         }
+        for (int i = 300000000; i < 2000000000; i += 10000000) {
+            try {
+                JsonIterator.deserialize(i + "0", Integer.class);
+                fail();
+            } catch (JsonException e) {
+            }
+            try {
+                JsonIterator.deserialize(-i + "0", Integer.class);
+                fail();
+            } catch (JsonException e) {
+            }
+        }
         try {
-            JsonIterator.deserialize(Long.toString(Long.MAX_VALUE) + "1", Long.class);
+            JsonIterator.deserialize("9223372036854775808", Long.class);
             fail();
         } catch (JsonException e) {
+        }
+        for (long i = 1000000000000000000L; i < 9000000000000000000L; i += 100000000000000000L) {
+            try {
+                JsonIterator.deserialize(i + "0", Long.class);
+                fail();
+            } catch (JsonException e) {
+            }
+            try {
+                JsonIterator.deserialize(-i + "0", Long.class);
+                fail();
+            } catch (JsonException e) {
+            }
         }
     }
 

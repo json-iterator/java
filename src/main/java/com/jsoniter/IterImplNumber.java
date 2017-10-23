@@ -31,8 +31,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package com.jsoniter;
 
-import com.jsoniter.spi.JsonException;
-
 import java.io.IOException;
 
 class IterImplNumber {
@@ -65,40 +63,26 @@ class IterImplNumber {
 
     public static final double readDouble(final JsonIterator iter) throws IOException {
         final byte c = IterImpl.nextToken(iter);
-        if (c == '-') {
-            return -IterImpl.readPositiveDouble(iter);
-        } else {
+        boolean negative = c == '-';
+        if (!negative) {
             iter.unreadByte();
-            return IterImpl.readPositiveDouble(iter);
         }
+        return IterImpl.readDouble(iter, negative);
     }
 
     public static final float readFloat(final JsonIterator iter) throws IOException {
-        final byte c = IterImpl.nextToken(iter);
-        if (c == '-') {
-            return (float)-IterImpl.readPositiveDouble(iter);
-        } else {
-            iter.unreadByte();
-            return (float) IterImpl.readPositiveDouble(iter);
-        }
+        return (float) IterImplNumber.readDouble(iter);
     }
 
     public static final int readInt(final JsonIterator iter) throws IOException {
         byte c = IterImpl.nextToken(iter);
-        if (c == '-') {
-            return -IterImpl.readPositiveInt(iter, IterImpl.readByte(iter));
-        } else {
-            return IterImpl.readPositiveInt(iter, c);
-        }
+        boolean negative = c == '-';
+        return IterImpl.readInt(iter, negative ? IterImpl.readByte(iter) : c, negative);
     }
 
     public static final long readLong(JsonIterator iter) throws IOException {
         byte c = IterImpl.nextToken(iter);
-        if (c == '-') {
-            return -IterImpl.readPositiveLong(iter, IterImpl.readByte(iter));
-        } else {
-            return IterImpl.readPositiveLong(iter, c);
-        }
+        boolean negative = c == '-';
+        return IterImpl.readLong(iter, negative ? IterImpl.readByte(iter) : c, negative);
     }
-
 }

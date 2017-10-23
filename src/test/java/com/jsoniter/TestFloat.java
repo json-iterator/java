@@ -34,10 +34,15 @@ public class TestFloat extends TestCase {
     public void test_decimal_places() throws IOException {
         assertEquals(Long.MAX_VALUE, parseFloat("9223372036854775807,"), 0.01f);
         assertEquals(Long.MAX_VALUE, parseDouble("9223372036854775807,"), 0.01f);
+        assertEquals(Long.MIN_VALUE, parseDouble("-9223372036854775808,"), 0.01f);
         assertEquals(9923372036854775807f, parseFloat("9923372036854775807,"), 0.01f);
+        assertEquals(-9923372036854775808f, parseFloat("-9923372036854775808,"), 0.01f);
         assertEquals(9923372036854775807d, parseDouble("9923372036854775807,"), 0.01f);
+        assertEquals(-9923372036854775808d, parseDouble("-9923372036854775808,"), 0.01f);
         assertEquals(720368.54775807f, parseFloat("720368.54775807,"), 0.01f);
+        assertEquals(-720368.54775807f, parseFloat("-720368.54775807,"), 0.01f);
         assertEquals(720368.54775807d, parseDouble("720368.54775807,"), 0.01f);
+        assertEquals(-720368.54775807d, parseDouble("-720368.54775807,"), 0.01f);
         assertEquals(72036.854775807f, parseFloat("72036.854775807,"), 0.01f);
         assertEquals(72036.854775807d, parseDouble("72036.854775807,"), 0.01f);
         assertEquals(720368.54775807f, parseFloat("720368.547758075,"), 0.01f);
