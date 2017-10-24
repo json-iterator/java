@@ -62,8 +62,7 @@ class IterImplNumber {
     }
 
     public static final double readDouble(final JsonIterator iter) throws IOException {
-        final byte c = IterImpl.nextToken(iter);
-        boolean negative = c == '-';
+        boolean negative = IterImpl.nextToken(iter) == '-';
         if (!negative) {
             iter.unreadByte();
         }
