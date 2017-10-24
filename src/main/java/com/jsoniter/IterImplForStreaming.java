@@ -499,7 +499,7 @@ class IterImplForStreaming {
                     return negative ? value : -value;
                 }
                 if (value < multmin) {
-                    throw iter.reportError("readIntSlowPath", "value is too large for int");
+                    throw iter.reportError("readLongSlowPath", "value is too large for int");
                 }
                 value = (value << 3) + (value << 1);
                 if (value < limit + ind) {
