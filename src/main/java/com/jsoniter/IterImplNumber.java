@@ -62,11 +62,13 @@ class IterImplNumber {
     }
 
     public static final double readDouble(final JsonIterator iter) throws IOException {
-        boolean negative = IterImpl.nextToken(iter) == '-';
-        if (!negative) {
+        final byte c = IterImpl.nextToken(iter);
+        if (c == '-') {
+            return -IterImpl.readDouble(iter);
+        } else {
             iter.unreadByte();
+            return IterImpl.readDouble(iter);
         }
-        return IterImpl.readDouble(iter, negative);
     }
 
     public static final float readFloat(final JsonIterator iter) throws IOException {
@@ -88,7 +90,14 @@ class IterImplNumber {
 
     public static final long readLong(JsonIterator iter) throws IOException {
         byte c = IterImpl.nextToken(iter);
-        boolean negative = c == '-';
-        return IterImpl.readLong(iter, negative ? IterImpl.readByte(iter) : c, negative);
+        if (c == '-') {
+            return IterImpl.readLong(iter, IterImpl.readByte(iter));
+        } else {
+            long val = IterImpl.readLong(iter, c);
+            if (val == Long.MIN_VALUE) {
+                throw iter.reportError("readLong", "value is too large for long");
+            }
+            return -val;
+        }
     }
 }

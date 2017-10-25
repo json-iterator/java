@@ -487,29 +487,27 @@ class IterImplForStreaming {
         }
     }
 
-    static long readLongSlowPath(final JsonIterator iter, long value, final boolean negative) throws IOException {
+    static long readLongSlowPath(final JsonIterator iter, long value) throws IOException {
         value = -value; // add negatives to avoid redundant checks for Long.MIN_VALUE on each iteration
-        long limit = negative ? Long.MIN_VALUE : -Long.MAX_VALUE;
         long multmin = -922337203685477580L; // limit / 10
         for (; ; ) {
             for (int i = iter.head; i < iter.tail; i++) {
                 int ind = IterImplNumber.intDigits[iter.buf[i]];
                 if (ind == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
                     iter.head = i;
-                    return negative ? value : -value;
+                    return value;
                 }
                 if (value < multmin) {
                     throw iter.reportError("readLongSlowPath", "value is too large for long");
                 }
-                value = (value << 3) + (value << 1);
-                if (value < limit + ind) {
+                value = (value << 3) + (value << 1) - ind;
+                if (value >= 0) {
                     throw iter.reportError("readLongSlowPath", "value is too large for long");
                 }
-                value -= ind;
             }
             if (!IterImpl.loadMore(iter)) {
                 iter.head = iter.tail;
-                return negative ? value : -value;
+                return value;
             }
         }
     }
@@ -588,12 +586,11 @@ class IterImplForStreaming {
         }
     }
 
-    static final double readDouble(final JsonIterator iter, final boolean negative) throws IOException {
-        double result = readDoubleSlowPath(iter);
-        return negative ? -result  : result;
+    static final double readDouble(final JsonIterator iter) throws IOException {
+        return readDoubleSlowPath(iter);
     }
 
-    static final long readLong(final JsonIterator iter, final byte c, final boolean negative) throws IOException {
+    static final long readLong(final JsonIterator iter, final byte c) throws IOException {
         long ind = IterImplNumber.intDigits[c];
         if (ind == 0) {
             assertNotLeadingZero(iter);
@@ -602,7 +599,7 @@ class IterImplForStreaming {
         if (ind == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
             throw iter.reportError("readLong", "expect 0~9");
         }
-        return IterImplForStreaming.readLongSlowPath(iter, ind, negative);
+        return IterImplForStreaming.readLongSlowPath(iter, ind);
     }
 
     static final int readInt(final JsonIterator iter, final byte c) throws IOException {
