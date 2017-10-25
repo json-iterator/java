@@ -75,8 +75,15 @@ class IterImplNumber {
 
     public static final int readInt(final JsonIterator iter) throws IOException {
         byte c = IterImpl.nextToken(iter);
-        boolean negative = c == '-';
-        return IterImpl.readInt(iter, negative ? IterImpl.readByte(iter) : c, negative);
+        if (c == '-') {
+            return IterImpl.readInt(iter, IterImpl.readByte(iter));
+        } else {
+            int val = IterImpl.readInt(iter, c);
+            if (val == Integer.MIN_VALUE) {
+                throw iter.reportError("readInt", "value is too large for int");
+            }
+            return -val;
+        }
     }
 
     public static final long readLong(JsonIterator iter) throws IOException {

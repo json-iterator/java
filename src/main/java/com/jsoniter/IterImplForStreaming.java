@@ -514,29 +514,27 @@ class IterImplForStreaming {
         }
     }
 
-    static int readIntSlowPath(final JsonIterator iter, int value, final boolean negative) throws IOException {
+    static int readIntSlowPath(final JsonIterator iter, int value) throws IOException {
         value = -value; // add negatives to avoid redundant checks for Integer.MIN_VALUE on each iteration
-        int limit = negative ? Integer.MIN_VALUE : -Integer.MAX_VALUE;
         int multmin = -214748364; // limit / 10
         for (; ; ) {
             for (int i = iter.head; i < iter.tail; i++) {
                 int ind = IterImplNumber.intDigits[iter.buf[i]];
                 if (ind == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
                     iter.head = i;
-                    return negative ? value : -value;
+                    return value;
                 }
                 if (value < multmin) {
                     throw iter.reportError("readIntSlowPath", "value is too large for int");
                 }
-                value = (value << 3) + (value << 1);
-                if (value < limit + ind) {
+                value = (value << 3) + (value << 1) - ind;
+                if (value >= 0) {
                     throw iter.reportError("readIntSlowPath", "value is too large for int");
                 }
-                value -= ind;
             }
             if (!IterImpl.loadMore(iter)) {
                 iter.head = iter.tail;
-                return negative ? value : -value;
+                return value;
             }
         }
     }
@@ -607,7 +605,7 @@ class IterImplForStreaming {
         return IterImplForStreaming.readLongSlowPath(iter, ind, negative);
     }
 
-    static final int readInt(final JsonIterator iter, final byte c, final boolean negative) throws IOException {
+    static final int readInt(final JsonIterator iter, final byte c) throws IOException {
         int ind = IterImplNumber.intDigits[c];
         if (ind == 0) {
             assertNotLeadingZero(iter);
@@ -616,7 +614,7 @@ class IterImplForStreaming {
         if (ind == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
             throw iter.reportError("readInt", "expect 0~9");
         }
-        return IterImplForStreaming.readIntSlowPath(iter, ind, negative);
+        return IterImplForStreaming.readIntSlowPath(iter, ind);
     }
 
     static void assertNotLeadingZero(JsonIterator iter) throws IOException {
