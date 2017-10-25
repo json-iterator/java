@@ -487,7 +487,9 @@ class IterImplForStreaming {
         }
     }
 
-    static long readLongSlowPath(JsonIterator iter, long value) throws IOException {
+    static long readLongSlowPath(final JsonIterator iter, long value) throws IOException {
+        value = -value; // add negatives to avoid redundant checks for Long.MIN_VALUE on each iteration
+        long multmin = -922337203685477580L; // limit / 10
         for (; ; ) {
             for (int i = iter.head; i < iter.tail; i++) {
                 int ind = IterImplNumber.intDigits[iter.buf[i]];
@@ -495,11 +497,11 @@ class IterImplForStreaming {
                     iter.head = i;
                     return value;
                 }
-                if (value == Long.MIN_VALUE) {
+                if (value < multmin) {
                     throw iter.reportError("readLongSlowPath", "value is too large for long");
                 }
-                value = (value << 3) + (value << 1) + ind;
-                if (value < 0 && value != Long.MIN_VALUE) {
+                value = (value << 3) + (value << 1) - ind;
+                if (value >= 0) {
                     throw iter.reportError("readLongSlowPath", "value is too large for long");
                 }
             }
@@ -510,7 +512,9 @@ class IterImplForStreaming {
         }
     }
 
-    static int readIntSlowPath(JsonIterator iter, int value) throws IOException {
+    static int readIntSlowPath(final JsonIterator iter, int value) throws IOException {
+        value = -value; // add negatives to avoid redundant checks for Integer.MIN_VALUE on each iteration
+        int multmin = -214748364; // limit / 10
         for (; ; ) {
             for (int i = iter.head; i < iter.tail; i++) {
                 int ind = IterImplNumber.intDigits[iter.buf[i]];
@@ -518,11 +522,11 @@ class IterImplForStreaming {
                     iter.head = i;
                     return value;
                 }
-                if (value == Integer.MIN_VALUE) {
+                if (value < multmin) {
                     throw iter.reportError("readIntSlowPath", "value is too large for int");
                 }
-                value = (value << 3) + (value << 1) + ind;
-                if (value < 0 && value != Integer.MIN_VALUE) {
+                value = (value << 3) + (value << 1) - ind;
+                if (value >= 0) {
                     throw iter.reportError("readIntSlowPath", "value is too large for int");
                 }
             }
@@ -582,32 +586,30 @@ class IterImplForStreaming {
         }
     }
 
-
-    static final double readPositiveDouble(final JsonIterator iter) throws IOException {
+    static final double readDouble(final JsonIterator iter) throws IOException {
         return readDoubleSlowPath(iter);
     }
 
-
-    static final long readPositiveLong(final JsonIterator iter, byte c) throws IOException {
+    static final long readLong(final JsonIterator iter, final byte c) throws IOException {
         long ind = IterImplNumber.intDigits[c];
         if (ind == 0) {
             assertNotLeadingZero(iter);
             return 0;
         }
         if (ind == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
-            throw iter.reportError("readPositiveLong", "expect 0~9");
+            throw iter.reportError("readLong", "expect 0~9");
         }
         return IterImplForStreaming.readLongSlowPath(iter, ind);
     }
 
-    static final int readPositiveInt(final JsonIterator iter, byte c) throws IOException {
+    static final int readInt(final JsonIterator iter, final byte c) throws IOException {
         int ind = IterImplNumber.intDigits[c];
         if (ind == 0) {
             assertNotLeadingZero(iter);
             return 0;
         }
         if (ind == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
-            throw iter.reportError("readPositiveInt", "expect 0~9");
+            throw iter.reportError("readInt", "expect 0~9");
         }
         return IterImplForStreaming.readIntSlowPath(iter, ind);
     }
@@ -620,7 +622,7 @@ class IterImplForStreaming {
             if (ind2 == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
                 return;
             }
-            throw iter.reportError("readPositiveInt", "leading zero is invalid");
+            throw iter.reportError("assertNotLeadingZero", "leading zero is invalid");
         } catch (ArrayIndexOutOfBoundsException e) {
             iter.head = iter.tail;
             return;

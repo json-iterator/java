@@ -31,8 +31,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package com.jsoniter;
 
-import com.jsoniter.spi.JsonException;
-
 import java.io.IOException;
 
 class IterImplNumber {
@@ -66,39 +64,40 @@ class IterImplNumber {
     public static final double readDouble(final JsonIterator iter) throws IOException {
         final byte c = IterImpl.nextToken(iter);
         if (c == '-') {
-            return -IterImpl.readPositiveDouble(iter);
+            return -IterImpl.readDouble(iter);
         } else {
             iter.unreadByte();
-            return IterImpl.readPositiveDouble(iter);
+            return IterImpl.readDouble(iter);
         }
     }
 
     public static final float readFloat(final JsonIterator iter) throws IOException {
-        final byte c = IterImpl.nextToken(iter);
-        if (c == '-') {
-            return (float)-IterImpl.readPositiveDouble(iter);
-        } else {
-            iter.unreadByte();
-            return (float) IterImpl.readPositiveDouble(iter);
-        }
+        return (float) IterImplNumber.readDouble(iter);
     }
 
     public static final int readInt(final JsonIterator iter) throws IOException {
         byte c = IterImpl.nextToken(iter);
         if (c == '-') {
-            return -IterImpl.readPositiveInt(iter, IterImpl.readByte(iter));
+            return IterImpl.readInt(iter, IterImpl.readByte(iter));
         } else {
-            return IterImpl.readPositiveInt(iter, c);
+            int val = IterImpl.readInt(iter, c);
+            if (val == Integer.MIN_VALUE) {
+                throw iter.reportError("readInt", "value is too large for int");
+            }
+            return -val;
         }
     }
 
     public static final long readLong(JsonIterator iter) throws IOException {
         byte c = IterImpl.nextToken(iter);
         if (c == '-') {
-            return -IterImpl.readPositiveLong(iter, IterImpl.readByte(iter));
+            return IterImpl.readLong(iter, IterImpl.readByte(iter));
         } else {
-            return IterImpl.readPositiveLong(iter, c);
+            long val = IterImpl.readLong(iter, c);
+            if (val == Long.MIN_VALUE) {
+                throw iter.reportError("readLong", "value is too large for long");
+            }
+            return -val;
         }
     }
-
 }
