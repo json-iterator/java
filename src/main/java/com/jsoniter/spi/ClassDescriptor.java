@@ -233,6 +233,8 @@ public class ClassDescriptor {
             binding.annotations = field.getAnnotations();
             binding.field = field;
             return binding;
+        } catch (RuntimeException e) {
+            throw e;
         } catch (Exception e) {
             throw new JsonException("failed to create binding for field: " + field, e);
         }
@@ -292,6 +294,8 @@ public class ClassDescriptor {
                 setter.method = method;
                 setter.annotations = method.getAnnotations();
                 setters.add(setter);
+            } catch (JsonException e) {
+                throw e;
             } catch (Exception e) {
                 throw new JsonException("failed to create binding from setter: " + method, e);
             }

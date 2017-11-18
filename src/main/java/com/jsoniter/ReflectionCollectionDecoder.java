@@ -26,6 +26,8 @@ class ReflectionCollectionDecoder implements Decoder {
     public Object decode(JsonIterator iter) throws IOException {
         try {
             return decode_(iter);
+        }  catch (JsonException e) {
+            throw e;
         } catch (Exception e) {
             throw new JsonException(e);
         }

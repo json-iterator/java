@@ -110,6 +110,8 @@ public class TypeLiteral<T> {
                     decoderClassName.append('_');
                     decoderClassName.append(typeName);
                 }
+            } catch (JsonException e) {
+                throw e;
             } catch (Exception e) {
                 throw new JsonException("failed to generate cache key for: " + type, e);
             }

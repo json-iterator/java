@@ -27,6 +27,8 @@ class ReflectionObjectDecoder {
     public ReflectionObjectDecoder(ClassInfo classInfo) {
         try {
             init(classInfo);
+        } catch (JsonException e) {
+            throw e;
         } catch (Exception e) {
             throw new JsonException(e);
         }
@@ -115,6 +117,8 @@ class ReflectionObjectDecoder {
         public Object decode(JsonIterator iter) throws IOException {
             try {
                 return decode_(iter);
+            } catch (RuntimeException e) {
+                throw e;
             } catch (Exception e) {
                 throw new JsonException(e);
             }
@@ -178,6 +182,8 @@ class ReflectionObjectDecoder {
         public Object decode(JsonIterator iter) throws IOException {
             try {
                 return decode_(iter);
+            } catch (RuntimeException e) {
+                throw e;
             } catch (Exception e) {
                 throw new JsonException(e);
             }
@@ -255,6 +261,8 @@ class ReflectionObjectDecoder {
         public Object decode(JsonIterator iter) throws IOException {
             try {
                 return decode_(iter);
+            } catch (RuntimeException e) {
+                throw e;
             } catch (Exception e) {
                 throw new JsonException(e);
             }

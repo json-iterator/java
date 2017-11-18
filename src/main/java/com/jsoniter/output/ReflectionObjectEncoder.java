@@ -35,6 +35,8 @@ class ReflectionObjectEncoder implements Encoder.ReflectionEncoder {
     public void encode(Object obj, JsonStream stream) throws IOException {
         try {
             enocde_(obj, stream);
+        } catch (RuntimeException e) {
+            throw e;
         } catch (Exception e) {
             throw new JsonException(e);
         }
@@ -52,6 +54,8 @@ class ReflectionObjectEncoder implements Encoder.ReflectionEncoder {
                 Object val = getter.binding.method.invoke(obj);
                 copied.put(getter.toName, val);
             }
+        } catch (JsonException e) {
+            throw e;
         } catch (Exception e) {
             throw new JsonException(e);
         }

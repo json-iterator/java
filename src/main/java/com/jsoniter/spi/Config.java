@@ -461,6 +461,8 @@ public class Config extends EmptyExtension {
         if (jsonProperty.decoder() != Decoder.class) {
             try {
                 binding.decoder = jsonProperty.decoder().newInstance();
+            } catch (RuntimeException e) {
+                throw e;
             } catch (Exception e) {
                 throw new JsonException(e);
             }
@@ -468,6 +470,8 @@ public class Config extends EmptyExtension {
         if (jsonProperty.encoder() != Encoder.class) {
             try {
                 binding.encoder = jsonProperty.encoder().newInstance();
+            } catch (JsonException e) {
+                throw e;
             } catch (Exception e) {
                 throw new JsonException(e);
             }
