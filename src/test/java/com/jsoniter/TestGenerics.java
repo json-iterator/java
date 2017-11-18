@@ -1,10 +1,6 @@
 package com.jsoniter;
 
-import com.jsoniter.output.JsonStream;
-import com.jsoniter.spi.Binding;
-import com.jsoniter.spi.ClassDescriptor;
-import com.jsoniter.spi.ClassInfo;
-import com.jsoniter.spi.TypeLiteral;
+import com.jsoniter.spi.*;
 import junit.framework.TestCase;
 
 import java.io.IOException;
@@ -15,7 +11,7 @@ import static org.junit.Assert.assertArrayEquals;
 public class TestGenerics extends TestCase {
 
     static {
-//        JsonIterator.setMode(DecodingMode.REFLECTION_MODE);
+//        JsonIterator.setMode(DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_STRICTLY);
     }
 
     public void test_int_list() throws IOException {

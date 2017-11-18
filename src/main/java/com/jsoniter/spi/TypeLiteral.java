@@ -122,7 +122,7 @@ public class TypeLiteral<T> {
             decoderClassName.append(formatTypeWithoutSpecialCharacter(compType));
             decoderClassName.append("_array");
         } else if (type instanceof WildcardType) {
-            decoderClassName.append("_wildcard");
+            decoderClassName.append(Object.class.getName());
         } else {
             throw new UnsupportedOperationException("do not know how to handle: " + type);
         }
@@ -148,7 +148,7 @@ public class TypeLiteral<T> {
             return formatTypeWithoutSpecialCharacter(gaType.getGenericComponentType()) + "_array";
         }
         if (type instanceof WildcardType) {
-            return type.toString();
+            return Object.class.getCanonicalName();
         }
         throw new JsonException("unsupported type: " + type + ", of class " + type.getClass());
     }

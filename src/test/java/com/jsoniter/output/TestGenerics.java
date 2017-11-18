@@ -5,7 +5,9 @@ import junit.framework.TestCase;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class TestGenerics extends TestCase {
     static {
@@ -39,6 +41,7 @@ public class TestGenerics extends TestCase {
 
     public static class TestObject7 {
         public List<?> field;
+        public Map<?,?> field2;
     }
 
     public void test_wildcard() throws IOException {
@@ -46,6 +49,9 @@ public class TestGenerics extends TestCase {
         ArrayList<Integer> list = new ArrayList<Integer>();
         list.add(1);
         obj.field = list;
-        assertEquals("{\"field\":[1]}", JsonStream.serialize(obj));
+        HashMap<String, Object> map = new HashMap<String, Object>();
+        map.put("hello", 1);
+        obj.field2 = map;
+        assertEquals("{\"field\":[1],\"field2\":{\"hello\":1}}", JsonStream.serialize(obj));
     }
 }

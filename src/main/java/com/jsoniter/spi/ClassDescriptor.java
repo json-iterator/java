@@ -391,6 +391,9 @@ public class ClassDescriptor {
             vars.putAll(collectTypeVariableLookup(clazz.getGenericSuperclass()));
             return vars;
         }
+        if (type instanceof WildcardType) {
+            return vars;
+        }
         throw new JsonException("unexpected type: " + type);
     }
 

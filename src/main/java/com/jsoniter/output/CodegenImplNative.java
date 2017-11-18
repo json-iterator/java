@@ -7,6 +7,7 @@ import com.jsoniter.spi.*;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.WildcardType;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.HashMap;
@@ -282,6 +283,10 @@ class CodegenImplNative {
                 ctx.append(String.format("stream.writeVal((%s)%s);", getTypeName(valueType), code));
                 return;
             }
+            if (valueType instanceof WildcardType) {
+                ctx.append(String.format("stream.writeVal((%s)%s);", getTypeName(Object.class), code));
+                return;
+            }
         }
 
         if (!isCollectionValueNullable) {
@@ -313,6 +318,8 @@ class CodegenImplNative {
             ParameterizedType pType = (ParameterizedType) fieldType;
             Class clazz = (Class) pType.getRawType();
             return clazz.getCanonicalName();
+        } else if (fieldType instanceof WildcardType) {
+            return Object.class.getCanonicalName();
         } else {
             throw new JsonException("unsupported type: " + fieldType);
         }

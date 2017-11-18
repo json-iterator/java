@@ -6,6 +6,7 @@ import com.jsoniter.spi.*;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.WildcardType;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.HashMap;
@@ -177,6 +178,8 @@ class CodegenImplNative {
             ParameterizedType pType = (ParameterizedType) fieldType;
             Class clazz = (Class) pType.getRawType();
             return clazz.getCanonicalName();
+        } else if (fieldType instanceof WildcardType) {
+            return Object.class.getCanonicalName();
         } else {
             throw new JsonException("unsupported type: " + fieldType);
         }
@@ -204,6 +207,8 @@ class CodegenImplNative {
                     if (nativeRead != null) {
                         return nativeRead;
                     }
+                } else if (valueType instanceof WildcardType) {
+                    return NATIVE_READS.get(Object.class.getCanonicalName());
                 }
                 Codegen.getDecoder(cacheKey, valueType);
                 if (Codegen.canStaticAccess(cacheKey)) {

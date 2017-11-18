@@ -129,7 +129,7 @@ class Codegen {
             clazz = (Class) pType.getRawType();
             typeArgs = pType.getActualTypeArguments();
         } else if (type instanceof WildcardType) {
-            clazz = Object.class;
+            return Object.class;
         } else {
             clazz = (Class) type;
         }
