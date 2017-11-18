@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.WildcardType;
 import java.util.*;
 
 class Codegen {
@@ -127,6 +128,8 @@ class Codegen {
             ParameterizedType pType = (ParameterizedType) type;
             clazz = (Class) pType.getRawType();
             typeArgs = pType.getActualTypeArguments();
+        } else if (type instanceof WildcardType) {
+            clazz = Object.class;
         } else {
             clazz = (Class) type;
         }

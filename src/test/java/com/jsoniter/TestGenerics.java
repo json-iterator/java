@@ -1,6 +1,10 @@
 package com.jsoniter;
 
-import com.jsoniter.spi.*;
+import com.jsoniter.output.JsonStream;
+import com.jsoniter.spi.Binding;
+import com.jsoniter.spi.ClassDescriptor;
+import com.jsoniter.spi.ClassInfo;
+import com.jsoniter.spi.TypeLiteral;
 import junit.framework.TestCase;
 
 import java.io.IOException;
@@ -132,4 +136,12 @@ public class TestGenerics extends TestCase {
         assertEquals(User.class, res.results.getClass());
     }
 
+    public static class TestObject7 {
+        public List<?> field;
+    }
+
+    public void test_wildcard() throws IOException {
+        TestObject7 obj = JsonIterator.deserialize("{\"field\":[1]}", TestObject7.class);
+        assertEquals(Double.valueOf(1), obj.field.get(0));
+    }
 }

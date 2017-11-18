@@ -2,6 +2,7 @@ package com.jsoniter.spi;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.WildcardType;
 
 public class ClassInfo {
 
@@ -15,6 +16,9 @@ public class ClassInfo {
             ParameterizedType pType = (ParameterizedType) type;
             clazz = (Class) pType.getRawType();
             typeArgs = pType.getActualTypeArguments();
+        } else if (type instanceof WildcardType) {
+            clazz = Object.class;
+            typeArgs = new Type[0];
         } else {
             clazz = (Class) type;
             typeArgs = new Type[0];
