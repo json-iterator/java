@@ -35,7 +35,7 @@ class ReflectionObjectEncoder implements Encoder.ReflectionEncoder {
     public void encode(Object obj, JsonStream stream) throws IOException {
         try {
             enocde_(obj, stream);
-        } catch (RuntimeException e) {
+        } catch (JsonException e) {
             throw e;
         } catch (Exception e) {
             throw new JsonException(e);

@@ -287,6 +287,8 @@ public class GsonCompatibilityMode extends Config {
                                 if (i >= value.length()) { // unless we hit the end?
                                     break;
                                 }
+                                i++;
+                                c = value.charAt(i);
                                 int firstPart = _surrogate;
                                 _surrogate = 0;
                                 // Ok, then, is the second part valid?

@@ -293,4 +293,22 @@ public class TestGson extends TestCase {
         output = JsonStream.serialize(config, obj);
         assertEquals("{\"field3\":\"field3\"}", output);
     }
+
+
+    private static class TestObject {
+        private String test;
+    }
+
+    public void test_surrogate() {
+        GsonCompatibilityMode gsonConfig =
+                new GsonCompatibilityMode.Builder()
+                        .disableHtmlEscaping()
+                        .build();
+
+        String input = "{\"test\":\"lorem-\uD83D\uDC44\uD83D\uDC40\"}";
+        TestObject testObject = new Gson().fromJson(input, TestObject.class);
+
+        System.out.println("Gson: " + new Gson().toJson(testObject));
+        System.out.println("jsoniter: " + JsonStream.serialize(gsonConfig, testObject));
+    }
 }
