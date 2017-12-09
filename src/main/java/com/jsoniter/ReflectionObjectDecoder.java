@@ -240,7 +240,7 @@ class ReflectionObjectDecoder {
             setExtra(obj, extra);
             for (Binding field : desc.fields) {
                 Object val = temp[field.idx];
-                if (val != NOT_SET) {
+                if (val != NOT_SET && field.fromNames.length > 0) {
                     field.field.set(obj, val);
                 }
             }
