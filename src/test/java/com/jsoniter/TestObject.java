@@ -184,14 +184,20 @@ public class TestObject extends TestCase {
         assertEquals(TestObject5.MyEnum.WOW, obj.field1);
     }
 
+    public static class TestObject6_field1 {
+        public int a;
+    }
+
     public static class TestObject6 {
         @JsonProperty(decoder = MaybeEmptyArrayDecoder.class)
-        public Map<String, Object> field1;
+        public TestObject6_field1 field1;
     }
 
     public void test_maybe_empty_array_field() {
         TestObject6 obj = JsonIterator.deserialize("{\"field1\":[]}", TestObject6.class);
         assertNull(obj.field1);
+        obj = JsonIterator.deserialize("{\"field1\":{\"a\":1}}", TestObject6.class);
+        assertEquals(1, obj.field1.a);
     }
 
     public void test_iterator() {

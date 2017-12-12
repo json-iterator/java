@@ -458,18 +458,30 @@ public class Config extends EmptyExtension {
         if (jsonProperty.to().length > 0) {
             binding.toNames = jsonProperty.to();
         }
-        if (jsonProperty.decoder() != Decoder.class) {
+        Class decoderClass = jsonProperty.decoder();
+        if (decoderClass != Decoder.class) {
             try {
-                binding.decoder = jsonProperty.decoder().newInstance();
+                try {
+                    Constructor decoderCtor = decoderClass.getConstructor(Binding.class);
+                    binding.decoder = (Decoder) decoderCtor.newInstance(binding);
+                } catch (NoSuchMethodException e) {
+                    binding.decoder = (Decoder) decoderClass.newInstance();
+                }
             } catch (RuntimeException e) {
                 throw e;
             } catch (Exception e) {
                 throw new JsonException(e);
             }
         }
-        if (jsonProperty.encoder() != Encoder.class) {
+        Class encoderClass = jsonProperty.encoder();
+        if (encoderClass != Encoder.class) {
             try {
-                binding.encoder = jsonProperty.encoder().newInstance();
+                try {
+                    Constructor encoderCtor = encoderClass.getConstructor(Binding.class);
+                    binding.encoder = (Encoder) encoderCtor.newInstance(binding);
+                } catch (NoSuchMethodException e) {
+                    binding.encoder = (Encoder) encoderClass.newInstance();
+                }
             } catch (JsonException e) {
                 throw e;
             } catch (Exception e) {

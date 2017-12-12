@@ -2,11 +2,18 @@ package com.jsoniter.fuzzy;
 
 import com.jsoniter.JsonIterator;
 import com.jsoniter.ValueType;
+import com.jsoniter.spi.Binding;
 import com.jsoniter.spi.Decoder;
 
 import java.io.IOException;
 
 public class MaybeEmptyArrayDecoder implements Decoder {
+
+    private Binding binding;
+
+    public MaybeEmptyArrayDecoder(Binding binding) {
+        this.binding = binding;
+    }
 
     @Override
     public Object decode(JsonIterator iter) throws IOException {
@@ -18,7 +25,7 @@ public class MaybeEmptyArrayDecoder implements Decoder {
                 return null;
             }
         } else {
-            return iter.read(iter);
+            return iter.read(binding.valueTypeLiteral);
         }
     }
 }
