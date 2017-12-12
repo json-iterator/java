@@ -3,6 +3,6 @@
 /release.properties
 /demo/target
 /.idea
-/build
-/.gradle
-/local.properties
+/android-demo/build
+/android-demo/.gradle
+/android-demo/local.properties

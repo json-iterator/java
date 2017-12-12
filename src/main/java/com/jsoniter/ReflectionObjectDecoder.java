@@ -347,6 +347,9 @@ class ReflectionObjectDecoder {
     }
 
     private void setExtra(Object obj, Map<String, Object> extra) throws Exception {
+        if (extra == null) {
+            return;
+        }
         if (desc.asExtraForUnknownProperties) {
             if (desc.onExtraProperties == null) {
                 for (String fieldName : extra.keySet()) {

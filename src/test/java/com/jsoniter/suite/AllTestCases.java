@@ -50,6 +50,7 @@ import org.junit.runners.Suite;
         com.jsoniter.output.TestGson.class,
         TestStreamBuffer.class,
         TestCollection.class,
-        TestList.class})
+        TestList.class,
+        TestAnnotationJsonObject.class})
 public abstract class AllTestCases {
 }

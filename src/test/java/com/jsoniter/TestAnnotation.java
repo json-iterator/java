@@ -87,46 +87,6 @@ public class TestAnnotation extends TestCase {
         }
     }
 
-    @JsonObject(asExtraForUnknownProperties = true)
-    public static class TestObject9 {
-        @JsonExtraProperties
-        public Map<String, Any> extraProperties;
-    }
-
-    public void test_extra_properties() throws IOException {
-        JsonIterator iter = JsonIterator.parse("{\"field1\": 100}");
-        TestObject9 obj = iter.read(TestObject9.class);
-        assertEquals(100, obj.extraProperties.get("field1").toInt());
-    }
-
-    @JsonObject(asExtraForUnknownProperties = true)
-    public static class TestObject13 {
-    }
-
-    public void test_unknown_properties() throws IOException {
-        JsonIterator iter = JsonIterator.parse("{\"field-1\": 100, \"field-1\": 101}");
-        try {
-            iter.read(TestObject13.class);
-            fail();
-        } catch (JsonException e) {
-            System.out.println(e);
-        }
-    }
-
-    @JsonObject(unknownPropertiesBlacklist = {"field1"})
-    public static class TestObject15 {
-    }
-
-    public void test_unknown_properties_blacklist() throws IOException {
-        JsonIterator iter = JsonIterator.parse("{\"field1\": 100}");
-        try {
-            iter.read(TestObject15.class);
-            fail();
-        } catch (JsonException e) {
-            System.out.println(e);
-        }
-    }
-
     public static class TestObject17 {
         public int field1;
 
