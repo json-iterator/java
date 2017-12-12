@@ -29,6 +29,7 @@ dependencies {
     })
     compile 'com.android.support:appcompat-v7:27.+'
     compile 'com.android.support.constraint:constraint-layout:+'
+    compile 'com.jsoniter:jsoniter:0.9.19-SNAPSHOT'
     testCompile 'junit:junit:4.12'
 }
 
@@ -36,6 +37,7 @@ buildscript {
     repositories {
         maven{ url 'http://maven.aliyun.com/nexus/content/groups/public/'}
         google()
+        mavenLocal()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:2.3.0'   //last version Jan 2016
@@ -46,5 +48,22 @@ allprojects {
     repositories {
         maven{ url 'http://maven.aliyun.com/nexus/content/groups/public/'}
         google()
+        mavenLocal()
     }
+}
+
+afterEvaluate {
+    android.applicationVariants.all { variant ->
+        variant.javaCompiler.dependsOn(generateSources)
+    }
+}
+
+task generateSources(type:JavaExec) {
+    classpath configurations.getByName(android.sourceSets.main.compileConfigurationName)
+    classpath project.buildDir.toString() + '/intermediates/classes/debug'
+    main = 'com.jsoniter.static_codegen.StaticCodegen'
+    args 'com.example.myapplication.DemoCodegenConfig'
+    workingDir = android.sourceSets.main.java.srcDirs[0].toString()
+    standardOutput = System.out
+    errorOutput = System.err
 }

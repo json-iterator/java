@@ -1,4 +1,4 @@
-package com.jsoniter.demo;
+package com.example.myapplication;
 
 import com.jsoniter.JsonIterator;
 import com.jsoniter.output.EncodingMode;
