@@ -20,7 +20,6 @@ public class JsoniterSpi {
     private static Map<TypeProperty, Encoder> globalPropertyEncoders = new HashMap<TypeProperty, Encoder>();
 
     // current state
-    private static int configIndex = 0;
     private static ThreadLocal<Config> currentConfig = new ThreadLocal<Config>() {
         @Override
         protected Config initialValue() {
@@ -73,8 +72,12 @@ public class JsoniterSpi {
         if (configName != null) {
             return configName;
         }
-        configIndex++;
-        configName = "jsoniter_codegen.cfg" + configIndex + ".";
+
+        long hash = obj.toString().hashCode();
+        if (hash < 0) {
+            hash = Long.MAX_VALUE + hash;
+        }
+        configName = "jsoniter_codegen.cfg" + hash + ".";
         copyGlobalSettings(configName);
         HashMap<Object, String> newCache = new HashMap<Object, String>(configNames);
         newCache.put(obj, configName);

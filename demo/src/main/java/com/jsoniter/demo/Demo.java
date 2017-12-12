@@ -1,17 +1,14 @@
 package com.jsoniter.demo;
 
-import com.jsoniter.DecodingMode;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.output.EncodingMode;
 import com.jsoniter.output.JsonStream;
+import com.jsoniter.spi.DecodingMode;
 
 public class Demo {
     static {
         // ensure the jsoniter is properly setup
         new DemoCodegenConfig().setup();
-        JsonIterator.setMode(DecodingMode.STATIC_MODE);
-        JsonStream.setMode(EncodingMode.STATIC_MODE);
-        JsonStream.defaultIndentionStep = 2;
     }
 
     public static void main(String[] args) {

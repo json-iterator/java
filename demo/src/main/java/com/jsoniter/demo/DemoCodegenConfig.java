@@ -1,24 +1,28 @@
 package com.jsoniter.demo;
 
 import com.jsoniter.JsonIterator;
-import com.jsoniter.StaticCodeGenerator;
-import com.jsoniter.annotation.JsoniterAnnotationSupport;
-import com.jsoniter.spi.CodegenConfig;
+import com.jsoniter.output.EncodingMode;
+import com.jsoniter.output.JsonStream;
 import com.jsoniter.spi.Decoder;
+import com.jsoniter.spi.DecodingMode;
 import com.jsoniter.spi.JsoniterSpi;
 import com.jsoniter.spi.TypeLiteral;
+import com.jsoniter.static_codegen.StaticCodegen;
+import com.jsoniter.static_codegen.StaticCodegenConfig;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-public class DemoCodegenConfig implements CodegenConfig {
+public class DemoCodegenConfig implements StaticCodegenConfig {
 
     @Override
     public void setup() {
-        JsoniterAnnotationSupport.enable();
         // register custom decoder or extensions before codegen
         // so that we doing codegen, we know in which case, we need to callback
+        JsonIterator.setMode(DecodingMode.STATIC_MODE);
+        JsonStream.setMode(EncodingMode.STATIC_MODE);
+        JsonStream.setIndentionStep(2);
         JsoniterSpi.registerPropertyDecoder(User.class, "score", new Decoder.IntDecoder() {
             @Override
             public int decodeInt(JsonIterator iter) throws IOException {
@@ -45,7 +49,7 @@ public class DemoCodegenConfig implements CodegenConfig {
     }
 
     public static void main(String[] args) throws Exception {
-        StaticCodeGenerator.main(new String[]{
+        StaticCodegen.main(new String[]{
                 DemoCodegenConfig.class.getCanonicalName()
             ,"/tmp"
         });

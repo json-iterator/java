@@ -6,3 +6,6 @@
 /android-demo/build
 /android-demo/.gradle
 /android-demo/local.properties
+/android-demo/gradlew
+/android-demo/gradle
+/android-demo/gradlew.bat

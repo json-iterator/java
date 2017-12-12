@@ -20,6 +20,11 @@ public class JacksonCompatibilityMode extends Config {
         protected Config doBuild(String configName) {
             return new JacksonCompatibilityMode(configName, this);
         }
+
+        @Override
+        public String toString() {
+            return super.toString() + " => JacksonCompatibilityMode{}";
+        }
     }
 
     private JacksonCompatibilityMode(String configName, Builder builder) {

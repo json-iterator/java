@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.jsoniter</groupId>
-    <version>0.9.8-SNAPSHOT</version>
+    <version>0.9.19-SNAPSHOT</version>
     <artifactId>jsoniter-demo</artifactId>
     <name>json iterator demo</name>
     <description>jsoniter (json-iterator) is fast and flexible JSON parser available in Java and Go</description>
@@ -49,7 +49,7 @@
         <dependency>
             <groupId>com.jsoniter</groupId>
             <artifactId>jsoniter</artifactId>
-            <version>0.9.11</version>
+            <version>0.9.19-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.openjdk.jmh</groupId>

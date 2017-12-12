@@ -202,6 +202,17 @@ public class Config extends EmptyExtension {
             builder.omitDefaultValue = omitDefaultValue;
             return builder;
         }
+
+        @Override
+        public String toString() {
+            return "Config{" +
+                    "decodingMode=" + decodingMode +
+                    ", encodingMode=" + encodingMode +
+                    ", indentionStep=" + indentionStep +
+                    ", escapeUnicode=" + escapeUnicode +
+                    ", omitDefaultValue=" + omitDefaultValue +
+                    '}';
+        }
     }
 
     public static final Config INSTANCE = new Builder().build();

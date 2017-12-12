@@ -19,9 +19,9 @@ class CodegenImplMap {
         append(lines, "}");
         append(lines, "do {");
         if (keyType == String.class) {
-            append(lines, "Object mapKey = com.jsoniter.CodegenAccess.readObjectFieldAsString(iter);");
+            append(lines, "java.lang.Object mapKey = com.jsoniter.CodegenAccess.readObjectFieldAsString(iter);");
         } else {
-            append(lines, "Object mapKey = com.jsoniter.CodegenAccess.readMapKey(\"" +
+            append(lines, "java.lang.Object mapKey = com.jsoniter.CodegenAccess.readMapKey(\"" +
                     TypeLiteral.create(keyType).getDecoderCacheKey() +"\", iter);");
         }
         append(lines, "map.put(mapKey, {{op}});");

@@ -212,6 +212,19 @@ public class GsonCompatibilityMode extends Config {
             copied.deserializationExclusionStrategies = new HashSet<ExclusionStrategy>(deserializationExclusionStrategies);
             return copied;
         }
+
+        @Override
+        public String toString() {
+            return super.toString() + " => GsonCompatibilityMode{" +
+                    "excludeFieldsWithoutExposeAnnotation=" + excludeFieldsWithoutExposeAnnotation +
+                    ", disableHtmlEscaping=" + disableHtmlEscaping +
+                    ", dateFormat=" + dateFormat +
+                    ", fieldNamingStrategy=" + fieldNamingStrategy +
+                    ", version=" + version +
+                    ", serializationExclusionStrategies=" + serializationExclusionStrategies +
+                    ", deserializationExclusionStrategies=" + deserializationExclusionStrategies +
+                    '}';
+        }
     }
 
     @Override

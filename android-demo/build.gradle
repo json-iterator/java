@@ -35,6 +35,7 @@ dependencies {
 buildscript {
     repositories {
         maven{ url 'http://maven.aliyun.com/nexus/content/groups/public/'}
+        google()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:2.3.0'   //last version Jan 2016
@@ -44,5 +45,6 @@ buildscript {
 allprojects {
     repositories {
         maven{ url 'http://maven.aliyun.com/nexus/content/groups/public/'}
+        google()
     }
 }
