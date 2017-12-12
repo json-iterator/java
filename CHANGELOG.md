@@ -1,3 +1,11 @@
+# 0.9.19
+* changed cfg class name to hashcode based
+* fix static codegen
+* fix #133 NPE when no extra
+* fix #132 MaybeEmptyArrayDecoder
+* fix #130 @JsonCreator not compatible with @JsonIgnore
+* fix #126 surrogate unicode
+
 # 0.9.18
 * fix of overflow detection for numeric primitive types
 * fix of method prefix of error message
