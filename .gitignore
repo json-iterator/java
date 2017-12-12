@@ -3,3 +3,6 @@
 /release.properties
 /demo/target
 /.idea
+/build
+/.gradle
+/local.properties
