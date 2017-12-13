@@ -54,12 +54,13 @@ allprojects {
 
 afterEvaluate {
     android.applicationVariants.all { variant ->
-        variant.javaCompiler.dependsOn(generateSources)
+        variant.javaCompiler.finalizedBy(jsoniterStaticCodgen)
     }
 }
 
-task generateSources(type:JavaExec) {
+task jsoniterStaticCodgen(type:JavaExec) {
     classpath configurations.getByName(android.sourceSets.main.compileConfigurationName)
+    classpath project.buildDir.toString() + '/intermediates/classes/release'
     classpath project.buildDir.toString() + '/intermediates/classes/debug'
     main = 'com.jsoniter.static_codegen.StaticCodegen'
     args 'com.example.myapplication.DemoCodegenConfig'
@@ -67,3 +68,4 @@ task generateSources(type:JavaExec) {
     standardOutput = System.out
     errorOutput = System.err
 }
+
