@@ -4,7 +4,6 @@ import com.jsoniter.annotation.JsonIgnore;
 import junit.framework.TestCase;
 
 import java.io.IOException;
-import java.io.Serializable;
 
 public class TestAnnotationJsonIgnore extends TestCase {
 
@@ -28,5 +27,20 @@ public class TestAnnotationJsonIgnore extends TestCase {
         TestObject2 obj = new TestObject2();
         obj.field1 = 100;
         assertEquals("{\"field1\":100}", JsonStream.serialize(obj));
+    }
+
+    public static class TestPrivateVariables {
+        @JsonIgnore
+        private String field1;
+
+        public String getField1() {
+            return field1;
+        }
+    }
+
+    public void test_private_serialize() throws IOException {
+        TestPrivateVariables obj = new TestPrivateVariables();
+        obj.field1 = "hello";
+        assertEquals("{}", JsonStream.serialize(obj));
     }
 }

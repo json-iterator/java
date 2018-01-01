@@ -47,14 +47,6 @@ public class TestObject extends TestCase {
         }
     }
 
-    public void test_getter() throws IOException {
-        TestObject2 obj = new TestObject2();
-        obj.field1 = "hello";
-        stream.writeVal(obj);
-        stream.close();
-        assertEquals("{'field1':'hello'}".replace('\'', '"'), baos.toString());
-    }
-
     public void test_null() throws IOException {
         stream.writeVal(new TypeLiteral<TestObject2>() {
         }, null);

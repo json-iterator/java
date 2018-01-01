@@ -205,11 +205,8 @@ public class ClassDescriptor {
 
     private static List<Binding> getFields(Map<String, Type> lookup, ClassInfo classInfo, boolean includingPrivate) {
         ArrayList<Binding> bindings = new ArrayList<Binding>();
-        for (Field field : getAllFields(classInfo.clazz, includingPrivate)) {
+        for (Field field : getAllFields(classInfo.clazz)) {
             if (Modifier.isStatic(field.getModifiers())) {
-                continue;
-            }
-            if (!includingPrivate && !Modifier.isPublic(field.getType().getModifiers())) {
                 continue;
             }
             if (includingPrivate) {
@@ -219,6 +216,14 @@ public class ClassDescriptor {
                 continue;
             }
             Binding binding = createBindingFromField(lookup, classInfo, field);
+            if (!includingPrivate && !Modifier.isPublic(field.getModifiers())) {
+                binding.toNames = new String[0];
+                binding.fromNames = new String[0];
+            }
+            if (!includingPrivate && !Modifier.isPublic(field.getType().getModifiers())) {
+                binding.toNames = new String[0];
+                binding.fromNames = new String[0];
+            }
             bindings.add(binding);
         }
         return bindings;
@@ -240,15 +245,12 @@ public class ClassDescriptor {
         }
     }
 
-    private static List<Field> getAllFields(Class clazz, boolean includingPrivate) {
-        List<Field> allFields = Arrays.asList(clazz.getFields());
-        if (includingPrivate) {
-            allFields = new ArrayList<Field>();
-            Class current = clazz;
-            while (current != null) {
-                allFields.addAll(Arrays.asList(current.getDeclaredFields()));
-                current = current.getSuperclass();
-            }
+    private static List<Field> getAllFields(Class clazz) {
+        ArrayList<Field> allFields = new ArrayList<Field>();
+        Class current = clazz;
+        while (current != null) {
+            allFields.addAll(Arrays.asList(current.getDeclaredFields()));
+            current = current.getSuperclass();
         }
         return allFields;
     }

@@ -68,6 +68,9 @@ class CodegenImplObjectStrict {
             }
             append(lines, "}");
             for (Binding field : desc.fields) {
+                if (field.fromNames.length == 0) {
+                    continue;
+                }
                 appendVarDef(lines, field);
             }
             for (Binding setter : desc.setters) {
@@ -91,6 +94,9 @@ class CodegenImplObjectStrict {
         if (desc.ctor.parameters.isEmpty()) {
             // if not field or setter, the value will set to temp variable
             for (Binding field : desc.fields) {
+                if (field.fromNames.length == 0) {
+                    continue;
+                }
                 rendered = updateBindingSetOp(rendered, field);
             }
             for (Binding setter : desc.setters) {
@@ -128,6 +134,9 @@ class CodegenImplObjectStrict {
         if (!desc.ctor.parameters.isEmpty()) {
             append(lines, String.format("%s obj = {{newInst}};", CodegenImplNative.getTypeName(desc.clazz)));
             for (Binding field : desc.fields) {
+                if (field.fromNames.length == 0) {
+                    continue;
+                }
                 append(lines, String.format("obj.%s = _%s_;", field.field.getName(), field.name));
             }
             for (Binding setter : desc.setters) {

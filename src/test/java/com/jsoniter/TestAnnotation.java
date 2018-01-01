@@ -1,22 +1,16 @@
 package com.jsoniter;
 
-import com.jsoniter.annotation.*;
-import com.jsoniter.any.Any;
-import com.jsoniter.fuzzy.StringIntDecoder;
+import com.jsoniter.annotation.JsonCreator;
+import com.jsoniter.annotation.JsonProperty;
 import com.jsoniter.spi.JsonException;
-import com.jsoniter.spi.JsoniterSpi;
 import junit.framework.TestCase;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 
 public class TestAnnotation extends TestCase {
 
     static {
-//        JsonIterator.setMode(DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_WITH_HASH);
+//        JsonIterator.setMode(DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_STRICTLY);
 //        JsonIterator.setMode(DecodingMode.REFLECTION_MODE);
     }
 

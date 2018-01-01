@@ -3,6 +3,7 @@ package com.jsoniter;
 import com.jsoniter.annotation.JsonProperty;
 import com.jsoniter.any.Any;
 import com.jsoniter.fuzzy.MaybeEmptyArrayDecoder;
+import com.jsoniter.spi.DecodingMode;
 import com.jsoniter.spi.EmptyExtension;
 import com.jsoniter.spi.JsonException;
 import com.jsoniter.spi.JsoniterSpi;

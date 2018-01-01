@@ -436,6 +436,8 @@ public class Config extends EmptyExtension {
                             setter.toNames = new String[0];
                         }
                     }
+                }
+                if (desc.getters != null) {
                     for (Binding getter : desc.getters) {
                         if (binding.field.getName().equals(getter.name)) {
                             getter.fromNames = new String[0];

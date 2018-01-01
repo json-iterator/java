@@ -4,6 +4,7 @@ import com.jsoniter.annotation.JsonIgnore;
 import com.jsoniter.annotation.JsonProperty;
 import com.jsoniter.annotation.JsonWrapper;
 import com.jsoniter.annotation.JsonWrapperType;
+import com.jsoniter.spi.DecodingMode;
 import junit.framework.TestCase;
 
 import java.io.IOException;

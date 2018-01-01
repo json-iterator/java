@@ -44,6 +44,9 @@ class CodegenImplObjectHash {
         append(lines, "} // end of if end");
         append(lines, "} else { com.jsoniter.CodegenAccess.unreadByte(iter); }// end of if not quote");
         for (Binding field : desc.fields) {
+            if (field.fromNames.length == 0) {
+                continue;
+            }
             appendVarDef(lines, field);
         }
         for (Binding setter : desc.setters) {
@@ -94,6 +97,9 @@ class CodegenImplObjectHash {
         append(lines, "} while (com.jsoniter.CodegenAccess.nextTokenIsComma(iter));");
         append(lines, CodegenImplNative.getTypeName(clazz) + " obj = {{newInst}};");
         for (Binding field : desc.fields) {
+            if (field.fromNames.length == 0) {
+                continue;
+            }
             append(lines, String.format("obj.%s = _%s_;", field.field.getName(), field.name));
         }
         for (Binding setter : desc.setters) {
