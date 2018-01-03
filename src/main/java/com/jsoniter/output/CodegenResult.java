@@ -1,6 +1,5 @@
 package com.jsoniter.output;
 
-import com.jsoniter.spi.JsonException;
 import com.jsoniter.spi.JsoniterSpi;
 
 class CodegenResult {
