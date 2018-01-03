@@ -2,7 +2,6 @@ package com.jsoniter.any;
 
 import com.jsoniter.ValueType;
 import com.jsoniter.output.JsonStream;
-import com.jsoniter.spi.TypeLiteral;
 
 import java.io.IOException;
 
