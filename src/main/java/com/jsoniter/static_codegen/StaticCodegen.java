@@ -24,7 +24,8 @@ public class StaticCodegen {
             outputDir = args[1];
         } else {
             if (!new File(configJavaFile).exists()) {
-                throw new JsonException("must execute static code generator in the java source code directory which contains: " + configJavaFile);
+                throw new JsonException("must execute static code generator in the java source code directory which " +
+                        "contains: " + configJavaFile);
             }
             outputDir = new File(".").getAbsolutePath();
         }
