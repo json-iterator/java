@@ -54,11 +54,11 @@ public class TypeLiteral<T> {
     }};
 
     private volatile static Map<Type, TypeLiteral> typeLiteralCache = new HashMap<Type, TypeLiteral>();
-    final Type type;
-    final String decoderCacheKey;
-    final String encoderCacheKey;
+    private final Type type;
+    private final String decoderCacheKey;
+    private final String encoderCacheKey;
     // TODO: remove native type
-    final NativeType nativeType;
+    private final NativeType nativeType;
 
     /**
      * Constructs a new type literal. Derives represented class from type parameter.
@@ -68,14 +68,14 @@ public class TypeLiteral<T> {
     @SuppressWarnings("unchecked")
     protected TypeLiteral() {
         this.type = getSuperclassTypeParameter(getClass());
-        nativeType = nativeTypes.get(this.type);
-        decoderCacheKey = generateDecoderCacheKey(type);
-        encoderCacheKey = generateEncoderCacheKey(type);
+        this.nativeType = nativeTypes.get(this.type);
+        this.decoderCacheKey = generateDecoderCacheKey(type);
+        this.encoderCacheKey = generateEncoderCacheKey(type);
     }
 
     public TypeLiteral(Type type, String decoderCacheKey, String encoderCacheKey) {
         this.type = type;
-        nativeType = nativeTypes.get(this.type);
+        this.nativeType = nativeTypes.get(this.type);
         this.decoderCacheKey = decoderCacheKey;
         this.encoderCacheKey = encoderCacheKey;
     }
@@ -136,12 +136,12 @@ public class TypeLiteral<T> {
         }
         if (type instanceof ParameterizedType) {
             ParameterizedType pType = (ParameterizedType) type;
-            String typeName = formatTypeWithoutSpecialCharacter(pType.getRawType());
+            StringBuilder typeName = new StringBuilder(formatTypeWithoutSpecialCharacter(pType.getRawType()));
             for (Type typeArg : pType.getActualTypeArguments()) {
-                typeName += "_";
-                typeName += formatTypeWithoutSpecialCharacter(typeArg);
+                typeName.append("_");
+                typeName.append(formatTypeWithoutSpecialCharacter(typeArg));
             }
-            return typeName;
+            return typeName.toString();
         }
         if (type instanceof GenericArrayType) {
             GenericArrayType gaType = (GenericArrayType) type;
@@ -153,7 +153,7 @@ public class TypeLiteral<T> {
         throw new JsonException("unsupported type: " + type + ", of class " + type.getClass());
     }
 
-    static Type getSuperclassTypeParameter(Class<?> subclass) {
+    private static Type getSuperclassTypeParameter(Class<?> subclass) {
         Type superclass = subclass.getGenericSuperclass();
         if (superclass instanceof Class) {
             throw new JsonException("Missing type parameter.");

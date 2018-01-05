@@ -176,11 +176,11 @@ public class Config extends EmptyExtension {
 
             Builder builder = (Builder) o;
 
-            if (indentionStep != builder.indentionStep) return false;
-            if (escapeUnicode != builder.escapeUnicode) return false;
-            if (decodingMode != builder.decodingMode) return false;
-            if (omitDefaultValue != builder.omitDefaultValue) return false;
-            return encodingMode == builder.encodingMode;
+            return ((indentionStep == builder.indentionStep) &&
+                    (escapeUnicode == builder.escapeUnicode) &&
+                    (decodingMode == builder.decodingMode) &&
+                    (omitDefaultValue == builder.omitDefaultValue) &&
+                    (encodingMode == builder.encodingMode));
         }
 
         @Override
@@ -311,7 +311,7 @@ public class Config extends EmptyExtension {
             for (int i = 0; i < paramNames.length; i++) {
                 paramNames[i] = (String) reflectCall(Array.get(params, i), "getName");
             }
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         }
         return paramNames;
     }

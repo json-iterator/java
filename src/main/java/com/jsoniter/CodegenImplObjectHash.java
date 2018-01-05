@@ -180,7 +180,7 @@ class CodegenImplObjectHash {
         code.append(")");
     }
 
-    static void append(StringBuilder lines, String str) {
+    private static void append(StringBuilder lines, String str) {
         lines.append(str);
         lines.append("\n");
     }

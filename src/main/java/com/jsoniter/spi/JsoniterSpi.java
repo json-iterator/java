@@ -93,7 +93,7 @@ public class JsoniterSpi {
 
     // TODO: use composite pattern
     public static List<Extension> getExtensions() {
-        ArrayList<Extension> combined = new ArrayList<Extension>(extensions);
+        List<Extension> combined = new ArrayList<Extension>(extensions);
         combined.add(currentConfig.get());
         return combined;
     }

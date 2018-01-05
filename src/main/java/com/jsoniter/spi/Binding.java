@@ -106,9 +106,9 @@ public class Binding {
 
         Binding binding = (Binding) o;
 
-        if (clazz != null ? !clazz.equals(binding.clazz) : binding.clazz != null) return false;
-        if (method != null ? !method.equals(binding.method) : binding.method != null) return false;
-        return name != null ? name.equals(binding.name) : binding.name == null;
+        return  (clazz != null ? clazz.equals(binding.clazz) : binding.clazz == null) &&
+                (method != null ? method.equals(binding.method) : binding.method == null) &&
+                (name != null ? name.equals(binding.name) : binding.name == null);
     }
 
     @Override

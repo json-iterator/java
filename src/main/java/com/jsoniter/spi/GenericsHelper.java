@@ -105,9 +105,9 @@ public class GenericsHelper {
             ParameterizedTypeImpl that = (ParameterizedTypeImpl) o;
 
             // Probably incorrect - comparing Object[] arrays with Arrays.equals
-            if (!Arrays.equals(actualTypeArguments, that.actualTypeArguments)) return false;
-            if (ownerType != null ? !ownerType.equals(that.ownerType) : that.ownerType != null) return false;
-            return rawType != null ? rawType.equals(that.rawType) : that.rawType == null;
+            return  ((Arrays.equals(actualTypeArguments, that.actualTypeArguments)) &&
+                    (ownerType != null ? ownerType.equals(that.ownerType) : that.ownerType == null) &&
+                    (rawType != null ? rawType.equals(that.rawType) : that.rawType == null));
 
         }
 

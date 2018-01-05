@@ -34,7 +34,7 @@ class ReflectionObjectDecoder {
         }
     }
 
-    private final void init(ClassInfo classInfo) throws Exception {
+    private void init(ClassInfo classInfo) throws Exception {
         Class clazz = classInfo.clazz;
         ClassDescriptor desc = ClassDescriptor.getDecodingClassDescriptor(classInfo, true);
         for (Binding param : desc.ctor.parameters) {
