@@ -6,10 +6,10 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
-// only uesd by generated code to access decoder
+// only used by generated code to access decoder
 public class CodegenAccess {
 
-    public static void addMissingField(List missingFields, long tracker, long mask, String fieldName) {
+    public static void addMissingField(List<String> missingFields, long tracker, long mask, String fieldName) {
         if ((tracker & mask) == 0) {
             missingFields.add(fieldName);
         }
@@ -34,12 +34,9 @@ public class CodegenAccess {
         iter.existingObject = obj;
     }
 
-    public final static boolean nextTokenIsComma(final JsonIterator iter) throws IOException {
+    public static boolean nextTokenIsComma(final JsonIterator iter) throws IOException {
         byte c = readByte(iter);
-        if (c == ',') {
-            return true;
-        }
-        return nextTokenIsCommaSlowPath(iter, c);
+        return (c == ',') || (nextTokenIsCommaSlowPath(iter, c));
     }
 
     private static boolean nextTokenIsCommaSlowPath(JsonIterator iter, byte c) throws IOException {
@@ -59,31 +56,31 @@ public class CodegenAccess {
         return IterImpl.nextToken(iter);
     }
 
-    public static final boolean readBoolean(String cacheKey, JsonIterator iter) throws IOException {
+    public static boolean readBoolean(String cacheKey, JsonIterator iter) throws IOException {
         return ((Decoder.BooleanDecoder) JsoniterSpi.getDecoder(cacheKey)).decodeBoolean(iter);
     }
 
-    public static final short readShort(String cacheKey, JsonIterator iter) throws IOException {
+    public static short readShort(String cacheKey, JsonIterator iter) throws IOException {
         return ((Decoder.ShortDecoder) JsoniterSpi.getDecoder(cacheKey)).decodeShort(iter);
     }
 
-    public static final int readInt(String cacheKey, JsonIterator iter) throws IOException {
+    public static int readInt(String cacheKey, JsonIterator iter) throws IOException {
         return ((Decoder.IntDecoder) JsoniterSpi.getDecoder(cacheKey)).decodeInt(iter);
     }
 
-    public static final long readLong(String cacheKey, JsonIterator iter) throws IOException {
+    public static long readLong(String cacheKey, JsonIterator iter) throws IOException {
         return ((Decoder.LongDecoder) JsoniterSpi.getDecoder(cacheKey)).decodeLong(iter);
     }
 
-    public static final float readFloat(String cacheKey, JsonIterator iter) throws IOException {
+    public static float readFloat(String cacheKey, JsonIterator iter) throws IOException {
         return ((Decoder.FloatDecoder) JsoniterSpi.getDecoder(cacheKey)).decodeFloat(iter);
     }
 
-    public static final double readDouble(String cacheKey, JsonIterator iter) throws IOException {
+    public static double readDouble(String cacheKey, JsonIterator iter) throws IOException {
         return ((Decoder.DoubleDecoder) JsoniterSpi.getDecoder(cacheKey)).decodeDouble(iter);
     }
 
-    public static final <T> T read(String cacheKey, JsonIterator iter) throws IOException {
+    public static <T> T read(String cacheKey, JsonIterator iter) throws IOException {
         return (T) Codegen.getDecoder(cacheKey, null).decode(iter);
     }
 
@@ -121,7 +118,7 @@ public class CodegenAccess {
         throw iter.reportError("genArray", "expect ]");
     }
 
-    public static final String readObjectFieldAsString(JsonIterator iter) throws IOException {
+    public static String readObjectFieldAsString(JsonIterator iter) throws IOException {
         String field = iter.readString();
         if (IterImpl.nextToken(iter) != ':') {
             throw iter.reportError("readObjectFieldAsString", "expect :");
@@ -129,25 +126,25 @@ public class CodegenAccess {
         return field;
     }
 
-    public static final int readObjectFieldAsHash(JsonIterator iter) throws IOException {
+    public static int readObjectFieldAsHash(JsonIterator iter) throws IOException {
         return IterImpl.readObjectFieldAsHash(iter);
     }
 
-    public static final Slice readObjectFieldAsSlice(JsonIterator iter) throws IOException {
+    public static Slice readObjectFieldAsSlice(JsonIterator iter) throws IOException {
         return IterImpl.readObjectFieldAsSlice(iter);
     }
 
-    public static final Slice readSlice(JsonIterator iter) throws IOException {
+    public static Slice readSlice(JsonIterator iter) throws IOException {
         return IterImpl.readSlice(iter);
     }
 
-    public static final Object readMapKey(String cacheKey, JsonIterator iter) throws IOException {
+    public static Object readMapKey(String cacheKey, JsonIterator iter) throws IOException {
         Slice encodedMapKey = readObjectFieldAsSlice(iter);
         MapKeyDecoder mapKeyDecoder = JsoniterSpi.getMapKeyDecoder(cacheKey);
         return mapKeyDecoder.decode(encodedMapKey);
     }
 
-    final static boolean skipWhitespacesWithoutLoadMore(JsonIterator iter) throws IOException {
+    public static boolean skipWhitespacesWithoutLoadMore(JsonIterator iter) {
         for (int i = iter.head; i < iter.tail; i++) {
             byte c = iter.buf[i];
             switch (c) {
@@ -171,7 +168,7 @@ public class CodegenAccess {
         return iter.head;
     }
 
-    public static void unreadByte(JsonIterator iter) throws IOException {
+    public static void unreadByte(JsonIterator iter) {
         iter.unreadByte();
     }
 
