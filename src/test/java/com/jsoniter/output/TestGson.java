@@ -11,7 +11,6 @@ import junit.framework.TestCase;
 
 import java.lang.reflect.Field;
 import java.text.DateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
@@ -107,22 +106,6 @@ public class TestGson extends TestCase {
         output = JsonStream.serialize(config, obj);
         assertEquals("{\"field1\":null,\"field2\":0}", output);
     }
-
-//    public void test_setDateFormat_no_op() {
-//        TimeZone orig = TimeZone.getDefault();
-//        try {
-//            TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-//            Gson gson = new GsonBuilder().create();
-//            String output = gson.toJson(new Date(0));
-//            assertEquals("\"Jan 1, 1970 12:00:00 AM\"", output);
-//            GsonCompatibilityMode config = new GsonCompatibilityMode.Builder()
-//                    .build();
-//            output = JsonStream.serialize(config, new Date(0));
-//            assertEquals("\"Jan 1, 1970 12:00:00 AM\"", output);
-//        } finally {
-//            TimeZone.setDefault(orig);
-//        }
-//    }
 
     public void test_setDateFormat_with_style() {
         TimeZone orig = TimeZone.getDefault();
