@@ -367,7 +367,7 @@ class CodegenImplObjectStrict {
                 .replace("{{newInst}}", CodegenImplObjectHash.genNewInstCode(clazz, ctor));
     }
 
-    static void append(StringBuilder lines, String str) {
+    private static void append(StringBuilder lines, String str) {
         lines.append(str);
         lines.append("\n");
     }

@@ -8,7 +8,7 @@ import java.io.IOException;
 
 class IterImpl {
 
-    public static final int readObjectFieldAsHash(JsonIterator iter) throws IOException {
+    public static int readObjectFieldAsHash(JsonIterator iter) throws IOException {
         if (readByte(iter) != '"') {
             if (nextToken(iter) != '"') {
                 throw iter.reportError("readObjectFieldAsHash", "expect \"");
@@ -33,7 +33,7 @@ class IterImpl {
         return (int) hash;
     }
 
-    public static final Slice readObjectFieldAsSlice(JsonIterator iter) throws IOException {
+    public static Slice readObjectFieldAsSlice(JsonIterator iter) throws IOException {
         Slice field = readSlice(iter);
         if (nextToken(iter) != ':') {
             throw iter.reportError("readObjectFieldAsSlice", "expect : after object field");
@@ -41,7 +41,7 @@ class IterImpl {
         return field;
     }
 
-    final static void skipArray(JsonIterator iter) throws IOException {
+    public static void skipArray(JsonIterator iter) throws IOException {
         int level = 1;
         for (int i = iter.head; i < iter.tail; i++) {
             switch (iter.buf[i]) {
@@ -67,7 +67,7 @@ class IterImpl {
         throw iter.reportError("skipArray", "incomplete array");
     }
 
-    final static void skipObject(JsonIterator iter) throws IOException {
+    public static void skipObject(JsonIterator iter) throws IOException {
         int level = 1;
         for (int i = iter.head; i < iter.tail; i++) {
             switch (iter.buf[i]) {
@@ -93,7 +93,7 @@ class IterImpl {
         throw iter.reportError("skipObject", "incomplete object");
     }
 
-    final static void skipString(JsonIterator iter) throws IOException {
+    public static void skipString(JsonIterator iter) throws IOException {
         int end = IterImplSkip.findStringEnd(iter);
         if (end == -1) {
             throw iter.reportError("skipString", "incomplete string");
@@ -102,7 +102,7 @@ class IterImpl {
         }
     }
 
-    final static void skipUntilBreak(JsonIterator iter) throws IOException {
+    public static void skipUntilBreak(JsonIterator iter) throws IOException {
         // true, false, null, number
         for (int i = iter.head; i < iter.tail; i++) {
             byte c = iter.buf[i];
@@ -114,7 +114,7 @@ class IterImpl {
         iter.head = iter.tail;
     }
 
-    final static boolean skipNumber(JsonIterator iter) throws IOException {
+    private static boolean skipNumber(JsonIterator iter) {
         // true, false, null, number
         boolean dotFound = false;
         for (int i = iter.head; i < iter.tail; i++) {
@@ -133,7 +133,7 @@ class IterImpl {
     }
 
     // read the bytes between " "
-    public final static Slice readSlice(JsonIterator iter) throws IOException {
+    public static Slice readSlice(JsonIterator iter) throws IOException {
         if (IterImpl.nextToken(iter) != '"') {
             throw iter.reportError("readSlice", "expect \" for string");
         }
@@ -148,7 +148,7 @@ class IterImpl {
         }
     }
 
-    final static byte nextToken(final JsonIterator iter) throws IOException {
+    public static byte nextToken(final JsonIterator iter) throws IOException {
         int i = iter.head;
         for (; ; ) {
             byte c = iter.buf[i++];
@@ -165,7 +165,7 @@ class IterImpl {
         }
     }
 
-    final static byte readByte(JsonIterator iter) throws IOException {
+    public static byte readByte(JsonIterator iter) throws IOException {
         return iter.buf[iter.head++];
     }
 
@@ -200,15 +200,15 @@ class IterImpl {
         }
     }
 
-    public static void skipFixedBytes(JsonIterator iter, int n) throws IOException {
+    public static void skipFixedBytes(JsonIterator iter, int n) {
         iter.head += n;
     }
 
-    public final static boolean loadMore(JsonIterator iter) throws IOException {
+    public static boolean loadMore(JsonIterator iter) {
         return false;
     }
 
-    public final static int readStringSlowPath(JsonIterator iter, int j) throws IOException {
+    public static int readStringSlowPath(JsonIterator iter, int j) {
         try {
             boolean isExpectingLowSurrogate = false;
             for (int i = iter.head; i < iter.tail; ) {
@@ -323,7 +323,7 @@ class IterImpl {
         return bound;
     }
 
-    static final int readInt(final JsonIterator iter, final byte c) throws IOException {
+    public static int readInt(final JsonIterator iter, final byte c) throws IOException {
         int ind = IterImplNumber.intDigits[c];
         if (ind == 0) {
             IterImplForStreaming.assertNotLeadingZero(iter);
@@ -385,7 +385,7 @@ class IterImpl {
         return IterImplForStreaming.readIntSlowPath(iter, ind);
     }
 
-    static final long readLong(final JsonIterator iter, final byte c) throws IOException {
+    public static long readLong(final JsonIterator iter, final byte c) throws IOException {
         long ind = IterImplNumber.intDigits[c];
         if (ind == 0) {
             IterImplForStreaming.assertNotLeadingZero(iter);
@@ -447,7 +447,7 @@ class IterImpl {
         return IterImplForStreaming.readLongSlowPath(iter, ind);
     }
 
-    static final double readDouble(final JsonIterator iter) throws IOException {
+    public static double readDouble(final JsonIterator iter) throws IOException {
         int oldHead = iter.head;
         try {
             try {

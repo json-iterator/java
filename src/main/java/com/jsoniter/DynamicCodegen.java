@@ -5,7 +5,7 @@ import javassist.*;
 
 class DynamicCodegen {
 
-    static ClassPool pool = ClassPool.getDefault();
+    private static ClassPool pool = ClassPool.getDefault();
 
     static {
         pool.insertClassPath(new ClassClassPath(Decoder.class));
