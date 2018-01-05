@@ -61,13 +61,14 @@ class Codegen {
                     return decoder;
                 } catch (Exception e) {
                     if (mode == DecodingMode.STATIC_MODE) {
-                        throw new JsonException("static gen should provide the decoder we need, but failed to create the decoder", e);
+                        throw new JsonException("static gen should provide the decoder we need, but failed to create " +
+                                "the decoder", e);
                     }
                 }
             }
             String source = genSource(mode, classInfo);
-            source = "public static java.lang.Object decode_(com.jsoniter.JsonIterator iter) throws java.io.IOException { "
-                    + source + "}";
+            source = "public static java.lang.Object decode_(com.jsoniter.JsonIterator iter) throws java.io.IOException " +
+                    "{ " + source + "}";
             if ("true".equals(System.getenv("JSONITER_DEBUG"))) {
                 System.out.println(">>> " + cacheKey);
                 System.out.println(source);
@@ -81,7 +82,8 @@ class Codegen {
                 }
                 return decoder;
             } catch (Exception e) {
-                String msg = "failed to generate decoder for: " + classInfo + " with " + Arrays.toString(classInfo.typeArgs) + ", exception: " + e;
+                String msg = "failed to generate decoder for: " + classInfo + " with " +
+                        Arrays.toString(classInfo.typeArgs) + ", exception: " + e;
                 msg = msg + "\n" + source;
                 throw new JsonException(msg, e);
             }
@@ -136,14 +138,17 @@ class Codegen {
         Class implClazz = JsoniterSpi.getTypeImplementation(clazz);
         if (Collection.class.isAssignableFrom(clazz)) {
             Type compType = Object.class;
-            if (typeArgs.length == 0) {
-                // default to List<Object>
-            } else if (typeArgs.length == 1) {
-                compType = typeArgs[0];
-            } else {
-                throw new IllegalArgumentException(
-                        "can not bind to generic collection without argument types, " +
-                                "try syntax like TypeLiteral<List<Integer>>{}");
+            switch (typeArgs.length) {
+                case 0:
+                    // default to List<Object>
+                    break;
+                case 1:
+                    compType = typeArgs[0];
+                    break;
+                default:
+                    throw new IllegalArgumentException(
+                            "can not bind to generic collection without argument types, " +
+                                    "try syntax like TypeLiteral<List<Integer>>{}");
             }
             if (clazz == List.class) {
                 clazz = implClazz == null ? ArrayList.class : implClazz;
@@ -155,15 +160,18 @@ class Codegen {
         if (Map.class.isAssignableFrom(clazz)) {
             Type keyType = String.class;
             Type valueType = Object.class;
-            if (typeArgs.length == 0) {
-                // default to Map<String, Object>
-            } else if (typeArgs.length == 2) {
-                keyType = typeArgs[0];
-                valueType = typeArgs[1];
-            } else {
-                throw new IllegalArgumentException(
-                        "can not bind to generic collection without argument types, " +
-                                "try syntax like TypeLiteral<Map<String, String>>{}");
+            switch (typeArgs.length) {
+                case 0:
+                    // default to Map<String, Object>
+                    break;
+                case 2:
+                    keyType = typeArgs[0];
+                    valueType = typeArgs[1];
+                    break;
+                default:
+                    throw new IllegalArgumentException(
+                            "can not bind to generic collection without argument types, " +
+                                    "try syntax like TypeLiteral<Map<String, String>>{}");
             }
             if (clazz == Map.class) {
                 clazz = implClazz == null ? HashMap.class : implClazz;
@@ -268,11 +276,7 @@ class Codegen {
                 hasBinding = true;
             }
         }
-        if (!hasBinding) {
-            // empty object can only be handled by strict mode
-            return true;
-        }
-        return false;
+        return !hasBinding;
     }
 
     public static void staticGenDecoders(TypeLiteral[] typeLiterals, CodegenAccess.StaticCodegenTarget staticCodegenTarget) {
