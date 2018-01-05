@@ -2,6 +2,7 @@ package com.jsoniter.spi;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -92,8 +93,8 @@ public class JsoniterSpi {
     }
 
     // TODO: use composite pattern
-    public static List<Extension> getExtensions() {
-        ArrayList<Extension> combined = new ArrayList<Extension>(extensions);
+    public static Collection<Extension> getExtensions() {
+        Collection<Extension> combined = new ArrayList<Extension>(extensions);
         combined.add(currentConfig.get());
         return combined;
     }

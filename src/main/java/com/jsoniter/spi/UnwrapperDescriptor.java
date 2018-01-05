@@ -36,10 +36,7 @@ public class UnwrapperDescriptor {
     }
 
     private boolean isMapUnwrapper(Method method) {
-        if (method.getParameterTypes().length != 0) {
-            return false;
-        }
-        return Map.class.isAssignableFrom(method.getReturnType());
+        return (method.getParameterTypes().length == 0) && (Map.class.isAssignableFrom(method.getReturnType()));
     }
 
     private boolean isStreamUnwrapper(Method method) {
@@ -47,9 +44,6 @@ public class UnwrapperDescriptor {
             return false;
         }
         Class<?>[] parameterTypes = method.getParameterTypes();
-        if (parameterTypes.length != 1) {
-            return false;
-        }
-        return parameterTypes[0] == JsonStream.class;
+        return (parameterTypes.length == 1) && (parameterTypes[0] == JsonStream.class);
     }
 }
