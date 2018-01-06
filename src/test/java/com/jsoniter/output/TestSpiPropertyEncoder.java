@@ -1,12 +1,9 @@
 package com.jsoniter.output;
 
-import com.jsoniter.any.Any;
 import com.jsoniter.spi.Encoder;
 import com.jsoniter.spi.JsoniterSpi;
 import com.jsoniter.spi.TypeLiteral;
 import junit.framework.TestCase;
-
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 public class TestSpiPropertyEncoder extends TestCase {
