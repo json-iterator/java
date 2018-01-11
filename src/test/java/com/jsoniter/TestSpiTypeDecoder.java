@@ -1,11 +1,13 @@
 package com.jsoniter;
 
 import com.jsoniter.spi.Decoder;
+import com.jsoniter.spi.JsonException;
 import com.jsoniter.spi.JsoniterSpi;
 import com.jsoniter.spi.TypeLiteral;
 import junit.framework.TestCase;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -87,5 +89,37 @@ public class TestSpiTypeDecoder extends TestCase {
         JsonIterator iter = JsonIterator.parse("[1481365190000]");
         MyDate[] dates = iter.read(MyDate[].class);
         assertEquals(1481365190000L, dates[0].date.getTime());
+    }
+
+    public static class MyList {
+        public List<String> list;
+    }
+
+    public void test_list_or_single_element() {
+        final TypeLiteral<List<String>> listOfString = new TypeLiteral<List<String>>() {
+        };
+        JsoniterSpi.registerTypeDecoder(MyList.class, new Decoder() {
+            @Override
+            public Object decode(JsonIterator iter) throws IOException {
+                ValueType valueType = iter.whatIsNext();
+                MyList myList = new MyList();
+                switch (valueType) {
+                    case ARRAY:
+                        myList.list = iter.read(listOfString);
+                        return myList;
+                    case STRING:
+                        myList.list = new ArrayList<String>();
+                        myList.list.add(iter.readString());
+                        return myList;
+                    default:
+                        throw new JsonException("unexpected input");
+                }
+            }
+        });
+        MyList list1 = JsonIterator.deserialize("\"hello\"", MyList.class);
+        assertEquals("hello", list1.list.get(0));
+        MyList list2 = JsonIterator.deserialize("[\"hello\",\"world\"]", MyList.class);
+        assertEquals("hello", list2.list.get(0));
+        assertEquals("world", list2.list.get(1));
     }
 }
