@@ -148,7 +148,7 @@ public class TestObject extends TestCase {
         try {
             JsonStream.serialize(config, new TestObject8());
             fail();
-        } catch (NullPointerException e) {
+        } catch (NullPointerException ignore) {
         }
     }
 
@@ -176,7 +176,7 @@ public class TestObject extends TestCase {
         try {
             JsonStream.serialize(config, obj);
             fail();
-        } catch (NullPointerException e) {
+        } catch (NullPointerException ignore) {
         }
 
         obj = new TestObject9();
@@ -185,7 +185,7 @@ public class TestObject extends TestCase {
         try {
             JsonStream.serialize(config, obj);
             fail();
-        } catch (NullPointerException e) {
+        } catch (NullPointerException ignore) {
         }
 
         obj = new TestObject9();
@@ -194,7 +194,7 @@ public class TestObject extends TestCase {
         try {
             JsonStream.serialize(config, obj);
             fail();
-        } catch (NullPointerException e) {
+        } catch (NullPointerException ignore) {
         }
 
         obj = new TestObject9();
@@ -203,7 +203,7 @@ public class TestObject extends TestCase {
         try {
             JsonStream.serialize(config, obj);
             fail();
-        } catch (NullPointerException e) {
+        } catch (NullPointerException ignore) {
         }
     }
 
@@ -265,7 +265,7 @@ public class TestObject extends TestCase {
         try {
             JsonStream.serialize(new TestObject13());
             fail("should throw JsonException");
-        } catch (JsonException e) {
+        } catch (JsonException ignore) {
 
         }
     }

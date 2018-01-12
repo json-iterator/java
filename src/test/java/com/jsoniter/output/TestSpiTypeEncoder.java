@@ -6,7 +6,7 @@ import com.jsoniter.spi.TypeLiteral;
 import junit.framework.TestCase;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -47,7 +47,7 @@ public class TestSpiTypeEncoder extends TestCase {
         });
         MyDate myDate = new MyDate();
         myDate.date = new Date(1481365190000L);
-        String output = JsonStream.serialize(typeLiteral, Arrays.asList(myDate));
+        String output = JsonStream.serialize(typeLiteral, Collections.singletonList(myDate));
         assertEquals("1481365190000", output);
     }
 }

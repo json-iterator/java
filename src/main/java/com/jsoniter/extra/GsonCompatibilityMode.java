@@ -176,15 +176,18 @@ public class GsonCompatibilityMode extends Config {
 
             Builder builder = (Builder) o;
 
-            if (excludeFieldsWithoutExposeAnnotation != builder.excludeFieldsWithoutExposeAnnotation) return false;
-            if (disableHtmlEscaping != builder.disableHtmlEscaping) return false;
-            if (!dateFormat.get().equals(builder.dateFormat.get())) return false;
-            if (fieldNamingStrategy != null ? !fieldNamingStrategy.equals(builder.fieldNamingStrategy) : builder.fieldNamingStrategy != null)
-                return false;
-            if (version != null ? !version.equals(builder.version) : builder.version != null) return false;
-            if (serializationExclusionStrategies != null ? !serializationExclusionStrategies.equals(builder.serializationExclusionStrategies) : builder.serializationExclusionStrategies != null)
-                return false;
-            return deserializationExclusionStrategies != null ? deserializationExclusionStrategies.equals(builder.deserializationExclusionStrategies) : builder.deserializationExclusionStrategies == null;
+            return excludeFieldsWithoutExposeAnnotation == builder.excludeFieldsWithoutExposeAnnotation &&
+                    disableHtmlEscaping == builder.disableHtmlEscaping &&
+                    dateFormat.get().equals(builder.dateFormat.get()) &&
+                    (fieldNamingStrategy != null ? fieldNamingStrategy.equals(builder.fieldNamingStrategy) :
+                            builder.fieldNamingStrategy == null) &&
+                    (version != null ? version.equals(builder.version) : builder.version == null) &&
+                    (serializationExclusionStrategies != null ?
+                            serializationExclusionStrategies.equals(builder.serializationExclusionStrategies) :
+                            builder.serializationExclusionStrategies == null) &&
+                    (deserializationExclusionStrategies != null ?
+                            deserializationExclusionStrategies.equals(builder.deserializationExclusionStrategies) :
+                            builder.deserializationExclusionStrategies == null);
         }
 
         @Override

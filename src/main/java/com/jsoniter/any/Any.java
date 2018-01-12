@@ -2,7 +2,6 @@ package com.jsoniter.any;
 
 import com.jsoniter.output.CodegenAccess;
 import com.jsoniter.spi.JsonException;
-import com.jsoniter.JsonIterator;
 import com.jsoniter.ValueType;
 import com.jsoniter.output.JsonStream;
 import com.jsoniter.spi.Encoder;
@@ -189,7 +188,7 @@ public abstract class Any implements Iterable<Any> {
         }
     }
 
-    public Set<String> keys() {
+    public Set keys() {
         return EMPTY_KEYS;
     }
 

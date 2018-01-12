@@ -1,6 +1,5 @@
 package com.jsoniter.output;
 
-import com.jsoniter.any.Any;
 import com.jsoniter.spi.*;
 
 import java.io.File;
@@ -10,7 +9,6 @@ import java.io.OutputStreamWriter;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.lang.reflect.WildcardType;
 import java.util.*;
 
 class Codegen {

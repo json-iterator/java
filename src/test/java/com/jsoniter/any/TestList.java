@@ -4,6 +4,7 @@ import junit.framework.TestCase;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 
 public class TestList extends TestCase {
     public void test_size() {
@@ -12,14 +13,14 @@ public class TestList extends TestCase {
     }
 
     public void test_to_boolean() {
-        Any any = Any.wrap(Arrays.asList());
+        Any any = Any.wrap(Collections.emptyList());
         assertFalse(any.toBoolean());
         any = Any.wrap(Arrays.asList("hello", 1));
         assertTrue(any.toBoolean());
     }
 
     public void test_to_int() {
-        Any any = Any.wrap(Arrays.asList());
+        Any any = Any.wrap(Collections.emptyList());
         assertEquals(0, any.toInt());
         any = Any.wrap(Arrays.asList("hello", 1));
         assertEquals(2, any.toInt());
@@ -31,7 +32,7 @@ public class TestList extends TestCase {
     }
 
     public void test_get_from_nested() {
-        Any any = Any.wrap(Arrays.asList(Arrays.asList("hello"), Arrays.asList("world")));
+        Any any = Any.wrap(Arrays.asList(Collections.singletonList("hello"), Collections.singletonList("world")));
         assertEquals("hello", any.get(0, 0).toString());
         assertEquals("[\"hello\",\"world\"]", any.get('*', 0).toString());
     }
