@@ -1,6 +1,7 @@
 package com.jsoniter.demo;
 
 import com.jsoniter.JsonIterator;
+import com.jsoniter.any.Any;
 import com.jsoniter.output.EncodingMode;
 import com.jsoniter.output.JsonStream;
 import com.jsoniter.spi.Decoder;
@@ -19,6 +20,7 @@ public class DemoCodegenConfig implements StaticCodegenConfig {
     public void setup() {
         // register custom decoder or extensions before codegen
         // so that we doing codegen, we know in which case, we need to callback
+        Any.registerEncoders();
         JsonIterator.setMode(DecodingMode.STATIC_MODE);
         JsonStream.setMode(EncodingMode.STATIC_MODE);
         JsonStream.setIndentionStep(2);

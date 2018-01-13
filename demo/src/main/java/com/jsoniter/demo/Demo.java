@@ -1,6 +1,7 @@
 package com.jsoniter.demo;
 
 import com.jsoniter.JsonIterator;
+import com.jsoniter.any.Any;
 import com.jsoniter.output.EncodingMode;
 import com.jsoniter.output.JsonStream;
 import com.jsoniter.spi.DecodingMode;
@@ -16,6 +17,7 @@ public class Demo {
         System.out.println(user.firstName);
         System.out.println(user.lastName);
         System.out.println(user.score);
+        user.attachment = Any.wrapArray(new int[]{1, 2, 3});
         System.out.println(JsonStream.serialize(user));
     }
 }

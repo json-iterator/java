@@ -13,6 +13,10 @@ import java.util.*;
 public abstract class Any implements Iterable<Any> {
 
     static {
+        registerEncoders();
+    }
+
+    public static void registerEncoders() {
         Encoder.ReflectionEncoder anyEncoder = new Encoder.ReflectionEncoder() {
             @Override
             public void encode(Object obj, JsonStream stream) throws IOException {

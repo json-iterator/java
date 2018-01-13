@@ -30,8 +30,12 @@ com.jsoniter.CodegenAccess.unreadByte(iter);
 java.lang.String _firstName_ = null;
 java.lang.String _lastName_ = null;
 int _score_ = 0;
+com.jsoniter.any.Any _attachment_ = null;
 do {
 switch (com.jsoniter.CodegenAccess.readObjectFieldAsHash(iter)) {
+case -1513391000: 
+_attachment_ = (com.jsoniter.any.Any)iter.readAny();
+continue;
 case -1078100014: 
 _lastName_ = (java.lang.String)iter.readString();
 continue;
@@ -48,6 +52,7 @@ com.jsoniter.demo.User obj = (existingObj == null ? new com.jsoniter.demo.User()
 obj.firstName = _firstName_;
 obj.lastName = _lastName_;
 obj.score = _score_;
+obj.attachment = _attachment_;
 return obj;
 }public java.lang.Object decode(com.jsoniter.JsonIterator iter) throws java.io.IOException {
 return decode_(iter);

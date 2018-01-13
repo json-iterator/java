@@ -1,6 +1,8 @@
 package com.jsoniter.any;
 
 import com.jsoniter.JsonIterator;
+import com.jsoniter.output.EncodingMode;
+import com.jsoniter.output.JsonStream;
 import junit.framework.TestCase;
 
 import java.util.ArrayList;

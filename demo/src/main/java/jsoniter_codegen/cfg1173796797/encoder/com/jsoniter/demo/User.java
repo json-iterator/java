@@ -15,6 +15,11 @@ stream.writeVal((java.lang.String)obj.lastName);
 stream.writeMore();
 stream.writeObjectField("score");
 stream.writeVal((int)obj.score);
+stream.writeMore();
+stream.writeObjectField("attachment");
+if (obj.attachment == null) { stream.writeNull(); } else {
+stream.writeVal((com.jsoniter.any.Any)obj.attachment);
+}
 stream.writeObjectEnd();
 }
 }
