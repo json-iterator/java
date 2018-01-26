@@ -138,6 +138,6 @@ public class TestGenerics extends TestCase {
 
     public void test_wildcard() throws IOException {
         TestObject7 obj = JsonIterator.deserialize("{\"field\":[1]}", TestObject7.class);
-        assertEquals(Double.valueOf(1), obj.field.get(0));
+        assertEquals(1, obj.field.get(0));
     }
 }
