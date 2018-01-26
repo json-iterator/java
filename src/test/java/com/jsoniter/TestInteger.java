@@ -6,6 +6,8 @@ import org.junit.experimental.categories.Category;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 //import java.math.BigDecimal;
 //import java.math.BigInteger;
 
@@ -191,5 +193,10 @@ public class TestInteger extends TestCase {
             assertEquals(input.length(), iter.head); // iterator head should point on next non-parsed byte
             return v;
         }
+    }
+
+    public void testBigInteger() {
+        BigInteger number = JsonIterator.deserialize("100", BigInteger.class);
+        assertEquals(new BigInteger("100"), number);
     }
 }

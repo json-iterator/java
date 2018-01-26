@@ -1,6 +1,7 @@
 package com.jsoniter.suite;
 
 import com.jsoniter.*;
+import com.jsoniter.TestFloat;
 import com.jsoniter.TestGenerics;
 import com.jsoniter.TestGson;
 import com.jsoniter.TestNested;
@@ -8,6 +9,7 @@ import com.jsoniter.TestObject;
 import com.jsoniter.TestString;
 import com.jsoniter.any.TestList;
 import com.jsoniter.output.*;
+import com.jsoniter.output.TestInteger;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
@@ -39,8 +41,8 @@ import org.junit.runners.Suite;
         com.jsoniter.TestMap.class,
         com.jsoniter.output.TestMap.class,
         TestNative.class,
-        TestBoolean.class, TestFloat.class,
-        TestList.class,
+        TestBoolean.class, TestFloat.class, com.jsoniter.output.TestFloat.class,
+        TestList.class, TestInteger.class, com.jsoniter.output.TestInteger.class,
         com.jsoniter.output.TestJackson.class,
         com.jsoniter.TestJackson.class,
         TestSpiTypeEncoder.class,

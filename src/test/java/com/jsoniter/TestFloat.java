@@ -5,6 +5,7 @@ import org.junit.experimental.categories.Category;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 
 public class TestFloat extends TestCase {
 
@@ -75,5 +76,10 @@ public class TestFloat extends TestCase {
         } else {
             return JsonIterator.parse(input).readDouble();
         }
+    }
+
+    public void testBigDecimal() {
+        BigDecimal number = JsonIterator.deserialize("100.1", BigDecimal.class);
+        assertEquals(new BigDecimal("100.1"), number);
     }
 }
