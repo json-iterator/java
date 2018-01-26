@@ -4,6 +4,8 @@ import com.jsoniter.ValueType;
 import com.jsoniter.output.JsonStream;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 
 class NullAny extends Any {
 
@@ -42,6 +44,16 @@ class NullAny extends Any {
     @Override
     public double toDouble() {
         return 0;
+    }
+
+    @Override
+    public BigInteger toBigInteger() {
+        return BigInteger.ZERO;
+    }
+
+    @Override
+    public BigDecimal toBigDecimal() {
+        return BigDecimal.ZERO;
     }
 
     @Override

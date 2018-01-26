@@ -119,7 +119,7 @@ class IterImpl {
         boolean dotFound = false;
         for (int i = iter.head; i < iter.tail; i++) {
             byte c = iter.buf[i];
-            if (c == '.') {
+            if (c == '.' || c == 'e' || c == 'E') {
                 dotFound = true;
                 continue;
             }

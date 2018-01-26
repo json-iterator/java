@@ -4,6 +4,8 @@ import com.jsoniter.ValueType;
 import com.jsoniter.output.JsonStream;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -114,5 +116,15 @@ class ArrayAny extends Any {
     @Override
     public double toDouble() {
         return val.size();
+    }
+
+    @Override
+    public BigInteger toBigInteger() {
+        return BigInteger.valueOf(val.size());
+    }
+
+    @Override
+    public BigDecimal toBigDecimal() {
+        return BigDecimal.valueOf(val.size());
     }
 }

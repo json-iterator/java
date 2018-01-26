@@ -5,6 +5,8 @@ import com.jsoniter.output.JsonStream;
 import com.jsoniter.spi.JsonException;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Arrays;
 
 class NotFoundAny extends Any {
@@ -79,6 +81,16 @@ class NotFoundAny extends Any {
     @Override
     public double toDouble() {
         return 0;
+    }
+
+    @Override
+    public BigInteger toBigInteger() {
+        return BigInteger.ZERO;
+    }
+
+    @Override
+    public BigDecimal toBigDecimal() {
+        return BigDecimal.ZERO;
     }
 
     @Override

@@ -7,6 +7,8 @@ import com.jsoniter.ValueType;
 import com.jsoniter.spi.JsonException;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 
 class StringLazyAny extends LazyAny {
     private final static String FALSE = "false";
@@ -101,6 +103,16 @@ class StringLazyAny extends LazyAny {
         } finally {
             JsonIteratorPool.returnJsonIterator(iter);
         }
+    }
+
+    @Override
+    public BigInteger toBigInteger() {
+        return new BigInteger(toString());
+    }
+
+    @Override
+    public BigDecimal toBigDecimal() {
+        return new BigDecimal(toString());
     }
 
     @Override

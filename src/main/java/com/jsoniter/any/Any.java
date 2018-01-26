@@ -8,6 +8,8 @@ import com.jsoniter.spi.Encoder;
 import com.jsoniter.spi.TypeLiteral;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.*;
 
 public abstract class Any implements Iterable<Any> {
@@ -173,6 +175,14 @@ public abstract class Any implements Iterable<Any> {
     }
 
     public abstract double toDouble();
+
+    public final BigInteger toBigInteger(Object ...keys) { return get(keys).toBigInteger(); }
+
+    public abstract BigInteger toBigInteger();
+
+    public final BigDecimal toBigDecimal(Object ...keys) { return get(keys).toBigDecimal(); }
+
+    public abstract BigDecimal toBigDecimal();
 
     public final String toString(Object... keys) {
         return get(keys).toString();

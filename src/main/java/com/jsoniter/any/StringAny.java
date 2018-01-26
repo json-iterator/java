@@ -4,6 +4,8 @@ import com.jsoniter.ValueType;
 import com.jsoniter.output.JsonStream;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 
 class StringAny extends Any {
 
@@ -75,6 +77,16 @@ class StringAny extends Any {
     @Override
     public double toDouble() {
         return Double.valueOf(val);
+    }
+
+    @Override
+    public BigInteger toBigInteger() {
+        return new BigInteger(val);
+    }
+
+    @Override
+    public BigDecimal toBigDecimal() {
+        return new BigDecimal(val);
     }
 
     @Override

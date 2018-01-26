@@ -6,6 +6,8 @@ import com.jsoniter.spi.JsonException;
 import com.jsoniter.spi.TypeLiteral;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -63,6 +65,16 @@ class ArrayLazyAny extends LazyAny {
     @Override
     public double toDouble() {
         return size();
+    }
+
+    @Override
+    public BigInteger toBigInteger() {
+        return BigInteger.valueOf(size());
+    }
+
+    @Override
+    public BigDecimal toBigDecimal() {
+        return BigDecimal.valueOf(size());
     }
 
     @Override
