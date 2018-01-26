@@ -199,4 +199,14 @@ public class TestInteger extends TestCase {
         BigInteger number = JsonIterator.deserialize("100", BigInteger.class);
         assertEquals(new BigInteger("100"), number);
     }
+
+    public void testChooseInteger() {
+        Object number = JsonIterator.deserialize("100", Object.class);
+        assertEquals(100, number);
+    }
+
+    public void testChooseLong() {
+        Object number = JsonIterator.deserialize(Long.valueOf(Long.MAX_VALUE).toString(), Object.class);
+        assertEquals(Long.MAX_VALUE, number);
+    }
 }

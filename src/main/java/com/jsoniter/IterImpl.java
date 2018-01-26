@@ -5,8 +5,14 @@ import com.jsoniter.spi.JsonException;
 import com.jsoniter.spi.Slice;
 
 import java.io.IOException;
+import java.math.BigInteger;
 
 class IterImpl {
+
+    private static BigInteger maxLong = BigInteger.valueOf(Long.MAX_VALUE);
+    private static BigInteger minLong = BigInteger.valueOf(Long.MIN_VALUE);
+    private static BigInteger maxInt = BigInteger.valueOf(Integer.MAX_VALUE);
+    private static BigInteger minInt = BigInteger.valueOf(Integer.MIN_VALUE);
 
     public static final int readObjectFieldAsHash(JsonIterator iter) throws IOException {
         if (readByte(iter) != '"') {

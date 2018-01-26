@@ -82,4 +82,9 @@ public class TestFloat extends TestCase {
         BigDecimal number = JsonIterator.deserialize("100.1", BigDecimal.class);
         assertEquals(new BigDecimal("100.1"), number);
     }
+
+    public void testChooseDouble() {
+        Object number = JsonIterator.deserialize("1.1", Object.class);
+        assertEquals(1.1, number);
+    }
 }
