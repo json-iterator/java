@@ -72,4 +72,9 @@ public class TestArray extends TestCase {
         assertEquals(obj1, obj2);
         assertEquals(obj1.hashCode(), obj2.hashCode());
     }
+
+    public void test_null() {
+        Any x = JsonIterator.deserialize("{\"test\":null}");
+        assertFalse(x.get("test").iterator().hasNext());
+    }
 }
