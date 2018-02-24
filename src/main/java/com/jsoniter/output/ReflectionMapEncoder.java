@@ -14,7 +14,7 @@ class ReflectionMapEncoder implements Encoder.ReflectionEncoder {
     private final Encoder mapKeyEncoder;
 
     public ReflectionMapEncoder(Class clazz, Type[] typeArgs) {
-        Type keyType = String.class;
+        Type keyType = Object.class;
         Type valueType = Object.class;
         if (typeArgs.length == 2) {
             keyType = typeArgs[0];

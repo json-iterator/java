@@ -1,6 +1,9 @@
 package com.jsoniter.output;
 
-import com.jsoniter.spi.*;
+import com.jsoniter.spi.Config;
+import com.jsoniter.spi.Encoder;
+import com.jsoniter.spi.JsoniterSpi;
+import com.jsoniter.spi.TypeLiteral;
 import junit.framework.TestCase;
 
 import java.io.ByteArrayOutputStream;
@@ -123,5 +126,11 @@ public class TestMap extends TestCase {
         m.put(1, 2);
         assertEquals("{\"1\":2}", JsonStream.serialize(new TypeLiteral<Map<Integer, Integer>>(){
         }, m));
+    }
+
+    public void test_int_obj_as_map_key() {
+        HashMap<Integer, Integer> m = new HashMap<Integer, Integer>();
+        m.put(1, 2);
+        assertEquals("{\"1\":2}", JsonStream.serialize(m));
     }
 }

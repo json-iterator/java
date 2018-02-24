@@ -13,7 +13,7 @@ class CodegenImplMap {
         if (cacheKey.endsWith("__value_not_nullable")) {
             isCollectionValueNullable = false;
         }
-        Type keyType = String.class;
+        Type keyType = Object.class;
         Type valueType = Object.class;
         if (typeArgs.length == 2) {
             keyType = typeArgs[0];

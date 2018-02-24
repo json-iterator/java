@@ -22,6 +22,9 @@ class MapKeyEncoders {
         if (mapKeyType == String.class) {
             return new StringKeyEncoder();
         }
+        if (mapKeyType == Object.class) {
+            return new DynamicKeyEncoder();
+        }
         if (mapKeyType instanceof Class) {
             if (Number.class.isAssignableFrom((Class<?>) mapKeyType)) {
                 return new NumberKeyEncoder();
@@ -45,6 +48,19 @@ class MapKeyEncoders {
             stream.write('"');
             stream.writeVal(obj);
             stream.write('"');
+        }
+    }
+
+    private static class DynamicKeyEncoder implements Encoder {
+
+        @Override
+        public void encode(Object obj, JsonStream stream) throws IOException {
+            Class<?> clazz = obj.getClass();
+            if (clazz == Object.class) {
+                throw new JsonException("map key type is Object.class, can not be encoded");
+            }
+            Encoder mapKeyEncoder = registerOrGetExisting(clazz);
+            mapKeyEncoder.encode(obj, stream);
         }
     }
 }
