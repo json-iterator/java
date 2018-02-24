@@ -11,7 +11,7 @@ import java.util.Map;
 class ReflectionMapEncoder implements Encoder.ReflectionEncoder {
 
     private final TypeLiteral valueTypeLiteral;
-    private final MapKeyEncoder mapKeyEncoder;
+    private final Encoder mapKeyEncoder;
 
     public ReflectionMapEncoder(Class clazz, Type[] typeArgs) {
         Type keyType = String.class;
@@ -20,11 +20,7 @@ class ReflectionMapEncoder implements Encoder.ReflectionEncoder {
             keyType = typeArgs[0];
             valueType = typeArgs[1];
         }
-        if (keyType == String.class) {
-            mapKeyEncoder = null;
-        } else {
-            mapKeyEncoder = DefaultMapKeyEncoder.registerOrGetExisting(keyType);
-        }
+        mapKeyEncoder = MapKeyEncoders.registerOrGetExisting(keyType);
         valueTypeLiteral = TypeLiteral.create(valueType);
     }
 
@@ -58,11 +54,7 @@ class ReflectionMapEncoder implements Encoder.ReflectionEncoder {
             stream.writeIndention();
             notFirst = true;
         }
-        if (mapKeyEncoder == null) {
-            stream.writeObjectField((String) entry.getKey());
-        } else {
-            stream.writeObjectField(mapKeyEncoder.encode(entry.getKey()));
-        }
+        stream.writeObjectField(entry.getKey(), mapKeyEncoder);
         stream.writeVal(valueTypeLiteral, entry.getValue());
         return notFirst;
     }

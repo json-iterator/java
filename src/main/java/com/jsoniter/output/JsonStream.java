@@ -331,6 +331,15 @@ public class JsonStream extends OutputStream {
         }
     }
 
+    public final void writeObjectField(Object key, Encoder keyEncoder) throws IOException {
+        keyEncoder.encode(key, this);
+        if (indention > 0) {
+            write((byte) ':', (byte) ' ');
+        } else {
+            write(':');
+        }
+    }
+
     public final void writeObjectEnd() throws IOException {
         int indentionStep = currentConfig().indentionStep();
         writeIndention(indentionStep);

@@ -79,7 +79,7 @@ class Codegen {
             }
             ClassInfo classInfo = new ClassInfo(type);
             if (Map.class.isAssignableFrom(classInfo.clazz) && classInfo.typeArgs.length > 1) {
-                DefaultMapKeyEncoder.registerOrGetExisting(classInfo.typeArgs[0]);
+                MapKeyEncoders.registerOrGetExisting(classInfo.typeArgs[0]);
             }
             if (mode == EncodingMode.REFLECTION_MODE) {
                 encoder = ReflectionEncoderFactory.create(classInfo);

@@ -1,9 +1,6 @@
 package com.jsoniter.output;
 
-import com.jsoniter.spi.Config;
-import com.jsoniter.spi.JsoniterSpi;
-import com.jsoniter.spi.MapKeyEncoder;
-import com.jsoniter.spi.TypeLiteral;
+import com.jsoniter.spi.*;
 import junit.framework.TestCase;
 
 import java.io.ByteArrayOutputStream;
@@ -70,11 +67,11 @@ public class TestMap extends TestCase {
     }
 
     public void test_MapKeyCodec() {
-        JsoniterSpi.registerMapKeyEncoder(TestObject1.class, new MapKeyEncoder() {
+        JsoniterSpi.registerMapKeyEncoder(TestObject1.class, new Encoder() {
             @Override
-            public String encode(Object mapKey) {
-                TestObject1 obj = (TestObject1) mapKey;
-                return String.valueOf(obj.Field);
+            public void encode(Object obj, JsonStream stream) throws IOException {
+                TestObject1 mapKey = (TestObject1) obj;
+                stream.writeVal(String.valueOf(mapKey.Field));
             }
         });
         HashMap<TestObject1, Object> obj = new HashMap<TestObject1, Object>();
@@ -119,5 +116,12 @@ public class TestMap extends TestCase {
                 .encodingMode(EncodingMode.DYNAMIC_MODE)
                 .build();
         assertEquals("{}", JsonStream.serialize(config, new HashMap<String, String>()));
+    }
+
+    public void test_int_as_map_key() {
+        HashMap<Integer, Integer> m = new HashMap<Integer, Integer>();
+        m.put(1, 2);
+        assertEquals("{\"1\":2}", JsonStream.serialize(new TypeLiteral<Map<Integer, Integer>>(){
+        }, m));
     }
 }

@@ -53,8 +53,8 @@ public class CodegenAccess {
     }
 
     public static void writeMapKey(String cacheKey, Object mapKey, JsonStream stream) throws IOException {
-        String encodedMapKey = JsoniterSpi.getMapKeyEncoder(cacheKey).encode(mapKey);
-        stream.writeVal(encodedMapKey);
+        Encoder mapKeyEncoder = JsoniterSpi.getMapKeyEncoder(cacheKey);
+        mapKeyEncoder.encode(mapKey, stream);
     }
 
     public static void writeStringWithoutQuote(String obj, JsonStream stream) throws IOException {
