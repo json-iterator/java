@@ -4,6 +4,7 @@ import com.jsoniter.spi.*;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.lang.reflect.WildcardType;
 
 class MapKeyEncoders {
 
@@ -23,6 +24,9 @@ class MapKeyEncoders {
             return new StringKeyEncoder();
         }
         if (mapKeyType == Object.class) {
+            return new DynamicKeyEncoder();
+        }
+        if (mapKeyType instanceof WildcardType) {
             return new DynamicKeyEncoder();
         }
         Encoder.ReflectionEncoder encoder = CodegenImplNative.NATIVE_ENCODERS.get(mapKeyType);

@@ -81,7 +81,9 @@ class CodegenImplMap {
         if (keyType == String.class) {
             ctx.append("stream.writeVal((java.lang.String)entry.getKey());");
         } else if (CodegenImplNative.NATIVE_ENCODERS.containsKey(keyType)) {
+            ctx.append("stream.write('\"');");
             ctx.append(String.format("stream.writeVal((%s)entry.getKey());", CodegenImplNative.getTypeName(keyType)));
+            ctx.append("stream.write('\"');");
         } else {
             String mapCacheKey = JsoniterSpi.getMapKeyEncoderCacheKey(keyType);
             ctx.append(String.format("com.jsoniter.output.CodegenAccess.writeMapKey(\"%s\", entry.getKey(), stream);", mapCacheKey));

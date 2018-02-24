@@ -143,7 +143,11 @@ public class CodegenAccess {
 
     public static final Object readMapKey(String cacheKey, JsonIterator iter) throws IOException {
         Decoder mapKeyDecoder = JsoniterSpi.getMapKeyDecoder(cacheKey);
-        return mapKeyDecoder.decode(iter);
+        Object key = mapKeyDecoder.decode(iter);
+        if (IterImpl.nextToken(iter) != ':') {
+            throw iter.reportError("readMapKey", "expect :");
+        }
+        return key;
     }
 
     final static boolean skipWhitespacesWithoutLoadMore(JsonIterator iter) throws IOException {

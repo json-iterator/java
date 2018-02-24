@@ -1,7 +1,9 @@
 package com.jsoniter;
 
 import com.jsoniter.extra.GsonCompatibilityMode;
-import com.jsoniter.spi.*;
+import com.jsoniter.spi.Decoder;
+import com.jsoniter.spi.JsoniterSpi;
+import com.jsoniter.spi.TypeLiteral;
 import junit.framework.TestCase;
 
 import java.io.IOException;
@@ -66,5 +68,4 @@ public class TestMap extends TestCase {
         assertEquals(1, keys.size());
         assertEquals(100, keys.get(0).Field);
     }
-
 }

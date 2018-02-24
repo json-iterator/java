@@ -128,7 +128,7 @@ public class TestMap extends TestCase {
         }, m));
     }
 
-    public void test_int_obj_as_map_key() {
+    public void test_object_key() {
         HashMap<Integer, Integer> m = new HashMap<Integer, Integer>();
         m.put(1, 2);
         assertEquals("{\"1\":2}", JsonStream.serialize(m));

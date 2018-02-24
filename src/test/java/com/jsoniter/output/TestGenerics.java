@@ -41,7 +41,7 @@ public class TestGenerics extends TestCase {
 
     public static class TestObject7 {
         public List<?> field;
-        public Map<?,?> field2;
+        public Map<?, ?> field2;
     }
 
     public void test_wildcard() throws IOException {
