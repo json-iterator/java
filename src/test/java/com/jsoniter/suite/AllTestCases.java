@@ -22,6 +22,7 @@ import org.junit.runners.Suite;
         TestAnnotationJsonWrapper.class,
         TestAnnotationJsonUnwrapper.class,
         TestAnnotation.class,
+        TestAnnotationJsonCreator.class,
         com.jsoniter.output.TestGenerics.class,
         TestCustomizeType.class, TestDemo.class,
         TestExisting.class, TestGenerics.class, TestGenerics.class, TestIO.class,

@@ -14,21 +14,6 @@ public class TestAnnotation extends TestCase {
 //        JsonIterator.setMode(DecodingMode.REFLECTION_MODE);
     }
 
-    public static class TestObject2 {
-        private int field1;
-
-        @JsonCreator
-        public TestObject2(@JsonProperty("field1") int field1) {
-            this.field1 = field1;
-        }
-    }
-
-    public void test_ctor() throws IOException {
-        JsonIterator iter = JsonIterator.parse("{'field1': 100}".replace('\'', '"'));
-        TestObject2 obj = iter.read(TestObject2.class);
-        assertEquals(100, obj.field1);
-    }
-
     public static class TestObject4 {
 
         private int field1;

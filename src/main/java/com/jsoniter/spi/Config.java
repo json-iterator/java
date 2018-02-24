@@ -277,6 +277,12 @@ public class Config extends EmptyExtension {
             }
             Annotation[][] annotations = method.getParameterAnnotations();
             String[] paramNames = getParamNames(method, annotations.length);
+            Iterator<Binding> iter = desc.setters.iterator();
+            while(iter.hasNext()) {
+                if (method.equals(iter.next().method)) {
+                    iter.remove();
+                }
+            }
             if (JsonWrapperType.BINDING.equals(jsonWrapper.value())) {
                 WrapperDescriptor wrapper = new WrapperDescriptor();
                 wrapper.method = method;

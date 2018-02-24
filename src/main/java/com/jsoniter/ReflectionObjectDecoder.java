@@ -247,6 +247,8 @@ class ReflectionObjectDecoder {
             for (Binding setter : desc.setters) {
                 Object val = temp[setter.idx];
                 if (val != NOT_SET) {
+                    System.out.println(setter.method);
+                    System.out.println(val.getClass());
                     setter.method.invoke(obj, val);
                 }
             }
