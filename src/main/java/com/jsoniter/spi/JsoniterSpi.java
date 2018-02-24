@@ -12,7 +12,7 @@ public class JsoniterSpi {
     private static Config defaultConfig;
     private static List<Extension> extensions = new ArrayList<Extension>();
     private static Map<Class, Class> typeImpls = new HashMap<Class, Class>();
-    private static Map<Type, MapKeyDecoder> globalMapKeyDecoders = new HashMap<Type, MapKeyDecoder>();
+    private static Map<Type, Decoder> globalMapKeyDecoders = new HashMap<Type, Decoder>();
     private static Map<Type, Encoder> globalMapKeyEncoders = new HashMap<Type, Encoder>();
     private static Map<Type, Decoder> globalTypeDecoders = new HashMap<Type, Decoder>();
     private static Map<Type, Encoder> globalTypeEncoders = new HashMap<Type, Encoder>();
@@ -28,7 +28,7 @@ public class JsoniterSpi {
     };
     private static volatile Map<Object, String> configNames = new HashMap<Object, String>();
     private static volatile Map<String, Encoder> mapKeyEncoders = new HashMap<String, Encoder>();
-    private static volatile Map<String, MapKeyDecoder> mapKeyDecoders = new HashMap<String, MapKeyDecoder>();
+    private static volatile Map<String, Decoder> mapKeyDecoders = new HashMap<String, Decoder>();
     private static volatile Map<String, Encoder> encoders = new HashMap<String, Encoder>();
     private static volatile Map<String, Decoder> decoders = new HashMap<String, Decoder>();
     private static volatile Map<Class, Extension> objectFactories = new HashMap<Class, Extension>();
@@ -98,7 +98,7 @@ public class JsoniterSpi {
         return combined;
     }
 
-    public static void registerMapKeyDecoder(Type mapKeyType, MapKeyDecoder mapKeyDecoder) {
+    public static void registerMapKeyDecoder(Type mapKeyType, Decoder mapKeyDecoder) {
         globalMapKeyDecoders.put(mapKeyType, mapKeyDecoder);
         copyGlobalMapKeyDecoder(getCurrentConfig().configName(), mapKeyType, mapKeyDecoder);
     }
@@ -159,7 +159,7 @@ public class JsoniterSpi {
     // === copy from global to current ===
 
     private static void copyGlobalSettings(String configName) {
-        for (Map.Entry<Type, MapKeyDecoder> entry : globalMapKeyDecoders.entrySet()) {
+        for (Map.Entry<Type, Decoder> entry : globalMapKeyDecoders.entrySet()) {
             copyGlobalMapKeyDecoder(configName, entry.getKey(), entry.getValue());
         }
         for (Map.Entry<Type, Encoder> entry : globalMapKeyEncoders.entrySet()) {
@@ -196,7 +196,7 @@ public class JsoniterSpi {
         addNewDecoder(TypeLiteral.create(type).getDecoderCacheKey(configName), typeDecoder);
     }
 
-    private static void copyGlobalMapKeyDecoder(String configName, Type mapKeyType, MapKeyDecoder mapKeyDecoder) {
+    private static void copyGlobalMapKeyDecoder(String configName, Type mapKeyType, Decoder mapKeyDecoder) {
         addNewMapDecoder(TypeLiteral.create(mapKeyType).getDecoderCacheKey(configName), mapKeyDecoder);
     }
 
@@ -216,13 +216,13 @@ public class JsoniterSpi {
 
     // === current ===
 
-    public synchronized static void addNewMapDecoder(String cacheKey, MapKeyDecoder mapKeyDecoder) {
-        HashMap<String, MapKeyDecoder> newCache = new HashMap<String, MapKeyDecoder>(mapKeyDecoders);
+    public synchronized static void addNewMapDecoder(String cacheKey, Decoder mapKeyDecoder) {
+        HashMap<String, Decoder> newCache = new HashMap<String, Decoder>(mapKeyDecoders);
         newCache.put(cacheKey, mapKeyDecoder);
         mapKeyDecoders = newCache;
     }
 
-    public static MapKeyDecoder getMapKeyDecoder(String cacheKey) {
+    public static Decoder getMapKeyDecoder(String cacheKey) {
         return mapKeyDecoders.get(cacheKey);
     }
 

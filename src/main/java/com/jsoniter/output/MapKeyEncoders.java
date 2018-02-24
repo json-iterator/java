@@ -25,10 +25,9 @@ class MapKeyEncoders {
         if (mapKeyType == Object.class) {
             return new DynamicKeyEncoder();
         }
-        if (mapKeyType instanceof Class) {
-            if (Number.class.isAssignableFrom((Class<?>) mapKeyType)) {
-                return new NumberKeyEncoder();
-            }
+        Encoder.ReflectionEncoder encoder = CodegenImplNative.NATIVE_ENCODERS.get(mapKeyType);
+        if (encoder != null) {
+            return new NumberKeyEncoder(encoder);
         }
         throw new JsonException("can not encode map key type: " + mapKeyType);
     }
@@ -43,10 +42,16 @@ class MapKeyEncoders {
 
     private static class NumberKeyEncoder implements Encoder {
 
+        private final Encoder encoder;
+
+        private NumberKeyEncoder(Encoder encoder) {
+            this.encoder = encoder;
+        }
+
         @Override
         public void encode(Object obj, JsonStream stream) throws IOException {
             stream.write('"');
-            stream.writeVal(obj);
+            encoder.encode(obj, stream);
             stream.write('"');
         }
     }

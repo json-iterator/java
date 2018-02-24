@@ -171,7 +171,7 @@ class Codegen {
             if (keyType == Object.class) {
                 keyType = String.class;
             }
-            DefaultMapKeyDecoder.registerOrGetExisting(keyType);
+            MapKeyDecoders.registerOrGetExisting(keyType);
             return GenericsHelper.createParameterizedType(new Type[]{keyType, valueType}, null, clazz);
         }
         if (implClazz != null) {

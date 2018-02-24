@@ -11,7 +11,7 @@ class ReflectionMapDecoder implements Decoder {
 
     private final Constructor ctor;
     private final Decoder valueTypeDecoder;
-    private final MapKeyDecoder mapKeyDecoder;
+    private final Decoder mapKeyDecoder;
 
     public ReflectionMapDecoder(Class clazz, Type[] typeArgs) {
         try {
@@ -20,11 +20,7 @@ class ReflectionMapDecoder implements Decoder {
             throw new JsonException(e);
         }
         Type keyType = typeArgs[0];
-        if (keyType == String.class) {
-            mapKeyDecoder = null;
-        } else {
-            mapKeyDecoder = DefaultMapKeyDecoder.registerOrGetExisting(keyType);
-        }
+        mapKeyDecoder = MapKeyDecoders.registerOrGetExisting(keyType);
         TypeLiteral valueTypeLiteral = TypeLiteral.create(typeArgs[1]);
         valueTypeDecoder = Codegen.getDecoder(valueTypeLiteral.getDecoderCacheKey(), typeArgs[1]);
     }
@@ -59,11 +55,10 @@ class ReflectionMapDecoder implements Decoder {
     }
 
     private Object readMapKey(JsonIterator iter) throws IOException {
-        if (mapKeyDecoder == null) {
-            return CodegenAccess.readObjectFieldAsString(iter);
-        } else {
-            Slice mapKey = CodegenAccess.readObjectFieldAsSlice(iter);
-            return mapKeyDecoder.decode(mapKey);
+        Object key = mapKeyDecoder.decode(iter);
+        if (':' != IterImpl.nextToken(iter)) {
+            throw iter.reportError("readMapKey", "expect :");
         }
+        return key;
     }
 }

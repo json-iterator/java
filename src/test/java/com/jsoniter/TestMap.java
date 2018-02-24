@@ -44,12 +44,11 @@ public class TestMap extends TestCase {
     }
 
     public void test_MapKeyCodec() {
-        JsoniterSpi.registerMapKeyDecoder(TestObject1.class, new MapKeyDecoder() {
+        JsoniterSpi.registerMapKeyDecoder(TestObject1.class, new Decoder() {
             @Override
-            public Object decode(Slice encodedMapKey) {
-                Integer field = Integer.valueOf(encodedMapKey.toString());
+            public Object decode(JsonIterator iter) throws IOException {
                 TestObject1 obj = new TestObject1();
-                obj.Field = field;
+                obj.Field = Integer.valueOf(iter.readString());
                 return obj;
             }
         });
