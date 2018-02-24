@@ -331,6 +331,11 @@ public class JsonStream extends OutputStream {
         }
     }
 
+    public final void writeObjectField(Object key) throws IOException {
+        Encoder encoder = MapKeyEncoders.registerOrGetExisting(key.getClass());
+        writeObjectField(key, encoder);
+    }
+
     public final void writeObjectField(Object key, Encoder keyEncoder) throws IOException {
         keyEncoder.encode(key, this);
         if (indention > 0) {

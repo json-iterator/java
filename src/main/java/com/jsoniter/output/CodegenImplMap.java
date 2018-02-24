@@ -19,7 +19,6 @@ class CodegenImplMap {
             keyType = typeArgs[0];
             valueType = typeArgs[1];
         }
-        String mapCacheKey = JsoniterSpi.getMapKeyEncoderCacheKey(keyType);
         CodegenResult ctx = new CodegenResult();
         ctx.append("public static void encode_(java.lang.Object obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {");
         ctx.append("if (obj == null) { stream.writeNull(); return; }");
@@ -36,16 +35,7 @@ class CodegenImplMap {
         } else {
             ctx.append("stream.writeObjectStart(); stream.writeIndention();");
         }
-        if (keyType == String.class) {
-            ctx.append("stream.writeVal((java.lang.String)entry.getKey());");
-        } else {
-            ctx.append(String.format("com.jsoniter.output.CodegenAccess.writeMapKey(\"%s\", entry.getKey(), stream);", mapCacheKey));
-        }
-        if (noIndention) {
-            ctx.append("stream.write(':');");
-        } else {
-            ctx.append("stream.write((byte)':', (byte)' ');");
-        }
+        genWriteMapKey(ctx, keyType, noIndention);
         if (isCollectionValueNullable) {
             ctx.append("if (entry.getValue() == null) { stream.writeNull(); } else {");
             CodegenImplNative.genWriteOp(ctx, "entry.getValue()", valueType, true);
@@ -60,11 +50,7 @@ class CodegenImplMap {
         } else {
             ctx.append("stream.writeMore();");
         }
-        if (keyType == String.class) {
-            ctx.append("stream.writeVal((java.lang.String)entry.getKey());");
-        } else {
-            ctx.append(String.format("com.jsoniter.output.CodegenAccess.writeMapKey(\"%s\", entry.getKey(), stream);", mapCacheKey));
-        }
+        genWriteMapKey(ctx, keyType, noIndention);
         if (noIndention) {
             ctx.append("stream.write(':');");
         } else {
@@ -85,5 +71,25 @@ class CodegenImplMap {
         }
         ctx.append("}");
         return ctx;
+    }
+
+    private static void genWriteMapKey(CodegenResult ctx, Type keyType, boolean noIndention) {
+        if (keyType == Object.class) {
+            ctx.append("stream.writeObjectField(entry.getKey());");
+            return;
+        }
+        if (keyType == String.class) {
+            ctx.append("stream.writeVal((java.lang.String)entry.getKey());");
+        } else if (CodegenImplNative.NATIVE_ENCODERS.containsKey(keyType)) {
+            ctx.append(String.format("stream.writeVal((%s)entry.getKey());", CodegenImplNative.getTypeName(keyType)));
+        } else {
+            String mapCacheKey = JsoniterSpi.getMapKeyEncoderCacheKey(keyType);
+            ctx.append(String.format("com.jsoniter.output.CodegenAccess.writeMapKey(\"%s\", entry.getKey(), stream);", mapCacheKey));
+        }
+        if (noIndention) {
+            ctx.append("stream.write(':');");
+        } else {
+            ctx.append("stream.write((byte)':', (byte)' ');");
+        }
     }
 }

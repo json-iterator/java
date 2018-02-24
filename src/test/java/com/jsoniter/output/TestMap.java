@@ -122,9 +122,9 @@ public class TestMap extends TestCase {
     }
 
     public void test_int_as_map_key() {
-        HashMap<Integer, Integer> m = new HashMap<Integer, Integer>();
-        m.put(1, 2);
-        assertEquals("{\"1\":2}", JsonStream.serialize(new TypeLiteral<Map<Integer, Integer>>(){
+        HashMap<Integer, String> m = new HashMap<Integer, String>();
+        m.put(1, "2");
+        assertEquals("{\"1\":\"2\"}", JsonStream.serialize(new TypeLiteral<Map<Integer, String>>() {
         }, m));
     }
 
