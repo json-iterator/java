@@ -55,6 +55,8 @@ import org.junit.runners.Suite;
         TestCollection.class,
         TestList.class,
         TestAnnotationJsonObject.class,
+        TestIterImpl.class,
         TestCodegenImplNative.class})
+
 public abstract class AllTestCases {
 }
