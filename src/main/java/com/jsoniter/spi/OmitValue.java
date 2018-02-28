@@ -135,6 +135,14 @@ public interface OmitValue {
             this.code = code;
         }
 
+        public Object getDefaultValue(){
+            return defaultValue;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
         public static OmitValue parse(Type valueType, String defaultValueToOmit) {
             if ("void".equals(defaultValueToOmit)) {
                 return null;
