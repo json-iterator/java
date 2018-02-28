@@ -385,6 +385,11 @@ public class Config extends EmptyExtension {
         }
     }
 
+    // Added to be able to test the private method updateBindings()
+    public void updateBindings_helper(ClassDescriptor desc) {
+        updateBindings(desc);
+    }
+
     private void updateBindings(ClassDescriptor desc) {
         boolean globalOmitDefault = JsoniterSpi.getCurrentConfig().omitDefaultValue();
         for (Binding binding : desc.allBindings()) {
