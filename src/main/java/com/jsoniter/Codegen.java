@@ -133,6 +133,10 @@ class Codegen {
         } else {
             clazz = (Class) type;
         }
+        return chooseCollectionImpl(type, clazz, typeArgs);
+    }
+
+    private static Type chooseCollectionImpl(Type type, Class clazz, Type[] typeArgs) {
         Class implClazz = JsoniterSpi.getTypeImplementation(clazz);
         if (Collection.class.isAssignableFrom(clazz)) {
             Type compType = Object.class;
@@ -152,6 +156,10 @@ class Codegen {
             }
             return GenericsHelper.createParameterizedType(new Type[]{compType}, null, clazz);
         }
+        return chooseMapImpl(type, clazz, typeArgs, implClazz);
+    }
+
+    private static Type chooseMapImpl(Type type, Class clazz, Type[] typeArgs, Class implClazz) {
         if (Map.class.isAssignableFrom(clazz)) {
             Type keyType = String.class;
             Type valueType = Object.class;
@@ -174,6 +182,10 @@ class Codegen {
             DefaultMapKeyDecoder.registerOrGetExisting(keyType);
             return GenericsHelper.createParameterizedType(new Type[]{keyType, valueType}, null, clazz);
         }
+        return chooseAlternativeImpl(type, typeArgs, implClazz);
+    }
+
+    private static Type chooseAlternativeImpl(Type type, Type[] typeArgs, Class implClazz) {
         if (implClazz != null) {
             if (typeArgs.length == 0) {
                 return implClazz;
