@@ -13,6 +13,42 @@ import java.util.*;
 
 public class JsonIterator implements Closeable {
 
+    // We have our own constants and a dictionary of size 256 bytes,
+    // while ValueType[256] is 1024 bytes on 32-bit system.
+    // If no one will call `whatIsNext`, ValueType class won't ever be loaded.
+    private static final byte T_INVALID = -1;
+    private static final byte T_STRING = 1;
+    private static final byte T_NUMBER = 2;
+    private static final byte T_NULL = 0;
+    private static final byte T_BOOLEAN = 3;
+    private static final byte T_ARRAY = 4;
+    private static final byte T_OBJECT = 5;
+    private static final byte[] types;
+    static {
+        byte[] _types = new byte[256];
+        for (int i = 0; i < _types.length; i++) {
+            _types[i] = T_INVALID;
+        }
+        _types['"'] = T_STRING;
+        _types['-'] = T_NUMBER;
+        _types['0'] = T_NUMBER;
+        _types['1'] = T_NUMBER;
+        _types['2'] = T_NUMBER;
+        _types['3'] = T_NUMBER;
+        _types['4'] = T_NUMBER;
+        _types['5'] = T_NUMBER;
+        _types['6'] = T_NUMBER;
+        _types['7'] = T_NUMBER;
+        _types['8'] = T_NUMBER;
+        _types['9'] = T_NUMBER;
+        _types['t'] = T_BOOLEAN;
+        _types['f'] = T_BOOLEAN;
+        _types['n'] = T_NULL;
+        _types['['] = T_ARRAY;
+        _types['{'] = T_OBJECT;
+        types = _types;
+    }
+
     public Config configCache;
     private static boolean isStreamingEnabled = false;
     InputStream in;
@@ -204,12 +240,12 @@ public class JsonIterator implements Closeable {
 
     public final BigDecimal readBigDecimal() throws IOException {
         // skip whitespace by read next
-        ValueType valueType = whatIsNext();
-        if (valueType == ValueType.NULL) {
+        byte type = whatsNext();
+        if (type == T_NULL) {
             skip();
             return null;
         }
-        if (valueType != ValueType.NUMBER) {
+        if (type != T_NUMBER) {
             throw reportError("readBigDecimal", "not number");
         }
         return new BigDecimal(IterImplForStreaming.readNumber(this));
@@ -217,12 +253,12 @@ public class JsonIterator implements Closeable {
 
     public final BigInteger readBigInteger() throws IOException {
         // skip whitespace by read next
-        ValueType valueType = whatIsNext();
-        if (valueType == ValueType.NULL) {
+        byte type = whatsNext();
+        if (type == T_NULL) {
             skip();
             return null;
         }
-        if (valueType != ValueType.NUMBER) {
+        if (type != T_NUMBER) {
             throw reportError("readBigDecimal", "not number");
         }
         return new BigInteger(IterImplForStreaming.readNumber(this));
@@ -258,11 +294,11 @@ public class JsonIterator implements Closeable {
 
     public final Object read() throws IOException {
         try {
-            ValueType valueType = whatIsNext();
-            switch (valueType) {
-                case STRING:
+            byte type = whatsNext();
+            switch (type) {
+                case T_STRING:
                     return readString();
-                case NUMBER:
+                case T_NUMBER:
                     double number = readDouble();
                     if (number == Math.floor(number) && !Double.isInfinite(number)) {
                         long longNumber = (long) number;
@@ -272,21 +308,21 @@ public class JsonIterator implements Closeable {
                         return longNumber;
                     }
                     return number;
-                case NULL:
+                case T_NULL:
                     IterImpl.skipFixedBytes(this, 4);
                     return null;
-                case BOOLEAN:
+                case T_BOOLEAN:
                     return readBoolean();
-                case ARRAY:
+                case T_ARRAY:
                     ArrayList list = new ArrayList(4);
                     readArrayCB(ReadArrayObjectCallback.INSTANCE, list);
                     return list;
-                case OBJECT:
+                case T_OBJECT:
                     Map map = new HashMap(4);
                     readObjectCB(ReadArrayObjectCallback.INSTANCE, map);
                     return map;
                 default:
-                    throw reportError("read", "unexpected value type: " + valueType);
+                    throw reportError("read", "unexpected value type: " + type);
             }
         } catch (ArrayIndexOutOfBoundsException e) {
             throw reportError("read", "premature end");
@@ -359,6 +395,12 @@ public class JsonIterator implements Closeable {
         ValueType valueType = ValueType.ofCharacter(IterImpl.nextToken(this));
         unreadByte();
         return valueType;
+    }
+
+    private byte whatsNext() throws IOException {
+        byte type = types[IterImpl.nextToken(this)];
+        unreadByte();
+        return type;
     }
 
     public void skip() throws IOException {
