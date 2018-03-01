@@ -9,16 +9,12 @@ import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class JsonIterator implements Closeable {
 
     public Config configCache;
     private static boolean isStreamingEnabled = false;
-    final static ValueType[] valueTypes = new ValueType[256];
     InputStream in;
     byte[] buf;
     int head;
@@ -29,29 +25,6 @@ public class JsonIterator implements Closeable {
     final Slice reusableSlice = new Slice(null, 0, 0);
     char[] reusableChars = new char[32];
     Object existingObject = null; // the object should be bind to next
-
-    static {
-        for (int i = 0; i < valueTypes.length; i++) {
-            valueTypes[i] = ValueType.INVALID;
-        }
-        valueTypes['"'] = ValueType.STRING;
-        valueTypes['-'] = ValueType.NUMBER;
-        valueTypes['0'] = ValueType.NUMBER;
-        valueTypes['1'] = ValueType.NUMBER;
-        valueTypes['2'] = ValueType.NUMBER;
-        valueTypes['3'] = ValueType.NUMBER;
-        valueTypes['4'] = ValueType.NUMBER;
-        valueTypes['5'] = ValueType.NUMBER;
-        valueTypes['6'] = ValueType.NUMBER;
-        valueTypes['7'] = ValueType.NUMBER;
-        valueTypes['8'] = ValueType.NUMBER;
-        valueTypes['9'] = ValueType.NUMBER;
-        valueTypes['t'] = ValueType.BOOLEAN;
-        valueTypes['f'] = ValueType.BOOLEAN;
-        valueTypes['n'] = ValueType.NULL;
-        valueTypes['['] = ValueType.ARRAY;
-        valueTypes['{'] = ValueType.OBJECT;
-    }
 
     private JsonIterator(InputStream in, byte[] buf, int head, int tail) {
         this.in = in;
@@ -383,7 +356,7 @@ public class JsonIterator implements Closeable {
     }
 
     public ValueType whatIsNext() throws IOException {
-        ValueType valueType = valueTypes[IterImpl.nextToken(this)];
+        ValueType valueType = ValueType.ofCharacter(IterImpl.nextToken(this));
         unreadByte();
         return valueType;
     }
