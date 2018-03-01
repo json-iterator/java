@@ -89,7 +89,7 @@ class IterImplString {
     public static int translateHex(final byte b) {
         int val;
         try {
-            val = hexDigits['0' + b];
+            val = hexDigits[b - '0'];
         } catch (ArrayIndexOutOfBoundsException e) {
             throw new IndexOutOfBoundsException(b + " is not valid hex digit");
         }
