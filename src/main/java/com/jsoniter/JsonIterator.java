@@ -263,23 +263,25 @@ public class JsonIterator implements Closeable {
         }
     }
 
-    private final static ReadArrayCallback fillArray = new ReadArrayCallback() {
+    private static final class ReadArrayObjectCallback implements ReadArrayCallback, ReadObjectCallback {
+
+        static final ReadArrayObjectCallback INSTANCE = new ReadArrayObjectCallback();
+
+        private ReadArrayObjectCallback() {}
+
         @Override
         public boolean handle(JsonIterator iter, Object attachment) throws IOException {
             List list = (List) attachment;
             list.add(iter.read());
             return true;
         }
-    };
-
-    private final static ReadObjectCallback fillObject = new ReadObjectCallback() {
         @Override
         public boolean handle(JsonIterator iter, String field, Object attachment) throws IOException {
             Map map = (Map) attachment;
             map.put(field, iter.read());
             return true;
         }
-    };
+    }
 
     public final Object read() throws IOException {
         try {
@@ -304,11 +306,11 @@ public class JsonIterator implements Closeable {
                     return readBoolean();
                 case ARRAY:
                     ArrayList list = new ArrayList(4);
-                    readArrayCB(fillArray, list);
+                    readArrayCB(ReadArrayObjectCallback.INSTANCE, list);
                     return list;
                 case OBJECT:
                     Map map = new HashMap(4);
-                    readObjectCB(fillObject, map);
+                    readObjectCB(ReadArrayObjectCallback.INSTANCE, map);
                     return map;
                 default:
                     throw reportError("read", "unexpected value type: " + valueType);
