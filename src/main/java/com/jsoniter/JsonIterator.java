@@ -239,19 +239,22 @@ public class JsonIterator implements Closeable {
     }
 
     public final BigDecimal readBigDecimal() throws IOException {
-        // skip whitespace by read next
-        byte type = whatsNext();
-        if (type == T_NULL) {
-            skip();
+        String n = readNumber();
+        if (n == null) {
             return null;
         }
-        if (type != T_NUMBER) {
-            throw reportError("readBigDecimal", "not number");
-        }
-        return new BigDecimal(IterImplForStreaming.readNumber(this));
+        return new BigDecimal(n);
     }
 
     public final BigInteger readBigInteger() throws IOException {
+        String n = readNumber();
+        if (n == null) {
+            return null;
+        }
+        return new BigInteger(n);
+    }
+
+    private String readNumber() throws IOException {
         // skip whitespace by read next
         byte type = whatsNext();
         if (type == T_NULL) {
@@ -259,9 +262,9 @@ public class JsonIterator implements Closeable {
             return null;
         }
         if (type != T_NUMBER) {
-            throw reportError("readBigDecimal", "not number");
+            throw reportError("readNumber", "not number");
         }
-        return new BigInteger(IterImplForStreaming.readNumber(this));
+        return IterImplForStreaming.readNumber(this);
     }
 
     public final Any readAny() throws IOException {
