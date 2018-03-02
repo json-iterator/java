@@ -161,7 +161,7 @@ class IterImplForStreaming {
         for (; ; ) {
             for (int i = iter.head; i < iter.tail; i++) {
                 byte c = iter.buf[i];
-                if (IterImplSkip.breaks[c]) {
+                if (IterImplSkip.isBreak(c)) {
                     iter.head = i;
                     return;
                 }
@@ -183,7 +183,7 @@ class IterImplForStreaming {
                     dotFound = true;
                     continue;
                 }
-                if (IterImplSkip.breaks[c]) {
+                if (IterImplSkip.isBreak(c)) {
                     iter.head = i;
                     return dotFound;
                 }
