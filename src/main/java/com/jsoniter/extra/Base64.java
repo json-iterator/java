@@ -78,10 +78,10 @@ import java.util.Arrays;
 abstract class Base64 {
     private static final char[] CA = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".toCharArray();
     static final byte[] BA;
-    static final int[] IA = new int[256];
+    static final byte[] IA = new byte[256];
     static {
-        Arrays.fill(IA, -1);
-        for (int i = 0, iS = CA.length; i < iS; i++) {
+        Arrays.fill(IA, (byte) -1);
+        for (byte i = 0, iS = (byte) CA.length; i < iS; i++) {
             IA[CA[i]] = i;
         }
         IA['='] = 0;
