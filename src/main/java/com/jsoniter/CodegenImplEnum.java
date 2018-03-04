@@ -9,7 +9,7 @@ class CodegenImplEnum {
         StringBuilder lines = new StringBuilder();
         append(lines, "if (iter.readNull()) { return null; }");
         append(lines, "com.jsoniter.slice.Slice field = com.jsoniter.CodegenAccess.readSlice(iter);");
-        append(lines, "switch (field.len()) {");
+        append(lines, "switch (field.size()) {");
         append(lines, renderTriTree(buildTriTree(Arrays.asList(classInfo.clazz.getEnumConstants()))));
         append(lines, "}"); // end of switch
         append(lines, String.format("throw iter.reportError(\"decode enum\", field + \" is not valid enum for %s\");", classInfo.clazz.getName()));

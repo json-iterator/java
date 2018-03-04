@@ -104,7 +104,7 @@ class CodegenImplObjectStrict {
             }
         }
         if (hasAnythingToBindFrom(allBindings)) {
-            append(lines, "switch (field.len()) {");
+            append(lines, "switch (field.size()) {");
             append(lines, rendered);
             append(lines, "}"); // end of switch
         }
@@ -114,7 +114,7 @@ class CodegenImplObjectStrict {
         append(lines, "while (com.jsoniter.CodegenAccess.nextToken(iter) == ',') {");
         append(lines, "field = com.jsoniter.CodegenAccess.readObjectFieldAsSlice(iter);");
         if (hasAnythingToBindFrom(allBindings)) {
-            append(lines, "switch (field.len()) {");
+            append(lines, "switch (field.size()) {");
             append(lines, rendered);
             append(lines, "}"); // end of switch
         }
