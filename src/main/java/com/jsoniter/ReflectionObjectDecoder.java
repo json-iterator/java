@@ -1,6 +1,8 @@
 package com.jsoniter;
 
 import com.jsoniter.any.Any;
+import com.jsoniter.slice.Slice;
+import com.jsoniter.slice.StringSlice;
 import com.jsoniter.spi.*;
 
 import java.io.IOException;
@@ -91,7 +93,7 @@ class ReflectionObjectDecoder {
         }
         binding.idx = tempIdx;
         for (String fromName : binding.fromNames) {
-            Slice slice = Slice.make(fromName);
+            Slice slice = new StringSlice(fromName);
             if (allBindings.containsKey(slice)) {
                 throw new JsonException("name conflict found in " + classInfo.clazz + ": " + fromName);
             }
@@ -393,7 +395,7 @@ class ReflectionObjectDecoder {
             if (extra == null) {
                 extra = new HashMap<String, Object>();
             }
-            extra.put(fieldName.toString(), value);
+            extra.put(fieldName.string(), value);
         } else {
             iter.skip();
         }

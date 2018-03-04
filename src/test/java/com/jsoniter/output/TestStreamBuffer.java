@@ -14,7 +14,7 @@ public class TestStreamBuffer extends TestCase {
         jsonStream.writeVal("01234567");
         jsonStream.writeVal("012345678");
         jsonStream.writeVal("");
-        assertEquals(33, jsonStream.buffer().len());
+        assertEquals(33, jsonStream.buffer().size());
     }
 
     public void test_write_raw() throws IOException {
@@ -23,7 +23,7 @@ public class TestStreamBuffer extends TestCase {
         jsonStream.writeRaw("0123456789");
         jsonStream.writeRaw("0123456789");
         jsonStream.writeRaw("0123456789");
-        assertEquals(40, jsonStream.buffer().len());
+        assertEquals(40, jsonStream.buffer().size());
     }
 
     public void test_write_bytes() throws IOException {
@@ -32,7 +32,7 @@ public class TestStreamBuffer extends TestCase {
         jsonStream.write("0123456789".getBytes());
         jsonStream.write("0123456789".getBytes());
         jsonStream.write("0123456789".getBytes());
-        assertEquals(40, jsonStream.buffer().len());
+        assertEquals(40, jsonStream.buffer().size());
     }
 
     public void test_write_indention() throws IOException {
@@ -42,7 +42,7 @@ public class TestStreamBuffer extends TestCase {
             JsonStream jsonStream = new JsonStream(null, 32);
             jsonStream.writeArrayStart();
             jsonStream.writeIndention();
-            assertEquals(34, jsonStream.buffer().len());
+            assertEquals(34, jsonStream.buffer().size());
         } finally {
             JsoniterSpi.setCurrentConfig(oldConfig);
         }
@@ -54,7 +54,7 @@ public class TestStreamBuffer extends TestCase {
         jsonStream.writeVal(123456789);
         jsonStream.writeVal(123456789);
         jsonStream.writeVal(123456789);
-        assertEquals(36, jsonStream.buffer().len());
+        assertEquals(36, jsonStream.buffer().size());
     }
 
     public void test_write_long() throws IOException {
@@ -63,6 +63,6 @@ public class TestStreamBuffer extends TestCase {
         jsonStream.writeVal(123456789L);
         jsonStream.writeVal(123456789L);
         jsonStream.writeVal(123456789L);
-        assertEquals(36, jsonStream.buffer().len());
+        assertEquals(36, jsonStream.buffer().size());
     }
 }

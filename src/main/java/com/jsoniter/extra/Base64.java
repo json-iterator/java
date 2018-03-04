@@ -1,8 +1,8 @@
 package com.jsoniter.extra;
 
 import com.jsoniter.JsonIterator;
-import com.jsoniter.spi.Slice;
 import com.jsoniter.output.JsonStream;
+import com.jsoniter.slice.Slice;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -177,7 +177,7 @@ abstract class Base64 {
 
     static long decodeLongBits(JsonIterator iter) throws IOException {
         Slice slice = iter.readStringAsSlice();
-        if (slice.len() != 11) {
+        if (slice.size() != 11) {
             throw iter.reportError("decodeLongBits", "must be 11 bytes for long bits encoded double");
         }
         byte[] encoded = slice.data();

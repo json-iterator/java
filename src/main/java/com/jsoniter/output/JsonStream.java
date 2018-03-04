@@ -1,6 +1,8 @@
 package com.jsoniter.output;
 
 import com.jsoniter.any.Any;
+import com.jsoniter.slice.DirectSlice;
+import com.jsoniter.slice.Slice;
 import com.jsoniter.spi.*;
 
 import java.io.IOException;
@@ -518,6 +520,6 @@ public class JsonStream extends OutputStream {
     }
 
     public Slice buffer() {
-        return new Slice(buf, 0, count);
+        return new DirectSlice(buf, 0, count);
     }
 }

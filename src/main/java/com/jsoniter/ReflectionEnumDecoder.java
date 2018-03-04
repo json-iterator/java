@@ -1,7 +1,8 @@
 package com.jsoniter;
 
+import com.jsoniter.slice.Slice;
+import com.jsoniter.slice.StringSlice;
 import com.jsoniter.spi.Decoder;
-import com.jsoniter.spi.Slice;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -15,7 +16,7 @@ class ReflectionEnumDecoder implements Decoder{
     public ReflectionEnumDecoder(Class clazz) {
         this.clazz = clazz;
         for (Object e : clazz.getEnumConstants()) {
-            enumMap.put(Slice.make(e.toString()), e);
+            enumMap.put(new StringSlice(e.toString()), e);
         }
     }
     @Override

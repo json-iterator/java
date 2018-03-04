@@ -1,5 +1,6 @@
 package com.jsoniter;
 
+import com.jsoniter.slice.Slice;
 import com.jsoniter.spi.*;
 
 import java.io.IOException;

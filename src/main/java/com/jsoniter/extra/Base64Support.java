@@ -1,8 +1,8 @@
 package com.jsoniter.extra;
 
 import com.jsoniter.JsonIterator;
-import com.jsoniter.spi.Slice;
 import com.jsoniter.output.JsonStream;
+import com.jsoniter.slice.Slice;
 import com.jsoniter.spi.Decoder;
 import com.jsoniter.spi.Encoder;
 import com.jsoniter.spi.JsonException;

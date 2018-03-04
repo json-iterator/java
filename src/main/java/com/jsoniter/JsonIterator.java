@@ -1,6 +1,9 @@
 package com.jsoniter;
 
 import com.jsoniter.any.Any;
+import com.jsoniter.slice.DirectSlice;
+import com.jsoniter.slice.Slice;
+import com.jsoniter.slice.StringSlice;
 import com.jsoniter.spi.*;
 
 import java.io.Closeable;
@@ -16,9 +19,11 @@ import java.util.Map;
 
 public class JsonIterator implements Closeable {
 
+    private static final ValueType[] valueTypes = new ValueType[256];
+    private static final byte[] EMPTY_BYTES = new byte[0];
+
     public Config configCache;
     private static boolean isStreamingEnabled = false;
-    final static ValueType[] valueTypes = new ValueType[256];
     InputStream in;
     byte[] buf;
     int head;
@@ -26,7 +31,10 @@ public class JsonIterator implements Closeable {
     int skipStartedAt = -1; // skip should keep bytes starting at this pos
 
     Map<String, Object> tempObjects = null; // used in reflection object decoder
-    final Slice reusableSlice = new Slice(null, 0, 0);
+
+    final DirectSlice rDirectSlice = new DirectSlice(EMPTY_BYTES, 0, 0);
+    final StringSlice rStringSlice = new StringSlice("");
+
     char[] reusableChars = new char[32];
     Object existingObject = null; // the object should be bind to next
 
@@ -61,7 +69,7 @@ public class JsonIterator implements Closeable {
     }
 
     public JsonIterator() {
-        this(null, new byte[0], 0, 0);
+        this(null, EMPTY_BYTES, 0, 0);
     }
 
     public static JsonIterator parse(InputStream in, int bufSize) {
