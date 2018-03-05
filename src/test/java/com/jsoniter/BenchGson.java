@@ -8,7 +8,6 @@ import com.google.gson.annotations.SerializedName;
 import com.jsoniter.extra.GsonCompatibilityMode;
 import com.jsoniter.spi.DecodingMode;
 import com.jsoniter.spi.JsoniterSpi;
-import org.junit.Test;
 import org.openjdk.jmh.Main;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.BenchmarkParams;
@@ -42,7 +41,7 @@ public class BenchGson {
 
     @Benchmark
     public void gsonDecoder(Blackhole bh) throws IOException {
-        FileInputStream stream = new FileInputStream("/tmp/tweets.json");
+        FileInputStream stream = new FileInputStream("./src/test/tweets.json");
         InputStreamReader reader = new InputStreamReader(stream);
         try {
             bh.consume(gson.fromJson(reader, new TypeReference<List<Tweet>>() {
@@ -55,7 +54,7 @@ public class BenchGson {
 
     @Benchmark
     public void jsoniterReflectionDecoder(Blackhole bh) throws IOException {
-        FileInputStream stream = new FileInputStream("/tmp/tweets.json");
+        FileInputStream stream = new FileInputStream("./src/test/tweets.json");
         JsonIterator iter = JsonIteratorPool.borrowJsonIterator();
         try {
             iter.reset(stream);
