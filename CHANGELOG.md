@@ -6,7 +6,12 @@
 
 # 0.9.21
 
+breaking changes
+
 * fix #149 parse Object.class follow jackson convention
+
+bug fixes
+
 * fix #145 add Any.registerEncoders
 * merge #143
 
