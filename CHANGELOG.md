@@ -1,3 +1,19 @@
+# 0.9.22
+
+* fix #167 parse Object.class follow jackson convention. fixed the case of 1.0 parsed as int not double.
+* fix #154 support map integer key
+* fix #152
+
+# 0.9.21
+
+* fix #149 parse Object.class follow jackson convention
+* fix #145 add Any.registerEncoders
+* merge #143
+
+# 0.9.20
+
+* fix #136, field with only getter is also considered as java bean property, so that @JsonIgnore on the field should be propagated to getter 
+
 # 0.9.19
 * changed cfg class name to hashcode based
 * fix static codegen
