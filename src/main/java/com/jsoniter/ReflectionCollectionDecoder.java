@@ -38,11 +38,7 @@ class ReflectionCollectionDecoder implements Decoder {
         if (iter.readNull()) {
             return null;
         }
-        if (col == null) {
-            col = (Collection) this.ctor.newInstance();
-        } else {
-            col.clear();
-        }
+        col = (Collection) this.ctor.newInstance();
         while (iter.readArray()) {
             col.add(compTypeDecoder.decode(iter));
         }
