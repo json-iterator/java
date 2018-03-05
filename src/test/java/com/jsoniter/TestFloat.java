@@ -1,5 +1,6 @@
 package com.jsoniter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import junit.framework.TestCase;
 import org.junit.experimental.categories.Category;
 
@@ -86,5 +87,7 @@ public class TestFloat extends TestCase {
     public void testChooseDouble() {
         Object number = JsonIterator.deserialize("1.1", Object.class);
         assertEquals(1.1, number);
+        number = JsonIterator.deserialize("1.0", Object.class);
+        assertEquals(1.0, number);
     }
 }

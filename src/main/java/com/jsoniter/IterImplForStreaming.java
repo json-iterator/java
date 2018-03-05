@@ -539,15 +539,22 @@ class IterImplForStreaming {
 
     public static final double readDoubleSlowPath(final JsonIterator iter) throws IOException {
         try {
-            String numberAsStr = readNumber(iter);
-            return Double.valueOf(numberAsStr);
+            numberChars numberChars = readNumber(iter);
+            return Double.valueOf(new String(numberChars.chars, 0, numberChars.charsLength));
         } catch (NumberFormatException e) {
             throw iter.reportError("readDoubleSlowPath", e.toString());
         }
     }
 
-    public static final String readNumber(final JsonIterator iter) throws IOException {
+    static class numberChars {
+        char[] chars;
+        int charsLength;
+        boolean dotFound;
+    }
+
+    public static final numberChars readNumber(final JsonIterator iter) throws IOException {
         int j = 0;
+        boolean dotFound = false;
         for (; ; ) {
             for (int i = iter.head; i < iter.tail; i++) {
                 if (j == iter.reusableChars.length) {
@@ -557,11 +564,13 @@ class IterImplForStreaming {
                 }
                 byte c = iter.buf[i];
                 switch (c) {
-                    case '-':
-                    case '+':
                     case '.':
                     case 'e':
                     case 'E':
+                        dotFound = true;
+                        // fallthrough
+                    case '-':
+                    case '+':
                     case '0':
                     case '1':
                     case '2':
@@ -576,12 +585,20 @@ class IterImplForStreaming {
                         break;
                     default:
                         iter.head = i;
-                        return new String(iter.reusableChars, 0, j);
+                        numberChars numberChars = new numberChars();
+                        numberChars.chars = iter.reusableChars;
+                        numberChars.charsLength = j;
+                        numberChars.dotFound = dotFound;
+                        return numberChars;
                 }
             }
             if (!IterImpl.loadMore(iter)) {
                 iter.head = iter.tail;
-                return new String(iter.reusableChars, 0, j);
+                numberChars numberChars = new numberChars();
+                numberChars.chars = iter.reusableChars;
+                numberChars.charsLength = j;
+                numberChars.dotFound = dotFound;
+                return numberChars;
             }
         }
     }

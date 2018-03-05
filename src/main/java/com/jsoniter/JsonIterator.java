@@ -190,7 +190,8 @@ public class JsonIterator implements Closeable {
     }
 
     public String readNumberAsString() throws IOException {
-        return IterImplForStreaming.readNumber(this);
+        IterImplForStreaming.numberChars numberChars = IterImplForStreaming.readNumber(this);
+        return new String(numberChars.chars, 0, numberChars.charsLength);
     }
 
     public static interface ReadArrayCallback {
@@ -239,7 +240,8 @@ public class JsonIterator implements Closeable {
         if (valueType != ValueType.NUMBER) {
             throw reportError("readBigDecimal", "not number");
         }
-        return new BigDecimal(IterImplForStreaming.readNumber(this));
+        IterImplForStreaming.numberChars numberChars = IterImplForStreaming.readNumber(this);
+        return new BigDecimal(numberChars.chars, 0, numberChars.charsLength);
     }
 
     public final BigInteger readBigInteger() throws IOException {
@@ -252,7 +254,8 @@ public class JsonIterator implements Closeable {
         if (valueType != ValueType.NUMBER) {
             throw reportError("readBigDecimal", "not number");
         }
-        return new BigInteger(IterImplForStreaming.readNumber(this));
+        IterImplForStreaming.numberChars numberChars = IterImplForStreaming.readNumber(this);
+        return new BigInteger(new String(numberChars.chars, 0, numberChars.charsLength));
     }
 
     public final Any readAny() throws IOException {
@@ -288,9 +291,14 @@ public class JsonIterator implements Closeable {
                 case STRING:
                     return readString();
                 case NUMBER:
-                    double number = readDouble();
-                    if (number == Math.floor(number) && !Double.isInfinite(number)) {
-                        long longNumber = (long) number;
+                    IterImplForStreaming.numberChars numberChars = IterImplForStreaming.readNumber(this);
+                    Double number = Double.valueOf(new String(numberChars.chars, 0, numberChars.charsLength));
+                    if (numberChars.dotFound) {
+                        return number;
+                    }
+                    double doubleNumber = number;
+                    if (doubleNumber == Math.floor(doubleNumber) && !Double.isInfinite(doubleNumber)) {
+                        long longNumber = (long) doubleNumber;
                         if (longNumber <= Integer.MAX_VALUE && longNumber >= Integer.MIN_VALUE) {
                             return (int) longNumber;
                         }
