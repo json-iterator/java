@@ -28,7 +28,7 @@ class CodegenImplObject {
                     ctx.append("while(iter.hasNext()) {");
                     ctx.append("java.util.Map.Entry entry = (java.util.Map.Entry)iter.next();");
                     notFirst = appendComma(ctx, notFirst);
-                    ctx.append("stream.writeObjectField(entry.getKey().toString());");
+                    ctx.append("stream.writeObjectField(((Slice) entry.getKey()).string());");
                     ctx.append("if (entry.getValue() == null) { stream.writeNull(); } else {");
                     CodegenImplNative.genWriteOp(ctx, "entry.getValue()", unwrapper.mapValueTypeLiteral.getType(), true);
                     ctx.append("}");
