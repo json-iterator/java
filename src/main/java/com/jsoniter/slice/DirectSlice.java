@@ -54,6 +54,9 @@ public final class DirectSlice implements Slice {
 
     @Override
     public byte at(int pos) {
+        if (pos < 0 || pos > size()) {
+            throw new ArrayIndexOutOfBoundsException("Wrong pos " + pos + ", size is " + size());
+        }
         return data[head + pos];
     }
 
