@@ -1,9 +1,12 @@
 package com.jsoniter;
 
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.jsoniter.annotation.JsonCreator;
 import com.jsoniter.annotation.JsonIgnore;
 import com.jsoniter.annotation.JsonProperty;
 import com.jsoniter.spi.DecodingMode;
+import jdk.nashorn.internal.objects.annotations.Getter;
+import jdk.nashorn.internal.objects.annotations.Setter;
 import junit.framework.TestCase;
 import org.junit.Test;
 
@@ -62,5 +65,26 @@ public class TestAnnotationJsonIgnore extends TestCase {
         JsonIterator iter = JsonIterator.parse("{\"field2\": \"test\"}");
         TestObject3 t = iter.read(TestObject3.class);
         assertNotNull(t.fieldXXX);
+    }
+
+    public static class TestObject4 {
+
+        @JsonIgnore
+        public String field1 = "Orange";
+        private double field2 = 0.0;
+
+        @Setter
+        public void setField2(double d) {
+            this.field2 = d;
+        }
+    }
+
+    public void test_ignore_with_setter() throws IOException {
+        // contract: If a parameter has annotated tag @JsonIgnore
+        // it should not be possible to change the parameter using
+        // a the json iterator
+        JsonIterator iter = JsonIterator.parse("{\"field1\": \"Apple\"}");
+        TestObject4 t = iter.read(TestObject4.class);
+        assertEquals("Orange",t.field1);
     }
 }

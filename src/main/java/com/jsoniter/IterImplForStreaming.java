@@ -382,6 +382,113 @@ class IterImplForStreaming {
         }
     }
 
+
+    public final static boolean readHexSlowPath(JsonIterator iter, int bc, boolean isExpectingLowSurrogate)
+            throws IOException, JsonException {
+        if (Character.isHighSurrogate((char) bc)) {
+            if (isExpectingLowSurrogate) {
+                throw new JsonException("invalid surrogate");
+            } else {
+                isExpectingLowSurrogate = true;
+            }
+        } else if (Character.isLowSurrogate((char) bc)) {
+            if (isExpectingLowSurrogate) {
+                isExpectingLowSurrogate = false;
+            } else {
+                throw new JsonException("invalid surrogate");
+            }
+        } else {
+            if (isExpectingLowSurrogate) {
+                throw new JsonException("invalid surrogate");
+            }
+        }
+        return isExpectingLowSurrogate;
+    }
+
+    private static class SlowPathReader {
+        int j;
+        int bc;
+        JsonIterator iter;
+        boolean shouldContinue;
+
+        SlowPathReader(int j, int bc, JsonIterator iter) {
+            this.j = j;
+            this.bc = bc;
+            this.iter = iter;
+        }
+    }
+
+    public final static SlowPathReader readValidUnicodeSlowPath(SlowPathReader slowPathReader) throws IOException {
+        int j = slowPathReader.j;
+        int bc = slowPathReader.bc;
+        JsonIterator iter = slowPathReader.iter;
+
+        if (bc >= 0x10000) {
+            // check if valid unicode
+            if (bc >= 0x110000)
+                throw iter.reportError("readStringSlowPath", "invalid unicode character");
+
+            // split surrogates
+            final int sup = bc - 0x10000;
+            if (iter.reusableChars.length == j) {
+                char[] newBuf = new char[iter.reusableChars.length * 2];
+                System.arraycopy(iter.reusableChars, 0, newBuf, 0, iter.reusableChars.length);
+                iter.reusableChars = newBuf;
+            }
+            iter.reusableChars[j++] = (char) ((sup >>> 10) + 0xd800);
+            if (iter.reusableChars.length == j) {
+                char[] newBuf = new char[iter.reusableChars.length * 2];
+                System.arraycopy(iter.reusableChars, 0, newBuf, 0, iter.reusableChars.length);
+                iter.reusableChars = newBuf;
+            }
+            iter.reusableChars[j++] = (char) ((sup & 0x3ff) + 0xdc00);
+            slowPathReader.shouldContinue = true;
+        }
+
+        slowPathReader.j = j;
+        slowPathReader.iter = iter;
+        slowPathReader.bc = bc;
+
+        return slowPathReader;
+    }
+
+    public final static SlowPathReader readUnicodeSlowPath(SlowPathReader slowPathReader) throws IOException {
+        int j = slowPathReader.j;
+        int bc = slowPathReader.bc;
+        JsonIterator iter = slowPathReader.iter;
+
+        final int u2 = readByte(iter);
+        if ((bc & 0xE0) == 0xC0) {
+            bc = ((bc & 0x1F) << 6) + (u2 & 0x3F);
+        } else {
+            final int u3 = readByte(iter);
+            if ((bc & 0xF0) == 0xE0) {
+                bc = ((bc & 0x0F) << 12) + ((u2 & 0x3F) << 6) + (u3 & 0x3F);
+            } else {
+                final int u4 = readByte(iter);
+                if ((bc & 0xF8) == 0xF0) {
+                    bc = ((bc & 0x07) << 18) + ((u2 & 0x3F) << 12) + ((u3 & 0x3F) << 6) + (u4 & 0x3F);
+                } else {
+                    throw iter.reportError("readStringSlowPath", "invalid unicode character");
+                }
+                slowPathReader.j = j;
+                slowPathReader.bc = bc;
+                slowPathReader.iter = iter;
+                slowPathReader = readValidUnicodeSlowPath(slowPathReader);
+
+                j = slowPathReader.j;
+                iter = slowPathReader.iter;
+                bc = slowPathReader.bc;
+            }
+        }
+
+        slowPathReader.j = j;
+        slowPathReader.iter = iter;
+        slowPathReader.bc = bc;
+
+        return slowPathReader;
+    }
+
     public final static int readStringSlowPath(JsonIterator iter, int j) throws IOException {
         boolean isExpectingLowSurrogate = false;
         for (;;) {
@@ -416,67 +523,19 @@ class IterImplForStreaming {
                                 (IterImplString.translateHex(readByte(iter)) << 8) +
                                 (IterImplString.translateHex(readByte(iter)) << 4) +
                                 IterImplString.translateHex(readByte(iter));
-                        if (Character.isHighSurrogate((char) bc)) {
-                            if (isExpectingLowSurrogate) {
-                                throw new JsonException("invalid surrogate");
-                            } else {
-                                isExpectingLowSurrogate = true;
-                            }
-                        } else if (Character.isLowSurrogate((char) bc)) {
-                            if (isExpectingLowSurrogate) {
-                                isExpectingLowSurrogate = false;
-                            } else {
-                                throw new JsonException("invalid surrogate");
-                            }
-                        } else {
-                            if (isExpectingLowSurrogate) {
-                                throw new JsonException("invalid surrogate");
-                            }
-                        }
+                        isExpectingLowSurrogate = readHexSlowPath(iter, bc, isExpectingLowSurrogate);
                         break;
-
                     default:
                         throw iter.reportError("readStringSlowPath", "invalid escape character: " + bc);
                 }
             } else if ((bc & 0x80) != 0) {
-                final int u2 = readByte(iter);
-                if ((bc & 0xE0) == 0xC0) {
-                    bc = ((bc & 0x1F) << 6) + (u2 & 0x3F);
-                } else {
-                    final int u3 = readByte(iter);
-                    if ((bc & 0xF0) == 0xE0) {
-                        bc = ((bc & 0x0F) << 12) + ((u2 & 0x3F) << 6) + (u3 & 0x3F);
-                    } else {
-                        final int u4 = readByte(iter);
-                        if ((bc & 0xF8) == 0xF0) {
-                            bc = ((bc & 0x07) << 18) + ((u2 & 0x3F) << 12) + ((u3 & 0x3F) << 6) + (u4 & 0x3F);
-                        } else {
-                            throw iter.reportError("readStringSlowPath", "invalid unicode character");
-                        }
+                SlowPathReader slowPathReader = new SlowPathReader(j, bc, iter);
+                slowPathReader = readUnicodeSlowPath(slowPathReader);
 
-                        if (bc >= 0x10000) {
-                            // check if valid unicode
-                            if (bc >= 0x110000)
-                                throw iter.reportError("readStringSlowPath", "invalid unicode character");
-
-                            // split surrogates
-                            final int sup = bc - 0x10000;
-                            if (iter.reusableChars.length == j) {
-                                char[] newBuf = new char[iter.reusableChars.length * 2];
-                                System.arraycopy(iter.reusableChars, 0, newBuf, 0, iter.reusableChars.length);
-                                iter.reusableChars = newBuf;
-                            }
-                            iter.reusableChars[j++] = (char) ((sup >>> 10) + 0xd800);
-                            if (iter.reusableChars.length == j) {
-                                char[] newBuf = new char[iter.reusableChars.length * 2];
-                                System.arraycopy(iter.reusableChars, 0, newBuf, 0, iter.reusableChars.length);
-                                iter.reusableChars = newBuf;
-                            }
-                            iter.reusableChars[j++] = (char) ((sup & 0x3ff) + 0xdc00);
-                            continue;
-                        }
-                    }
-                }
+                j = slowPathReader.j;
+                iter = slowPathReader.iter;
+                bc = slowPathReader.bc;
+                if (slowPathReader.shouldContinue) continue;
             }
             if (iter.reusableChars.length == j) {
                 char[] newBuf = new char[iter.reusableChars.length * 2];

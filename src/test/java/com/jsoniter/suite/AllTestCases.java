@@ -1,6 +1,7 @@
 package com.jsoniter.suite;
 
 import com.jsoniter.*;
+import com.jsoniter.TestCodegenImplNative;
 import com.jsoniter.TestFloat;
 import com.jsoniter.TestGenerics;
 import com.jsoniter.TestGson;
@@ -10,6 +11,7 @@ import com.jsoniter.TestString;
 import com.jsoniter.any.TestList;
 import com.jsoniter.output.*;
 import com.jsoniter.output.TestInteger;
+import com.jsoniter.spi.TestConfig;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
@@ -51,9 +53,15 @@ import org.junit.runners.Suite;
         TestSpiPropertyDecoder.class,
         TestGson.class,
         com.jsoniter.output.TestGson.class,
+        com.jsoniter.IterImplForStreamingTest.class,
         TestStreamBuffer.class,
         TestCollection.class,
         TestList.class,
-        TestAnnotationJsonObject.class})
+        TestAnnotationJsonObject.class,
+        com.jsoniter.spi.TestConfig.class,
+        TestOmitValue.class,
+        TestIterImpl.class,
+        TestCodegenImplNative.class})
+  
 public abstract class AllTestCases {
 }
