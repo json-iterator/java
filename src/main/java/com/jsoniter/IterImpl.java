@@ -393,10 +393,6 @@ class IterImpl {
 
     static final long readLong(final JsonIterator iter, final byte c) throws IOException {
         long ind = IterImplNumber.intDigits[c];
-        if (ind == 0) {
-            IterImplForStreaming.assertNotLeadingZero(iter);
-            return 0;
-        }
         if (ind == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
             throw iter.reportError("readLong", "expect 0~9");
         }

@@ -91,8 +91,17 @@ class IterImplNumber {
     public static final long readLong(JsonIterator iter) throws IOException {
         byte c = IterImpl.nextToken(iter);
         if (c == '-') {
-            return IterImpl.readLong(iter, IterImpl.readByte(iter));
+            c = IterImpl.readByte(iter);
+            if (IterImplNumber.intDigits[c] == 0) {
+                IterImplForStreaming.assertNotLeadingZero(iter);
+                return 0;
+            }
+            return IterImpl.readLong(iter, c);
         } else {
+            if (IterImplNumber.intDigits[c] == 0) {
+                IterImplForStreaming.assertNotLeadingZero(iter);
+                return 0;
+            }
             long val = IterImpl.readLong(iter, c);
             if (val == Long.MIN_VALUE) {
                 throw iter.reportError("readLong", "value is too large for long");
