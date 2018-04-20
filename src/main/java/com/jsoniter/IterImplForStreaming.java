@@ -540,6 +540,16 @@ class IterImplForStreaming {
     public static final double readDoubleSlowPath(final JsonIterator iter) throws IOException {
         try {
             numberChars numberChars = readNumber(iter);
+            if (numberChars.charsLength == 0 && iter.whatIsNext() == ValueType.STRING) {
+                String possibleInf = iter.readString();
+                if ("infinity".equals(possibleInf)) {
+                    return Double.POSITIVE_INFINITY;
+                }
+                if ("-infinity".equals(possibleInf)) {
+                    return Double.NEGATIVE_INFINITY;
+                }
+                throw iter.reportError("readDoubleSlowPath", "expect number but found string: " + possibleInf);
+            }
             return Double.valueOf(new String(numberChars.chars, 0, numberChars.charsLength));
         } catch (NumberFormatException e) {
             throw iter.reportError("readDoubleSlowPath", e.toString());

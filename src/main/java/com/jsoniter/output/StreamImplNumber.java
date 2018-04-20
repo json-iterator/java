@@ -212,10 +212,18 @@ class StreamImplNumber {
 
     public static final void writeFloat(JsonStream stream, float val) throws IOException {
         if (val < 0) {
+            if (val == Float.NEGATIVE_INFINITY) {
+                stream.writeVal("-Infinity");
+                return;
+            }
             stream.write('-');
             val = -val;
         }
         if (val > 0x4ffffff) {
+            if (val == Float.POSITIVE_INFINITY) {
+                stream.writeVal("Infinity");
+                return;
+            }
             stream.writeRaw(Float.toString(val));
             return;
         }
@@ -240,10 +248,18 @@ class StreamImplNumber {
 
     public static final void writeDouble(JsonStream stream, double val) throws IOException {
         if (val < 0) {
+            if (val == Double.NEGATIVE_INFINITY) {
+                stream.writeVal("-Infinity");
+                return;
+            }
             val = -val;
             stream.write('-');
         }
         if (val > 0x4ffffff) {
+            if (val == Double.POSITIVE_INFINITY) {
+                stream.writeVal("Infinity");
+                return;
+            }
             stream.writeRaw(Double.toString(val));
             return;
         }

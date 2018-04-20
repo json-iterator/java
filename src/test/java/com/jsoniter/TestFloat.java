@@ -1,6 +1,5 @@
 package com.jsoniter;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import junit.framework.TestCase;
 import org.junit.experimental.categories.Category;
 
@@ -90,4 +89,12 @@ public class TestFloat extends TestCase {
         number = JsonIterator.deserialize("1.0", Object.class);
         assertEquals(1.0, number);
     }
+
+    public void testInfinity() {
+        assertTrue(JsonIterator.deserialize("\"-infinity\"", Double.class) == Double.NEGATIVE_INFINITY);
+        assertTrue(JsonIterator.deserialize("\"-infinity\"", Float.class) == Float.NEGATIVE_INFINITY);
+        assertTrue(JsonIterator.deserialize("\"infinity\"", Double.class) == Double.POSITIVE_INFINITY);
+        assertTrue(JsonIterator.deserialize("\"infinity\"", Float.class) == Float.POSITIVE_INFINITY);
+    }
+
 }
