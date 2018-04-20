@@ -22,6 +22,7 @@ public class JsonIteratorPool {
 
     public static void returnJsonIterator(JsonIterator iter) {
         iter.configCache = null;
+        iter.existingObject = null;
         if (slot1.get() == null) {
             slot1.set(iter);
             return;
