@@ -8,6 +8,7 @@ import com.jsoniter.TestNested;
 import com.jsoniter.TestObject;
 import com.jsoniter.TestString;
 import com.jsoniter.any.TestList;
+import com.jsoniter.any.TestLong;
 import com.jsoniter.output.*;
 import com.jsoniter.output.TestInteger;
 import org.junit.runner.RunWith;
@@ -54,6 +55,7 @@ import org.junit.runners.Suite;
         TestStreamBuffer.class,
         TestCollection.class,
         TestList.class,
-        TestAnnotationJsonObject.class})
+        TestAnnotationJsonObject.class,
+        TestLong.class})
 public abstract class AllTestCases {
 }

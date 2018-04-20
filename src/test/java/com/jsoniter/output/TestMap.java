@@ -1,5 +1,6 @@
 package com.jsoniter.output;
 
+import com.jsoniter.JsonIterator;
 import com.jsoniter.spi.Config;
 import com.jsoniter.spi.Encoder;
 import com.jsoniter.spi.JsoniterSpi;
@@ -63,6 +64,19 @@ public class TestMap extends TestCase {
         }, obj);
         stream.close();
         assertEquals("{\"100\":null}", baos.toString());
+    }
+
+    public static enum EnumKey {
+        KeyA, KeyB
+    }
+
+    public void test_enum_key() throws IOException {
+        HashMap<EnumKey, Object> obj = new HashMap<EnumKey, Object>();
+        obj.put(EnumKey.KeyA, null);
+        stream.writeVal(new TypeLiteral<Map<EnumKey, Object>>() {
+        }, obj);
+        stream.close();
+        assertEquals("{\"KeyA\":null}", baos.toString());
     }
 
     public static class TestObject1 {

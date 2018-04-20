@@ -29,6 +29,9 @@ class MapKeyEncoders {
         if (mapKeyType instanceof WildcardType) {
             return new DynamicKeyEncoder();
         }
+        if (mapKeyType instanceof Class && ((Class) mapKeyType).isEnum()) {
+            return new StringKeyEncoder();
+        }
         Encoder.ReflectionEncoder encoder = CodegenImplNative.NATIVE_ENCODERS.get(mapKeyType);
         if (encoder != null) {
             return new NumberKeyEncoder(encoder);
