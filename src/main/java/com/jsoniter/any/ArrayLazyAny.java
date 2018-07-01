@@ -172,7 +172,7 @@ class ArrayLazyAny extends LazyAny {
             if (lastParsedPos == head) {
                 if (!CodegenAccess.readArrayStart(iter)) {
                     lastParsedPos = tail;
-                    throw new IndexOutOfBoundsException();
+                    return null;
                 }
                 Any element = iter.readAny();
                 cache.add(element);
