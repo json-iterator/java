@@ -11,7 +11,7 @@ import com.jsoniter.spi.JsoniterSpi;
 import java.io.IOException;
 
 /**
- * byte[] <=> base64
+ * byte[] &lt;=&gt; base64
  */
 public class Base64Support {
     private static boolean enabled;
