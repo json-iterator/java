@@ -1,6 +1,5 @@
 package com.jsoniter.output;
 
-import com.jsoniter.JsonIterator;
 import com.jsoniter.spi.Config;
 import com.jsoniter.spi.Encoder;
 import com.jsoniter.spi.JsoniterSpi;
@@ -9,6 +8,7 @@ import junit.framework.TestCase;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -146,5 +146,14 @@ public class TestMap extends TestCase {
         HashMap<Integer, Integer> m = new HashMap<Integer, Integer>();
         m.put(1, 2);
         assertEquals("{\"1\":2}", JsonStream.serialize(m));
+    }
+
+    public void test_multiple_keys() {
+        HashMap<String, Object> map = new HashMap<String, Object>();
+        map.put("destination", "test_destination_value");
+        map.put("amount", new BigDecimal("0.0000101101"));
+        map.put("password", "test_pass");
+        final String serialized = JsonStream.serialize(map);
+        assertEquals(-1, serialized.indexOf("::"));
     }
 }

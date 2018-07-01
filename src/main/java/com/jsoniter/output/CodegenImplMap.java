@@ -51,11 +51,6 @@ class CodegenImplMap {
             ctx.append("stream.writeMore();");
         }
         genWriteMapKey(ctx, keyType, noIndention);
-        if (noIndention) {
-            ctx.append("stream.write(':');");
-        } else {
-            ctx.append("stream.write((byte)':', (byte)' ');");
-        }
         if (isCollectionValueNullable) {
             ctx.append("if (entry.getValue() == null) { stream.writeNull(); } else {");
             CodegenImplNative.genWriteOp(ctx, "entry.getValue()", valueType, true);
