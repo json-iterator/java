@@ -1,8 +1,9 @@
 package com.jsoniter;
 
 import com.jsoniter.any.Any;
+import com.jsoniter.slice.DirectSlice;
+import com.jsoniter.slice.Slice;
 import com.jsoniter.spi.JsonException;
-import com.jsoniter.spi.Slice;
 
 import java.io.IOException;
 
@@ -45,7 +46,9 @@ class IterImplForStreaming {
                 int len = field.tail() - field.head();
                 byte[] newBuf = new byte[len];
                 System.arraycopy(field.data(), field.head(), newBuf, 0, len);
-                field.reset(newBuf, 0, newBuf.length);
+                DirectSlice ds = iter.rDirectSlice;
+                ds.reset(newBuf, 0, newBuf.length);
+                field = ds;
             }
             if (!loadMore(iter)) {
                 throw iter.reportError("readObjectFieldAsSlice", "expect : after object field");
@@ -203,9 +206,10 @@ class IterImplForStreaming {
         int end = IterImplString.findSliceEnd(iter);
         if (end != -1) {
             // reuse current buffer
-            iter.reusableSlice.reset(iter.buf, iter.head, end - 1);
+            DirectSlice slice = iter.rDirectSlice;
+            slice.reset(iter.buf, iter.head, end - 1);
             iter.head = end;
-            return iter.reusableSlice;
+            return slice;
         }
         // TODO: avoid small memory allocation
         byte[] part1 = new byte[iter.tail - iter.head];
@@ -225,8 +229,9 @@ class IterImplForStreaming {
                 System.arraycopy(part1, 0, part2, 0, part1.length);
                 System.arraycopy(iter.buf, 0, part2, part1.length, end - 1);
                 iter.head = end;
-                iter.reusableSlice.reset(part2, 0, part2.length);
-                return iter.reusableSlice;
+                DirectSlice slice = iter.rDirectSlice;
+                slice.reset(part2, 0, part2.length);
+                return slice;
             }
         }
     }

@@ -11,6 +11,9 @@ import com.jsoniter.any.TestList;
 import com.jsoniter.any.TestLong;
 import com.jsoniter.output.*;
 import com.jsoniter.output.TestInteger;
+import com.jsoniter.slice.DirectSliceTest;
+import com.jsoniter.slice.SlicesInterop;
+import com.jsoniter.slice.StringSliceTest;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
@@ -31,7 +34,8 @@ import org.junit.runners.Suite;
         com.jsoniter.output.TestNested.class,
         TestObject.class,
         com.jsoniter.output.TestObject.class,
-        TestReadAny.class, TestSkip.class, TestSlice.class,
+        TestReadAny.class, TestSkip.class,
+        DirectSliceTest.class, SlicesInterop.class, StringSliceTest.class,
         TestString.class,
         com.jsoniter.output.TestString.class,
         TestWhatIsNext.class,

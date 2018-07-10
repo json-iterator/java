@@ -86,7 +86,7 @@ class CodegenImplObjectStrict {
         if (desc.onExtraProperties != null || !desc.keyValueTypeWrappers.isEmpty()) {
             append(lines, "java.util.Map extra = null;");
         }
-        append(lines, "com.jsoniter.spi.Slice field = com.jsoniter.CodegenAccess.readObjectFieldAsSlice(iter);");
+        append(lines, "com.jsoniter.slice.Slice field = com.jsoniter.CodegenAccess.readObjectFieldAsSlice(iter);");
         append(lines, "boolean once = true;");
         append(lines, "while (once) {");
         append(lines, "once = false;");
@@ -104,7 +104,7 @@ class CodegenImplObjectStrict {
             }
         }
         if (hasAnythingToBindFrom(allBindings)) {
-            append(lines, "switch (field.len()) {");
+            append(lines, "switch (field.size()) {");
             append(lines, rendered);
             append(lines, "}"); // end of switch
         }
@@ -114,7 +114,7 @@ class CodegenImplObjectStrict {
         append(lines, "while (com.jsoniter.CodegenAccess.nextToken(iter) == ',') {");
         append(lines, "field = com.jsoniter.CodegenAccess.readObjectFieldAsSlice(iter);");
         if (hasAnythingToBindFrom(allBindings)) {
-            append(lines, "switch (field.len()) {");
+            append(lines, "switch (field.size()) {");
             append(lines, rendered);
             append(lines, "}"); // end of switch
         }
@@ -155,7 +155,7 @@ class CodegenImplObjectStrict {
         append(lines, "while(extraIter.hasNext()) {");
         for (Method wrapper : desc.keyValueTypeWrappers) {
             append(lines, "java.util.Map.Entry entry = (java.util.Map.Entry)extraIter.next();");
-            append(lines, "String key = entry.getKey().toString();");
+            append(lines, "String key = ((Slice) entry.getKey()).string();");
             append(lines, "com.jsoniter.any.Any value = (com.jsoniter.any.Any)entry.getValue();");
             append(lines, String.format("obj.%s(key, value.object());", wrapper.getName()));
         }
@@ -259,11 +259,11 @@ class CodegenImplObjectStrict {
 
     private static void appendOnUnknownField(StringBuilder lines, ClassDescriptor desc) {
         if (desc.asExtraForUnknownProperties && desc.onExtraProperties == null) {
-            append(lines, "throw new com.jsoniter.spi.JsonException('extra property: ' + field.toString());".replace('\'', '"'));
+            append(lines, "throw new com.jsoniter.spi.JsonException('extra property: ' + ((Slice) field).string());".replace('\'', '"'));
         } else {
             if (desc.asExtraForUnknownProperties || !desc.keyValueTypeWrappers.isEmpty()) {
                 append(lines, "if (extra == null) { extra = new java.util.HashMap(); }");
-                append(lines, "extra.put(field.toString(), iter.readAny());");
+                append(lines, "extra.put(((Slice) field).string(), iter.readAny());");
             } else {
                 append(lines, "iter.skip();");
             }
