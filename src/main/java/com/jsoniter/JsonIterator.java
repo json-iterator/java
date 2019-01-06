@@ -298,7 +298,7 @@ public class JsonIterator implements Closeable {
                     }
                     double doubleNumber = number;
                     if (doubleNumber == Math.floor(doubleNumber) && !Double.isInfinite(doubleNumber)) {
-                        long longNumber = (long) doubleNumber;
+                        long longNumber = Long.valueOf(new String(numberChars.chars, 0, numberChars.charsLength));
                         if (longNumber <= Integer.MAX_VALUE && longNumber >= Integer.MIN_VALUE) {
                             return (int) longNumber;
                         }
