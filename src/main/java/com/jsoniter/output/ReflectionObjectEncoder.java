@@ -67,41 +67,49 @@ class ReflectionObjectEncoder implements Encoder.ReflectionEncoder {
             stream.writeNull();
             return;
         }
-        stream.writeObjectStart();
-        boolean notFirst = false;
-        for (EncodeTo encodeTo : fields) {
-            Object val = encodeTo.binding.field.get(obj);
-            notFirst = writeEncodeTo(stream, notFirst, encodeTo, val);
+        boolean isSimpleValue = fields.isEmpty() && getters.isEmpty() && desc.unwrappers.size() == 1 && desc.unwrappers.get(0).isSimpleValue;
+        if (isSimpleValue) {
+            UnwrapperDescriptor unwrapper = desc.unwrappers.get(0);
+            Object simpleValue = unwrapper.method.invoke(obj);
+            stream.writeVal(unwrapper.mapValueTypeLiteral, simpleValue);
         }
-        for (EncodeTo encodeTo : getters) {
-            Object val = encodeTo.binding.method.invoke(obj);
-            notFirst = writeEncodeTo(stream, notFirst, encodeTo, val);
-        }
-        for (UnwrapperDescriptor unwrapper : desc.unwrappers) {
-            if (unwrapper.isMap) {
-                Map<Object, Object> map = (Map<Object, Object>) unwrapper.method.invoke(obj);
-                for (Map.Entry<Object, Object> entry : map.entrySet()) {
+        else {
+            stream.writeObjectStart();
+            boolean notFirst = false;
+            for (EncodeTo encodeTo : fields) {
+                Object val = encodeTo.binding.field.get(obj);
+                notFirst = writeEncodeTo(stream, notFirst, encodeTo, val);
+            }
+            for (EncodeTo encodeTo : getters) {
+                Object val = encodeTo.binding.method.invoke(obj);
+                notFirst = writeEncodeTo(stream, notFirst, encodeTo, val);
+            }
+            for (UnwrapperDescriptor unwrapper : desc.unwrappers) {
+                if (unwrapper.isMap) {
+                    Map<Object, Object> map = (Map<Object, Object>) unwrapper.method.invoke(obj);
+                    for (Map.Entry<Object, Object> entry : map.entrySet()) {
+                        if (notFirst) {
+                            stream.writeMore();
+                        } else {
+                            notFirst = true;
+                        }
+                        stream.writeObjectField(entry.getKey().toString());
+                        stream.writeVal(unwrapper.mapValueTypeLiteral, entry.getValue());
+                    }
+                } else {
                     if (notFirst) {
                         stream.writeMore();
                     } else {
                         notFirst = true;
                     }
-                    stream.writeObjectField(entry.getKey().toString());
-                    stream.writeVal(unwrapper.mapValueTypeLiteral, entry.getValue());
+                    unwrapper.method.invoke(obj, stream);
                 }
-            } else {
-                if (notFirst) {
-                    stream.writeMore();
-                } else {
-                    notFirst = true;
-                }
-                unwrapper.method.invoke(obj, stream);
             }
-        }
-        if (notFirst) {
-            stream.writeObjectEnd();
-        } else {
-            stream.write('}');
+            if (notFirst) {
+                stream.writeObjectEnd();
+            } else {
+                stream.write('}');
+            }
         }
     }
 
