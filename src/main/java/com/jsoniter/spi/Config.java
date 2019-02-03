@@ -264,6 +264,19 @@ public class Config extends EmptyExtension {
             }
             desc.unwrappers.add(new UnwrapperDescriptor(method));
         }
+        if (!desc.unwrappers.isEmpty()) {
+            boolean isSimpleValue = false;
+            for(UnwrapperDescriptor unwarpper: desc.unwrappers) {
+                if (unwarpper.isSimpleValue) {
+                    if (isSimpleValue) {
+                        throw new JsonException("Multiple @JsonUnwrapper on simple value getter");
+                    }
+                    else {
+                        isSimpleValue = true;
+                    }
+                }
+            }
+        }
     }
 
     private void detectWrappers(ClassDescriptor desc, List<Method> allMethods) {

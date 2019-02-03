@@ -67,7 +67,13 @@ class ReflectionObjectEncoder implements Encoder.ReflectionEncoder {
             stream.writeNull();
             return;
         }
-        boolean isSimpleValue = fields.isEmpty() && getters.isEmpty() && desc.unwrappers.size() == 1 && desc.unwrappers.get(0).isSimpleValue;
+        boolean isSimpleValue = false;
+        for(UnwrapperDescriptor unwarpper: desc.unwrappers) {
+            if (unwarpper.isSimpleValue) {
+                isSimpleValue = true;
+                break;
+            }
+        }
         if (isSimpleValue) {
             UnwrapperDescriptor unwrapper = desc.unwrappers.get(0);
             Object simpleValue = unwrapper.method.invoke(obj);

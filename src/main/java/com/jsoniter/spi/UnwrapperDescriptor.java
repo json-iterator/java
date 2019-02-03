@@ -34,7 +34,7 @@ public class UnwrapperDescriptor {
             this.isMap = false;
         } else if (method.getParameterTypes().length == 0 && method.getReturnType() != void.class) { //A getter
             this.isSimpleValue = true;
-            Type mapType = method.getGenericReturnType();
+            Type mapType = method.getReturnType();
             mapValueTypeLiteral = TypeLiteral.create(mapType);
         }
         else {

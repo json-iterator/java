@@ -12,7 +12,13 @@ class CodegenImplObject {
         List<EncodeTo> encodeTos = desc.encodeTos();
         ctx.append(String.format("public static void encode_(%s obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {", classInfo.clazz.getCanonicalName()));
         if (hasFieldOutput(desc)) {
-            boolean isSimpleValue = encodeTos.isEmpty() && desc.unwrappers.size() == 1 && desc.unwrappers.get(0).isSimpleValue;
+            boolean isSimpleValue = false;
+            for(UnwrapperDescriptor unwarpper: desc.unwrappers) {
+                if (unwarpper.isSimpleValue) {
+                    isSimpleValue = true;
+                    break;
+                }
+            }
             if (isSimpleValue) {
                 UnwrapperDescriptor unwrapper = desc.unwrappers.get(0);
                 ctx.append(String.format("Object simpleValue = obj.%s();", unwrapper.method.getName()));
