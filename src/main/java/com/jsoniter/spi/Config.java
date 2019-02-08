@@ -255,6 +255,7 @@ public class Config extends EmptyExtension {
     }
 
     private void detectUnwrappers(ClassDescriptor desc, List<Method> allMethods) {
+        boolean isSimpleValue = false;
         for (Method method : allMethods) {
             if (Modifier.isStatic(method.getModifiers())) {
                 continue;
@@ -262,20 +263,16 @@ public class Config extends EmptyExtension {
             if (getJsonUnwrapper(method.getAnnotations()) == null) {
                 continue;
             }
-            desc.unwrappers.add(new UnwrapperDescriptor(method));
-        }
-        if (!desc.unwrappers.isEmpty()) {
-            boolean isSimpleValue = false;
-            for(UnwrapperDescriptor unwarpper: desc.unwrappers) {
-                if (unwarpper.isSimpleValue) {
-                    if (isSimpleValue) {
-                        throw new JsonException("Multiple @JsonUnwrapper on simple value getter");
-                    }
-                    else {
-                        isSimpleValue = true;
-                    }
+            UnwrapperDescriptor unwarpper = new UnwrapperDescriptor(method);
+            if (unwarpper.isSimpleValue) {
+                if (isSimpleValue) {
+                    throw new JsonException("Multiple @JsonUnwrapper on simple value getter");
+                }
+                else {
+                    isSimpleValue = true;
                 }
             }
+            desc.unwrappers.add(unwarpper);
         }
     }
 
