@@ -292,13 +292,14 @@ public class JsonIterator implements Closeable {
                     return readString();
                 case NUMBER:
                     IterImplForStreaming.numberChars numberChars = IterImplForStreaming.readNumber(this);
-                    Double number = Double.valueOf(new String(numberChars.chars, 0, numberChars.charsLength));
+                    String numberStr = new String(numberChars.chars, 0, numberChars.charsLength);
+                    Double number = Double.valueOf(numberStr);
                     if (numberChars.dotFound) {
                         return number;
                     }
                     double doubleNumber = number;
                     if (doubleNumber == Math.floor(doubleNumber) && !Double.isInfinite(doubleNumber)) {
-                        long longNumber = (long) doubleNumber;
+                        long longNumber = Long.valueOf(numberStr);
                         if (longNumber <= Integer.MAX_VALUE && longNumber >= Integer.MIN_VALUE) {
                             return (int) longNumber;
                         }
