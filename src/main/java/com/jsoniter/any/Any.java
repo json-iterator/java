@@ -202,6 +202,10 @@ public abstract class Any implements Iterable<Any> {
         }
     }
 
+    public boolean exists() {
+        return !(this instanceof NotFoundAny);
+    }
+
     public Set keys() {
         return EMPTY_KEYS;
     }
