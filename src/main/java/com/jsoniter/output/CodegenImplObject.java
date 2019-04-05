@@ -12,41 +12,57 @@ class CodegenImplObject {
         List<EncodeTo> encodeTos = desc.encodeTos();
         ctx.append(String.format("public static void encode_(%s obj, com.jsoniter.output.JsonStream stream) throws java.io.IOException {", classInfo.clazz.getCanonicalName()));
         if (hasFieldOutput(desc)) {
-            int notFirst = 0;
-            if (noIndention) {
-                ctx.buffer('{');
-            } else {
-                ctx.append("stream.writeObjectStart();");
-            }
-            for (EncodeTo encodeTo : encodeTos) {
-                notFirst = genField(ctx, encodeTo.binding, encodeTo.toName, notFirst);
-            }
-            for (UnwrapperDescriptor unwrapper : desc.unwrappers) {
-                if (unwrapper.isMap) {
-                    ctx.append(String.format("java.util.Map map = (java.util.Map)obj.%s();", unwrapper.method.getName()));
-                    ctx.append("java.util.Iterator iter = map.entrySet().iterator();");
-                    ctx.append("while(iter.hasNext()) {");
-                    ctx.append("java.util.Map.Entry entry = (java.util.Map.Entry)iter.next();");
-                    notFirst = appendComma(ctx, notFirst);
-                    ctx.append("stream.writeObjectField(entry.getKey().toString());");
-                    ctx.append("if (entry.getValue() == null) { stream.writeNull(); } else {");
-                    CodegenImplNative.genWriteOp(ctx, "entry.getValue()", unwrapper.mapValueTypeLiteral.getType(), true);
-                    ctx.append("}");
-                    ctx.append("}");
-                } else {
-                    notFirst = appendComma(ctx, notFirst);
-                    ctx.append(String.format("obj.%s(stream);", unwrapper.method.getName()));
+            boolean isSimpleValue = false;
+            for(UnwrapperDescriptor unwarpper: desc.unwrappers) {
+                if (unwarpper.isSimpleValue) {
+                    isSimpleValue = true;
+                    break;
                 }
             }
-            if (noIndention) {
-                ctx.buffer('}');
-            } else {
-                if (notFirst == 1) { // definitely not first
-                    ctx.append("stream.writeObjectEnd();");
-                } else if (notFirst == 2) { // // maybe not first, previous field is omitNull
-                    ctx.append("if (notFirst) { stream.writeObjectEnd(); } else { stream.write('}'); }");
-                } else { // this is the first
-                    ctx.append("stream.write('}');");
+            if (isSimpleValue) {
+                UnwrapperDescriptor unwrapper = desc.unwrappers.get(0);
+                ctx.append(String.format("Object simpleValue = obj.%s();", unwrapper.method.getName()));
+                ctx.append("if (simpleValue == null) { stream.writeNull(); } else {");
+                CodegenImplNative.genWriteOp(ctx, "simpleValue", unwrapper.mapValueTypeLiteral.getType(), true);
+                ctx.append("}");
+            }
+            else {
+                int notFirst = 0;
+                if (noIndention) {
+                    ctx.buffer('{');
+                } else {
+                    ctx.append("stream.writeObjectStart();");
+                }
+                for (EncodeTo encodeTo : encodeTos) {
+                    notFirst = genField(ctx, encodeTo.binding, encodeTo.toName, notFirst);
+                }
+                for (UnwrapperDescriptor unwrapper : desc.unwrappers) {
+                    if (unwrapper.isMap) {
+                        ctx.append(String.format("java.util.Map map = (java.util.Map)obj.%s();", unwrapper.method.getName()));
+                        ctx.append("java.util.Iterator iter = map.entrySet().iterator();");
+                        ctx.append("while(iter.hasNext()) {");
+                        ctx.append("java.util.Map.Entry entry = (java.util.Map.Entry)iter.next();");
+                        notFirst = appendComma(ctx, notFirst);
+                        ctx.append("stream.writeObjectField(entry.getKey().toString());");
+                        ctx.append("if (entry.getValue() == null) { stream.writeNull(); } else {");
+                        CodegenImplNative.genWriteOp(ctx, "entry.getValue()", unwrapper.mapValueTypeLiteral.getType(), true);
+                        ctx.append("}");
+                        ctx.append("}");
+                    } else {
+                        notFirst = appendComma(ctx, notFirst);
+                        ctx.append(String.format("obj.%s(stream);", unwrapper.method.getName()));
+                    }
+                }
+                if (noIndention) {
+                    ctx.buffer('}');
+                } else {
+                    if (notFirst == 1) { // definitely not first
+                        ctx.append("stream.writeObjectEnd();");
+                    } else if (notFirst == 2) { // // maybe not first, previous field is omitNull
+                        ctx.append("if (notFirst) { stream.writeObjectEnd(); } else { stream.write('}'); }");
+                    } else { // this is the first
+                        ctx.append("stream.write('}');");
+                    }
                 }
             }
         } else {

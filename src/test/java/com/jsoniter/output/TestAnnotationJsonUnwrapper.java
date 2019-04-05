@@ -48,4 +48,34 @@ public class TestAnnotationJsonUnwrapper extends TestCase {
         stream.close();
         assertEquals("{\"100\":\"hello\"}", baos.toString());
     }
+
+
+    /**
+     * Consider the getter result as the entire json object
+     * Similar as @JsonValue in jackson
+     */
+    public static class TestObject3 {
+
+        private String name;
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        @JsonUnwrapper
+        public String getValue() {
+            return "hello";
+        }
+    }
+
+    public void test_unwrapper_with_simple_value() throws IOException {
+        TestObject3 obj = new TestObject3();
+        stream.writeVal(obj);
+        stream.close();
+        assertEquals("\"hello\"", baos.toString());
+    }
 }
