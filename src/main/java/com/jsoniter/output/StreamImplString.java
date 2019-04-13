@@ -175,10 +175,11 @@ class StreamImplString {
                     int firstPart = _surrogate;
                     _surrogate = 0;
                     // Ok, then, is the second part valid?
-                    if (c < SURR2_FIRST || c > SURR2_LAST) {
-                        throw new JsonException("Broken surrogate pair: first char 0x" + Integer.toHexString(firstPart) + ", second 0x" + Integer.toHexString(c) + "; illegal combination");
+                    int secondPart = val.charAt(++i);
+                    if (secondPart < SURR2_FIRST || secondPart > SURR2_LAST) {
+                        throw new JsonException("Broken surrogate pair: first char 0x" + Integer.toHexString(firstPart) + ", second 0x" + Integer.toHexString(secondPart) + "; illegal combination");
                     }
-                    c = 0x10000 + ((firstPart - SURR1_FIRST) << 10) + (c - SURR2_FIRST);
+                    c = 0x10000 + ((firstPart - SURR1_FIRST) << 10) + (secondPart - SURR2_FIRST);
                     if (c > 0x10FFFF) { // illegal in JSON as well as in XML
                         throw new JsonException("illegalSurrogate");
                     }
