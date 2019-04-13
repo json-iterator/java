@@ -1,11 +1,12 @@
 package com.jsoniter;
 
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+
 import com.jsoniter.any.Any;
 import com.jsoniter.spi.JsonException;
 import com.jsoniter.spi.Slice;
-
-import java.io.IOException;
-import java.math.BigInteger;
 
 class IterImpl {
 
@@ -469,7 +470,10 @@ class IterImpl {
                     decimalPart = -decimalPart;
                     int decimalPlaces = iter.head - start;
                     if (decimalPlaces > 0 && decimalPlaces < IterImplNumber.POW10.length && (iter.head - oldHead) < 10) {
-                        return value + (decimalPart / (double) IterImplNumber.POW10[decimalPlaces]);
+                    	BigDecimal integerPart = new BigDecimal(value);
+                    	BigDecimal fractionalPart = new BigDecimal((decimalPart / (double) IterImplNumber.POW10[decimalPlaces]));
+                    	BigDecimal result = integerPart.add(fractionalPart).setScale(decimalPlaces,BigDecimal.ROUND_HALF_UP);
+                    	return result.doubleValue();
                     } else {
                         iter.head = oldHead;
                         return IterImplForStreaming.readDoubleSlowPath(iter);
