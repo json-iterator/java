@@ -41,6 +41,18 @@ public class TestMap extends TestCase {
         }}, map);
     }
 
+    public static enum EnumKey {
+        KeyA, KeyB
+    }
+
+    public void test_enum_key() {
+        Map<EnumKey, Object> map = JsonIterator.deserialize("{\"KeyA\":null}", new TypeLiteral<Map<EnumKey, Object>>() {
+        });
+        assertEquals(new HashMap<EnumKey, Object>() {{
+            put(EnumKey.KeyA, null);
+        }}, map);
+    }
+
     public static class TestObject1 {
         public int Field;
     }

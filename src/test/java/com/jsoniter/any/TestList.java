@@ -1,10 +1,12 @@
 package com.jsoniter.any;
 
+import com.jsoniter.JsonIterator;
 import junit.framework.TestCase;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 
 public class TestList extends TestCase {
     public void test_size() {
@@ -51,5 +53,11 @@ public class TestList extends TestCase {
         Any any = Any.wrap(Arrays.asList(1, 2, 3));
         any.asList().add(Any.wrap(4));
         assertEquals("[1,2,3,4]", any.toString());
+    }
+
+    public void test_for_each() {
+        Any a = JsonIterator.deserialize("[]");
+        Iterator<Any> iter = a.iterator();
+        assertFalse(iter.hasNext());
     }
 }

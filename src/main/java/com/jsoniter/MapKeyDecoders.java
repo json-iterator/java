@@ -22,11 +22,14 @@ class MapKeyDecoders {
         if (String.class == mapKeyType) {
             return new StringKeyDecoder();
         }
+        if (mapKeyType instanceof Class && ((Class) mapKeyType).isEnum()) {
+            return new EnumKeyDecoder((Class) mapKeyType);
+        }
         Decoder decoder = CodegenImplNative.NATIVE_DECODERS.get(mapKeyType);
         if (decoder != null) {
             return new NumberKeyDecoder(decoder);
         }
-        throw new JsonException("can not encode map key type: " + mapKeyType);
+        throw new JsonException("can not decode map key type: " + mapKeyType);
     }
 
     private static class StringKeyDecoder implements Decoder {
@@ -34,6 +37,20 @@ class MapKeyDecoders {
         @Override
         public Object decode(JsonIterator iter) throws IOException {
             return iter.readString();
+        }
+    }
+
+    private static class EnumKeyDecoder implements Decoder {
+
+        private final Class enumClass;
+
+        private EnumKeyDecoder(Class enumClass) {
+            this.enumClass = enumClass;
+        }
+
+        @Override
+        public Object decode(JsonIterator iter) throws IOException {
+            return iter.read(enumClass);
         }
     }
 

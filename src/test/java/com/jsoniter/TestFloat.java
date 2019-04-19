@@ -86,5 +86,15 @@ public class TestFloat extends TestCase {
     public void testChooseDouble() {
         Object number = JsonIterator.deserialize("1.1", Object.class);
         assertEquals(1.1, number);
+        number = JsonIterator.deserialize("1.0", Object.class);
+        assertEquals(1.0, number);
     }
+
+    public void testInfinity() {
+        assertTrue(JsonIterator.deserialize("\"-infinity\"", Double.class) == Double.NEGATIVE_INFINITY);
+        assertTrue(JsonIterator.deserialize("\"-infinity\"", Float.class) == Float.NEGATIVE_INFINITY);
+        assertTrue(JsonIterator.deserialize("\"infinity\"", Double.class) == Double.POSITIVE_INFINITY);
+        assertTrue(JsonIterator.deserialize("\"infinity\"", Float.class) == Float.POSITIVE_INFINITY);
+    }
+
 }

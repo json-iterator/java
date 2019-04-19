@@ -206,7 +206,11 @@ class ArrayLazyAny extends LazyAny {
 
         public LazyIterator() {
             index = 0;
-            next = fillCacheUntil(index);
+            try {
+                next = fillCacheUntil(index);
+            } catch (IndexOutOfBoundsException e) {
+                next = null;
+            }
         }
 
         @Override

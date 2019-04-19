@@ -8,6 +8,7 @@ import junit.framework.TestCase;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -63,6 +64,19 @@ public class TestMap extends TestCase {
         }, obj);
         stream.close();
         assertEquals("{\"100\":null}", baos.toString());
+    }
+
+    public static enum EnumKey {
+        KeyA, KeyB
+    }
+
+    public void test_enum_key() throws IOException {
+        HashMap<EnumKey, Object> obj = new HashMap<EnumKey, Object>();
+        obj.put(EnumKey.KeyA, null);
+        stream.writeVal(new TypeLiteral<Map<EnumKey, Object>>() {
+        }, obj);
+        stream.close();
+        assertEquals("{\"KeyA\":null}", baos.toString());
     }
 
     public static class TestObject1 {
@@ -132,5 +146,14 @@ public class TestMap extends TestCase {
         HashMap<Integer, Integer> m = new HashMap<Integer, Integer>();
         m.put(1, 2);
         assertEquals("{\"1\":2}", JsonStream.serialize(m));
+    }
+
+    public void test_multiple_keys() {
+        HashMap<String, Object> map = new HashMap<String, Object>();
+        map.put("destination", "test_destination_value");
+        map.put("amount", new BigDecimal("0.0000101101"));
+        map.put("password", "test_pass");
+        final String serialized = JsonStream.serialize(map);
+        assertEquals(-1, serialized.indexOf("::"));
     }
 }

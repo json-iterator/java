@@ -9,7 +9,10 @@ import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class JsonIterator implements Closeable {
 
@@ -199,7 +202,8 @@ public class JsonIterator implements Closeable {
     }
 
     public String readNumberAsString() throws IOException {
-        return IterImplForStreaming.readNumber(this);
+        IterImplForStreaming.numberChars numberChars = IterImplForStreaming.readNumber(this);
+        return new String(numberChars.chars, 0, numberChars.charsLength);
     }
 
     public static interface ReadArrayCallback {
@@ -239,22 +243,20 @@ public class JsonIterator implements Closeable {
     }
 
     public final BigDecimal readBigDecimal() throws IOException {
-        String n = readNumber();
-        if (n == null) {
+        // skip whitespace by read next
+        ValueType valueType = whatIsNext();
+        if (valueType == ValueType.NULL) {
+            skip();
             return null;
         }
-        return new BigDecimal(n);
+        if (valueType != ValueType.NUMBER) {
+            throw reportError("readBigDecimal", "not number");
+        }
+        IterImplForStreaming.numberChars numberChars = IterImplForStreaming.readNumber(this);
+        return new BigDecimal(numberChars.chars, 0, numberChars.charsLength);
     }
 
     public final BigInteger readBigInteger() throws IOException {
-        String n = readNumber();
-        if (n == null) {
-            return null;
-        }
-        return new BigInteger(n);
-    }
-
-    private String readNumber() throws IOException {
         // skip whitespace by read next
         byte type = whatsNext();
         if (type == T_NULL) {
@@ -264,7 +266,8 @@ public class JsonIterator implements Closeable {
         if (type != T_NUMBER) {
             throw reportError("readNumber", "not number");
         }
-        return IterImplForStreaming.readNumber(this);
+        IterImplForStreaming.numberChars numberChars = IterImplForStreaming.readNumber(this);
+        return new BigInteger(new String(numberChars.chars, 0, numberChars.charsLength));
     }
 
     public final Any readAny() throws IOException {
@@ -302,9 +305,15 @@ public class JsonIterator implements Closeable {
                 case T_STRING:
                     return readString();
                 case T_NUMBER:
-                    double number = readDouble();
-                    if (number == Math.floor(number) && !Double.isInfinite(number)) {
-                        long longNumber = (long) number;
+                    IterImplForStreaming.numberChars numberChars = IterImplForStreaming.readNumber(this);
+                    String numberStr = new String(numberChars.chars, 0, numberChars.charsLength);
+                    Double number = Double.valueOf(numberStr);
+                    if (numberChars.dotFound) {
+                        return number;
+                    }
+                    double doubleNumber = number;
+                    if (doubleNumber == Math.floor(doubleNumber) && !Double.isInfinite(doubleNumber)) {
+                        long longNumber = Long.valueOf(numberStr);
                         if (longNumber <= Integer.MAX_VALUE && longNumber >= Integer.MIN_VALUE) {
                             return (int) longNumber;
                         }

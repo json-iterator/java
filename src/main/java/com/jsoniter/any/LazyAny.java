@@ -68,7 +68,7 @@ abstract class LazyAny extends Any {
     }
 
     public String toString() {
-        return new String(data, head, tail - head);
+        return new String(data, head, tail - head).trim();
     }
 
     protected final JsonIterator parse() {
