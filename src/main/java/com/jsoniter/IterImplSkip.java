@@ -4,21 +4,16 @@ import java.io.IOException;
 
 class IterImplSkip {
 
-    private static final int[] BREAKS = new int[128/32]; // actually, we need 127 booleans
+    static final boolean[] breaks = new boolean[127];
 
     static {
-        BREAKS[ ' ' >> 5] |= 1 << ( ' ' & 0x1F);
-        BREAKS['\t' >> 5] |= 1 << ('\t' & 0x1F);
-        BREAKS['\n' >> 5] |= 1 << ('\n' & 0x1F);
-        BREAKS['\r' >> 5] |= 1 << ('\r' & 0x1F);
-        BREAKS[ ',' >> 5] |= 1 << ( ',' & 0x1F);
-        BREAKS[ '}' >> 5] |= 1 << ( '}' & 0x1F);
-        BREAKS[ ']' >> 5] |= 1 << ( ']' & 0x1F);
-    }
-
-    static boolean isBreak(byte character) {
-        int inIndex = 1 << (character & 0x1F);
-        return (BREAKS[character >> 5] & inIndex) == inIndex;
+        breaks[' '] = true;
+        breaks['\t'] = true;
+        breaks['\n'] = true;
+        breaks['\r'] = true;
+        breaks[','] = true;
+        breaks['}'] = true;
+        breaks[']'] = true;
     }
 
     public static final void skip(JsonIterator iter) throws IOException {
