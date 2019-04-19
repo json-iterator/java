@@ -35,22 +35,14 @@ import java.io.IOException;
 
 class IterImplString {
 
-    final static int[] hexDigits = new int['f' + 1];
-
-    static {
-        for (int i = 0; i < hexDigits.length; i++) {
-            hexDigits[i] = -1;
-        }
-        for (int i = '0'; i <= '9'; ++i) {
-            hexDigits[i] = (i - '0');
-        }
-        for (int i = 'a'; i <= 'f'; ++i) {
-            hexDigits[i] = ((i - 'a') + 10);
-        }
-        for (int i = 'A'; i <= 'F'; ++i) {
-            hexDigits[i] = ((i - 'A') + 10);
-        }
-    }
+    private final static byte[] hexDigits = {
+            /* 48 unused characters skipped */
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, // decimal digits
+            -1, -1, -1, -1, -1, -1, -1,
+            10, 11, 12, 13, 14, 15,       // hexadecimal digits, lowercase
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+            10, 11, 12, 13, 14, 15        // hexadecimal digits, uppercase
+    };
 
     public static final String readString(JsonIterator iter) throws IOException {
         byte c = IterImpl.nextToken(iter);
@@ -95,10 +87,17 @@ class IterImplString {
     }
 
     public static int translateHex(final byte b) {
-        int val = hexDigits[b];
+        int val;
+        try {
+            val = hexDigits[b - '0'];
+        } catch (ArrayIndexOutOfBoundsException e) {
+            throw new IndexOutOfBoundsException(b + " is not valid hex digit");
+        }
+
         if (val == -1) {
             throw new IndexOutOfBoundsException(b + " is not valid hex digit");
         }
+
         return val;
     }
 

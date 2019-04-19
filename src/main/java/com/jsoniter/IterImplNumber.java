@@ -35,8 +35,8 @@ import java.io.IOException;
 
 class IterImplNumber {
 
-    final static int[] intDigits = new int[127];
-    final static int[] floatDigits = new int[127];
+    final static byte[] intDigits = new byte[127];
+    final static byte[] floatDigits = new byte[127];
     final static int END_OF_NUMBER = -2;
     final static int DOT_IN_NUMBER = -3;
     final static int INVALID_CHAR_FOR_NUMBER = -1;
@@ -51,8 +51,8 @@ class IterImplNumber {
             intDigits[i] = INVALID_CHAR_FOR_NUMBER;
         }
         for (int i = '0'; i <= '9'; ++i) {
-            floatDigits[i] = (i - '0');
-            intDigits[i] = (i - '0');
+            floatDigits[i] = (byte) (i - '0');
+            intDigits[i] = (byte) (i - '0');
         }
         floatDigits[','] = END_OF_NUMBER;
         floatDigits[']'] = END_OF_NUMBER;
