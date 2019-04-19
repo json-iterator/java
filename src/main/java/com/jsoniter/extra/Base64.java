@@ -5,6 +5,7 @@ import com.jsoniter.spi.Slice;
 import com.jsoniter.output.JsonStream;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
 /** A very fast and memory efficient class to encode and decode to and from BASE64 in full accordance
@@ -76,11 +77,17 @@ import java.util.Arrays;
  */
 
 abstract class Base64 {
-    private static final char[] CA = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".toCharArray();
-    static final byte[] BA;
-    static final byte[] IA = new byte[256];
+    private static final byte[] CA;
+    private static final byte[] BA;
+    private static final byte[] IA = new byte[256];
     static {
         Arrays.fill(IA, (byte) -1);
+        try {
+            CA = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".getBytes("US-ASCII");
+        } catch (UnsupportedEncodingException e) {
+            throw new AssertionError(e);
+        }
+
         for (byte i = 0, iS = (byte) CA.length; i < iS; i++) {
             IA[CA[i]] = i;
         }
@@ -103,10 +110,10 @@ abstract class Base64 {
             int i = (sArr[s++] & 0xff) << 16 | (sArr[s++] & 0xff) << 8 | (sArr[s++] & 0xff);
 
             // Encode the int into four chars
-            dArr[d++] = CA[(i >>> 18) & 0x3f];
-            dArr[d++] = CA[(i >>> 12) & 0x3f];
-            dArr[d++] = CA[(i >>> 6) & 0x3f];
-            dArr[d++] = CA[i & 0x3f];
+            dArr[d++] = (char) CA[(i >>> 18) & 0x3f];
+            dArr[d++] = (char) CA[(i >>> 12) & 0x3f];
+            dArr[d++] = (char) CA[(i >>> 6) & 0x3f];
+            dArr[d++] = (char) CA[i & 0x3f];
         }
 
         // Pad and encode last bits if source isn't even 24 bits.
@@ -116,9 +123,9 @@ abstract class Base64 {
             int i = ((sArr[eLen] & 0xff) << 10) | (left == 2 ? ((sArr[sLen - 1] & 0xff) << 2) : 0);
 
             // Set last four chars
-            dArr[start + dLen - 4] = CA[i >> 12];
-            dArr[start + dLen - 3] = CA[(i >>> 6) & 0x3f];
-            dArr[start + dLen - 2] = left == 2 ? CA[i & 0x3f] : '=';
+            dArr[start + dLen - 4] = (char) CA[i >> 12];
+            dArr[start + dLen - 3] = (char) CA[(i >>> 6) & 0x3f];
+            dArr[start + dLen - 2] = left == 2 ? (char) CA[i & 0x3f] : '=';
             dArr[start + dLen - 1] = '=';
         }
 
