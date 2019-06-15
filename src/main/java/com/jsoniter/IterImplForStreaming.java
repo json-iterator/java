@@ -274,19 +274,17 @@ class IterImplForStreaming {
     }
 
     private static boolean keepSkippedBytesThenRead(JsonIterator iter) throws IOException {
-        int n;
-        int offset;
+        int offset = iter.tail - iter.skipStartedAt;
+        byte[] srcBuffer = iter.buf;
+        // Double the size of internal buffer
+        // TODO: Fix NegativeArraySizeException that happens if source stream doesnt return as much
+        // of output as was requested i.e. when n < iter.buf.length - offset. Anyhow doubling the buffer
+        // size seems to be pretty dangerous idea and should be either disabled or solved safely.
         if (iter.skipStartedAt == 0 || iter.skipStartedAt < iter.tail / 2) {
-            byte[] newBuf = new byte[iter.buf.length * 2];
-            offset = iter.tail - iter.skipStartedAt;
-            System.arraycopy(iter.buf, iter.skipStartedAt, newBuf, 0, offset);
-            iter.buf = newBuf;
-            n = iter.in.read(iter.buf, offset, iter.buf.length - offset);
-        } else {
-            offset = iter.tail - iter.skipStartedAt;
-            System.arraycopy(iter.buf, iter.skipStartedAt, iter.buf, 0, offset);
-            n = iter.in.read(iter.buf, offset, iter.buf.length - offset);
+            iter.buf = new byte[iter.buf.length * 2];
         }
+        System.arraycopy(srcBuffer, iter.skipStartedAt, iter.buf, 0, offset);
+        int n = iter.in.read(iter.buf, offset, iter.buf.length - offset);
         iter.skipStartedAt = 0;
         if (n < 1) {
             if (n == -1) {
