@@ -277,7 +277,7 @@ class IterImplForStreaming {
         int offset = iter.tail - iter.skipStartedAt;
         byte[] srcBuffer = iter.buf;
         // Check there is no unused buffer capacity
-        if (iter.buf.length - iter.tail == 0) {
+        if ((getUnusedBufferByteCount(iter)) == 0) {
           // If auto expand buffer enabled, then create larger buffer
           if (iter.autoExpandBufferStep > 0) {
             iter.buf = new byte[iter.buf.length + iter.autoExpandBufferStep];
@@ -299,6 +299,11 @@ class IterImplForStreaming {
             iter.tail = offset + n;
         }
         return true;
+    }
+
+    private static int getUnusedBufferByteCount(JsonIterator iter) {
+        // Get bytes from 0 to skipStart + from tail till end
+        return iter.buf.length - iter.tail + iter.skipStartedAt;
     }
 
     final static byte readByte(JsonIterator iter) throws IOException {

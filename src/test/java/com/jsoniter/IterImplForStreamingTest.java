@@ -2,6 +2,7 @@ package com.jsoniter;
 
 import com.jsoniter.any.Any;
 import com.jsoniter.spi.JsonException;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import junit.framework.TestCase;
@@ -35,7 +36,7 @@ public class IterImplForStreamingTest extends TestCase {
 		// Check buffer was not expanded
 		assertEquals(initialBufferSize, jsonIterator.buf.length);
 
-		// Case #2: Data does fit into initial buffer, autoresizing off
+		// Case #2: Data does not fit into initial buffer, autoresizing off
 		initialBufferSize = originalContent.length() / 2;
 		jsonIterator = JsonIterator.parse(getSluggishInputStream(src), initialBufferSize, 0);
 		jsonIterator.readObject();
@@ -59,6 +60,15 @@ public class IterImplForStreamingTest extends TestCase {
 		assertEquals(originalContent, parsedString.toString());
 		// Check buffer was expanded exactly once
 		assertEquals(initialBufferSize + autoExpandBufferStep, jsonIterator.buf.length);
+
+		// Case #4: Data does not fit (but largest string does) into initial buffer, autoresizing on
+		initialBufferSize = originalContent.length() + 2;
+		jsonIterator = JsonIterator.parse(new ByteArrayInputStream(src), initialBufferSize, 0);
+		jsonIterator.readObject();
+		parsedString = jsonIterator.readAny();
+		assertEquals(originalContent, parsedString.toString());
+		// Check buffer was expanded exactly once
+		assertEquals(initialBufferSize, jsonIterator.buf.length);
 	}
 
 	private static InputStream getSluggishInputStream(final byte[] src) {
