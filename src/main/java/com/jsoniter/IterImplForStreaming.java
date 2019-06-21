@@ -282,7 +282,7 @@ class IterImplForStreaming {
           if (iter.autoExpandBufferStep > 0) {
             iter.buf = new byte[iter.buf.length + iter.autoExpandBufferStep];
           } else {
-            throw iter.reportError("loadMore", "buffer is full and autoexpansion is disabled");
+            throw iter.reportError("loadMore", String.format("buffer is full and autoexpansion is disabled. tail: [%s] skipStartedAt: [%s]", iter.tail, iter.skipStartedAt));
           }
         }
         System.arraycopy(srcBuffer, iter.skipStartedAt, iter.buf, 0, offset);
