@@ -71,7 +71,7 @@ class IterImplForStreaming {
                     case '[': // If open symbol, increase level
                         level++;
                         break;
-                    case ']': // If close symbol, increase level
+                    case ']': // If close symbol, decrease level
                         level--;
 
                         // If we have returned to the original level, we're done
@@ -101,7 +101,7 @@ class IterImplForStreaming {
                     case '{': // If open symbol, increase level
                         level++;
                         break;
-                    case '}': // If close symbol, increase level
+                    case '}': // If close symbol, decrease level
                         level--;
 
                         // If we have returned to the original level, we're done
