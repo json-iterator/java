@@ -147,7 +147,8 @@ class IterImplForStreaming {
                     throw iter.reportError("skipString", "incomplete string");
                 }
                 if (escaped) {
-                    iter.head = 1; // skip the first char as last char is \
+                    // TODO add unit test to prove/verify bug
+                    iter.head += 1; // skip the first char as last char is \
                 }
             } else {
                 iter.head = end;
