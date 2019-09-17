@@ -96,16 +96,12 @@ class Codegen {
             public Object decode(JsonIterator iter) throws IOException {
                 Decoder decoder = JsoniterSpi.getDecoder(cacheKey);
                 if (this == decoder) {
-                    for(int i = 0; i < 30; i++) {
+                    for(int i = 0; (i < 30) && (this == decoder); i++) {
                         decoder = JsoniterSpi.getDecoder(cacheKey);
-                        if (this == decoder) {
-                            try {
-                                Thread.sleep(1000);
+                        try {
+                            Thread.sleep(1000);
                             } catch (InterruptedException e) {
                                 throw new JsonException(e);
-                            }
-                        } else {
-                            break;
                         }
                     }
                     if (this == decoder) {
