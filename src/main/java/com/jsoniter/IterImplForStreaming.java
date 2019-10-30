@@ -71,7 +71,7 @@ class IterImplForStreaming {
                     case '[': // If open symbol, increase level
                         level++;
                         break;
-                    case ']': // If close symbol, increase level
+                    case ']': // If close symbol, decrease level
                         level--;
 
                         // If we have returned to the original level, we're done
@@ -101,7 +101,7 @@ class IterImplForStreaming {
                     case '{': // If open symbol, increase level
                         level++;
                         break;
-                    case '}': // If close symbol, increase level
+                    case '}': // If close symbol, decrease level
                         level--;
 
                         // If we have returned to the original level, we're done
@@ -147,7 +147,8 @@ class IterImplForStreaming {
                     throw iter.reportError("skipString", "incomplete string");
                 }
                 if (escaped) {
-                    iter.head = 1; // skip the first char as last char is \
+                    // TODO add unit test to prove/verify bug
+                    iter.head += 1; // skip the first char as last char is \
                 }
             } else {
                 iter.head = end;
@@ -274,19 +275,19 @@ class IterImplForStreaming {
     }
 
     private static boolean keepSkippedBytesThenRead(JsonIterator iter) throws IOException {
-        int n;
-        int offset;
-        if (iter.skipStartedAt == 0 || iter.skipStartedAt < iter.tail / 2) {
-            byte[] newBuf = new byte[iter.buf.length * 2];
-            offset = iter.tail - iter.skipStartedAt;
-            System.arraycopy(iter.buf, iter.skipStartedAt, newBuf, 0, offset);
-            iter.buf = newBuf;
-            n = iter.in.read(iter.buf, offset, iter.buf.length - offset);
-        } else {
-            offset = iter.tail - iter.skipStartedAt;
-            System.arraycopy(iter.buf, iter.skipStartedAt, iter.buf, 0, offset);
-            n = iter.in.read(iter.buf, offset, iter.buf.length - offset);
+        int offset = iter.tail - iter.skipStartedAt;
+        byte[] srcBuffer = iter.buf;
+        // Check there is no unused buffer capacity
+        if ((getUnusedBufferByteCount(iter)) == 0) {
+          // If auto expand buffer enabled, then create larger buffer
+          if (iter.autoExpandBufferStep > 0) {
+            iter.buf = new byte[iter.buf.length + iter.autoExpandBufferStep];
+          } else {
+            throw iter.reportError("loadMore", String.format("buffer is full and autoexpansion is disabled. tail: [%s] skipStartedAt: [%s]", iter.tail, iter.skipStartedAt));
+          }
         }
+        System.arraycopy(srcBuffer, iter.skipStartedAt, iter.buf, 0, offset);
+        int n = iter.in.read(iter.buf, offset, iter.buf.length - offset);
         iter.skipStartedAt = 0;
         if (n < 1) {
             if (n == -1) {
@@ -299,6 +300,11 @@ class IterImplForStreaming {
             iter.tail = offset + n;
         }
         return true;
+    }
+
+    private static int getUnusedBufferByteCount(JsonIterator iter) {
+        // Get bytes from 0 to skipStart + from tail till end
+        return iter.buf.length - iter.tail + iter.skipStartedAt;
     }
 
     final static byte readByte(JsonIterator iter) throws IOException {
@@ -643,8 +649,7 @@ class IterImplForStreaming {
 
     static void assertNotLeadingZero(JsonIterator iter) throws IOException {
         try {
-            byte nextByte = IterImpl.readByte(iter);
-            iter.unreadByte();
+            byte nextByte = iter.buf[iter.head];
             int ind2 = IterImplNumber.intDigits[nextByte];
             if (ind2 == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
                 return;

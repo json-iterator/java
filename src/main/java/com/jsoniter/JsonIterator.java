@@ -21,6 +21,9 @@ public class JsonIterator implements Closeable {
     final static ValueType[] valueTypes = new ValueType[256];
     InputStream in;
     byte[] buf;
+    // Whenever buf is not large enough new one is created with size of
+    // buf.length + autoExpandBufferStep. Set to < 1 to disable auto expanding.
+    int autoExpandBufferStep;
     int head;
     int tail;
     int skipStartedAt = -1; // skip should keep bytes starting at this pos
@@ -60,13 +63,22 @@ public class JsonIterator implements Closeable {
         this.tail = tail;
     }
 
+    private JsonIterator(InputStream in, byte[] buf, int autoExpandBufferStep) {
+        this(in, buf, 0, 0);
+        this.autoExpandBufferStep = autoExpandBufferStep;
+    }
+
     public JsonIterator() {
         this(null, new byte[0], 0, 0);
     }
 
     public static JsonIterator parse(InputStream in, int bufSize) {
+        return parse(in, bufSize, bufSize);
+    }
+
+    public static JsonIterator parse(InputStream in, int bufSize, int autoExpandBufferStep) {
         enableStreamingSupport();
-        return new JsonIterator(in, new byte[bufSize], 0, 0);
+        return new JsonIterator(in, new byte[bufSize], autoExpandBufferStep);
     }
 
     public static JsonIterator parse(byte[] buf) {
