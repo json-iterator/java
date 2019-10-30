@@ -649,8 +649,7 @@ class IterImplForStreaming {
 
     static void assertNotLeadingZero(JsonIterator iter) throws IOException {
         try {
-            byte nextByte = IterImpl.readByte(iter);
-            iter.unreadByte();
+            byte nextByte = iter.buf[iter.head];
             int ind2 = IterImplNumber.intDigits[nextByte];
             if (ind2 == IterImplNumber.INVALID_CHAR_FOR_NUMBER) {
                 return;
