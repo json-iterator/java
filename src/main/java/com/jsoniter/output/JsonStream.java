@@ -6,6 +6,8 @@ import com.jsoniter.spi.*;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Type;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 public class JsonStream extends OutputStream {
 
@@ -470,6 +472,10 @@ public class JsonStream extends OutputStream {
         return serialize(JsoniterSpi.getCurrentConfig().escapeUnicode(), obj.getClass(), obj);
     }
 
+    public static String serialize(Object obj, final Charset charset) {
+        return serialize(JsoniterSpi.getCurrentConfig().escapeUnicode(), obj.getClass(), obj, charset);
+    }
+
     public static String serialize(Config config, TypeLiteral typeLiteral, Object obj) {
         JsoniterSpi.setCurrentConfig(config);
         try {
@@ -484,12 +490,16 @@ public class JsonStream extends OutputStream {
     }
 
     public static String serialize(boolean escapeUnicode, Type type, Object obj) {
+        return  serialize(escapeUnicode, type, obj, Charset.defaultCharset());
+    }
+
+    public static String serialize(boolean escapeUnicode, Type type, Object obj, Charset charset) {
         JsonStream stream = JsonStreamPool.borrowJsonStream();
         try {
             stream.reset(null);
             stream.writeVal(type, obj);
             if (escapeUnicode) {
-                return new String(stream.buf, 0, stream.count);
+                return new String(stream.buf, 0, stream.count, charset);
             } else {
                 return new String(stream.buf, 0, stream.count, "UTF8");
             }
@@ -504,7 +514,6 @@ public class JsonStream extends OutputStream {
         Config newConfig = JsoniterSpi.getDefaultConfig().copyBuilder().encodingMode(mode).build();
         JsoniterSpi.setDefaultConfig(newConfig);
         JsoniterSpi.setCurrentConfig(newConfig);
-
     }
 
     public static void setIndentionStep(int indentionStep) {

@@ -6,9 +6,11 @@ import com.jsoniter.spi.*;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -492,6 +494,10 @@ public class JsonIterator implements Closeable {
 
     public static final Any deserialize(String input) {
         return deserialize(input.getBytes());
+    }
+
+    public static Any deserialize(final String input, final Charset charset) {
+        return deserialize(input.getBytes(charset));
     }
 
     public static final Any deserialize(Config config, byte[] input) {
