@@ -6,6 +6,7 @@ import com.jsoniter.output.EncodingMode;
 import com.jsoniter.output.JsonStream;
 import com.jsoniter.spi.DecodingMode;
 
+//test change comment
 public class Demo {
     static {
         // ensure the jsoniter is properly setup
