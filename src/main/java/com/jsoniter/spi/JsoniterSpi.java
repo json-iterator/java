@@ -291,6 +291,15 @@ public class JsoniterSpi {
         objectFactories = copy;
     }
 
+    public static synchronized void clearCaches() {
+        mapKeyEncoders = new HashMap<>();
+        mapKeyDecoders = new HashMap<>();
+        encoders = new HashMap<>();
+        decoders = new HashMap<>();
+        objectFactories = new HashMap<>();
+    }
+
+    
     private static class TypeProperty {
 
         public final Type type;
