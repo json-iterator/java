@@ -4,6 +4,8 @@ public class JsonIteratorPool {
 
     private static ThreadLocal<JsonIterator> slot1 = new ThreadLocal<JsonIterator>();
     private static ThreadLocal<JsonIterator> slot2 = new ThreadLocal<JsonIterator>();
+    
+    private JsonIteratorPool() { }
 
     public static JsonIterator borrowJsonIterator() {
         JsonIterator iter = slot1.get();
