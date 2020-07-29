@@ -3,6 +3,8 @@ package com.jsoniter;
 import java.io.IOException;
 
 class IterImplObject {
+    
+    private IterImplObject() { }
 
     public static final String readObject(JsonIterator iter) throws IOException {
         byte c = IterImpl.nextToken(iter);
