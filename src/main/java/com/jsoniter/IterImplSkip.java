@@ -5,6 +5,8 @@ import java.io.IOException;
 class IterImplSkip {
 
     static final boolean[] breaks = new boolean[127];
+    
+    private IterImplSkip(){ }
 
     static {
         breaks[' '] = true;
