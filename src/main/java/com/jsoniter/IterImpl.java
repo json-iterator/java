@@ -13,6 +13,8 @@ class IterImpl {
     private static BigInteger minLong = BigInteger.valueOf(Long.MIN_VALUE);
     private static BigInteger maxInt = BigInteger.valueOf(Integer.MAX_VALUE);
     private static BigInteger minInt = BigInteger.valueOf(Integer.MIN_VALUE);
+    
+    private IterImpl(){ }
 
     public static final int readObjectFieldAsHash(JsonIterator iter) throws IOException {
         if (readByte(iter) != '"') {
