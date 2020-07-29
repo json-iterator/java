@@ -7,6 +7,8 @@ import com.jsoniter.spi.Slice;
 import java.io.IOException;
 
 class IterImplForStreaming {
+    
+    private IterImplForStreaming() { }
 
     public static final int readObjectFieldAsHash(JsonIterator iter) throws IOException {
         if (nextToken(iter) != '"') {
