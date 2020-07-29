@@ -36,6 +36,8 @@ import java.io.IOException;
 class IterImplString {
 
     final static int[] hexDigits = new int['f' + 1];
+   
+    private IterImplString(){ }
 
     static {
         for (int i = 0; i < hexDigits.length; i++) {
