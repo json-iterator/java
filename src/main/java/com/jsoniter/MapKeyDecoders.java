@@ -7,6 +7,8 @@ import java.lang.reflect.Type;
 
 class MapKeyDecoders {
 
+    private MapKeyDecoders() { }
+    
     public static Decoder registerOrGetExisting(Type mapKeyType) {
         String cacheKey = JsoniterSpi.getMapKeyDecoderCacheKey(mapKeyType);
         Decoder mapKeyDecoder = JsoniterSpi.getMapKeyDecoder(cacheKey);
