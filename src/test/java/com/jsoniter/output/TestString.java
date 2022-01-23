@@ -8,6 +8,10 @@ public class TestString extends TestCase {
         String output = JsonStream.serialize(new Config.Builder().escapeUnicode(false).build(), "中文");
         assertEquals("\"中文\"", output);
     }
+    public void test_unicode_tilde() {
+        String output = JsonStream.serialize(new Config.Builder().escapeUnicode(false).build(), "~");
+        assertEquals("\"~\"", output);
+    }
     public void test_escape_control_character() {
         String output = JsonStream.serialize(new String(new byte[]{0}));
         assertEquals("\"\\u0000\"", output);

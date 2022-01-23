@@ -48,7 +48,7 @@ class StreamImplString {
 
     static {
         for (int i = 0; i < CAN_DIRECT_WRITE.length; i++) {
-            if (i > 31 && i < 126 && i != '"' && i != '\\') {
+            if (i > 31 && i <= 126 && i != '"' && i != '\\') {
                 CAN_DIRECT_WRITE[i] = true;
             }
         }
