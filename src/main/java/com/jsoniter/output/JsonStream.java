@@ -442,7 +442,49 @@ public class JsonStream extends OutputStream {
     }
 
     public static void serialize(Type type, Object obj, OutputStream out) {
-        JsonStream stream = JsonStreamPool.borrowJsonStream();
+        serialize(type, obj, out, false);
+    }
+
+    public static String serialize(Config config, Object obj) {
+        return serialize(config, obj.getClass(), obj);
+    }
+
+    public static String serialize(Object obj) {
+        return serialize(obj.getClass(), obj);
+    }
+
+    public static String serialize(Config config, TypeLiteral typeLiteral, Object obj) {
+        return serialize(config, typeLiteral.getType(), obj);
+    }
+
+    private static String serialize(Config config, Type type, Object obj) {
+        final Config configBackup = JsoniterSpi.getCurrentConfig();
+        // Set temporary config
+        JsoniterSpi.setCurrentConfig(config);
+        try {
+            return serialize(type, obj);
+        } finally {
+            // Revert old config
+            JsoniterSpi.setCurrentConfig(configBackup);
+        }
+    }
+
+    public static String serialize(TypeLiteral typeLiteral, Object obj) {
+        return serialize(typeLiteral.getType(), obj);
+    }
+
+    public static String serialize(boolean escapeUnicode, Type type, Object obj) {
+        final Config currentConfig = JsoniterSpi.getCurrentConfig();
+        return serialize(currentConfig.copyBuilder().escapeUnicode(escapeUnicode).build(), type, obj);
+    }
+
+    private static String serialize(Type type, Object obj) {
+        return serialize(type, obj, null, true);
+    }
+
+    private static String serialize(Type type, Object obj, OutputStream out, boolean returnObjAsString) {
+        final JsonStream stream = JsonStreamPool.borrowJsonStream();
+        final boolean escapeUnicode = JsoniterSpi.getCurrentConfig().escapeUnicode();
         try {
             try {
                 stream.reset(out);
@@ -450,44 +492,9 @@ public class JsonStream extends OutputStream {
             } finally {
                 stream.close();
             }
-        } catch (IOException e) {
-            throw new JsonException(e);
-        } finally {
-            JsonStreamPool.returnJsonStream(stream);
-        }
-    }
-
-    public static String serialize(Config config, Object obj) {
-        JsoniterSpi.setCurrentConfig(config);
-        try {
-            return serialize(config.escapeUnicode(), obj.getClass(), obj);
-        } finally {
-            JsoniterSpi.clearCurrentConfig();
-        }
-    }
-
-    public static String serialize(Object obj) {
-        return serialize(JsoniterSpi.getCurrentConfig().escapeUnicode(), obj.getClass(), obj);
-    }
-
-    public static String serialize(Config config, TypeLiteral typeLiteral, Object obj) {
-        JsoniterSpi.setCurrentConfig(config);
-        try {
-            return serialize(config.escapeUnicode(), typeLiteral.getType(), obj);
-        } finally {
-            JsoniterSpi.clearCurrentConfig();
-        }
-    }
-
-    public static String serialize(TypeLiteral typeLiteral, Object obj) {
-        return serialize(JsoniterSpi.getCurrentConfig().escapeUnicode(), typeLiteral.getType(), obj);
-    }
-
-    public static String serialize(boolean escapeUnicode, Type type, Object obj) {
-        JsonStream stream = JsonStreamPool.borrowJsonStream();
-        try {
-            stream.reset(null);
-            stream.writeVal(type, obj);
+            if (!returnObjAsString) {
+                return "";
+            }
             if (escapeUnicode) {
                 return new String(stream.buf, 0, stream.count);
             } else {
