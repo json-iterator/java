@@ -43,6 +43,7 @@ public class JsoniterSpi {
         currentConfig.set(val);
     }
 
+    // TODO usage of this method leads to potentially unexpected side effects. All usage should be checked.
     public static void clearCurrentConfig() {
         currentConfig.set(defaultConfig);
     }
