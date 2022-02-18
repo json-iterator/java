@@ -13,6 +13,8 @@ public class UnwrapperDescriptor {
 
     public boolean isMap;
 
+    public boolean isSimpleValue;
+
     public TypeLiteral mapValueTypeLiteral;
 
     public UnwrapperDescriptor(Method method) {
@@ -30,7 +32,12 @@ public class UnwrapperDescriptor {
             }
         } else if (isStreamUnwrapper(method)) {
             this.isMap = false;
-        } else {
+        } else if (method.getParameterTypes().length == 0 && method.getReturnType() != void.class) { //A getter
+            this.isSimpleValue = true;
+            Type mapType = method.getReturnType();
+            mapValueTypeLiteral = TypeLiteral.create(mapType);
+        }
+        else {
             throw new JsonException("invalid unwrapper method signature: " + method);
         }
     }
