@@ -203,14 +203,13 @@ public class ClassDescriptor {
         return cctor;
     }
 
-    private static ConstructorDescriptor getRecordCtor(Class clazz) {
+    private static ConstructorDescriptor getRecordCtor(Class<?> clazz) {
         ConstructorDescriptor cctor = new ConstructorDescriptor();
         try {
-            Constructor<?> ctor = clazz.getDeclaredConstructors()[0];
-            cctor.ctor = ctor;
-            for (Type parameter : ctor.getParameterTypes()) {
-                ClassInfo info = new ClassInfo(parameter);
-            }
+            Class<?>[] canonicalParameterTypes = Arrays.stream(clazz.getRecordComponents()).map(RecordComponent::getType).toArray(Class<?>[]::new);
+            System.out.println("Canonical Parameter Types : ");
+            System.out.println(Arrays.toString(canonicalParameterTypes));
+            cctor.ctor = clazz.getDeclaredConstructor(canonicalParameterTypes);
         } catch (Exception e) {
             cctor.ctor = null;
         }

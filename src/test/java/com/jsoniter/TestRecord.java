@@ -5,9 +5,7 @@ import com.jsoniter.annotation.JsonCreator;
 import com.jsoniter.annotation.JsonProperty;
 import com.jsoniter.any.Any;
 import com.jsoniter.spi.ClassInfo;
-import com.jsoniter.spi.EmptyExtension;
 import com.jsoniter.spi.JsonException;
-import com.jsoniter.spi.JsoniterSpi;
 import junit.framework.TestCase;
 
 import java.io.IOException;
@@ -102,7 +100,6 @@ public class TestRecord extends TestCase {
             throw new JsonException("no constructor for: class com.jsoniter.TestRecord", e);
         }
     }
-
 
     public void test_record_withOnlyFieldDecoder() throws IOException {
 
@@ -200,7 +197,7 @@ public class TestRecord extends TestCase {
 
         assertEquals(ReflectionRecordDecoder.OnlyFieldRecord.class, ReflectionDecoderFactory.create(new ClassInfo(TestRecord6.class)).getClass());
 
-        JsonIterator iter = JsonIterator.parse("{ 'valInt' : 1 }".replace('\'', '"'));
+        JsonIterator iter = JsonIterator.parse("{ 'val' : 1 }".replace('\'', '"'));
         TestRecord6 record = iter.read(TestRecord6.class);
 
         assertNotNull(record);
