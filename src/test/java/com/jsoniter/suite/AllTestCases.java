@@ -6,6 +6,7 @@ import com.jsoniter.TestGenerics;
 import com.jsoniter.TestGson;
 import com.jsoniter.TestNested;
 import com.jsoniter.TestObject;
+import com.jsoniter.TestRecord;
 import com.jsoniter.TestString;
 import com.jsoniter.any.TestList;
 import com.jsoniter.any.TestLong;
@@ -58,6 +59,10 @@ import org.junit.runners.Suite;
         TestList.class,
         TestAnnotationJsonObject.class,
         TestLong.class,
-        TestOmitValue.class})
+        TestOmitValue.class,
+        TestRecord.class,
+        com.jsoniter.output.TestRecord.class,
+        com.jsoniter.any.TestRecord.class
+})
 public abstract class AllTestCases {
 }
