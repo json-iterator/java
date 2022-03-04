@@ -9,20 +9,20 @@ import java.util.*;
 
 class ReflectionObjectDecoder {
 
-    private static Object NOT_SET = new Object() {
+    protected static Object NOT_SET = new Object() {
         @Override
         public String toString() {
             return "NOT_SET";
         }
     };
-    private Map<Slice, Binding> allBindings = new HashMap<Slice, Binding>();
-    private String tempCacheKey;
-    private String ctorArgsCacheKey;
-    private int tempCount;
-    private long expectedTracker;
-    private int requiredIdx;
-    private int tempIdx;
-    private ClassDescriptor desc;
+    protected Map<Slice, Binding> allBindings = new HashMap<Slice, Binding>();
+    protected String tempCacheKey;
+    protected String ctorArgsCacheKey;
+    protected int tempCount;
+    protected long expectedTracker;
+    protected int requiredIdx;
+    protected int tempIdx;
+    protected ClassDescriptor desc;
 
     public ReflectionObjectDecoder(ClassInfo classInfo) {
         try {
@@ -34,7 +34,9 @@ class ReflectionObjectDecoder {
         }
     }
 
-    private final void init(ClassInfo classInfo) throws Exception {
+    protected final void init(ClassInfo classInfo) throws Exception {
+
+        System.out.println("INIT");
         Class clazz = classInfo.clazz;
         ClassDescriptor desc = ClassDescriptor.getDecodingClassDescriptor(classInfo, true);
         for (Binding param : desc.ctor.parameters) {
@@ -116,6 +118,7 @@ class ReflectionObjectDecoder {
 
         public Object decode(JsonIterator iter) throws IOException {
             try {
+                System.out.println("ONLY FIELD");
                 return decode_(iter);
             } catch (RuntimeException e) {
                 throw e;
@@ -181,6 +184,7 @@ class ReflectionObjectDecoder {
         @Override
         public Object decode(JsonIterator iter) throws IOException {
             try {
+                System.out.println("WITH CTOR");
                 return decode_(iter);
             } catch (RuntimeException e) {
                 throw e;
@@ -260,6 +264,7 @@ class ReflectionObjectDecoder {
         @Override
         public Object decode(JsonIterator iter) throws IOException {
             try {
+                System.out.println("WITH WRAPPER");
                 return decode_(iter);
             } catch (RuntimeException e) {
                 throw e;
@@ -346,7 +351,7 @@ class ReflectionObjectDecoder {
         }
     }
 
-    private void setExtra(Object obj, Map<String, Object> extra) throws Exception {
+    protected void setExtra(Object obj, Map<String, Object> extra) throws Exception {
         if (extra == null) {
             return;
         }
@@ -367,24 +372,24 @@ class ReflectionObjectDecoder {
         }
     }
 
-    private boolean canNotSetDirectly(Binding binding) {
+    protected boolean canNotSetDirectly(Binding binding) {
         return binding.field == null && binding.method == null;
     }
 
-    private Object decodeBinding(JsonIterator iter, Binding binding) throws Exception {
+    protected Object decodeBinding(JsonIterator iter, Binding binding) throws Exception {
         Object value;
         value = binding.decoder.decode(iter);
         return value;
     }
 
-    private Object decodeBinding(JsonIterator iter, Object obj, Binding binding) throws Exception {
+    protected Object decodeBinding(JsonIterator iter, Object obj, Binding binding) throws Exception {
         if (binding.valueCanReuse) {
             CodegenAccess.setExistingObject(iter, binding.field.get(obj));
         }
         return decodeBinding(iter, binding);
     }
 
-    private Map<String, Object> onUnknownProperty(JsonIterator iter, Slice fieldName, Map<String, Object> extra) throws IOException {
+    protected Map<String, Object> onUnknownProperty(JsonIterator iter, Slice fieldName, Map<String, Object> extra) throws IOException {
         boolean shouldReadValue = desc.asExtraForUnknownProperties || !desc.keyValueTypeWrappers.isEmpty();
         if (shouldReadValue) {
             Any value = iter.readAny();
@@ -398,7 +403,7 @@ class ReflectionObjectDecoder {
         return extra;
     }
 
-    private List<String> collectMissingFields(long tracker) {
+    protected List<String> collectMissingFields(long tracker) {
         List<String> missingFields = new ArrayList<String>();
         for (Binding binding : allBindings.values()) {
             if (binding.asMissingWhenNotPresent) {
@@ -409,7 +414,7 @@ class ReflectionObjectDecoder {
         return missingFields;
     }
 
-    private void applyWrappers(Object[] temp, Object obj) throws Exception {
+    protected void applyWrappers(Object[] temp, Object obj) throws Exception {
         for (WrapperDescriptor wrapper : desc.bindingTypeWrappers) {
             Object[] args = new Object[wrapper.parameters.size()];
             for (int i = 0; i < wrapper.parameters.size(); i++) {
@@ -422,7 +427,7 @@ class ReflectionObjectDecoder {
         }
     }
 
-    private Object createNewObject(JsonIterator iter, Object[] temp) throws Exception {
+    protected Object createNewObject(JsonIterator iter, Object[] temp) throws Exception {
         if (iter.tempObjects == null) {
             iter.tempObjects = new HashMap<String, Object>();
         }
