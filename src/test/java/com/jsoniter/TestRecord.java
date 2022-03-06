@@ -4,6 +4,7 @@ package com.jsoniter;
 import com.jsoniter.annotation.JsonCreator;
 import com.jsoniter.annotation.JsonProperty;
 import com.jsoniter.any.Any;
+import com.jsoniter.spi.ClassDescriptor;
 import com.jsoniter.spi.ClassInfo;
 import com.jsoniter.spi.JsonException;
 import junit.framework.TestCase;
@@ -17,7 +18,8 @@ import java.util.Map;
 
 public class TestRecord extends TestCase {
 
-    record TestRecord1(long field1) {}
+    record TestRecord1(long field1) {
+    }
 
     public record TestRecord0(Long id, String name) {
 
@@ -114,7 +116,8 @@ public class TestRecord extends TestCase {
 
     public void test_record_2_fields_withOnlyFieldDecoder() throws IOException {
 
-        record TestRecord2(long field1, String field2) {}
+        record TestRecord2(long field1, String field2) {
+        }
 
         assertEquals(ReflectionRecordDecoder.OnlyFieldRecord.class, ReflectionDecoderFactory.create(new ClassInfo(TestRecord2.class)).getClass());
 
@@ -127,7 +130,8 @@ public class TestRecord extends TestCase {
 
     public void test_record_2_fields_swapFieldOrder_withOnlyFieldDecoder() throws IOException {
 
-        record TestRecord2(String field2, long field1) {}
+        record TestRecord2(String field2, long field1) {
+        }
 
         assertEquals(ReflectionRecordDecoder.OnlyFieldRecord.class, ReflectionDecoderFactory.create(new ClassInfo(TestRecord2.class)).getClass());
 
@@ -140,8 +144,10 @@ public class TestRecord extends TestCase {
 
     public void test_record_recordComposition_withOnlyFieldDecoder() throws IOException {
 
-        record TestRecordA(long fieldA) {}
-        record TestRecordB(long fieldB, TestRecordA a) {}
+        record TestRecordA(long fieldA) {
+        }
+        record TestRecordB(long fieldB, TestRecordA a) {
+        }
 
         assertEquals(ReflectionRecordDecoder.OnlyFieldRecord.class, ReflectionDecoderFactory.create(new ClassInfo(TestRecordB.class)).getClass());
 
@@ -154,7 +160,8 @@ public class TestRecord extends TestCase {
 
     public void test_record_empty_constructor_withOnlyFieldDecoder() throws IOException {
 
-        record TestRecord3() {}
+        record TestRecord3() {
+        }
 
         assertEquals(ReflectionRecordDecoder.OnlyFieldRecord.class, ReflectionDecoderFactory.create(new ClassInfo(TestRecord3.class)).getClass());
 
@@ -216,6 +223,8 @@ public class TestRecord extends TestCase {
             }
         }
 
+        assertEquals(ReflectionRecordDecoder.WithCtor.class, ReflectionDecoderFactory.create(new ClassInfo(TestRecord6.class)).getClass());
+
         JsonIterator iter = JsonIterator.parse("{ 'valInt' : 1 }".replace('\'', '"'));
         TestRecord6 record = iter.read(TestRecord6.class);
 
@@ -227,8 +236,10 @@ public class TestRecord extends TestCase {
         record TestRecord2(@JsonProperty long field1) {
 
             @JsonCreator
-            TestRecord2 {}
+            TestRecord2 {
+            }
         }
+        assertEquals(ReflectionRecordDecoder.WithCtor.class, ReflectionDecoderFactory.create(new ClassInfo(TestRecord2.class)).getClass());
 
         assertEquals(ReflectionDecoderFactory.create(new ClassInfo(TestRecord2.class)).getClass(), ReflectionObjectDecoder.WithCtor.class);
 
@@ -237,4 +248,11 @@ public class TestRecord extends TestCase {
 
         assertEquals(1, record.field1);
     }
+
+    public void test_record_constructor() throws IOException {
+        ClassDescriptor desc = ClassDescriptor.getDecodingClassDescriptor(new ClassInfo(TestRecord0.class), false);
+        assertEquals(TestRecord0.class.getConstructors()[1], desc.ctor.ctor);
+
+    }
+
 }
