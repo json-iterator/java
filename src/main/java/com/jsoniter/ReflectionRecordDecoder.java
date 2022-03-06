@@ -48,7 +48,6 @@ public class ReflectionRecordDecoder extends ReflectionObjectDecoder {
         public Object decode(JsonIterator iter) throws IOException {
 
             try {
-                System.out.println("ONLY FIELD RECORD");
                 return decode_(iter);
             } catch (RuntimeException e) {
                 throw e;

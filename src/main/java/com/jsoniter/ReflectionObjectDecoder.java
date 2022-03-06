@@ -36,7 +36,6 @@ class ReflectionObjectDecoder {
 
     protected final void init(ClassInfo classInfo) throws Exception {
 
-        System.out.println("INIT");
         Class clazz = classInfo.clazz;
         ClassDescriptor desc = ClassDescriptor.getDecodingClassDescriptor(classInfo, true);
         for (Binding param : desc.ctor.parameters) {
@@ -118,7 +117,6 @@ class ReflectionObjectDecoder {
 
         public Object decode(JsonIterator iter) throws IOException {
             try {
-                System.out.println("ONLY FIELD");
                 return decode_(iter);
             } catch (RuntimeException e) {
                 throw e;
@@ -184,7 +182,6 @@ class ReflectionObjectDecoder {
         @Override
         public Object decode(JsonIterator iter) throws IOException {
             try {
-                System.out.println("WITH CTOR");
                 return decode_(iter);
             } catch (RuntimeException e) {
                 throw e;
@@ -264,7 +261,6 @@ class ReflectionObjectDecoder {
         @Override
         public Object decode(JsonIterator iter) throws IOException {
             try {
-                System.out.println("WITH WRAPPER");
                 return decode_(iter);
             } catch (RuntimeException e) {
                 throw e;

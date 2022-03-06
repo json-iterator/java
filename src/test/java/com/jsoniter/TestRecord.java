@@ -25,7 +25,8 @@ public class TestRecord extends TestCase {
         }
     }
 
-    public void test_print_record_reflection_info() {
+    // remove "disabled" to run the function
+    public void disabled_test_print_record_reflection_info() {
 
         Class<TestRecord1> clazz = TestRecord1.class;
 

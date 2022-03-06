@@ -207,8 +207,6 @@ public class ClassDescriptor {
         ConstructorDescriptor cctor = new ConstructorDescriptor();
         try {
             Class<?>[] canonicalParameterTypes = Arrays.stream(clazz.getRecordComponents()).map(RecordComponent::getType).toArray(Class<?>[]::new);
-            System.out.println("Canonical Parameter Types : ");
-            System.out.println(Arrays.toString(canonicalParameterTypes));
             cctor.ctor = clazz.getDeclaredConstructor(canonicalParameterTypes);
         } catch (Exception e) {
             cctor.ctor = null;
