@@ -9,8 +9,10 @@ import com.jsoniter.spi.JsonException;
 import junit.framework.TestCase;
 
 import java.io.IOException;
-import java.lang.reflect.*;
-import java.util.Arrays;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Map;
 
 public class TestRecord extends TestCase {
@@ -190,6 +192,7 @@ public class TestRecord extends TestCase {
         record TestRecord6(long val) {
 
             public TestRecord6(int valInt) {
+
                 this(Long.valueOf(valInt));
             }
         }
@@ -208,6 +211,7 @@ public class TestRecord extends TestCase {
 
             @JsonCreator
             public TestRecord6(@JsonProperty("valInt") int valInt) {
+
                 this(Long.valueOf(valInt));
             }
         }
