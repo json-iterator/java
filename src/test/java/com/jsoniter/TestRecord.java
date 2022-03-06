@@ -9,10 +9,8 @@ import com.jsoniter.spi.JsonException;
 import junit.framework.TestCase;
 
 import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
+import java.lang.reflect.*;
+import java.util.Arrays;
 import java.util.Map;
 
 public class TestRecord extends TestCase {
@@ -198,6 +196,22 @@ public class TestRecord extends TestCase {
         assertEquals(ReflectionRecordDecoder.OnlyFieldRecord.class, ReflectionDecoderFactory.create(new ClassInfo(TestRecord6.class)).getClass());
 
         JsonIterator iter = JsonIterator.parse("{ 'val' : 1 }".replace('\'', '"'));
+        TestRecord6 record = iter.read(TestRecord6.class);
+
+        assertNotNull(record);
+    }
+
+    public void test_record_2_constructors_secondCtorUse_withOnlyFieldDecoder() throws IOException {
+
+        record TestRecord6(long val) {
+
+            @JsonCreator
+            public TestRecord6(@JsonProperty("valInt") int valInt) {
+                this(Long.valueOf(valInt));
+            }
+        }
+
+        JsonIterator iter = JsonIterator.parse("{ 'valInt' : 1 }".replace('\'', '"'));
         TestRecord6 record = iter.read(TestRecord6.class);
 
         assertNotNull(record);
