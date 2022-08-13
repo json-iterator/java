@@ -20,9 +20,11 @@ open module com.jsoniter {
 	requires transitive com.fasterxml.jackson.core;
 
 	requires transitive com.fasterxml.jackson.databind;
+	
+	requires transitive javassist;
 
-	requires com.google.gson;
+	requires transitive com.google.gson;
 
-	requires java.desktop;
+	requires transitive java.desktop;
 
 }
