@@ -14,16 +14,15 @@ open module com.jsoniter {
 	exports com.jsoniter.spi;
 
 	exports com.jsoniter.any;
+	
+	requires transitive com.fasterxml.jackson.annotation;
 
-	requires com.fasterxml.jackson.annotation;
+	requires transitive com.fasterxml.jackson.core;
 
-	requires com.fasterxml.jackson.core;
-
-	requires com.fasterxml.jackson.databind;
+	requires transitive com.fasterxml.jackson.databind;
 
 	requires com.google.gson;
 
 	requires java.desktop;
 
-	requires javassist;
 }
