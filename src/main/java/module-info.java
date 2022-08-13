@@ -1,4 +1,4 @@
-open module com.jsoniter {
+module com.jsoniter {
 	exports com.jsoniter.fuzzy;
 
 	exports com.jsoniter.static_codegen;
@@ -15,16 +15,16 @@ open module com.jsoniter {
 
 	exports com.jsoniter.any;
 	
-	requires transitive com.fasterxml.jackson.annotation;
+	requires com.fasterxml.jackson.annotation;
 
-	requires transitive com.fasterxml.jackson.core;
+	requires com.fasterxml.jackson.core;
 
-	requires transitive com.fasterxml.jackson.databind;
+	requires com.fasterxml.jackson.databind;
 	
-	requires transitive javassist;
+	requires javassist;
 
-	requires transitive com.google.gson;
+	requires com.google.gson;
 
-	requires transitive java.desktop;
+	requires java.desktop;
 
 }
