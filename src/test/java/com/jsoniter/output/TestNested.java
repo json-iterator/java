@@ -1,16 +1,12 @@
 package com.jsoniter.output;
 
-import com.jsoniter.annotation.JsonProperty;
-import com.jsoniter.spi.JsoniterSpi;
-import com.jsoniter.spi.TypeLiteral;
-import junit.framework.TestCase;
+import java.io.*;
+import java.util.*;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.jsoniter.annotation.JsonProperty;
+import com.jsoniter.spi.*;
+
+import junit.framework.TestCase;
 
 public class TestNested extends TestCase {
 
@@ -45,7 +41,7 @@ public class TestNested extends TestCase {
         obj1.field1 = "1";
         obj1.field2 = "2";
         String output = JsonStream.serialize(new TypeLiteral<List<TestObject1>>() {
-        }, new ArrayList() {{
+        }, new ArrayList<>() {{
             add(obj1);
         }});
         assertTrue(output.contains("field1"));
@@ -92,7 +88,7 @@ public class TestNested extends TestCase {
             obj1.field1 = "1";
             obj1.field2 = "2";
             stream.writeVal(new TypeLiteral<Map<String, TestObject1>>() {
-            }, new HashMap() {{
+            }, new HashMap<>() {{
                 put("hello", obj1);
             }});
             stream.close();
