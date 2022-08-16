@@ -1,4 +1,7 @@
 module com.jsoniter {
+	
+	exports com.jsoniter;
+
 	exports com.jsoniter.fuzzy;
 
 	exports com.jsoniter.static_codegen;
@@ -9,22 +12,27 @@ module com.jsoniter {
 
 	exports com.jsoniter.annotation;
 
-	exports com.jsoniter;
-
 	exports com.jsoniter.spi;
 
 	exports com.jsoniter.any;
+
+
+	/** static, because marked as optional in pom.xml*/
+	requires static javassist;
+
+	/** static, because marked as optional in pom.xml*/
+	requires static com.fasterxml.jackson.core;
+
+	/** static, because marked as optional in pom.xml*/
+	requires static com.fasterxml.jackson.annotation;
+
+	/** static, because marked as optional in pom.xml*/
+	requires static com.fasterxml.jackson.databind;
 	
-	requires com.fasterxml.jackson.annotation;
+	/** static, because marked as optional in pom.xml*/
+	requires static com.google.gson;
 
-	requires com.fasterxml.jackson.core;
-
-	requires com.fasterxml.jackson.databind;
-	
-	requires javassist;
-
-	requires com.google.gson;
-
-	requires java.desktop;
+	/** static, because only used in testing */
+	requires static java.desktop;
 
 }
