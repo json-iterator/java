@@ -1,4 +1,4 @@
-module com.jsoniter {
+open module com.jsoniter {
 	
 	exports com.jsoniter;
 
