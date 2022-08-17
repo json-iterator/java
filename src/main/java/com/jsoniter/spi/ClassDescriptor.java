@@ -31,7 +31,7 @@ public class ClassDescriptor {
         desc.classInfo = classInfo;
         desc.clazz = clazz;
         desc.lookup = lookup;
-        desc.ctor = getCtor(clazz);
+        desc.ctor = clazz.isRecord() ? getRecordCtor(clazz) : getCtor(clazz);
         desc.setters = getSetters(lookup, classInfo, includingPrivate);
         desc.getters = new ArrayList<Binding>();
         desc.fields = getFields(lookup, classInfo, includingPrivate);
@@ -197,6 +197,17 @@ public class ClassDescriptor {
         }
         try {
             cctor.ctor = clazz.getDeclaredConstructor();
+        } catch (Exception e) {
+            cctor.ctor = null;
+        }
+        return cctor;
+    }
+
+    private static ConstructorDescriptor getRecordCtor(Class<?> clazz) {
+        ConstructorDescriptor cctor = new ConstructorDescriptor();
+        try {
+            Class<?>[] canonicalParameterTypes = Arrays.stream(clazz.getRecordComponents()).map(RecordComponent::getType).toArray(Class<?>[]::new);
+            cctor.ctor = clazz.getDeclaredConstructor(canonicalParameterTypes);
         } catch (Exception e) {
             cctor.ctor = null;
         }
@@ -431,7 +442,6 @@ public class ClassDescriptor {
         }
         return bindings;
     }
-
 
     public List<Binding> allEncoderBindings() {
         ArrayList<Binding> bindings = new ArrayList<Binding>(8);

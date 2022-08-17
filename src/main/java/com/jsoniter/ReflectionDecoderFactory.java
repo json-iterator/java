@@ -23,6 +23,9 @@ class ReflectionDecoderFactory {
         if (clazz.isEnum()) {
             return new ReflectionEnumDecoder(clazz);
         }
+        if (clazz.isRecord()) {
+            return new ReflectionRecordDecoder(classAndArgs).create();
+        }
         return new ReflectionObjectDecoder(classAndArgs).create();
     }
 }
