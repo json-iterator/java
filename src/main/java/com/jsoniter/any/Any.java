@@ -196,7 +196,8 @@ public abstract class Any implements Iterable<Any> {
 
     public Any mustBeValid() {
         if(this instanceof NotFoundAny) {
-            throw ((NotFoundAny) this).exception;
+            ((NotFoundAny) this).throwException();
+            return null;
         } else {
             return this;
         }

@@ -11,21 +11,28 @@ import java.util.Arrays;
 
 class NotFoundAny extends Any {
 
-    protected final JsonException exception;
+    private Object[] keys;
+    private int idx;
+    private Object obj, key;
+    private final int exceptionMode;
 
     public NotFoundAny(Object[] keys, int idx, Object obj) {
-        this.exception = new JsonException(String.format("Value not found: failed to get path %s, because #%s section of the path ( %s ) not found in %s",
-                Arrays.toString(keys), idx, keys[idx], obj));
+        this.keys = keys;
+        this.idx = idx;
+        this.obj = obj;
+        exceptionMode = 0;
     }
 
     public NotFoundAny(int index, Object obj) {
-        this.exception = new JsonException(String.format("Value not found: failed to get index %s from %s",
-                index, obj));
+        this.idx = index;
+        this.obj = obj;
+        exceptionMode = 1;
     }
 
     public NotFoundAny(Object key, Object obj) {
-        this.exception = new JsonException(String.format("Value not found: failed to get key %s from %s",
-                key, obj));
+        this.key = key;
+        this.obj = obj;
+        exceptionMode = 2;
     }
 
     @Override
@@ -35,12 +42,28 @@ class NotFoundAny extends Any {
 
     @Override
     public Object object() {
-        throw exception;
+        throwException();
+        return null;
+    }
+
+    void throwException() {
+        switch (exceptionMode) {
+            case 0:
+                throw new JsonException(String.format("Value not found: failed to get path %s, because #%s section of the path ( %s ) not found in %s",
+                        Arrays.toString(keys), idx, keys[idx], obj));
+            case 1:
+                throw new JsonException(String.format("Value not found: failed to get index %s from %s",
+                        idx, obj));
+            case 2:
+                throw new JsonException(String.format("Value not found: failed to get key %s from %s",
+                        key, obj));
+        }
+        throw new JsonException();
     }
 
     @Override
     public void writeTo(JsonStream stream) throws IOException {
-        throw exception;
+        throwException();
     }
 
     @Override
