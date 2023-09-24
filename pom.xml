@@ -116,6 +116,24 @@
                     <check />
                 </configuration>
             </plugin>
+
+
+<plugin>
+
+<groupId>org.apache.tomcat.maven</groupId> <artifactId>tomcat9-maven-plugin</artifactId>
+
+<version>2.0</version>
+
+<configuration>
+
+<server>maven-tomcat-war-deployment-server</server> <url>http://localhost:8070/manager/text</url>
+
+<path>/rps</path>
+
+</configuration>
+
+</plugin>
+                 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
