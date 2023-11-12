@@ -8,6 +8,8 @@ import com.google.gson.annotations.Until;
 import com.jsoniter.extra.GsonCompatibilityMode;
 import com.jsoniter.spi.JsoniterSpi;
 import junit.framework.TestCase;
+import org.json.JSONException;
+import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.lang.reflect.Field;
 import java.text.DateFormat;
@@ -86,7 +88,7 @@ public class TestGson extends TestCase {
         public int field2;
     }
 
-    public void test_serializeNulls() {
+    public void test_serializeNulls() throws JSONException {
         TestObject5 obj = new TestObject5();
         Gson gson = new GsonBuilder().create();
         String output = gson.toJson(obj);
@@ -94,7 +96,7 @@ public class TestGson extends TestCase {
 
         gson = new GsonBuilder().serializeNulls().create();
         output = gson.toJson(obj);
-        assertEquals("{\"field1\":null,\"field2\":0}", output);
+        JSONAssert.assertEquals("{\"field1\":null,\"field2\":0}", output,false);
 
         GsonCompatibilityMode config = new GsonCompatibilityMode.Builder()
                 .build();
@@ -104,7 +106,7 @@ public class TestGson extends TestCase {
         config = new GsonCompatibilityMode.Builder()
                 .serializeNulls().build();
         output = JsonStream.serialize(config, obj);
-        assertEquals("{\"field1\":null,\"field2\":0}", output);
+        JSONAssert.assertEquals("{\"field1\":null,\"field2\":0}", output,false);
     }
 
     public void test_setDateFormat_with_style() {

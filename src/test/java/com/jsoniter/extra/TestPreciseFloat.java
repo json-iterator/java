@@ -1,5 +1,6 @@
 package com.jsoniter.extra;
-
+import org.json.JSONException;
+import org.skyscreamer.jsonassert.JSONAssert;
 import com.jsoniter.output.JsonStream;
 import junit.framework.TestCase;
 
@@ -20,12 +21,12 @@ public class TestPreciseFloat extends TestCase {
         public float field4;
     }
 
-    public void test_indirect_encode() {
+    public void test_indirect_encode() throws JSONException {
         TestObject1 obj = new TestObject1();
         obj.field1 = 0.12345678d;
         obj.field2 = 0.12345678d;
         obj.field3 = 0.12345678f;
         obj.field4 = 0.12345678f;
-        assertEquals("{\"field1\":0.12345678,\"field2\":0.12345678,\"field3\":0.12345678,\"field4\":0.12345678}", JsonStream.serialize(obj));
+        JSONAssert.assertEquals("{\"field1\":0.12345678,\"field2\":0.12345678,\"field3\":0.12345678,\"field4\":0.12345678}", JsonStream.serialize(obj),false);
     }
 }

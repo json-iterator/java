@@ -4,6 +4,8 @@ import com.jsoniter.annotation.JsonProperty;
 import com.jsoniter.spi.JsoniterSpi;
 import com.jsoniter.spi.TypeLiteral;
 import junit.framework.TestCase;
+import org.json.JSONException;
+import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -56,7 +58,7 @@ public class TestNested extends TestCase {
         public TestObject1[] objs;
     }
 
-    public void test_object_of_array() throws IOException {
+    public void test_object_of_array() throws IOException, JSONException {
         if (JsoniterSpi.getCurrentConfig().encodingMode() != EncodingMode.REFLECTION_MODE) {
             return;
         }
@@ -69,20 +71,20 @@ public class TestNested extends TestCase {
             obj.objs[0].field2 = "2";
             stream.writeVal(obj);
             stream.close();
-            assertEquals("{\n" +
+            JSONAssert.assertEquals("{\n" +
                     "  \"objs\": [\n" +
                     "    {\n" +
                     "      \"field1\": \"1\",\n" +
                     "      \"field2\": \"2\"\n" +
                     "    }\n" +
                     "  ]\n" +
-                    "}".replace('\'', '"'), baos.toString());
+                    "}".replace('\'', '"'), baos.toString(),false);
         } finally {
             JsonStream.setIndentionStep(0);
         }
     }
 
-    public void test_map_of_objects() throws IOException {
+    public void test_map_of_objects() throws IOException, JSONException {
         if (JsoniterSpi.getCurrentConfig().encodingMode() != EncodingMode.REFLECTION_MODE) {
             return;
         }
@@ -96,12 +98,12 @@ public class TestNested extends TestCase {
                 put("hello", obj1);
             }});
             stream.close();
-            assertEquals("{\n" +
+            JSONAssert.assertEquals("{\n" +
                     "  \"hello\": {\n" +
                     "    \"field1\": \"1\",\n" +
                     "    \"field2\": \"2\"\n" +
                     "  }\n" +
-                    "}".replace('\'', '"'), baos.toString());
+                    "}".replace('\'', '"'), baos.toString(),false);
         } finally {
             JsonStream.setIndentionStep(0);
         }
