@@ -78,7 +78,7 @@ public class TestNested extends TestCase {
                     "      \"field2\": \"2\"\n" +
                     "    }\n" +
                     "  ]\n" +
-                    "}".replace('\'', '"'), baos.toString(),false);
+                    "}".replace('\'', '"'), baos.toString(), false);
         } finally {
             JsonStream.setIndentionStep(0);
         }
@@ -103,7 +103,7 @@ public class TestNested extends TestCase {
                     "    \"field1\": \"1\",\n" +
                     "    \"field2\": \"2\"\n" +
                     "  }\n" +
-                    "}".replace('\'', '"'), baos.toString(),false);
+                    "}".replace('\'', '"'), baos.toString(), false);
         } finally {
             JsonStream.setIndentionStep(0);
         }

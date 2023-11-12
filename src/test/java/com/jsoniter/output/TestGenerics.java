@@ -54,6 +54,6 @@ public class TestGenerics extends TestCase {
         HashMap<String, Object> map = new HashMap<String, Object>();
         map.put("hello", 1);
         obj.field2 = map;
-        JSONAssert.assertEquals("{\"field\":[1],\"field2\":{\"hello\":1}}", JsonStream.serialize(obj),false);
+        JSONAssert.assertEquals("{\"field\":[1],\"field2\":{\"hello\":1}}", JsonStream.serialize(obj), false);
     }
 }

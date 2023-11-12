@@ -96,7 +96,7 @@ public class TestGson extends TestCase {
 
         gson = new GsonBuilder().serializeNulls().create();
         output = gson.toJson(obj);
-        JSONAssert.assertEquals("{\"field1\":null,\"field2\":0}", output,false);
+        JSONAssert.assertEquals("{\"field1\":null,\"field2\":0}", output, false);
 
         GsonCompatibilityMode config = new GsonCompatibilityMode.Builder()
                 .build();
@@ -106,7 +106,7 @@ public class TestGson extends TestCase {
         config = new GsonCompatibilityMode.Builder()
                 .serializeNulls().build();
         output = JsonStream.serialize(config, obj);
-        JSONAssert.assertEquals("{\"field1\":null,\"field2\":0}", output,false);
+        JSONAssert.assertEquals("{\"field1\":null,\"field2\":0}", output, false);
     }
 
     public void test_setDateFormat_with_style() {

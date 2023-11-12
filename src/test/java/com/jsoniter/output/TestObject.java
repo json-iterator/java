@@ -231,10 +231,10 @@ public class TestObject extends TestCase {
         assertEquals("{\"field3\":null}", JsonStream.serialize(new TestObject11()));
         TestObject11 obj = new TestObject11();
         obj.field1 = "hello";
-        JSONAssert.assertEquals("{\"field1\":\"hello\",\"field3\":null}", JsonStream.serialize(obj),false);
+        JSONAssert.assertEquals("{\"field1\":\"hello\",\"field3\":null}", JsonStream.serialize(obj), false);
         obj = new TestObject11();
         obj.field2 = "hello";
-        JSONAssert.assertEquals("{\"field2\":\"hello\",\"field3\":null}", JsonStream.serialize(obj),false);
+        JSONAssert.assertEquals("{\"field2\":\"hello\",\"field3\":null}", JsonStream.serialize(obj), false);
         obj = new TestObject11();
         obj.field3 = 3;
         assertEquals("{\"field3\":3}", JsonStream.serialize(obj));
@@ -294,7 +294,7 @@ public class TestObject extends TestCase {
                 "  \"field1\": \"1\",\n" +
                 "  \"field2\": \"2\",\n" +
                 "  \"field3\": null\n" +
-                "}", output,false);
+                "}", output, false);
         Config reflectionCfg = new Config.Builder()
                 .indentionStep(2)
                 .encodingMode(EncodingMode.REFLECTION_MODE)
@@ -304,7 +304,7 @@ public class TestObject extends TestCase {
                 "  \"field1\": \"1\",\n" +
                 "  \"field2\": \"2\",\n" +
                 "  \"field3\": null\n" +
-                "}", output,false);
+                "}", output, false);
     }
 
     public static class TestObject15 {
@@ -357,12 +357,12 @@ public class TestObject extends TestCase {
         Config cfg = new Config.Builder()
                 .omitDefaultValue(true)
                 .build();
-        JSONAssert.assertEquals("{\"l\":1,\"d\":1}", JsonStream.serialize(cfg, new TestObject17()),false);
+        JSONAssert.assertEquals("{\"l\":1,\"d\":1}", JsonStream.serialize(cfg, new TestObject17()), false);
         cfg = new Config.Builder()
                 .omitDefaultValue(true)
                 .encodingMode(EncodingMode.DYNAMIC_MODE)
                 .build();
-        JSONAssert.assertEquals("{\"l\":1,\"d\":1}", JsonStream.serialize(cfg, new TestObject17()),false);
+        JSONAssert.assertEquals("{\"l\":1,\"d\":1}", JsonStream.serialize(cfg, new TestObject17()), false);
     }
 
     public static class TestObject18 {

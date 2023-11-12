@@ -27,6 +27,6 @@ public class TestPreciseFloat extends TestCase {
         obj.field2 = 0.12345678d;
         obj.field3 = 0.12345678f;
         obj.field4 = 0.12345678f;
-        JSONAssert.assertEquals("{\"field1\":0.12345678,\"field2\":0.12345678,\"field3\":0.12345678,\"field4\":0.12345678}", JsonStream.serialize(obj),false);
+        JSONAssert.assertEquals("{\"field1\":0.12345678,\"field2\":0.12345678,\"field3\":0.12345678,\"field4\":0.12345678}", JsonStream.serialize(obj), false);
     }
 }
