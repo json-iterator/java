@@ -1,6 +1,8 @@
 package com.jsoniter.output;
 
 import junit.framework.TestCase;
+import org.json.JSONException;
+import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -44,7 +46,7 @@ public class TestGenerics extends TestCase {
         public Map<?, ?> field2;
     }
 
-    public void test_wildcard() throws IOException {
+    public void test_wildcard() throws IOException, JSONException {
         TestObject7 obj = new TestObject7();
         ArrayList<Integer> list = new ArrayList<Integer>();
         list.add(1);
@@ -52,6 +54,6 @@ public class TestGenerics extends TestCase {
         HashMap<String, Object> map = new HashMap<String, Object>();
         map.put("hello", 1);
         obj.field2 = map;
-        assertEquals("{\"field\":[1],\"field2\":{\"hello\":1}}", JsonStream.serialize(obj));
+        JSONAssert.assertEquals("{\"field\":[1],\"field2\":{\"hello\":1}}", JsonStream.serialize(obj), false);
     }
 }

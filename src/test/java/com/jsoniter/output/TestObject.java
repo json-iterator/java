@@ -7,6 +7,8 @@ import com.jsoniter.spi.JsonException;
 import com.jsoniter.spi.JsoniterSpi;
 import com.jsoniter.spi.TypeLiteral;
 import junit.framework.TestCase;
+import org.json.JSONException;
+import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -225,14 +227,14 @@ public class TestObject extends TestCase {
         public Integer field3;
     }
 
-    public void test_omit_null() {
+    public void test_omit_null() throws JSONException {
         assertEquals("{\"field3\":null}", JsonStream.serialize(new TestObject11()));
         TestObject11 obj = new TestObject11();
         obj.field1 = "hello";
-        assertEquals("{\"field1\":\"hello\",\"field3\":null}", JsonStream.serialize(obj));
+        JSONAssert.assertEquals("{\"field1\":\"hello\",\"field3\":null}", JsonStream.serialize(obj), false);
         obj = new TestObject11();
         obj.field2 = "hello";
-        assertEquals("{\"field2\":\"hello\",\"field3\":null}", JsonStream.serialize(obj));
+        JSONAssert.assertEquals("{\"field2\":\"hello\",\"field3\":null}", JsonStream.serialize(obj), false);
         obj = new TestObject11();
         obj.field3 = 3;
         assertEquals("{\"field3\":3}", JsonStream.serialize(obj));
@@ -279,7 +281,7 @@ public class TestObject extends TestCase {
         public String field3;
     }
 
-    public void test_indention() {
+    public void test_indention() throws JSONException {
         Config dynamicCfg = new Config.Builder()
                 .indentionStep(2)
                 .encodingMode(EncodingMode.DYNAMIC_MODE)
@@ -288,21 +290,21 @@ public class TestObject extends TestCase {
         obj.field1 = "1";
         obj.field2 = "2";
         String output = JsonStream.serialize(dynamicCfg, obj);
-        assertEquals("{\n" +
+        JSONAssert.assertEquals("{\n" +
                 "  \"field1\": \"1\",\n" +
                 "  \"field2\": \"2\",\n" +
                 "  \"field3\": null\n" +
-                "}", output);
+                "}", output, false);
         Config reflectionCfg = new Config.Builder()
                 .indentionStep(2)
                 .encodingMode(EncodingMode.REFLECTION_MODE)
                 .build();
         output = JsonStream.serialize(reflectionCfg, obj);
-        assertEquals("{\n" +
+        JSONAssert.assertEquals("{\n" +
                 "  \"field1\": \"1\",\n" +
                 "  \"field2\": \"2\",\n" +
                 "  \"field3\": null\n" +
-                "}", output);
+                "}", output, false);
     }
 
     public static class TestObject15 {
@@ -351,16 +353,16 @@ public class TestObject extends TestCase {
         public char e;
     }
 
-    public void test_omit_default() {
+    public void test_omit_default() throws JSONException {
         Config cfg = new Config.Builder()
                 .omitDefaultValue(true)
                 .build();
-        assertEquals("{\"l\":1,\"d\":1}", JsonStream.serialize(cfg, new TestObject17()));
+        JSONAssert.assertEquals("{\"l\":1,\"d\":1}", JsonStream.serialize(cfg, new TestObject17()), false);
         cfg = new Config.Builder()
                 .omitDefaultValue(true)
                 .encodingMode(EncodingMode.DYNAMIC_MODE)
                 .build();
-        assertEquals("{\"l\":1,\"d\":1}", JsonStream.serialize(cfg, new TestObject17()));
+        JSONAssert.assertEquals("{\"l\":1,\"d\":1}", JsonStream.serialize(cfg, new TestObject17()), false);
     }
 
     public static class TestObject18 {
