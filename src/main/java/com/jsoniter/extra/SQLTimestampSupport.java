@@ -11,8 +11,8 @@ import java.text.SimpleDateFormat;
 
 public record SQLTimestampSupport(SimpleDateFormat dateFormat) implements Decoder, Encoder {
     @Override
-    public Object decode (JsonIterator iter) throws IOException {
-        String timestampStr = iter.readString();
+    public Object decode (JsonIterator jsonIterator) throws IOException {
+        String timestampStr = jsonIterator.readString();
         return Timestamp.valueOf(timestampStr);
     }
 
